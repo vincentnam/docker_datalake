@@ -1,0 +1,6 @@
+*/.bash_history
+*/airflow.cfg
+*/airflow.db
+*/airflow-webserver.pid
+*/unittests.cfg
+*/logs
