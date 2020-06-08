@@ -39,10 +39,10 @@ If you want to insert data in the datalake (a file) : use the "insert_datalake()
 ## Not used : 
 
 ##### In the input area :
-- <img src="https://mapr.com/products/apache-hbase/assets/hbase-logo.png" height="24"> HBase : need for raw input data, HBase would have been used as a key / value database while it's a column store database + difficult to handle raw data reading
+- <img src="https://mapr.com/products/apache-hbase/assets/hbase-logo.png" height="42"> HBase : need for raw input data, HBase would have been used as a key / value database while it's a column store database + difficult to handle raw data reading
 
 #### For the raw-to-formatted data transformer : 
-- <img src="https://fr.wikipedia.org/wiki/Talend#/media/Fichier:TalendLogoCoral.png" height="24"> Talend : difficulties to install on Linux + difficulties to find version that can be integrated in the POC
+- <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/TalendLogoCoral.png" height="42"> Talend : difficulties to install on Linux + difficulties to find version that can be integrated in the POC
 
 ####For the "Gold" zone : 
 - ... 
