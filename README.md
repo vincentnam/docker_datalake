@@ -30,9 +30,19 @@ If you want to insert data in the datalake (a file) : use the "insert_datalake()
 
 
 
-## Les outils : 
+## Tools : 
 
 - MongoDb
 - Openstack Swift
 - Apache Airflow 
 
+## Not used : 
+
+##### In the input area :
+- <img src="https://mapr.com/products/apache-hbase/assets/hbase-logo.png" height="24"> HBase : need for raw input data, HBase would have been used as a key / value database while it's a column store database + difficult to handle raw data reading
+
+#### For the raw-to-formatted data transformer : 
+- Talend : difficulties to install on Linux + difficulties to find version that can be integrated in the POC
+
+####For the "Gold" zone : 
+- ... 

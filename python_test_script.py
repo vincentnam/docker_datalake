@@ -138,14 +138,3 @@ container_name = "mygates"
 
 insert_datalake(file_data, file_name,meta_data, user, key, authurl, container_name, mongodb_url="127.0.0.1:27017")
 # conn.put_container(container_name)
-
-# datalake_input_swift_1         | Jun  3 17:32:32 c9d68540141e container-sync: UNCAUGHT EXCEPTION#012Traceback (most recent call last):#012  File "/usr/bin/swift-container-sync", line 23, in <module>#012    run_daemon(ContainerSync, conf_file, **options)#012  File "/usr/lib/python2.7/dist-packages/swift/common/daemon.py", line 110, in run_daemon#012    klass(conf).run(once=once, **kwargs)#012  File "/usr/lib/python2.7/dist-packages/swift/common/daemon.py", line 57, in run#012    self.run_forever(**kwargs)#012  File "/usr/lib/python2.7/dist-packages/swift/container/sync.py", line 173, in run_forever#012    for path, device, partition in all_locs:#012  File "/usr/lib/python2.7/dist-packages/swift/common/utils.py", line 1721, in audit_location_generator#012    partitions = listdir(datadir_path)#012  File "/usr/lib/python2.7/dist-packages/swift/common/utils.py", line 2160, in listdir#012    return os.listdir(path)#012OSError: [Errno 20] Not a directory: '/srv/object.ring.gz/containers'
-# datalake_middleware_airflow_1  | [2020-06-03 17:32:36 +0000] [50] [INFO] Handling signal: ttin
-# datalake_middleware_airflow_1  | [2020-06-03 17:32:36 +0000] [16964] [INFO] Booting worker with pid: 16964
-# datalake_middleware_airflow_1  | [2020-06-03 17:32:36,587] {__init__.py:51} INFO - Using executor SequentialExecutor
-# datalake_middleware_airflow_1  | [2020-06-03 17:32:36,587] {dagbag.py:403} INFO - Filling up the DagBag from /usr/local/airflow/dags
-# datalake_middleware_airflow_1  | [2020-06-03 17:32:37 +0000] [50] [INFO] Handling signal: ttou
-# datalake_middleware_airflow_1  | [2020-06-03 17:32:37 +0000] [16853] [INFO] Worker exiting (pid: 16853)
-# datalake_input_swift_1         | Jun  3 17:32:37 c9d68540141e object-replicator: Starting object replication pass.
-# datalake_input_swift_1         | Jun  3 17:32:37 c9d68540141e object-replicator: Nothing replicated for 0.00133919715881 seconds.
-# datalake_input_swift_1         | Jun  3 17:32:37 c9d68540141e object-replicator: Object replication complete. (0.00 minutes)
