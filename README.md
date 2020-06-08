@@ -7,13 +7,13 @@ NeOCampus is an operation based in the University with numerous research laborat
 ![alt text](./git_image/DataLakeArchiV0.png)
 
 
-# Composition : 
+# Composition and TODO part: 
 The architecture is defined by big 3 parts : 
 
-- [x]  Input part : the first area of the data lake that handle raw input data 
+- [ ]  Input part : the first area of the data lake that handle raw input data 
     - [x] Object storage
     - [x] MongoDb database for metadata
-        - [ ] MongoDB hook for new input to launch a new Airflow job
+    - [ ] Trigger for new input to launch a new Airflow job
 - [ ]  Transformation from raw to formatted
     - [x] Airflow deploymen (docker image) 
     - [ ] Airflow job creation / configuration 
@@ -53,3 +53,6 @@ If you want to insert data in the datalake (a file) : use the "insert_datalake()
 - [ ] Job creation automatization for Airflow 
     - Create automatically the job for new data format and the output format
         - Allow us to integrate every kind of data without human action 
+- [ ] Ensure that input into Swift and MongoDB is an atomic operation (and if one fail, the other fail)
+    - How ? : Create triggers in MongoDB and Swift to check input request response ?
+    
