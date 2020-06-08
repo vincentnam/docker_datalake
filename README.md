@@ -44,7 +44,7 @@ If you want to insert data in the datalake (a file) : use the "insert_datalake()
 #### For the raw-to-formatted data transformer : 
 - <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/TalendLogoCoral.png" height="42"> Talend : difficulties to install on Linux + difficulties to find version that can be integrated in the POC
 
-####For the "Gold" zone : 
+#### For the "Gold" zone : 
 - ... 
 
 
