@@ -46,3 +46,10 @@ If you want to insert data in the datalake (a file) : use the "insert_datalake()
 
 ####For the "Gold" zone : 
 - ... 
+
+
+
+## How to go further :
+- [ ] Job creation automatization for Airflow 
+    - Create automatically the job for new data format and the output format
+        - Allow us to integrate every kind of data without human action 
