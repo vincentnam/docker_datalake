@@ -1,0 +1,19 @@
+version: '3'
+services:
+  datalake_input_swift:
+    image : morrisjobke/docker-swift-onlyone
+    ports :
+# 8080 : port d'authentification de Swift
+      - '12345:8080'
+  datalake_input_metadatabase:
+    image : mongo
+    ports:
+    - '27017:27017'
+  datalake_middleware_airflow :
+    image : puckel/docker-airflow
+#    ports:
+#      - '8080:8080'
+    volumes :
+      - ./apache_airflow:/usr/local/airflow
+    command: webserver
+
