@@ -1,7 +1,8 @@
 version: '3'
 services:
   datalake_input_swift:
-    image : morrisjobke/docker-swift-onlyone
+#    image : morrisjobke/docker-swift-onlyone
+    build : Openstack/swift/docker_repo/docker-swift-onlyone/.
     ports :
 # 8080 : port d'authentification de Swift
       - '12345:8080'

@@ -6,7 +6,7 @@ from swift.proxy.controllers.base import get_container_info
 from eventlet import Timeout
 from swift.common.utils import register_swift_info
 
-from .middleware.webhook import WebhookMiddleware
+
 
 import six
 if six.PY3:
@@ -25,6 +25,10 @@ class WebhookMiddleware(object):
 
     @wsgify
     def __call__(self, req):
+        # print(req)
+        # print(req.headers)
+        print(req.environ)
+        # self.logger.info(req)
         obj = None
         try:
             (version, account, container, obj) = \
@@ -32,6 +36,16 @@ class WebhookMiddleware(object):
         except ValueError:
             # not an object request
             pass
+        if "REQUEST_METHOD" in req.environ:
+            print("ON FAIT DU PUT D'OBJET ?")
+
+            if req.environ["REQUEST_METHOD"] == "PUT": # Check si le retour est ok
+                # Ca marche
+                # Ca marche
+                print("ON FAIT DU PUT D'OBqsddddddddddddddddddddddddddddddddddddddddddddddddddddddJET ?")
+                # ICI on envoie le hook : l'objet a été inséré correctement0
+
+
         if 'x-webhook' in req.headers:
             # translate user's request header to sysmeta
             req.headers[SYSMETA_WEBHOOK] = \
@@ -63,18 +77,18 @@ class WebhookMiddleware(object):
             resp.headers['x-webhook'] = resp.headers[SYSMETA_WEBHOOK]
         return resp
 
-#
-# def webhook_factory(global_conf, **local_conf):
-#     conf = global_conf.copy()
-#     conf.update(local_conf)
-#
-#     def webhook_filter(app):
-#         return WebhookMiddleware(app, conf)
-#     return webhook_filter
-#
 
 def webhook_factory(global_conf, **local_conf):
-    register_swift_info('webhook')
+    conf = global_conf.copy()
+    conf.update(local_conf)
+
     def webhook_filter(app):
-        return WebhookMiddleware(app)
+        return WebhookMiddleware(app, conf)
     return webhook_filter
+
+#
+# def webhook_factory(global_conf, **local_conf):
+#     register_swift_info('webhook')
+#     def webhook_filter(app):
+#         return WebhookMiddleware(app)
+#     return webhook_filter

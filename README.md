@@ -13,10 +13,13 @@ The architecture is defined by big 3 parts :
 - [ ]  Input part : the first area of the data lake that handle raw input data 
     - [x] Object storage
     - [x] MongoDb database for metadata
-    - [ ] Trigger for new input to launch a new Airflow job
+    - [x] Trigger for new input to launch a new Airflow job
+        - [x] Create middleware for swift proxy (Webhook trigger to launch Airflow jobs)
+        - [ ] Optimizations 
 - [ ]  Transformation from raw to formatted
     - [x] Airflow deploymen (docker image) 
     - [ ] Airflow job creation / configuration 
+        - [ ] Handle hook from Swift middleware (Webhook)
 - [ ] The "gold" zone : database to store formatted / valuable data
     - [ ] Relational database (default)
     - [ ] Time serie oriented database (visualisation)
