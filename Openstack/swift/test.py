@@ -42,3 +42,37 @@ conn.put_object(container_name, "input_file_test/"+"0.jpg", contents=file_data
 #         print(data)
 #
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

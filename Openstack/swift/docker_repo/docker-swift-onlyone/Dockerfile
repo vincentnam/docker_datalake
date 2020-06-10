@@ -24,10 +24,12 @@ ADD files/account-server.conf /etc/swift/account-server.conf
 ADD files/object-server.conf /etc/swift/object-server.conf
 ADD files/container-server.conf /etc/swift/container-server.conf
 ADD files/startmain.sh /usr/local/bin/startmain.sh
-ADD middleware/webhook.py /usr/lib/python2.7/dist-packages/swift/common/middleware/webhook.py
+ADD middleware/new_data_trigger.py /usr/lib/python2.7/dist-packages/swift/common/middleware/new_data_trigger.py
+ADD middleware/new_data_trigger.cfg /usr/lib/python2.7/dist-packages/swift/common/middleware/new_data_trigger.cfg
+
 EXPOSE 8080
 #ADD middleware /etc/swift/middleware
 ADD files/proxy-server.conf /etc/swift/proxy-server.conf
 RUN chmod 755 /usr/local/bin/*.sh
-RUN python usr/lib/python2.7/dist-packages/swift/common/middleware/webhook.py
+RUN python usr/lib/python2.7/dist-packages/swift/common/middleware/new_data_trigger.py
 CMD /usr/local/bin/startmain.sh
