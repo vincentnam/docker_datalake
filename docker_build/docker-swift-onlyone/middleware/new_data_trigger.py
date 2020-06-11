@@ -37,10 +37,11 @@ class NewDataTriggerMiddleware(object):
         try:
             (version, account, container, obj) = \
                 split_path(req.path_info, 4, 4, True)
-            print("COUCOU COUCOU COUCOU COUCOU COUCOU COUCOU COUCOU COUCOU COUCOU COUCOU COUCOU COUCOU COUCOU COUCOU COUCOU COUCOU COUCOU COUCOU COUCOU ")
 
-            rep = requests.post(URL + ENDPOINT_PATH + "/dags/new_input/dag_runs", )
 
+            rep = requests.post(URL + ENDPOINT_PATH + "/dags/new_input/dag_runs", data={})
+            self.logger.info(rep.headers)
+            self.logger.info(rep.text)
         except ValueError:
             # not an object request
             pass
