@@ -17,6 +17,9 @@ NeOCampus is an operation based in the University with numerous research laborat
 The architecture is defined by big 3 parts : 
 
 - [ ]  Input part : the first area of the data lake that handle raw input data 
+    - [ ] API Rest 
+        - [x] Make available the data input
+        - [ ] API Rest to input 1 or more data
     - [x] Object storage
     - [x] MongoDb database for metadata
     - [x] Trigger for new input to launch a new Airflow job
