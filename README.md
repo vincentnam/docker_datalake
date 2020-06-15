@@ -5,7 +5,13 @@ NeOCampus is an operation based in the University with numerous research laborat
 
 ## Architecture (it might change in the future) : 
 ![alt text](./git_image/DataLakeArchiV0.png)
+## Activity Diagram : 
+### Data lake
+![alt text](./git_image/Sequence_Datalake.png)
 
+### Data integration activity diagram (Apache Airflow) : 
+
+![alt text](git_image/Sequence_Dataintegration.png)
 
 # Composition and TODO part: 
 The architecture is defined by big 3 parts : 
@@ -19,7 +25,8 @@ The architecture is defined by big 3 parts :
 - [ ]  Transformation from raw to formatted
     - [x] Airflow deployment (docker image) 
     - [ ] Airflow job creation / configuration 
-        - [ ] Handle hook from Swift middleware (Webhook)
+        - [x] Handle hook from Swift middleware (Webhook)
+        - [ ] Set up jobs 
 - [ ] The "gold" zone : database to store formatted / valuable data
     - [ ] Relational database (default)
     - [ ] Time serie oriented database (visualisation)

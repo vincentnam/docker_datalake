@@ -42,21 +42,22 @@ dag = DAG(
 #     bash_command='echo "coucou" ',
 #     dag=dag,
 # )
+from airflow.models import Variable
 
 
 def print_context(ds, **kwargs):
-    print(kwargs)
-    print(ds)
-    with open("/usr/local/airflow/test.txt", "a") as fp:
-        for i in kwargs:
-            fp.write(i)
-            fp.write("    ")
-            fp.write(kwargs[i])
-            fp.write("\n")
-        # fp.write(kwargs["conf"])
-        # fp.write(ds)
-    with open("/usr/local/airflow/test2.txt", "w") as fp2:
-        fp2.write(ds)
+    # print(kwargs)
+
+    # Common (Not-so-nice way)
+    # 3 DB connections when the file is parsed
+    # var1 = Variable.get("conf", deserialize_json=True)
+    # var2 = Variable.get("var2")
+    # var3 = Variable.get("var3")
+    for i in kwargs:
+        print(kwargs['dag_run'].conf['coucou'])
+    # print(ds)
+    # with open("/usr/local/airflow/tests.txt", "w+") as fp:
+        # fp.write(var1)
     return 'Whatever you return gets printed in the logs'
 
 t1 = PythonOperator(
