@@ -54,7 +54,7 @@ def print_context(ds, **kwargs):
     # var2 = Variable.get("var2")
     # var3 = Variable.get("var3")
     for i in kwargs:
-        print(kwargs['dag_run'].conf['coucou'])
+        print(kwargs['dag_run'].conf)
     # print(ds)
     # with open("/usr/local/airflow/tests.txt", "w+") as fp:
         # fp.write(var1)

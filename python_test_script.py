@@ -133,11 +133,11 @@ with open(file_name,"rb") as f:
 file_content = open(file_name, "r")
 print(file_data)
 container_name = "mygatess"
-#
+#https://github.com/vincentnam/docker_datalake
 # conn.put_object(container_name,"0.jpg", contents=file_data
 #                         ,content_type="image/jpg")
 
-conn.put_container(container_name)
+# conn.put_container(container_name)
 insert_datalake(file_data, file_name,meta_data, user, key, authurl, container_name, mongodb_url="127.0.0.1:27017")
 
 
@@ -244,3 +244,7 @@ insert_datalake(file_data, file_name,meta_data, user, key, authurl, container_na
 # datalake_input_swift_1         | Jun  9 16:33:24 8d7c5235a89c proxy-server: STDOUT: {'Content-Length': '230605', 'Accept-Encoding': 'identity', 'User-Agent': 'python-swiftclient-3.9.0', 'Host': '127.0.0.1:12345', 'X-Auth-Token': 'AUTH_tk3bb3323733b24d7690d876babcedd8a4', 'Content-Type': 'image/png'} (txn: txf12a4c77054440d794f4b-005edfb9d4)
 # datalake_input_swift_1         | Jun  9 16:33:24 8d7c5235a89c proxy-server: STDOUT: {'swift.copy_hook': <function dlo_copy_hook at 0x7f52bf09b6e0>, 'SCRIPT_NAME': '', 'swift.proxy_access_log_made': True, 'REQUEST_METHOD': 'PUT', 'PATH_INFO': '/v1/AUTH_test/mygatess/5', 'staticweb.start_time': 1591720404.48724, 'SERVER_PROTOCOL': 'HTTP/1.0', 'swift.authorize': <bound method TempAuth.authorize of <swift.common.middleware.tempauth.TempAuth object at 0x7f52bf11e9d0>>, 'REMOTE_ADDR': '172.19.0.1', 'CONTENT_LENGTH': '230605', 'HTTP_X_AUTH_TOKEN': 'AUTH_tk3bb3323733b24d7690d876babcedd8a4', 'HTTP_USER_AGENT': 'python-swiftclient-3.9.0', 'eventlet.posthooks': [], 'RAW_PATH_INFO': '/v1/AUTH_test/mygatess/5', 'REMOTE_PORT': '41222', 'eventlet.input': <eventlet.wsgi.Input object at 0x7f52bf14a5d0>, 'wsgi.url_scheme': 'http', 'swift.account/AUTH_test': {'status': 204, 'container_count': 2, 'bytes': '230605', 'total_object_count': '3', 'meta': {}, 'sysmeta': {}}, 'SERVER_PORT': '8080', 'wsgi.input': <swift.common.utils.InputProxy object at 0x7f52bf14a490>, 'REMOTE_USER': 'test,test:tester,AUTH_test', 'HTTP_HOST': '127.0.0.1:12345', 'swift.cache': <swift.common.memcached.MemcacheRing object at 0x7f52bf124e90>, 'wsgi.multithread': True, 'wsgi.version': (1, 0), 'SERVER_NAME': '172.19.0.4', 'GATEWAY_INTERFACE': 'CGI/1.1', 'wsgi.run_once': False, 'wsgi.errors': <swift.common.utils.LoggerFileObject object at 0x7f52bf158d10>, 'wsgi.multiprocess': False, 'swift.trans_id': 'txf12a4c77054440d794f4b-005edfb9d4', 'swift.container/AUTH_test/mygatess': {'status': 204, 'sync_key': None, 'sysmeta': {}, 'meta': {}, 'write_acl': None, 'object_count': '1', 'versions': None, 'bytes': '230605', 'read_acl': None, 'cors': {'allow_origin': None, 'expose_headers': None, 'max_age': None}}, 'CONTENT_TYPE': 'image/png', 'swift.clean_acl': <function clean_acl at 0x7f52bfa51488>, 'HTTP_ACCEPT_ENCODING': 'identity'}
 # datalake_input_swift_1         | Jun  9 16:33:24 8d7c5235a89c proxy-server: <swift.common.swob.Request object at 0x7f52bf099c90>
+
+
+# Context des requests HTML
+# https://airflow.readthedocs.io/en/stable/_modules/airflow/models/dagrun.html#DagRun.conf

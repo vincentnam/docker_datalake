@@ -6,7 +6,7 @@ from swift.proxy.controllers.base import get_container_info
 from eventlet import Timeout
 from swift.common.utils import register_swift_info
 
-URL = "airflow:8080"
+URL = "http://airflow:8080"
 ENDPOINT_PATH="/api/experimental"
 
 #
@@ -20,7 +20,7 @@ else:
 import requests
 # x-container-sysmeta-webhook
 SYSMETA_WEBHOOK = get_sys_meta_prefix('container') + 'webhook'
-
+import json
 
 class NewDataTriggerMiddleware(object):
     def __init__(self, app, conf):
@@ -29,8 +29,9 @@ class NewDataTriggerMiddleware(object):
 
     @wsgify
     def __call__(self, req):
-        # print(req)
-        # print(req.headers)
+        print(req)
+        print(req.headers)
+        print(req.path_info)
         # print(req.environ)
         # self.logger.info(req)
         obj = None
@@ -39,13 +40,18 @@ class NewDataTriggerMiddleware(object):
                 split_path(req.path_info, 4, 4, True)
 
 
-            rep = requests.post(URL + ENDPOINT_PATH + "/dags/new_input/dag_runs", data={})
-            self.logger.info(rep.headers)
-            self.logger.info(rep.text)
         except ValueError:
             # not an object request
-            pass
+            resp = req.get_response(self.app)
 
+            return resp
+        print(obj)
+        payload = {"conf": {"swif_id":obj}}
+        rep = requests.post(URL + ENDPOINT_PATH + "/dags/new_input/dag_runs",
+                            data=json.dumps(payload))
+        print(rep.text)
+        self.logger.info(rep.headers)
+        self.logger.info(rep.text)
         # No response return = bug
         resp = req.get_response(self.app)
 
