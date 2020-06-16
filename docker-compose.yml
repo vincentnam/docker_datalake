@@ -41,6 +41,19 @@ services:
         aliases:
              - airflow
 
+  datalake_goldzone_neo4j :
+    image: neo4j
+    volumes:
+      - ./neo4j/data:/data
+    ports:
+    - '7474:7474'
+    - '7687:7687'
+    networks:
+      southbound_airflow:
+        aliases:
+            - neo4j
+    environment:
+      - NEO4J_AUTH=none
 
 
 

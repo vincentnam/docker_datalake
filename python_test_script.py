@@ -96,6 +96,30 @@ def insert_datalake(file_content, file_name,meta_data, user, key, authurl, conta
     client.stats.swift.update_one({"type":"object_id_file"},
                                   {"$inc": {"object_id": 1}})
 #####################################
+import pandas as pd
+import os
+import mimetypes
+def input_csv_file(csv_file,**kwargs):
+    df = pd.read_csv(csv_file, sep=kwargs["sep"], header=kwargs["header"])
+    print(df.keys())
+    # print(df["path"]+df["file_name"])
+    # print(df["extension"])
+    for i in df.iloc:
+        meta_data = {
+            "content_type": mimetypes.guess_type(i["file_name"])[0],
+            "projet": kwargs["projet"],
+        }
+        for j in i.keys() :
+            meta_data[j]=i[j]
+        print(meta_data)
+        # print(mimetypes.guess_type("file" + i))
+    # print(mimetypes.guess_type("file" + ".jpg"))
+        with open(os.path.join(meta_data["path"],meta_data["file_name"]),"rb") as f:
+             file_data = f.read()
+    insert_datalake(file_data, meta_data["file_name"], meta_data, user, key, kwargs["authurl"],
+                    kwargs["container_name"], mongodb_url="127.0.0.1:27017")
+input_csv_file("./dataset/mygates/subset.csv", sep=";", header=0, projet="mygates",authurl = "http://127.0.0.1:12345/auth/v1.0",container_name = "mygates")
+
 
 def init_id():
     # USE IT ONLY ONE TIME !!
@@ -113,34 +137,34 @@ def init_id():
 # client = MongoClient("127.0.0.1:27017").stats.swift.insert_one(id_doc)
 # print(get_id("127.0.0.1:27017"))
 
-
-import requests
-authurl = "http://127.0.0.1:12345/auth/v1.0"
-conn = swiftclient.Connection(user=user, key=key,
-                              authurl=authurl)
-
-
-file_name = "Openstack/swift/input_file_test/0.png"
-meta_data = {
-    "content_type": "image/png",
-    "application": "mygates cnn"
-}
-# with open(file_name,"rb") as f :
+#
+# import requests
+# authurl = "http://127.0.0.1:12345/auth/v1.0"
+# conn = swiftclient.Connection(user=user, key=key,
+#                               authurl=authurl)
+#
+#
+# file_name = "Openstack/swift/input_file_test/0.png"
+# meta_data = {
+#     "content_type": "image/png",
+#     "application": "mygates cnn"
+# }
+# # with open(file_name,"rb") as f :
+# #     file_data = f.read()
+# with open(file_name,"rb") as f:
 #     file_data = f.read()
-with open(file_name,"rb") as f:
-    file_data = f.read()
-
-file_content = open(file_name, "r")
-print(file_data)
-container_name = "mygatess"
-#https://github.com/vincentnam/docker_datalake
-# conn.put_object(container_name,"0.jpg", contents=file_data
-#                         ,content_type="image/jpg")
-
-# conn.put_container(container_name)
-insert_datalake(file_data, file_name,meta_data, user, key, authurl, container_name, mongodb_url="127.0.0.1:27017")
-
-
+#
+# file_content = open(file_name, "r")
+# print(file_data)
+# container_name = "mygatess"
+# #https://github.com/vincentnam/docker_datalake
+# # conn.put_object(container_name,"0.jpg", contents=file_data
+# #                         ,content_type="image/jpg")
+#
+# # conn.put_container(container_name)
+# insert_datalake(file_data, file_name,meta_data, user, key, authurl, container_name, mongodb_url="127.0.0.1:27017")
+#
+#
 
 
 
