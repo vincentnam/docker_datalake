@@ -37,12 +37,12 @@ The architecture is defined by big 3 parts :
     - [ ] Graph database (?)
     - [ ] ...
 # What services is available now : 
-| |Swift | Metadata `MongoDB`  | Airflow |Airflow `Jobs` | Neo4J `"Gold" zone`|...|
------|----------|----------|--|--|--|-
-Todo |  | ||<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">
-Working|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">||<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">
-Optimized||||
-Tested ||||
+| |Swift | Metadata `MongoDB`  | Airflow |Airflow `Jobs` | Neo4J `"Gold" zone`|InfluxDB`"Gold" zone`|Relational SGBD`"Gold" zone`
+:-----:|:----------:|:----------:|:--:|:--:|:--:|:-:|:-:|
+Todo |  | ||<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">
+Working|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">||<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">
+Optimized||||||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">
+Tested ||||||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">
 # How to run : 
 - docker-compose up 
 
