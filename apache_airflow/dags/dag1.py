@@ -4,6 +4,7 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.utils.dates import days_ago
+from airflow.contrib.hooks.mongo_hook import MongoHook
 from datetime import timedelta
 # # These args will get passed on to each operator
 # # You can override them on a per-task basis during operator initialization
@@ -16,35 +17,22 @@ default_args = {
     'email_on_retry': False,
     'retries': 0,
     'retry_delay': timedelta(minutes=0),
-    # 'queue': 'bash_queue',
-    # 'pool': 'backfill',
-    # 'priority_weight': 10,
-    # 'end_date': datetime(2016, 1, 1),
-    # 'wait_for_downstream': False,
-    # 'dag': dag,
-    # 'sla': timedelta(hours=2),
-    # 'execution_timeout': timedelta(seconds=300),
-    # 'on_failure_callback': some_function,
-    # 'on_success_callback': some_other_function,
-    # 'on_retry_callback': another_function,
-    # 'sla_miss_callback': yet_another_function,
-    # 'trigger_rule': 'all_success'
 }
 dag = DAG(
     'new_input',
     default_args=default_args,
     description='Check for new input data and launch data integration jobs'
 )
-# print(dag.conf)
-# t1, t2 and t3 are examples of tasks created by instantiating operators
-# t1 = BashOperator(
-#     task_id='print_date',
-#     bash_command='echo "coucou" ',
-#     dag=dag,
-# )
-from airflow.models import Variable
 
-
+def check_type(**kwargs):
+    meta_base = MongoHook("metadatabase")
+    # find(self, mongo_collection, query, find_one=False, mongo_db=None,
+    #      **kwargs):
+    doc = meta_base.find("mygates", {}, find_one=False)
+    # print(doc)
+    for i in doc:
+        print(i)
+    # return doc
 def print_context(ds, **kwargs):
     # print(kwargs)
 
@@ -61,18 +49,9 @@ def print_context(ds, **kwargs):
     return 'Whatever you return gets printed in the logs'
 
 t1 = PythonOperator(
-    task_id='print_the_context',
+    task_id='check_type',
     provide_context=True,
-    python_callable=print_context,
+    python_callable=check_type,
     dag=dag,
 )
 
-# dag.doc_md = __doc__
-#
-# t1.doc_md = """\
-# #### Task Documentation
-# You can document your task using the attributes `doc_md` (markdown),
-# `doc` (plain text), `doc_rst`, `doc_json`, `doc_yaml` which gets
-# rendered in the UI's Task Instance Details page.
-# ![img](http://montcs.bloomu.edu/~bobmon/Semesters/2012-01/491/import%20soul.png)
-# """

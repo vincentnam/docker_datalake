@@ -68,4 +68,4 @@ If you want to insert data in the datalake (a file) : use the "insert_datalake()
         - Allow us to integrate every kind of data without human action 
 - [ ] Ensure that input into Swift and MongoDB is an atomic operation (and if one fail, the other fail)
     - How ? : Create triggers in MongoDB and Swift to check input request response ?
-    
+- [ ] Handle the input of same data (redondant data)

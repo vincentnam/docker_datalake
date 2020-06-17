@@ -62,6 +62,19 @@ def get_id(mongodb_url):
     return mongo_forid_co.stats.swift.find_one({"type":"object_id_file"})["object_id"]
 
 
+def init_id():
+    # USE IT ONLY ONE TIME !!
+    if MongoClient("127.0.0.1:27017").stats.swift.find_one(
+        {"type": "object_id_file"}) is None :
+        id_doc = {"type": "object_id_file", "object_id": 0}
+        client = MongoClient("127.0.0.1:27017").stats.swift
+        if client.find({"type":"object_id_file"}) is None:
+            client.insert_one(id_doc)
+        client.create_index("type", unique=True)
+
+def clean_swift(container):
+    pass
+
 def insert_datalake(file_content, file_name,meta_data, user, key, authurl, container_name, mongodb_url="127.0.0.1:27017"):
     '''
     :param file: name OR the file : it has to be defined to be sure of what data are stored in mongodb
@@ -83,7 +96,7 @@ def insert_datalake(file_content, file_name,meta_data, user, key, authurl, conta
     meta_data["swift_user"]=user
     meta_data["swift_container"] = container_name
     meta_data["swift_object_id"] = str(get_id(mongodb_url))
-    meta_data["swift_object_name"] = file_name
+    # meta_data["swift_object_name"] = file_name
     print(meta_data)
 
     if SwiftService({}).stat(container_name)["object"] is None:
@@ -110,23 +123,26 @@ def input_csv_file(csv_file,**kwargs):
             "projet": kwargs["projet"],
         }
         for j in i.keys() :
-            meta_data[j]=i[j]
-        print(meta_data)
+            meta_data[j]=str(i[j])
+        # print(meta_data)
         # print(mimetypes.guess_type("file" + i))
     # print(mimetypes.guess_type("file" + ".jpg"))
-        with open(os.path.join(meta_data["path"],meta_data["file_name"]),"rb") as f:
+        with open(os.path.join(meta_data["path"],meta_data["file_name"]), "rb") as f:
              file_data = f.read()
-    insert_datalake(file_data, meta_data["file_name"], meta_data, user, key, kwargs["authurl"],
-                    kwargs["container_name"], mongodb_url="127.0.0.1:27017")
-input_csv_file("./dataset/mygates/subset.csv", sep=";", header=0, projet="mygates",authurl = "http://127.0.0.1:12345/auth/v1.0",container_name = "mygates")
+        insert_datalake(file_data, meta_data["file_name"], meta_data, user, key, kwargs["authurl"],
+                        kwargs["container_name"], mongodb_url="127.0.0.1:27017")
 
 
-def init_id():
-    # USE IT ONLY ONE TIME !!
-    id_doc = {"type": "object_id_file", "object_id": 0}
-    client = MongoClient("127.0.0.1:27017").stats.swift
-    client.insert_one(id_doc)
-    client.create_index("type", unique=True)
+
+
+
+
+# def test():
+#     from swiftclient.service import SwiftService
+#     print(SwiftService().list(container="mygates"))
+
+
+
 
 
 # client = MongoClient("127.0.0.1:27017").stats.swift.drop()
@@ -272,3 +288,12 @@ def init_id():
 
 # Context des requests HTML
 # https://airflow.readthedocs.io/en/stable/_modules/airflow/models/dagrun.html#DagRun.conf
+
+
+
+
+
+
+input_csv_file("./dataset/mygates/subset.csv", sep=";", header=0, projet="mygates",authurl = "http://127.0.0.1:12345/auth/v1.0",container_name = "mygates")
+
+# swift stat -U test:tester -A http://localhost:8080/auth/v1.0 -K testing CONTAINER
