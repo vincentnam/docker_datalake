@@ -46,7 +46,7 @@ class NewDataTriggerMiddleware(object):
 
             return resp
         print(obj)
-        payload = {"conf": {"swif_id":obj}}
+        payload = {"conf": {"swift_id":obj, "swift_container":container, "swift_user":account, "swift_version":version}}
         rep = requests.post(URL + ENDPOINT_PATH + "/dags/new_input/dag_runs",
                             data=json.dumps(payload))
         print(rep.text)

@@ -64,13 +64,12 @@ def get_id(mongodb_url):
 
 def init_id():
     # USE IT ONLY ONE TIME !!
-    if MongoClient("127.0.0.1:27017").stats.swift.find_one(
-        {"type": "object_id_file"}) is None :
-        id_doc = {"type": "object_id_file", "object_id": 0}
-        client = MongoClient("127.0.0.1:27017").stats.swift
-        if client.find({"type":"object_id_file"}) is None:
-            client.insert_one(id_doc)
-        client.create_index("type", unique=True)
+    id_doc = {"type": "object_id_file", "object_id": 0}
+    client = MongoClient("127.0.0.1:27017").stats.swift
+    if  MongoClient("127.0.0.1:27017").stats.swift.find_one(
+        {"type": "object_id_file"}) is None:
+        client.insert_one(id_doc)
+    client.create_index("type", unique=True)
 
 def clean_swift(container):
     pass
@@ -102,12 +101,13 @@ def insert_datalake(file_content, file_name,meta_data, user, key, authurl, conta
     if SwiftService({}).stat(container_name)["object"] is None:
         conn.put_container(container_name)
 # Gérer l'atomicité de cette partie #
-    conn.put_object(container_name, meta_data["swift_object_id"], contents=file_content,
-                    content_type=meta_data["content_type"])
 
     coll.insert_one(meta_data)
     client.stats.swift.update_one({"type":"object_id_file"},
                                   {"$inc": {"object_id": 1}})
+    conn.put_object(container_name, meta_data["swift_object_id"], contents=file_content,
+                    content_type=meta_data["content_type"])
+
 #####################################
 import pandas as pd
 import os
@@ -131,7 +131,7 @@ def input_csv_file(csv_file,**kwargs):
              file_data = f.read()
         insert_datalake(file_data, meta_data["file_name"], meta_data, user, key, kwargs["authurl"],
                         kwargs["container_name"], mongodb_url="127.0.0.1:27017")
-
+        break
 
 
 
@@ -146,7 +146,7 @@ def input_csv_file(csv_file,**kwargs):
 
 
 # client = MongoClient("127.0.0.1:27017").stats.swift.drop()
-# init_id()
+init_id()
 # client = MongoClient("127.0.0.1:27017")
 
 # id_doc =  {"type":"object_id_file", "object_id":0}
