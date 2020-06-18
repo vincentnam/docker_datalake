@@ -36,19 +36,25 @@ The architecture is defined by big 3 parts :
     - [ ] Document oriented database (transactional vision)
     - [ ] Graph database (?)
     - [ ] ...
+# What services are available now : 
+| |Swift | Metadata `MongoDB`  | Airflow |Airflow `Jobs` | Neo4J `"Gold" zone`|InfluxDB`"Gold" zone`|Relational SGBD`"Gold" zone`
+:-----:|:----------:|:----------:|:--:|:--:|:--:|:-:|:-:|
+Todo |  | ||<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">
+Working|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">||<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">
+Optimized||||||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">
+Tested ||||||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">
 # How to run : 
 - docker-compose up 
 
 If you want to insert data in the datalake (a file) : use the "insert_datalake()" function in  ["python_test_script.py"](./python_test_script.py) 
-
-
+ 
 
 ## Tools : 
 
 - MongoDb
 - Openstack Swift
 - Apache Airflow 
-
+- Neo4J
 ## Not used : 
 
 ##### In the input area :
