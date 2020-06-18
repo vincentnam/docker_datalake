@@ -51,7 +51,7 @@ services:
     networks:
       southbound_airflow:
         aliases:
-            - neo4j
+            - neo4j_gold
     environment:
       - NEO4J_AUTH=none
 
