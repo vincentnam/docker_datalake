@@ -38,17 +38,19 @@ The architecture is defined by big 3 parts :
     - [ ] ...
 # What services are available now : 
 #### Services : 
-| |Swift | Metadata `MongoDB`  | Airflow |Airflow `Jobs` | Neo4J `"Gold" zone`|InfluxDB`"Gold" zone`|Relational SGBD`"Gold" zone`
-:-----:|:----------:|:----------:|:--:|:--:|:--:|:-:|:-:|
-Todo |  | ||<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">
-Working|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">||<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">
-Optimized||||||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">
-Tested ||||||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">
 
+| |Swift | Metadata `MongoDB` | Airflow |Airflow `Jobs` | Neo4J `"Gold" zone`|InfluxDB`"Gold" zone`|Relational SGBD`"Gold" zone`  
+|:-----:|:----------:|:----------:|:--:|:--:|:--:|:-:|:-:| 
+Todo |  | ||<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">  |
+Working|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">||<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">  |
+Optimized||||||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|  
+Tested ||||||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32"> |
+  
 
-###Data model : 
-||Image : JPEG | Image : PNG | Text : Json |
-|:---:|:---:|:----:|:---:|:--:|
+### Data model :   
+
+||Image : JPEG | Image : PNG | Text : Json |  
+|:---:|:---:|:----:|:---:|  
 ||Working on : "To Neo4J : image composition"| <img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|
 
 # How to run : 
