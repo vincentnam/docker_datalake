@@ -53,7 +53,9 @@ Tested ||||||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" he
 
 ||Image : JPEG | Image : PNG | Text : Json |  
 |:---:|:---:|:----:|:---:|  
-||Node created for : images - objects ; links for objects in the image| <img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|
+||Neo4J : Node created for : images - objects ; links for objects in the image| <img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|
+###### Neo4j data format example :
+![alt text](git_image/neo4j_data_shema.png )
 
 # How to run : 
 - docker-compose up 
