@@ -34,7 +34,9 @@ The architecture is defined by big 3 parts :
     - [ ] Relational database (default)
     - [ ] Time serie oriented database (visualisation)
     - [ ] Document oriented database (transactional vision)
-    - [ ] Graph database (?)
+    - [ ] Graph database 
+        - [ ] JPEG files : objects in the file
+        - [ ] 
     - [ ] ...
 # What services are available now : 
 #### Services : 
@@ -51,7 +53,7 @@ Tested ||||||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" he
 
 ||Image : JPEG | Image : PNG | Text : Json |  
 |:---:|:---:|:----:|:---:|  
-||Working on : "To Neo4J : image composition"| <img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|
+||Node created for : images - objects ; links for objects in the image| <img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|
 
 # How to run : 
 - docker-compose up 

@@ -112,6 +112,7 @@ def insert_datalake(file_content, file_name,meta_data, user, key, authurl, conta
 import pandas as pd
 import os
 import mimetypes
+import bsonnumpy
 def input_csv_file(csv_file,**kwargs):
     df = pd.read_csv(csv_file, sep=kwargs["sep"], header=kwargs["header"])
     print(df.keys())
@@ -122,8 +123,10 @@ def input_csv_file(csv_file,**kwargs):
             "content_type": mimetypes.guess_type(i["file_name"])[0],
             "projet": kwargs["projet"],
         }
+        print(type(i["main_object"]))
         for j in i.keys() :
             meta_data[j]=str(i[j])
+        print(meta_data)
         # print(meta_data)
         # print(mimetypes.guess_type("file" + i))
     # print(mimetypes.guess_type("file" + ".jpg"))
@@ -132,7 +135,9 @@ def input_csv_file(csv_file,**kwargs):
         insert_datalake(file_data, meta_data["file_name"], meta_data, user, key, kwargs["authurl"],
                         kwargs["container_name"], mongodb_url="127.0.0.1:27017")
         break
-
+# TODO: Finir le JSON des fichiers
+# TODO : réparer l'ajout de listes dans mongodb
+# TODO : Voire pour la segmentation d'image (https://github.com/facebookresearch/Detectron2)
 
 
 

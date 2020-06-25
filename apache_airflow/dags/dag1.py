@@ -7,6 +7,10 @@ from airflow.utils.dates import days_ago
 from airflow.contrib.hooks.mongo_hook import MongoHook
 from datetime import timedelta
 from airflow.operators.dummy_operator import DummyOperator
+
+
+
+
 # # These args will get passed on to each operator
 # # You can override them on a per-task basis during operator initialization
 default_args = {
@@ -26,33 +30,23 @@ dag = DAG(
 )
 
 
-# def print_context(ds, **kwargs):
-#     # print(kwargs)
-#
-#     # Common (Not-so-nice way)
-#     # 3 DB connections when the file is parsed
-#     # var1 = Variable.get("conf", deserialize_json=True)
-#     # var2 = Variable.get("var2")
-#     # var3 = Variable.get("var3")
-#     for i in kwargs:
-#         print(kwargs['dag_run'].conf)
-#     # print(ds)
-#     # with open("/usr/local/airflow/tests.txt", "w+") as fp:
-#         # fp.write(var1)
-#     return 'Whatever you return gets printed in the logs'
-
 def jpeg_data(**kwargs):
-    from neo4j import GraphDatabase
-    uri = "neo4j://neo4j_gold:7687"
-    driver = GraphDatabase.driver(uri, auth=("neo4j", "password"))
 
+    from .lib.neo4j_job import Neo4j_dataintegration
+    uri = "neo4j://neo4j_gold:7687"
+    driver = Neo4j_dataintegration(uri, "neo4j", "password")
+    meta_base = MongoHook("metadatabase")
+    coll = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_id"])
+    doc = meta_base.get_conn().swift.get_collection(coll).find_one(
+        {"swift_object_id": swift_id})
+    driver.insert_image(doc)
 
 def not_handled():
     pass
 
 
-type_dict = { "image/jpeg":"jpeg_data" , None:"not_handled"}
-callable_dict = {"jpeg_data" : jpeg_data, "not_handled": not_handled }
+
 def check_type(**kwargs):
     meta_base = MongoHook("metadatabase")
     # find(self, mongo_collection, query, find_one=False, mongo_db=None,
@@ -86,15 +80,34 @@ join = DummyOperator(
 
     dag=dag,
 )
-
+type_dict = { "image/jpeg":"jpeg_data" , None:"not_handled"}
+callable_dict = {"jpeg_data" : [jpeg_data], "not_handled": [jpeg_data, not_handled,jpeg_data, not_handled] }
 run_this_first >> branch_op
 
-for i in type_dict:
-    t = PythonOperator(
-        task_id=type_dict[i],
-        provide_context=True,
-        python_callable=callable_dict[type_dict[i]],
-        dag=dag,
-    )
-    branch_op >> t >> join
+for data_type in type_dict:
+    pipeline = []
+    for ope in callable_dict[type_dict[data_type]]:
+         pipeline.append(PythonOperator(
+            task_id= ope.__name__,
+            provide_context=True,
+            python_callable=ope,
+            dag=dag,
+        ))
 
+    branch_op >> pipeline >> join
+
+# TODO : solve multi stage pipeline (can't add plusieurs operations : not_handled is only 1 stage pipeline right now)
+# def print_context(ds, **kwargs):
+#     # print(kwargs)
+#
+#     # Common (Not-so-nice way)
+#     # 3 DB connections when the file is parsed
+#     # var1 = Variable.get("conf", deserialize_json=True)
+#     # var2 = Variable.get("var2")
+#     # var3 = Variable.get("var3")
+#     for i in kwargs:
+#         print(kwargs['dag_run'].conf)
+#     # print(ds)
+#     # with open("/usr/local/airflow/tests.txt", "w+") as fp:
+#         # fp.write(var1)
+#     return 'Whatever you return gets printed in the logs'
