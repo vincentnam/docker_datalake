@@ -63,3 +63,4 @@ networks:
   southbound_airflow:
     driver: bridge
 
+# TODO : Ajouter une base d'historique des jobs d'intégration de données
