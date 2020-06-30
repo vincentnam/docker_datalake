@@ -2,13 +2,17 @@ from neo4j import GraphDatabase
 import pandas as pd
 import pymongo
 import json
-class Neo4j_dataintegration():
+
+
+class Neo4jIntegrator:
     def __init__(self, uri, user, password):
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
 
     def close(self):
         self.driver.close()
 
+
+    # TODO : Refactor this method name
     def insert_image(self, metadata):
         """
         :param metadata:

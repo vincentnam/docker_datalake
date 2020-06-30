@@ -54,6 +54,17 @@ services:
             - neo4j_gold
     environment:
       - NEO4J_AUTH=none
+  datalake_goldzone_influxdb :
+    image: influxdb
+    volumes:
+      - ./influxdb/data:/data
+    ports:
+    - '8086:8086'
+    networks:
+      southbound_airflow:
+        aliases:
+            - influxdb_gold
+
 
 
 

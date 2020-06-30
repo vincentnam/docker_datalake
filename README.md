@@ -35,9 +35,14 @@ The architecture is defined by big 3 parts :
     - [ ] Time serie oriented database (visualisation)
     - [ ] Document oriented database (transactional vision)
     - [ ] Graph database 
-        - [ ] JPEG files : objects in the file
+        - [ ] Image files : 
+            - [x] Jpeg 
+                - [x] Nodes creation for objects in the file
+                - [ ] Automatic object detection / segmentation 
         - [ ] 
     - [ ] ...
+
+-[ ] Set up a "log" database to log operations on data done
 # What services are available now : 
 #### Services : 
 
@@ -69,6 +74,13 @@ If you want to insert data in the datalake (a file) : use the "insert_datalake()
 - Openstack Swift
 - Apache Airflow 
 - Neo4J
+- Influxdb
+
+
+Aiflow DAG tools in the apache_airflow/dag/lib folder has a special nomenclature : 
+- *tools : all the tools from a database or to process a specific data type 
+- *integrator : implemented tool to put data into a specific database 
+
 ## Not used : 
 
 ##### In the input area :

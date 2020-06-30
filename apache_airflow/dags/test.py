@@ -2,7 +2,7 @@
 # import pandas as pd
 # import pymongo
 # import json
-# class Neo4j_dataintegration():
+# class Neo4jIntegrator():
 #     def __init__(self, uri, user, password):
 #         self.driver = GraphDatabase.driver(uri, auth=(user, password))
 #
@@ -50,7 +50,7 @@
 # # # print(data_df.iloc[1])
 # #
 # # print(req)
-# neo4j_integ = Neo4j_dataintegration("neo4j://localhost:7687", "test", "test")
+# neo4j_integ = Neo4jIntegrator("neo4j://localhost:7687", "test", "test")
 # neo4j_integ.insert_image(rep)
 
 ###
