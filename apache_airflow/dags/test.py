@@ -55,16 +55,37 @@
 
 ###
 
-type_dict = { "image/jpeg":"jpeg_data" , None:"not_handled"}
-callable_dict = {"jpeg_data" : ["jpeg_data"], "not_handled": ["not_handled"] }
-# run_this_first >> branch_op
-
-for dtype in type_dict:
-    pipeline = []
-    print(dtype)
-    for ope in callable_dict[type_dict[dtype]]:
-        print(type(ope))
-        print(callable_dict["jpeg_data"])
-        print(type_dict[dtype])
+# type_dict = { "image/jpeg":"jpeg_data" , None:"not_handled"}
+# callable_dict = {"jpeg_data" : ["jpeg_data"], "not_handled": ["not_handled"] }
+# # run_this_first >> branch_op
 #
+# for dtype in type_dict:
+#     pipeline = []
+#     print(dtype)
+#     for ope in callable_dict[type_dict[dtype]]:
+#         print(type(ope))
+#         print(callable_dict["jpeg_data"])
+#         print(type_dict[dtype])
+# #
+def jpeg_data():
+    pass
 
+def not_handled():
+    pass
+callable_dict = {"jpeg_data": [jpeg_data],
+                 "not_handled": [jpeg_data, not_handled, jpeg_data,
+                                 not_handled]}
+# run_this_first >> branch_op
+type_dict = { "image/jpeg":"jpeg_data" , None:"not_handled"}
+pipeline = []
+aux = 0
+for data_type in type_dict:
+    sub_pipe = []
+    for ope in callable_dict[type_dict[data_type]]:
+
+        sub_pipe.append( "coucou" )
+        aux = aux + 1
+    pipeline.append(sub_pipe)
+print(pipeline)
+# for list in pipeline:
+#     chain(branch_op, list, join)

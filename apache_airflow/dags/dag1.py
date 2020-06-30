@@ -7,6 +7,7 @@ from airflow.utils.dates import days_ago
 from airflow.contrib.hooks.mongo_hook import MongoHook
 from datetime import timedelta
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.utils.helpers import chain
 
 
 
@@ -81,22 +82,56 @@ join = DummyOperator(
     dag=dag,
 )
 type_dict = { "image/jpeg":"jpeg_data" , None:"not_handled"}
-callable_dict = {"jpeg_data" : [jpeg_data], "not_handled": [jpeg_data, not_handled,jpeg_data, not_handled] }
+callable_dict = {"jpeg_data" : [jpeg_data], "not_handled": [not_handled, not_handled] }
 run_this_first >> branch_op
 
+pipeline = []
+aux = 0
 for data_type in type_dict:
-    pipeline = []
+    sub_pipe = []
     for ope in callable_dict[type_dict[data_type]]:
-         pipeline.append(PythonOperator(
-            task_id= ope.__name__,
+
+        sub_pipe.append( PythonOperator(
+            task_id= ope.__name__ + str(aux),
             provide_context=True,
             python_callable=ope,
-            dag=dag,
-        ))
+            start_date= days_ago(2)) )
+        aux = aux + 1
+    pipeline.append(sub_pipe)
 
-    branch_op >> pipeline >> join
+for list in pipeline:
+    chain(branch_op, *list, join)
+# for list in pipeline:
+#     chain(branch_op, PythonOperator(
+#             task_id= ope.__name__ + str(aux),
+#             provide_context=True,
+#             python_callable=ope,
+#             start_date= days_ago(2)),PythonOperator(
+#             task_id= ope.__name__ + "s",
+#             provide_context=True,
+#             python_callable=ope,
+#             start_date= days_ago(2)), join)
+#
+# chain(branch_op, PythonOperator(
+#             task_id= ope.__name__ + str(aux),
+#             provide_context=True,
+#             python_callable=ope,
+#             dag = dag ),PythonOperator(
+#             task_id= ope.__name__ + "s",
+#             provide_context=True,
+#             python_callable=ope,
+#             dag = dag , join))
+# chain(branch_op, (PythonOperator(
+#             task_id= ope.__name__ + "d",
+#             provide_context=True,
+#             python_callable=ope,
+#             dag = dag ),PythonOperator(
+#             task_id= ope.__name__ + "ss",
+#             provide_context=True,
+#             python_callable=ope,
+#             dag = dag )), join)
 
-# TODO : solve multi stage pipeline (can't add plusieurs operations : not_handled is only 1 stage pipeline right now)
+
 # def print_context(ds, **kwargs):
 #     # print(kwargs)
 #
