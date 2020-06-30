@@ -1,7 +1,6 @@
 # The DAG object; we'll need this to instantiate a DAG
 from airflow import DAG
 # Operators; we need this to operate!
-from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
 from airflow.utils.dates import days_ago
 from airflow.contrib.hooks.mongo_hook import MongoHook
@@ -10,7 +9,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.helpers import chain
 
 
-
+# TODO : Restructure DAG architecture
 
 # # These args will get passed on to each operator
 # # You can override them on a per-task basis during operator initialization
@@ -31,8 +30,7 @@ dag = DAG(
 )
 
 
-def jpeg_data(**kwargs):
-
+def content_neo4j_node_creation(**kwargs):
     from .lib.neo4j_job import Neo4j_dataintegration
     uri = "neo4j://neo4j_gold:7687"
     driver = Neo4j_dataintegration(uri, "neo4j", "password")
@@ -43,7 +41,12 @@ def jpeg_data(**kwargs):
         {"swift_object_id": swift_id})
     driver.insert_image(doc)
 
+def from_mongodb_to_influx(**kwargs):
+    pass
+
+
 def not_handled():
+    # TODO : Insert in mongodb the fact that the data has not been handled
     pass
 
 
@@ -71,18 +74,18 @@ run_this_first = DummyOperator(
 )
 
 branch_op = BranchPythonOperator(
-    task_id='type_of_data',
+    task_id='check_data_type',
     provide_context=True,
     python_callable=check_type,
     dag=dag)
 join = DummyOperator(
-    task_id='join',
+    task_id='dag_end',
     trigger_rule='all_success',
 
     dag=dag,
 )
-type_dict = { "image/jpeg":"jpeg_data" , None:"not_handled"}
-callable_dict = {"jpeg_data" : [jpeg_data], "not_handled": [not_handled, not_handled] }
+type_dict = { "image/jpeg":"jpeg_data" , None:"not_handled","None":"not_handled", "none":"not_handled"}
+callable_dict = {"jpeg_data" : [content_neo4j_node_creation], "not_handled": [not_handled, not_handled] }
 run_this_first >> branch_op
 
 pipeline = []
@@ -92,7 +95,8 @@ for data_type in type_dict:
     for ope in callable_dict[type_dict[data_type]]:
 
         sub_pipe.append( PythonOperator(
-            task_id= ope.__name__ + str(aux),
+            # TODO : Find a task_id naming solution
+            task_id= ope.__name__ + "_" + str(aux),
             provide_context=True,
             python_callable=ope,
             start_date= days_ago(2)) )
@@ -101,48 +105,3 @@ for data_type in type_dict:
 
 for list in pipeline:
     chain(branch_op, *list, join)
-# for list in pipeline:
-#     chain(branch_op, PythonOperator(
-#             task_id= ope.__name__ + str(aux),
-#             provide_context=True,
-#             python_callable=ope,
-#             start_date= days_ago(2)),PythonOperator(
-#             task_id= ope.__name__ + "s",
-#             provide_context=True,
-#             python_callable=ope,
-#             start_date= days_ago(2)), join)
-#
-# chain(branch_op, PythonOperator(
-#             task_id= ope.__name__ + str(aux),
-#             provide_context=True,
-#             python_callable=ope,
-#             dag = dag ),PythonOperator(
-#             task_id= ope.__name__ + "s",
-#             provide_context=True,
-#             python_callable=ope,
-#             dag = dag , join))
-# chain(branch_op, (PythonOperator(
-#             task_id= ope.__name__ + "d",
-#             provide_context=True,
-#             python_callable=ope,
-#             dag = dag ),PythonOperator(
-#             task_id= ope.__name__ + "ss",
-#             provide_context=True,
-#             python_callable=ope,
-#             dag = dag )), join)
-
-
-# def print_context(ds, **kwargs):
-#     # print(kwargs)
-#
-#     # Common (Not-so-nice way)
-#     # 3 DB connections when the file is parsed
-#     # var1 = Variable.get("conf", deserialize_json=True)
-#     # var2 = Variable.get("var2")
-#     # var3 = Variable.get("var3")
-#     for i in kwargs:
-#         print(kwargs['dag_run'].conf)
-#     # print(ds)
-#     # with open("/usr/local/airflow/tests.txt", "w+") as fp:
-#         # fp.write(var1)
-#     return 'Whatever you return gets printed in the logs'

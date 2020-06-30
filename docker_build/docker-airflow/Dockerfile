@@ -73,7 +73,7 @@ RUN set -ex \
         /usr/share/doc \
         /usr/share/doc-base \
     && pip uninstall -y SQLAlchemy \
-    && pip install SQLAlchemy==1.3.15 pymongo neo4j
+    && pip install SQLAlchemy==1.3.15 pymongo neo4j influxdb
 COPY script/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 
