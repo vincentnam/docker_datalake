@@ -42,7 +42,16 @@ The architecture is defined by big 3 parts :
         - [ ] 
     - [ ] ...
 
--[ ] Set up a "log" database to log operations on data done
+- [ ] Set up a "log" database to log operations on data done
+- [ ] Diagrams for 
+    - [x] Software Architecture
+        - [x] Basic
+        - [ ] Advanced
+    - [ ] Hardware Architecture
+        - [ ] Basic 
+    - [ ] Sequence diagram
+        - [x] Basic
+        - [ ] Advanced
 # What services are available now : 
 #### Services : 
 
