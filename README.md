@@ -30,6 +30,7 @@ The architecture is defined by big 3 parts :
     - [ ] Airflow job creation / configuration 
         - [x] Handle hook from Swift middleware (Webhook)
         - [ ] Set up jobs 
+        - [ ] Handle big file (split big file reading + processing if possible)
 - [ ] The "gold" zone : database to store formatted / valuable data
     - [ ] Relational database (default)
     - [ ] Time serie oriented database (visualisation)
