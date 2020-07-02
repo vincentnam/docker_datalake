@@ -8,6 +8,12 @@ class InfluxIntegrator:
         self.database_list = self.influx_client.get_list_database()
 
     def write(self, points: dict, db: str):
+        '''
+
+        :param points:
+        :param db:
+        :return: bool : return status : true if successful
+        '''
         if db not in self.database_list:
             self.influx_client.create_database(dbname=db)
         self.influx_client.switch_database(db)
