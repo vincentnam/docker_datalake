@@ -1,6 +1,7 @@
 # TODO : create tools to process JSON :
 #    - TODO : create tools to process sensor log into InfluxDB
 #    - TODO : IA FOR JSON TEMPLATE : AUTOMATIC TEMPLATE / INFORMATION RECOGNITION FOR A LIST OF DOCUMENT WITH DIFFERENTS STRUCTURE
+
 # { "_id" : ObjectId("5d004092adf80168fe79b55c"),
 # "idcapteur" : 4, "subId" : "ouest", "device" : "temperature",
 # "data" : { "date" : "2019-06-12T00:00:18.388374",
