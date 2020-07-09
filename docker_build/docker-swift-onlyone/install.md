@@ -37,6 +37,35 @@
     python setup.py develop --user
     
     
+Création de loopback device (for xattr over NFSv3)
+    
+    truncate -s $TAILLE /projets/datalake/swift_storage/swift_store
+    mkfs.xfs /projets/datalake/swift_storage/swift_store
+    # Wheel car on a besoin de mount :
+    # mount ne peut être fait que par root (ou sudo) et 
+    # donc il faut un groupe où root est présent
+    sudo chown vdang:wheel /projets/datalake/swift_storage/swift_store
+    mkdir /mnt/swift_store
+    # Si on est pas dans le dossier, on peut pas monter, pourquoi ?
+    cd /projets/datalake/swift_storage/
+    # Option : read-write, loop 
+    sudo mount swift_store -o rw,loop /mnt/swift_store
+    # sudo echo "/projets/datalake/swift_storage/swift_store /mnt/swift_store xfs loop,noatime 0 0" >> /etc/fstab
+    sudo chown -R vdang:datalake /mnt/swift_store
+    
+    
+Création loopback tmp pour le test
+    
+    cd /projets/datalake/swift_storage/
+    truncate -s 1GB swift_tmp
+    mkfs.xfs swift_tmp
+    sudo mount -o loop,noatime swift_tmp /mnt/swift_tmp/
+    sudo chmod -R 1777 /mnt/swift_tmp/
+    sudo chown -R vdang:datalake /mnt/swift_tmp/
+   
+    echo "export TMPDIR=/mnt/swift_tmp" >> $HOME/.bashrc
+    export TPMDIR=/mnt/swift_tmp
+
     
 Installation de rsync: 
 
@@ -105,6 +134,21 @@ find /etc/swift/ -name \*.conf | xargs sudo sed -i "s/<your-user-name>/${USERNAM
 # devices=/projets/datalake
 # Mais besoin de swiftonfile
 
-
+# ON A MODIFIER TOUS LES device en /projets/datalake...
 
 # Creating an XFS tmp dir
+
+
+
+
+# ON A MODIFIER TOUS LES device en /projets/datalake...
+
+
+# TEST 
+    
+    echo "export SWIFT_TEST_CONFIG_FILE=/etc/swift/test.conf" >> ~/.bashrc
+    echo "export PATH=${PATH}:/projets/datalake/swift_install/bin" >> ~/.bashrc 
+    
+    
+    FAUT FAIRE UN LOOP BACK DEVICE
+    
