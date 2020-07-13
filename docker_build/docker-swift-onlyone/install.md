@@ -35,23 +35,23 @@
     
     sudo pip install --no-binary cryptography -r requirements.txt;
     python setup.py develop --user
-    
+    PATH=$PATH:"/users/neocampus/vdang/.local.bin"
     
 Création de loopback device (for xattr over NFSv3)
     
     truncate -s $TAILLE /projets/datalake/swift_storage/swift_store
     mkfs.xfs /projets/datalake/swift_storage/swift_store
-    # Wheel car on a besoin de mount :
-    # mount ne peut être fait que par root (ou sudo) et 
-    # donc il faut un groupe où root est présent
-    sudo chown vdang:wheel /projets/datalake/swift_storage/swift_store
+    
+    sudo chown vdang:datalake /projets/datalake/swift_storage/swift_store
     mkdir /mnt/swift_store
     # Si on est pas dans le dossier, on peut pas monter, pourquoi ?
     cd /projets/datalake/swift_storage/
     # Option : read-write, loop 
-    sudo mount swift_store -o rw,loop /mnt/swift_store
+    sudo mount -o loop,noatime,nodiratime,nobarrier,logbufs=8  swift_store /mnt/swift_store/   
+    
+    # Pas possible à cause des droits NFS
     # sudo echo "/projets/datalake/swift_storage/swift_store /mnt/swift_store xfs loop,noatime 0 0" >> /etc/fstab
-    sudo chown -R vdang:datalake /mnt/swift_store
+    
     
     
 Création loopback tmp pour le test
@@ -66,7 +66,24 @@ Création loopback tmp pour le test
     echo "export TMPDIR=/mnt/swift_tmp" >> $HOME/.bashrc
     export TPMDIR=/mnt/swift_tmp
 
-    
+Post loopback creation : 
+
+    sudo mkdir /mnt/swift_store/1 /mnt/swift_store/2 /mnt/swift_store/3 /mnt/swift_store/4
+    sudo chown ${USER}:${USER} /mnt/swift_store/*
+    for x in {1..4}; do sudo ln -s /mnt/swift_store/$x /srv/$x; done
+    sudo mkdir -p /srv/1/node/sdb1 /srv/1/node/sdb5 \
+                  /srv/2/node/sdb2 /srv/2/node/sdb6 \
+                  /srv/3/node/sdb3 /srv/3/node/sdb7 \
+                  /srv/4/node/sdb4 /srv/4/node/sdb8
+    sudo mkdir -p /var/run/swift
+    sudo mkdir -p /var/cache/swift /var/cache/swift2 \
+                  /var/cache/swift3 /var/cache/swift4
+    sudo chown -R vdang:datalake /var/run/swift
+    sudo chown -R vdang:datalake /var/cache/swift*
+    # **Make sure to include the trailing slash after /srv/$x/**
+    for x in {1..4}; do sudo chown -R vdang:datalake /srv/$x/; done
+
+
 Installation de rsync: 
 
     Modification de /etc/rsyncd.conf pour qu'il soit comme le fichier de ./files
@@ -80,6 +97,10 @@ Installation de rsync:
     sudo systemctl start memcached
     sudo systemctl enable memcached
 
+Installation rsyslog :
+
+    # Don't know why 
+    
 
 Config swift : 
    
@@ -134,6 +155,10 @@ find /etc/swift/ -name \*.conf | xargs sudo sed -i "s/<your-user-name>/${USERNAM
 # devices=/projets/datalake
 # Mais besoin de swiftonfile
 
+
+
+    
+
 # ON A MODIFIER TOUS LES device en /projets/datalake...
 
 # Creating an XFS tmp dir
@@ -150,5 +175,11 @@ find /etc/swift/ -name \*.conf | xargs sudo sed -i "s/<your-user-name>/${USERNAM
     echo "export PATH=${PATH}:/projets/datalake/swift_install/bin" >> ~/.bashrc 
     
     
-    FAUT FAIRE UN LOOP BACK DEVICE
+    # Unit test lancement
+    /projets/datalake/swift_install/swift/.unittests  3>&1 1>../swift_install/unit_test.log.txt 2>&1
+    startmain
+    
+    curl -v -H 'X-Storage-User: test:tester' -H 'X-Storage-Pass: testing' http://127.0.0.1:8080/auth/v1.0
+
+    curl -v -H 'X-Auth-Token: AUTH_tk9e91e6902a054fb28eb514f73189f9be'  http://127.0.0.1:8080/auth/v1.0
     
