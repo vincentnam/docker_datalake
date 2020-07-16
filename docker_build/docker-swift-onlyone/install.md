@@ -60,11 +60,14 @@ Création loopback tmp pour le test
     truncate -s 1GB swift_tmp
     mkfs.xfs swift_tmp
     sudo mount -o loop,noatime swift_tmp /mnt/swift_tmp/
+    # On bind pour ne pas avoir à changer le TMPDIR et pouvoir 
+    # mettre le tmp sur la baie de stockage
+    sudo mount --bind /mnt/swift_tmp/ /tmp/
     sudo chmod -R 1777 /mnt/swift_tmp/
     sudo chown -R vdang:datalake /mnt/swift_tmp/
    
-    echo "export TMPDIR=/mnt/swift_tmp" >> $HOME/.bashrc
-    export TPMDIR=/mnt/swift_tmp
+    echo "export TMPDIR=/tmp/" >> $HOME/.bashrc
+    export TPMDIR=/tmp/
 
 Post loopback creation : 
 
@@ -83,6 +86,8 @@ Post loopback creation :
     # **Make sure to include the trailing slash after /srv/$x/**
     for x in {1..4}; do sudo chown -R vdang:datalake /srv/$x/; done
 
+    # Resize 
+    # dd if=/dev/zero bs=1MiB of=/path/to/file conv=notrunc oflag=append count=xxx
 
 Installation de rsync: 
 
@@ -112,43 +117,43 @@ Lancement swift :
 #yum -y install sudo
 
 # Create User
-USERNAME="vincentnam" && GROUPNAME="vincentnam"
-HOME=/home/${USERNAME}
- groupadd vincentnam && useradd -g ${GROUPNAME} -G wheel ${USERNAME}
+    USERNAME="vincentnam" && GROUPNAME="vincentnam"
+    HOME=/home/${USERNAME}
+     groupadd vincentnam && useradd -g ${GROUPNAME} -G wheel ${USERNAME}
 #sed -i 's/User=/User=vincentnam/g' /etc/sddm.conf
 # To check if it has been a success :
 # id ${USERNAME}
 #
-passwd ${USERNAME}
+    passwd ${USERNAME}
 # Partitions set up (need to fit to the real /dev/ spec : TODO)
 
 
 # Getting the code
-cp /mnt/user_install1.sh /
-chown ${USERNAME}:${GROUPNAME} /user_install1.sh
-sudo su -c "/user_install1.sh" - $USERNAME
+    cp /mnt/user_install1.sh /
+    chown ${USERNAME}:${GROUPNAME} /user_install1.sh
+    sudo su -c "/user_install1.sh" - $USERNAME
 
 
 # Rsync set up : for node replication
-
-cp /mnt/file/rsyncd.conf /etc/
-sed -i "s/<your-user-name>/${USERNAME}/" /etc/rsyncd.conf
+    
+    cp /mnt/file/rsyncd.conf /etc/
+    sed -i "s/<your-user-name>/${USERNAME}/" /etc/rsyncd.conf   
   # A MODIFIER SUR LA VRAIE MACHINE
-systemctl enable rsyncd
-systemctl start rsyncd
-
-systemctl start memcached
-systemctl enable memcached
+    systemctl enable rsyncd
+    systemctl start rsyncd
+    
+    systemctl start memcached
+    systemctl enable memcached
 
 
 ## Configuring each node
 
-sudo rm -rf /etc/swift
-
-sudo cd $HOME/swift/doc; sudo cp -r saio/swift /etc/swift; cd -
-sudo chown -R ${USERNAME}:${USERNAME} /etc/swift
-
-find /etc/swift/ -name \*.conf | xargs sudo sed -i "s/<your-user-name>/${USERNAME}/"
+    sudo rm -rf /etc/swift
+    
+    sudo cd $HOME/swift/doc; sudo cp -r saio/swift /etc/swift; cd -
+    sudo chown -R ${USERNAME}:${USERNAME} /etc/swift
+    
+    find /etc/swift/ -name \*.conf | xargs sudo sed -i "s/<your-user-name>/${USERNAME}/"
 ### RING CREATION :
 # https://opendev.org/x/swiftonfile/src/branch/master/doc/markdown/quick_start_guide.md
 # Sûrement
@@ -182,4 +187,9 @@ find /etc/swift/ -name \*.conf | xargs sudo sed -i "s/<your-user-name>/${USERNAM
     curl -v -H 'X-Storage-User: test:tester' -H 'X-Storage-Pass: testing' http://127.0.0.1:8080/auth/v1.0
 
     curl -v -H 'X-Auth-Token: AUTH_tk9e91e6902a054fb28eb514f73189f9be'  http://127.0.0.1:8080/auth/v1.0
+     
+     
+     
+# Configuration du proxy 
     
+    scp -r /data/python-project/docker_datalake/docker_build/docker-swift-onlyone/middleware vdang@co2-dl-swift:/etc/swift
