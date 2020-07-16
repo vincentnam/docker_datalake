@@ -29,14 +29,14 @@ The architecture is defined by big 3 parts :
     - [x] Airflow deployment (docker image) 
     - [ ] Airflow job creation / configuration 
         - [x] Handle hook from Swift middleware (Webhook)
-        - [ ] Set up jobs 
+        - [x] Set up jobs 
         - [ ] Handle big file (split big file reading + processing if possible)
-- [ ] The "gold" zone : database to store formatted / valuable data
+- [x] The "gold" zone : database to store formatted / valuable data
     - [ ] Relational database (default)
-    - [ ] Time serie oriented database (visualisation)
-    - [ ] Document oriented database (transactional vision)
-    - [ ] Graph database 
-        - [ ] Image files : 
+    - [x] Time serie oriented database (visualisation)
+    - [x] Document oriented database (transactional vision)
+    - [x] Graph database 
+        - [x] Image files : 
             - [x] Jpeg 
                 - [x] Nodes creation for objects in the file
                 - [ ] Automatic object detection / segmentation 
@@ -56,14 +56,14 @@ The architecture is defined by big 3 parts :
 # What services are available now : 
 #### Services : 
 
-| |Swift | Metadata `MongoDB` | Airflow |Airflow `Jobs` | Neo4J `"Gold" zone`|InfluxDB`"Gold" zone`|Relational SGBD`"Gold" zone`  
+| |Swift | Metadata `MongoDB` | Airflow |Airflow `Jobs` | Neo4J `"Gold" zone`|InfluxDB`"Gold" zone`|Mongodb`"Gold" zone`  
 |:-----:|:----------:|:----------:|:--:|:--:|:--:|:-:|:-:| 
-Todo |  | ||<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">  |
-Working|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">||<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">  |
-Optimized||||||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|  
-Tested ||||||<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32"> |
+Todo |  | |||| | |
+Working|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
+Optimized||||||||  
+Tested ||||||||
   
-
+All is installed on Osirim : need to be tested.
 ### Data model :   
 
 ||Image : JPEG | Image : PNG | Text : Json |  
