@@ -7,7 +7,11 @@ from airflow.contrib.hooks.mongo_hook import MongoHook
 from datetime import timedelta
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.helpers import chain
-
+globals()["META_MONGO_URI"] = ""
+globals()["INPUT_SWIFT_API"] = ""
+globals()["GOLD_MONGO_URI"] = ""
+globals()["GOLD_NEO4J_URI"] = ""
+globals()["GOLD_INFLUX_URI"] = ""
 
 # TODO : Restructure DAG architecture
 
@@ -17,7 +21,7 @@ default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
     'start_date': days_ago(2),
-    'email': ['airflow@example.com'],
+    # 'email': ['airflow@example.com'],
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 0,
@@ -32,9 +36,10 @@ dag = DAG(
 
 def content_neo4j_node_creation(**kwargs):
     from .lib.neo4j_job import Neo4j_dataintegration
-    uri = "neo4j://neo4j_gold:7687"
+    uri = globals()["GOLD_NEO4J_URI"]
     driver = Neo4j_dataintegration(uri, "neo4j", "password")
-    meta_base = MongoHook("metadatabase")
+
+    meta_base = MongoHook(globals()["META_MONGO_URI"])
     coll = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_id"])
     doc = meta_base.get_conn().swift.get_collection(coll).find_one(
@@ -52,7 +57,7 @@ def not_handled():
 
 
 def check_type(**kwargs):
-    meta_base = MongoHook("metadatabase")
+    meta_base = MongoHook(globals()["META_MONGO_URI"])
     # find(self, mongo_collection, query, find_one=False, mongo_db=None,
     #      **kwargs):
     coll = kwargs["dag_run"].conf["swift_container"]
@@ -84,14 +89,14 @@ join = DummyOperator(
 
     dag=dag,
 )
-type_dict = { "image/jpeg":"jpeg_data" , None:"not_handled","None":"not_handled", "none":"not_handled"}
+type_dict = { "image/jpeg":"jpeg_data" , None:"not_handled"}
 callable_dict = {"jpeg_data" : [content_neo4j_node_creation], "not_handled": [not_handled, not_handled] }
 run_this_first >> branch_op
 
 pipeline = []
 aux = 0
 for data_type in type_dict:
-    sub_pipe = []
+    sub_pipe = []influxdb_gold
     for ope in callable_dict[type_dict[data_type]]:
 
         sub_pipe.append( PythonOperator(
