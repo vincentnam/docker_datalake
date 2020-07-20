@@ -28,3 +28,21 @@
 
     pip install pymongo influxdb neo4j python-swiftclient jinja2 --user
     
+    
+    
+    
+# Lancement Airflow
+
+    airflow initdb
+    tmux 
+    # Console 1 :
+    airflow webserver -p 8080
+    # Console 2 : 
+    airflow scheduler 
+    # ctrl+B puis D 
+    
+    # Session TMUX lancée pour Airflow   
+    
+    # Needed to create an airflow connection (in UI port 8080) for Mongodb
+    # Used in Airflow hook but not implemented for neo4j, influxdb
+    # 2 connections : mongo_gold & mongo_metadatabase

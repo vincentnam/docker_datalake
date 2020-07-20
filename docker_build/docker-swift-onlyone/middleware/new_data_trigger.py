@@ -6,9 +6,9 @@ from swift.proxy.controllers.base import get_container_info
 from eventlet import Timeout
 from swift.common.utils import register_swift_info
 
-URL = "http://airflow:8080"
+URL = "http://141.115.103.32:8080"
 ENDPOINT_PATH="/api/experimental"
-
+DAG_TO_TRIGGER="new_input"
 #
 # import ConfigParser
 # config = ConfigParser.ConfigParser().read(CONFIG_PATH).sections()
@@ -47,7 +47,7 @@ class NewDataTriggerMiddleware(object):
             return resp
         print(obj)
         payload = {"conf": {"swift_id":obj, "swift_container":container, "swift_user":account, "swift_version":version}}
-        rep = requests.post(URL + ENDPOINT_PATH + "/dags/new_input/dag_runs",
+        rep = requests.post(URL + ENDPOINT_PATH + "/dags/"+DAG_TO_TRIGGER+"/dag_runs",
                             data=json.dumps(payload))
         print(rep.text)
         self.logger.info(rep.headers)

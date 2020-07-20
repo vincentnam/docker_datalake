@@ -78,10 +78,14 @@ Post loopback creation :
                   /srv/2/node/sdb2 /srv/2/node/sdb6 \
                   /srv/3/node/sdb3 /srv/3/node/sdb7 \
                   /srv/4/node/sdb4 /srv/4/node/sdb8
+                  
+    # To recreate on each reboot
     sudo mkdir -p /var/run/swift
+    sudo chown -R vdang:datalake /var/run/swift
+    
+
     sudo mkdir -p /var/cache/swift /var/cache/swift2 \
                   /var/cache/swift3 /var/cache/swift4
-    sudo chown -R vdang:datalake /var/run/swift
     sudo chown -R vdang:datalake /var/cache/swift*
     # **Make sure to include the trailing slash after /srv/$x/**
     for x in {1..4}; do sudo chown -R vdang:datalake /srv/$x/; done
@@ -186,10 +190,33 @@ Lancement swift :
     
     curl -v -H 'X-Storage-User: test:tester' -H 'X-Storage-Pass: testing' http://127.0.0.1:8080/auth/v1.0
 
-    curl -v -H 'X-Auth-Token: AUTH_tk9e91e6902a054fb28eb514f73189f9be'  http://127.0.0.1:8080/auth/v1.0
+    curl -v -H 'X-Auth-Token: AUTH_tk9abae4e1c6924a4cba1399da3f741bf6'  http://127.0.0.1:8080/v1/AUTH_test
+
      
+
+AUTH_tk026049cc5bea4c08a609dd327ea7e721
+
      
      
 # Configuration du proxy 
     
     scp -r /data/python-project/docker_datalake/docker_build/docker-swift-onlyone/middleware vdang@co2-dl-swift:/etc/swift
+
+
+
+# Test
+    
+    curl -X PUT -T file1 -H 'X-Auth-Token: AUTH_tk65840af9f6f74d1aaefac978cb8f0899' http://10.80.83.68:8077/v1/AUTH_system/mycontainer/
+    
+    
+# Problem resolution : 
+
+    1. Check if loopback device (swift_storage / swift_tmp) are mounted : "connection refused" in API rest 
+    
+    
+# On reboot : 
+
+    mkdir /var/run/swift
+    sudo chown vdang:datalake /var/run/swift
+    remakerings
+    startmain

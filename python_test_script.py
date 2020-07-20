@@ -74,7 +74,7 @@ def init_id():
 def clean_swift(container):
     pass
 
-def insert_datalake(file_content, file_name,meta_data, user, key, authurl, container_name, mongodb_url="127.0.0.1:27017"):
+def insert_datalake(file_content,meta_data, user, key, authurl, container_name, mongodb_url="127.0.0.1:27017"):
     '''
     :param file: name OR the file : it has to be defined to be sure of what data are stored in mongodb
     :param meta_data: dict
@@ -132,7 +132,7 @@ def input_csv_file(csv_file,**kwargs):
     # print(mimetypes.guess_type("file" + ".jpg"))
         with open(os.path.join(meta_data["path"],meta_data["file_name"]), "rb") as f:
              file_data = f.read()
-        insert_datalake(file_data, meta_data["file_name"], meta_data, user, key, kwargs["authurl"],
+        insert_datalake(file_data, meta_data, user, key, kwargs["authurl"],
                         kwargs["container_name"], mongodb_url="127.0.0.1:27017")
         break
 # TODO: Finir le JSON des fichiers

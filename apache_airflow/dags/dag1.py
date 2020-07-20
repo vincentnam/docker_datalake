@@ -7,11 +7,19 @@ from airflow.contrib.hooks.mongo_hook import MongoHook
 from datetime import timedelta
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.helpers import chain
-globals()["META_MONGO_URI"] = ""
-globals()["INPUT_SWIFT_API"] = ""
-globals()["GOLD_MONGO_URI"] = ""
-globals()["GOLD_NEO4J_URI"] = ""
-globals()["GOLD_INFLUX_URI"] = ""
+globals()["META_MONGO_IP"] = "141.115.103.31"
+globals()["OPENSTACK_SWIFT_IP"] = "141.115.103.30"
+globals()["GOLD_MONGO_IP"] = "141.115.103.33"
+globals()["GOLD_NEO4J_IP"] = "141.115.103.33"
+globals()["GOLD_INFLUX_IP"] = "141.115.103.33"
+globals()["MONGO_PORT"]="27017"
+globals()["SWIFT_REST_API_PORT"]="8080"
+globals()["INFLUXDB_PORT"]="8086"
+globals()["NEO4J_PORT"]="7687"
+
+# Needed for airflow Hook
+globals()["MONGO_META_CONN_ID"]="mongo_metadatabase"
+globals()["MONGO_GOLD_CONN_ID"]="mongo_gold"
 
 # TODO : Restructure DAG architecture
 
@@ -36,10 +44,13 @@ dag = DAG(
 
 def content_neo4j_node_creation(**kwargs):
     from .lib.neo4j_job import Neo4j_dataintegration
-    uri = globals()["GOLD_NEO4J_URI"]
-    driver = Neo4j_dataintegration(uri, "neo4j", "password")
+    uri = "bolt://"+ globals()["GOLD_NEO4J_IP"]+":"+globals()["NEO4J_PORT"]
+    neo4j_user = "neo4j"
+    neo4j_pass= "password"
+    driver = Neo4j_dataintegration(uri, neo4j_user, neo4j_pass)
+    # mongo_uri = globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"]
+    meta_base = MongoHook(globals()["MONGO_META_CONN_ID"])
 
-    meta_base = MongoHook(globals()["META_MONGO_URI"])
     coll = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_id"])
     doc = meta_base.get_conn().swift.get_collection(coll).find_one(
@@ -57,7 +68,8 @@ def not_handled():
 
 
 def check_type(**kwargs):
-    meta_base = MongoHook(globals()["META_MONGO_URI"])
+
+    meta_base = MongoHook(globals()["MONGO_META_CONN_ID"])
     # find(self, mongo_collection, query, find_one=False, mongo_db=None,
     #      **kwargs):
     coll = kwargs["dag_run"].conf["swift_container"]
@@ -96,7 +108,7 @@ run_this_first >> branch_op
 pipeline = []
 aux = 0
 for data_type in type_dict:
-    sub_pipe = []influxdb_gold
+    sub_pipe = []
     for ope in callable_dict[type_dict[data_type]]:
 
         sub_pipe.append( PythonOperator(
