@@ -68,7 +68,7 @@ def not_handled():
 
 
 def check_type(**kwargs):
-
+    # TODO : catch error if no file are found in Mongodb
     meta_base = MongoHook(globals()["MONGO_META_CONN_ID"])
     # find(self, mongo_collection, query, find_one=False, mongo_db=None,
     #      **kwargs):
