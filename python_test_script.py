@@ -16,8 +16,6 @@ from swiftclient.service import SwiftService
 # docs.ceph.com/docs/jewel/radosgw/swift/python
 
 
-user='test:tester'
-key = 'testing'
 #
 # conn = swiftclient.Connection(user=user,key=key,authurl="http://127.0.0.1:12345/auth/v1.0")
 # container_name = 'my-new-container'
@@ -149,10 +147,12 @@ def input_csv_file(csv_file,**kwargs):
 
 
 
+user='test:tester'
+key = 'testing'
 
 # client = MongoClient("127.0.0.1:27017").stats.swift.drop()
+client = MongoClient("127.0.0.1:27017")
 init_id()
-# client = MongoClient("127.0.0.1:27017")
 
 # id_doc =  {"type":"object_id_file", "object_id":0}
 # client = MongoClient("127.0.0.1:27017").stats.swift.insert_one(id_doc)
@@ -160,32 +160,32 @@ init_id()
 
 #
 # import requests
-# authurl = "http://127.0.0.1:12345/auth/v1.0"
-# conn = swiftclient.Connection(user=user, key=key,
-#                               authurl=authurl)
+authurl = "http://127.0.0.1:8080/auth/v1.0"
+conn = swiftclient.Connection(user=user, key=key,
+                              authurl=authurl)
 #
 #
-# file_name = "Openstack/swift/input_file_test/0.png"
-# meta_data = {
-#     "content_type": "image/png",
-#     "application": "mygates cnn"
-# }
-# # with open(file_name,"rb") as f :
-# #     file_data = f.read()
-# with open(file_name,"rb") as f:
+file_name = "Openstack/swift/input_file_test/0.png"
+meta_data = {
+    "content_type": "image/png",
+    "application": "mygates cnn"
+}
+# with open(file_name,"rb") as f :
 #     file_data = f.read()
-#
-# file_content = open(file_name, "r")
-# print(file_data)
-# container_name = "mygatess"
-# #https://github.com/vincentnam/docker_datalake
-# # conn.put_object(container_name,"0.jpg", contents=file_data
-# #                         ,content_type="image/jpg")
-#
-# # conn.put_container(container_name)
-# insert_datalake(file_data, file_name,meta_data, user, key, authurl, container_name, mongodb_url="127.0.0.1:27017")
-#
-#
+with open(file_name,"rb") as f:
+    file_data = f.read()
+
+file_content = open(file_name, "r")
+print(file_data)
+container_name = "mygates"
+#https://github.com/vincentnam/docker_datalake
+# conn.put_object(container_name,"0.jpg", contents=file_data
+#                         ,content_type="image/jpg")
+
+# conn.put_container(container_name)
+insert_datalake(file_data,meta_data, user, key, authurl, container_name, mongodb_url="127.0.0.1:27017")
+
+
 
 
 
@@ -299,6 +299,6 @@ init_id()
 
 
 
-input_csv_file("./dataset/mygates/subset.csv", sep=";", header=0, projet="mygates",authurl = "http://127.0.0.1:12345/auth/v1.0",container_name = "mygates")
+# input_csv_file("./dataset/mygates/subset.csv", sep=";", header=0, projet="mygates",authurl = "http://127.0.0.1:12345/auth/v1.0",container_name = "mygates")
 
 # swift stat -U test:tester -A http://localhost:8080/auth/v1.0 -K testing CONTAINER

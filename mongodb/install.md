@@ -14,3 +14,14 @@
     sudo systemctl enable mongod
 
 
+# Configuration 
+
+Input IP is by default binded on 127.0.0.1. It allows to accept connection only to localhost.
+
+To allow external connection, it has to be binded on 0.0.0.0.
+
+    vim /etc/mongod.conf
+    >> bindIp: 127.0.0.1 -> bindIp: 0.0.0.0
+    
+    
+ 
