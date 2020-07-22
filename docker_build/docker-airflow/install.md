@@ -73,3 +73,10 @@ Since airflow > 1.10, REST api is defined to deny all.
 
 -d : for data (payload)
     Set any field in "conf" document
+    
+    
+    
+    
+
+
+    

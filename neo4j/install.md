@@ -10,3 +10,9 @@
     EOF
     
     sudo yum install -y neo4j-enterprise-4.1.1
+    
+# Config
+
+To accept non-local connections, uncomment this line in /etc/neo4j/neo4j.conf: 
+
+    dbms.windows_service_name=neo4j
