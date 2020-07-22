@@ -152,7 +152,7 @@ key = 'testing'
 
 # client = MongoClient("127.0.0.1:27017").stats.swift.drop()
 client = MongoClient("127.0.0.1:27017")
-init_id()
+# init_id()
 
 # id_doc =  {"type":"object_id_file", "object_id":0}
 # client = MongoClient("127.0.0.1:27017").stats.swift.insert_one(id_doc)
@@ -165,9 +165,9 @@ conn = swiftclient.Connection(user=user, key=key,
                               authurl=authurl)
 #
 #
-file_name = "Openstack/swift/input_file_test/0.png"
+file_name = "Openstack/swift/input_file_test/0.jpg"
 meta_data = {
-    "content_type": "image/png",
+    "content_type": "image/jpeg",
     "application": "mygates cnn"
 }
 # with open(file_name,"rb") as f :
