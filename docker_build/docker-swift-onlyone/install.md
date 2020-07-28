@@ -212,11 +212,25 @@ AUTH_tk026049cc5bea4c08a609dd327ea7e721
 # Problem resolution : 
 
     1. Check if loopback device (swift_storage / swift_tmp) are mounted : "connection refused" in API rest 
-    
+    2. If custom middleware is not well designed / coded, it will raised a 500 internal error on swift-proxy
     
 # On reboot : 
-
-    mkdir /var/run/swift
+    
+    cd /projets/datalake/swift_storage/
+    sudo mount -o loop,noatime,nodiratime,nobarrier,logbufs=8  swift_store /mnt/swift_store/   
+    sudo mount -o loop,noatime swift_tmp /mnt/swift_tmp/
+    
+    sudo mount --bind /mnt/swift_tmp/ /tmp/
+    sudo chmod -R 1777 /mnt/swift_tmp/
+    
+    sudo mkdir /var/run/swift
     sudo chown vdang:datalake /var/run/swift
+    sudo chown -R vdang:datalake /srv/*
+    sudo chown vdang:datalake /mnt/swift_store
+    sudo chown vdang:datalake /mnt/swift_tmp
     remakerings
     startmain
+    
+    
+    
+    

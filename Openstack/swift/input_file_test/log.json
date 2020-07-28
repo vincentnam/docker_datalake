@@ -1,0 +1,8 @@
+{
+  "_id": "ObjectId(\"5d004092adf80168fe79b55c\")",
+  "idcapteur": 4,
+  "idpiece": 1,
+  "value": 15,
+  "datemesure": "2019-06-12T00:00:18.388374",
+  "mesurevaleur": "celsius"
+}
