@@ -18,6 +18,8 @@ globals()["MONGO_PORT"] = "27017"
 globals()["SWIFT_REST_API_PORT"] = "8080"
 globals()["INFLUXDB_PORT"] = "8086"
 globals()["NEO4J_PORT"] = "7000"
+globals()["SWIFT_USER"]='test:tester'
+globals()["SWIFT_KEY"]='testing'
 
 # Needed for airflow Hook
 globals()["MONGO_META_CONN_ID"] = "mongo_metadatabase"
@@ -31,16 +33,19 @@ default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
     'start_date': days_ago(2),
-    # 'email': ['airflow@example.com'],
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 0,
-    'retry_delay': timedelta(minutes=0),
+    # # 'email': ['airflow@example.com'],
+    # 'email_on_failure': False,
+    # 'email_on_retry': False,
+    # 'retries': 0,
+    # 'retry_delay': timedelta(minutes=0),
+    # "schedule_interval" : None
 }
 dag = DAG(
     'new_input',
     default_args=default_args,
-    description='Check for new input data and launch data integration jobs'
+    description='Check for new input data and launch data integration jobs',
+    schedule_interval=None,
+
 )
 
 
@@ -63,11 +68,26 @@ def content_neo4j_node_creation(**kwargs):
 
 
 def from_mongodb_to_influx(**kwargs):
-    pass
-
+    from lib.influxdbintegrator import InfluxIntegrator
+    import swiftclient
+    print("SI C'EST LA JEE SUIS LES MORTS")
+    integrator = InfluxIntegrator(influx_host=globals()["GOLD_INFLUX_IP"],
+                                  influx_port=globals()["INFLUXDB_PORT"] )
+    print("TEST")
+    swift_co = swiftclient.Connection(user=globals()["SWIFT_USER"], key=globals()["SWIFT_KEY"],
+                           authurl="http://"+ globals()["OPENSTACK_SWIFT_IP"] +":"
+                                   +globals()["SWIFT_REST_API_PORT"]+"/auth/v1.0")
+    print("TEST !!")
+    swift_json = swift_co.get_object(kwargs["dag_run"].conf["swift_container"], kwargs["dag_run"].conf["swift_id"])
+    print(swift_json)
+    integrator.mongodoc_to_influx(swift_json[1],
+                                  kwargs["dag_run"].conf["swift_container"])
 
 def not_handled(**kwargs):
     # TODO : Insert in mongodb the fact that the data has not been handled
+    pass
+
+def Not_implemented_json(**kwargs):
     pass
 
 
@@ -113,43 +133,38 @@ branch_op = BranchPythonOperator(
 join = DummyOperator(
     task_id='dag_end',
     trigger_rule='one_success',
+
     dag=dag,
 )
 # Needed for lib mime type
-type_dict = {"image/jpeg": "jpeg_data", None: "not_handled"}
+type_dict = {"image/jpeg": "jpeg_data", "application/json": "json_data"
+    ,"image/png":"png_data", None: "not_handled"}
 # Callable_dict contains the branch to get
-callable_dict = {"jpeg_data":
+callable_dict = \
     {
+    "jpeg_data":
+        {
         "default": "object_in_image_in_neo4j",
         "mygates": "mygates_object_in_image_in_neo4j",
-    },
-
-    "not_handled": {
+        },
+    "json_data":
+        {
+        "default": "Not_implemented_json",
+        "neocampus": "Json_log_to_timeserie_influxdb",
+        },
+    "not_handled":
+        {
         "default": "Nothing_to_do"
+        }
     }
 
-}
-run_this_first >> branch_op
 
-# pipeline = []
-# aux = 0
-# for data_type in type_dict:
-#     sub_pipe = []
-#     for ope in callable_dict[type_dict[data_type]]:
-#         sub_pipe.append()
-#         aux = aux + 1
-#     pipeline.append(sub_pipe)
-#
-# for list in pipeline:
-#     chain(branch_op, *list, join)
-
-# TODO : recursive funct to create the pipeline (for n sublevel in dict)
 task_dict = {
-    "jpeg_data": {
+    "png_data": {
         "default": [
             PythonOperator(
                 # TODO : Find a task_id naming solution
-                task_id="object_in_image_in_neo4j",
+                task_id="Object_in_png_in_neo4j",
                 provide_context=True,
                 python_callable=content_neo4j_node_creation,
                 start_date=days_ago(2))
@@ -157,17 +172,53 @@ task_dict = {
         "mygates": [
             PythonOperator(
                 # TODO : Find a task_id naming solution
-                task_id="mygates_object_in_image_in_neo4j",
+                task_id="Mygates_object_in_png_in_neo4j",
                 provide_context=True,
                 python_callable=content_neo4j_node_creation,
                 start_date=days_ago(2))
         ]
     },
+    "jpeg_data": {
+        "default": [
+            PythonOperator(
+                # TODO : Find a task_id naming solution
+                task_id="Object_in_jpeg_in_neo4j",
+                provide_context=True,
+                python_callable=content_neo4j_node_creation,
+                start_date=days_ago(2))
+        ],
+        "mygates": [
+            PythonOperator(
+                # TODO : Find a task_id naming solution
+                task_id="Mygates_object_in_jpeg_in_neo4j",
+                provide_context=True,
+                python_callable=content_neo4j_node_creation,
+                start_date=days_ago(2))
+        ]
+    },
+    "json_data":{
+        "default":[
+            PythonOperator(
+                # TODO : Find a task_id naming solution
+                task_id="Not_implemented_json",
+                provide_context=True,
+                python_callable=Not_implemented_json,
+                start_date=days_ago(2))
+        ],
+        "neocampus":[
+            PythonOperator(
+                # TODO : Find a task_id naming solution
+                task_id="Json_log_to_timeserie_influxdb",
+                provide_context=True,
+                python_callable=from_mongodb_to_influx,
+                start_date=days_ago(2))
+        ]
+    } ,
     "not_handled": {
         "default": [
             PythonOperator(
                 # TODO : Find a task_id naming solution
-                task_id="Nothing_to_do",
+                task_id="Not_handled",
                 provide_context=True,
                 python_callable=not_handled,
                 start_date=days_ago(2))
@@ -176,13 +227,18 @@ task_dict = {
     }
 }
 
+run_this_first >> branch_op
+
+# TODO : recursive funct to create the pipeline (for n sublevel in dict)
+
 pipeline = []
 for data_type in task_dict:
+
     for owner_group in task_dict[data_type]:
         sub_pipe = []
         for task in task_dict[data_type][owner_group]:
             sub_pipe.append(task)
-        pipeline.append(sub_pipe)
+        pipeline.append([*sub_pipe,])
 
 for list in pipeline:
     chain(branch_op, *list, join)

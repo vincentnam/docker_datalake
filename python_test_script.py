@@ -165,10 +165,10 @@ conn = swiftclient.Connection(user=user, key=key,
                               authurl=authurl)
 #
 #
-file_name = "Openstack/swift/input_file_test/0.jpg"
+file_name = "Openstack/swift/input_file_test/log.json"
 meta_data = {
-    "content_type": "image/jpeg",
-    "application": "mygates cnn"
+    "content_type": "application/json",
+    "application": "neocampus sensors log"
 }
 # with open(file_name,"rb") as f :
 #     file_data = f.read()
@@ -177,7 +177,7 @@ with open(file_name,"rb") as f:
 
 file_content = open(file_name, "r")
 print(file_data)
-container_name = "mygates"
+container_name = "neocampus"
 #https://github.com/vincentnam/docker_datalake
 # conn.put_object(container_name,"0.jpg", contents=file_data
 #                         ,content_type="image/jpg")
@@ -291,6 +291,7 @@ insert_datalake(file_data,meta_data, user, key, authurl, container_name, mongodb
 # datalake_input_swift_1         | Jun  9 16:33:24 8d7c5235a89c proxy-server: <swift.common.swob.Request object at 0x7f52bf099c90>
 
 
+
 # Context des requests HTML
 # https://airflow.readthedocs.io/en/stable/_modules/airflow/models/dagrun.html#DagRun.conf
 
@@ -302,3 +303,5 @@ insert_datalake(file_data,meta_data, user, key, authurl, container_name, mongodb
 # input_csv_file("./dataset/mygates/subset.csv", sep=";", header=0, projet="mygates",authurl = "http://127.0.0.1:12345/auth/v1.0",container_name = "mygates")
 
 # swift stat -U test:tester -A http://localhost:8080/auth/v1.0 -K testing CONTAINER
+
+# sshfs vdang@co2-dl-airflow:/projets/datalake/airflow/ /data/python-project/docker_datalake/mnt_temp
