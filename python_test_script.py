@@ -96,6 +96,9 @@ def insert_datalake(file_content,meta_data, user, key, authurl, container_name, 
     # meta_data["swift_object_name"] = file_name
     print(meta_data)
 
+    URL = "http://141.115.103.32:8080"
+    ENDPOINT_PATH = "/api/experimental"
+    DAG_TO_TRIGGER = "new_input"
     if SwiftService({}).stat(container_name)["object"] is None:
         conn.put_container(container_name)
 # Gérer l'atomicité de cette partie #
@@ -104,7 +107,7 @@ def insert_datalake(file_content,meta_data, user, key, authurl, container_name, 
     client.stats.swift.update_one({"type":"object_id_file"},
                                   {"$inc": {"object_id": 1}})
     conn.put_object(container_name, meta_data["swift_object_id"], contents=file_content,
-                    content_type=meta_data["content_type"])
+                    content_type=meta_data["content_type"], headers={"x-webhook":URL + ENDPOINT_PATH + "/dags/"+DAG_TO_TRIGGER+"/dag_runs"})
 
 #####################################
 import pandas as pd
@@ -121,6 +124,7 @@ def input_csv_file(csv_file,**kwargs):
             "content_type": mimetypes.guess_type(i["file_name"])[0],
             "projet": kwargs["projet"],
         }
+
         print(type(i["main_object"]))
         for j in i.keys() :
             meta_data[j]=str(i[j])

@@ -18,8 +18,8 @@ globals()["MONGO_PORT"] = "27017"
 globals()["SWIFT_REST_API_PORT"] = "8080"
 globals()["INFLUXDB_PORT"] = "8086"
 globals()["NEO4J_PORT"] = "7000"
-globals()["SWIFT_USER"]='test:tester'
-globals()["SWIFT_KEY"]='testing'
+globals()["SWIFT_USER"] = 'test:tester'
+globals()["SWIFT_KEY"] = 'testing'
 
 # Needed for airflow Hook
 globals()["MONGO_META_CONN_ID"] = "mongo_metadatabase"
@@ -72,20 +72,41 @@ def from_mongodb_to_influx(**kwargs):
     import swiftclient
     print("SI C'EST LA JEE SUIS LES MORTS")
     integrator = InfluxIntegrator(influx_host=globals()["GOLD_INFLUX_IP"],
-                                  influx_port=globals()["INFLUXDB_PORT"] )
+                                  influx_port=globals()["INFLUXDB_PORT"])
     print("TEST")
-    swift_co = swiftclient.Connection(user=globals()["SWIFT_USER"], key=globals()["SWIFT_KEY"],
-                           authurl="http://"+ globals()["OPENSTACK_SWIFT_IP"] +":"
-                                   +globals()["SWIFT_REST_API_PORT"]+"/auth/v1.0")
+    swift_co = swiftclient.Connection(user=globals()["SWIFT_USER"],
+                                      key=globals()["SWIFT_KEY"],
+                                      authurl="http://" + globals()[
+                                          "OPENSTACK_SWIFT_IP"] + ":"
+                                              + globals()[
+                                                  "SWIFT_REST_API_PORT"] + "/auth/v1.0")
     print("TEST !!")
-    swift_json = swift_co.get_object(kwargs["dag_run"].conf["swift_container"], kwargs["dag_run"].conf["swift_id"])
-    print(swift_json)
-    integrator.mongodoc_to_influx(swift_json[1],
-                                  kwargs["dag_run"].conf["swift_container"])
+    # storage_url, auth_token = swift_co.get_auth()
+    retry = 0
+    swift_json = None
+    while retry < 3:
+        try:
+            swift_json = swift_co.get_object(
+                kwargs["dag_run"].conf["swift_container"],
+                kwargs["dag_run"].conf["swift_id"])
+            # If success : break
+
+            print(swift_json)
+            integrator.mongodoc_to_influx(swift_json[1],
+                                          kwargs["dag_run"].conf[
+                                              "swift_container"])
+            break
+        except:
+            retry += 1
+            if retry >= 3:
+                # After 3 fails, break
+                break
+
 
 def not_handled(**kwargs):
     # TODO : Insert in mongodb the fact that the data has not been handled
     pass
+
 
 def Not_implemented_json(**kwargs):
     pass
@@ -107,7 +128,7 @@ def check_type(**kwargs):
         data_type = type_dict[doc["content_type"]]
         if group in callable_dict[data_type]:
             return callable_dict[data_type][group]
-        else :
+        else:
             return callable_dict[data_type]["default"]
     else:
         return callable_dict["not_handled"]["default"]
@@ -138,26 +159,25 @@ join = DummyOperator(
 )
 # Needed for lib mime type
 type_dict = {"image/jpeg": "jpeg_data", "application/json": "json_data"
-    ,"image/png":"png_data", None: "not_handled"}
+    , "image/png": "png_data", None: "not_handled"}
 # Callable_dict contains the branch to get
 callable_dict = \
     {
-    "jpeg_data":
-        {
-        "default": "object_in_image_in_neo4j",
-        "mygates": "mygates_object_in_image_in_neo4j",
-        },
-    "json_data":
-        {
-        "default": "Not_implemented_json",
-        "neocampus": "Json_log_to_timeserie_influxdb",
-        },
-    "not_handled":
-        {
-        "default": "Nothing_to_do"
-        }
+        "jpeg_data":
+            {
+                "default": "object_in_image_in_neo4j",
+                "mygates": "mygates_object_in_image_in_neo4j",
+            },
+        "json_data":
+            {
+                "default": "Not_implemented_json",
+                "neocampus": "Json_log_to_timeserie_influxdb",
+            },
+        "not_handled":
+            {
+                "default": "Nothing_to_do"
+            }
     }
-
 
 task_dict = {
     "png_data": {
@@ -196,8 +216,8 @@ task_dict = {
                 start_date=days_ago(2))
         ]
     },
-    "json_data":{
-        "default":[
+    "json_data": {
+        "default": [
             PythonOperator(
                 # TODO : Find a task_id naming solution
                 task_id="Not_implemented_json",
@@ -205,7 +225,7 @@ task_dict = {
                 python_callable=Not_implemented_json,
                 start_date=days_ago(2))
         ],
-        "neocampus":[
+        "neocampus": [
             PythonOperator(
                 # TODO : Find a task_id naming solution
                 task_id="Json_log_to_timeserie_influxdb",
@@ -213,7 +233,7 @@ task_dict = {
                 python_callable=from_mongodb_to_influx,
                 start_date=days_ago(2))
         ]
-    } ,
+    },
     "not_handled": {
         "default": [
             PythonOperator(
@@ -238,7 +258,7 @@ for data_type in task_dict:
         sub_pipe = []
         for task in task_dict[data_type][owner_group]:
             sub_pipe.append(task)
-        pipeline.append([*sub_pipe,])
+        pipeline.append([*sub_pipe, ])
 
 for list in pipeline:
     chain(branch_op, *list, join)
