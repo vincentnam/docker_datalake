@@ -70,21 +70,17 @@ def content_neo4j_node_creation(**kwargs):
 def from_mongodb_to_influx(**kwargs):
     from lib.influxdbintegrator import InfluxIntegrator
     import swiftclient
-    print("SI C'EST LA JEE SUIS LES MORTS")
+    import json
     integrator = InfluxIntegrator(influx_host=globals()["GOLD_INFLUX_IP"],
                                   influx_port=globals()["INFLUXDB_PORT"])
-    print("TEST")
     swift_co = swiftclient.Connection(user=globals()["SWIFT_USER"],
                                       key=globals()["SWIFT_KEY"],
                                       authurl="http://" + globals()[
                                           "OPENSTACK_SWIFT_IP"] + ":"
                                               + globals()[
                                                   "SWIFT_REST_API_PORT"] + "/auth/v1.0")
-    print("TEST !!")
-    # storage_url, auth_token = swift_co.get_auth()
     retry = 0
-    swift_json = None
-    while retry < 3:
+    while True:
         try:
             swift_json = swift_co.get_object(
                 kwargs["dag_run"].conf["swift_container"],
@@ -92,10 +88,10 @@ def from_mongodb_to_influx(**kwargs):
             # If success : break
 
             print(swift_json)
-            integrator.mongodoc_to_influx(swift_json[1],
+            integrator.write([integrator.mongodoc_to_influx(json.load(swift_json[1]))],
                                           kwargs["dag_run"].conf[
                                               "swift_container"])
-            break
+            return None
         except:
             retry += 1
             if retry >= 3:
