@@ -301,8 +301,7 @@ insert_datalake(file_data,meta_data, user, key, authurl, container_name, mongodb
 
 
 
-
-
+# TODO : Changer le webhook par un trigger toutes les X minutes pour tester les données à traiter : mettre dans mongodb la liste des données à traiter
 
 # input_csv_file("./dataset/mygates/subset.csv", sep=";", header=0, projet="mygates",authurl = "http://127.0.0.1:12345/auth/v1.0",container_name = "mygates")
 
