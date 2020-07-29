@@ -50,11 +50,11 @@ def multiple_log_to_timeserie(jsons, template = None):
             pass
 
 from jinja2 import Template
+if __name__=="__main__":
+    person = {'log': [{"type":"temperature", "value":14}], 'age': 34}
+    print(person.keys())
+    tm = Template("{{doc.0.log.type}}")
+    # tm = Template("My name is {{ per['name'] }} and I am {{ per['age'] }}")
+    msg = tm.render(doc=person)
 
-person = {'log': [{"type":"temperature", "value":14}], 'age': 34}
-print(person.keys())
-tm = Template("{{doc.0.log.type}}")
-# tm = Template("My name is {{ per['name'] }} and I am {{ per['age'] }}")
-msg = tm.render(doc=person)
-
-print(msg)
+    print(msg)
