@@ -8,7 +8,7 @@ from airflow.contrib.hooks.mongo_hook import MongoHook
 from datetime import timedelta
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.helpers import chain
-
+from airflow.operator.branch_operator import BaseBranchOperator
 globals()["META_MONGO_IP"] = "141.115.103.31"
 globals()["OPENSTACK_SWIFT_IP"] = "141.115.103.30"
 globals()["GOLD_MONGO_IP"] = "141.115.103.33"
@@ -47,6 +47,9 @@ dag = DAG(
     schedule_interval=None,
 
 )
+class DataIsProcessBranchOperator(BaseBranchOperator):
+    def choose_branch(self, context):
+        pass
 
 
 def content_neo4j_node_creation(**kwargs):
@@ -194,7 +197,9 @@ task_dict = {
                 task_id="Mygates_object_in_png_in_neo4j",
                 provide_context=True,
                 python_callable=content_neo4j_node_creation,
-                start_date=days_ago(2))
+                start_date=days_ago(2),
+                # on_failure_callback : if this is a success do this callable
+                on_failure_callback= None)
         ]
     },
     "jpeg_data": {

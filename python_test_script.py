@@ -90,6 +90,10 @@ def insert_datalake(file_content,meta_data, user, key, authurl, container_name, 
     client = MongoClient(mongodb_url)
     db = client.swift
     coll = db[container_name]
+    if "content_type" not in meta_data:
+        #TODO : Check MIME type
+        pass
+
     meta_data["swift_user"]=user
     meta_data["swift_container"] = container_name
     meta_data["swift_object_id"] = str(get_id(mongodb_url))
@@ -110,11 +114,21 @@ def insert_datalake(file_content,meta_data, user, key, authurl, container_name, 
             conn.put_object(container_name, meta_data["swift_object_id"], contents=file_content,
                             content_type=meta_data["content_type"])
 
+            client.stats.swift.update_one({"type": "data_to_process_list"},
+                                          {"$push":
+                                              {
+                                              "data_to_process": {
+                                                        "swift_id" :meta_data["swift_object_id"],
+                                                        "swift_container" : meta_data["swift_container"],
+                                                        "swift_user" : meta_data["swift_user"],
+                                                        "content_type" : meta_data["content_type"]
+                                                     }
+                                              }
+                                           }
+                                          )
+
             client.stats.swift.update_one({"type": "object_id_file"},
                                           {"$inc": {"object_id": 1}})
-            client.stats.swift.update_one({"type": "data_to_process_list"},
-                                          {"$push": {"data_to_process": meta_data["swift_object_id"]}})
-
             return None
         except Exception as e:
             print(e)
