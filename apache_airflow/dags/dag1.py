@@ -87,10 +87,13 @@ def from_mongodb_to_influx(**kwargs):
                 kwargs["dag_run"].conf["swift_id"])
             # If success : break
 
-            print(swift_json)
-            integrator.write([integrator.mongodoc_to_influx(json.load(swift_json[1]))],
+            print(json.load(swift_json))
+            if integrator.write([integrator.mongodoc_to_influx(json.load(swift_json[1]))],
                                           kwargs["dag_run"].conf[
-                                              "swift_container"])
+                                              "swift_container"]) :
+                print("successfully writed to influxdb")
+            else :
+                print("write failed to influxdb")
             return None
         except:
             retry += 1
