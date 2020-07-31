@@ -104,16 +104,29 @@ def insert_datalake(file_content,meta_data, user, key, authurl, container_name, 
 # Gérer l'atomicité de cette partie #
 
     coll.insert_one(meta_data)
-    client.stats.swift.update_one({"type":"object_id_file"},
-                                  {"$inc": {"object_id": 1}})
-    conn.put_object(container_name, meta_data["swift_object_id"], contents=file_content,
-                    content_type=meta_data["content_type"], headers={"x-webhook":URL + ENDPOINT_PATH + "/dags/"+DAG_TO_TRIGGER+"/dag_runs"})
+    retry = 0
+    while True :
+        try :
+            conn.put_object(container_name, meta_data["swift_object_id"], contents=file_content,
+                            content_type=meta_data["content_type"])
+
+            client.stats.swift.update_one({"type": "object_id_file"},
+                                          {"$inc": {"object_id": 1}})
+            client.stats.swift.update_one({"type": "data_to_process_list"},
+                                          {"$push": {"data_to_process": meta_data["swift_object_id"]}})
+
+            return None
+        except Exception as e:
+            print(e)
+            retry += 1
+            if retry > 3 :
+                return None
 
 #####################################
 import pandas as pd
 import os
 import mimetypes
-import bsonnumpy
+
 def input_csv_file(csv_file,**kwargs):
     df = pd.read_csv(csv_file, sep=kwargs["sep"], header=kwargs["header"])
     print(df.keys())
