@@ -14,6 +14,7 @@ from pymongo import MongoClient
 import swiftclient.service
 from swiftclient.service import SwiftService
 # docs.ceph.com/docs/jewel/radosgw/swift/python
+import datetime
 
 
 #
@@ -72,7 +73,7 @@ def init_id():
 def clean_swift(container):
     pass
 
-def insert_datalake(file_content,meta_data, user, key, authurl, container_name, mongodb_url="127.0.0.1:27017"):
+def insert_datalake(file_content,user, key, authurl, container_name,file_name = None, application = None ,content_type=None, mongodb_url="127.0.0.1:27017"):
     '''
     :param file: name OR the file : it has to be defined to be sure of what data are stored in mongodb
     :param meta_data: dict
@@ -90,14 +91,27 @@ def insert_datalake(file_content,meta_data, user, key, authurl, container_name, 
     client = MongoClient(mongodb_url)
     db = client.swift
     coll = db[container_name]
-    if "content_type" not in meta_data:
+    if content_type is not None :
         #TODO : Check MIME type
         pass
-
+    meta_data = {}
+    if content_type is not None:
+        meta_data["content_type"]= content_type
+    else :
+        meta_data["content_type"]= "None"
     meta_data["swift_user"]=user
     meta_data["swift_container"] = container_name
     meta_data["swift_object_id"] = str(get_id(mongodb_url))
-    # meta_data["swift_object_name"] = file_name
+    if application is not None:
+        meta_data["application"]= application
+    else :
+        meta_data["application"] = user + "_" + container_name
+    if file_name is not None :
+        meta_data["swift_object_name"] = file_name
+    meta_data["creation_date"]= datetime.datetime.now()
+    meta_data["last_modified"] = datetime.datetime.now()
+    meta_data["successful_operations"]= []
+    meta_data["failed_operations"]= []
     print(meta_data)
 
     URL = "http://141.115.103.32:8080"
@@ -197,10 +211,7 @@ conn = swiftclient.Connection(user=user, key=key,
 #
 #
 file_name = "Openstack/swift/input_file_test/log.json"
-meta_data = {
-    "content_type": "application/json",
-    "application": "neocampus sensors log"
-}
+
 # with open(file_name,"rb") as f :
 #     file_data = f.read()
 with open(file_name,"rb") as f:
@@ -214,7 +225,7 @@ container_name = "neocampus"
 #                         ,content_type="image/jpg")
 
 # conn.put_container(container_name)
-insert_datalake(file_data,meta_data, user, key, authurl, container_name, mongodb_url="127.0.0.1:27017")
+insert_datalake(file_data , user, key, authurl, container_name, application= "neocampus sensors log", content_type= "application/json", mongodb_url="127.0.0.1:27017")
 
 
 

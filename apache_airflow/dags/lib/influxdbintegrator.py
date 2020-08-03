@@ -18,7 +18,10 @@ class InfluxIntegrator:
             self.influx_client.create_database(dbname=db)
         self.influx_client.switch_database(db)
         # TODO : Set authentications (user / password)
-        return self.influx_client.write_points(points)
+        if self.influx_client.write_points(points):
+            return True
+        else :
+            raise Exception("Failed write in Influx database : %s", db)
 
     def mongodoc_to_influx(self, json):
         if "payload" in json:
