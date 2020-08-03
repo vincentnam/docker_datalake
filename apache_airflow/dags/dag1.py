@@ -6,6 +6,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator, \
     BranchPythonOperator
 from airflow.utils.dates import days_ago
+from airflow.utils.helpers import chain
 
 from pymongo import MongoClient
 
@@ -143,7 +144,6 @@ def check_type(**kwargs):
 def failed_data_processing(*args, **kwargs):
     print("The data processing was a fail.")
     print(kwargs.keys())
-    # print(kwargs["ti"].task_id)
     print(args[0]["execution_date"])
     print(args[0])
     group = args[0]["dag_run"].conf["swift_container"]
