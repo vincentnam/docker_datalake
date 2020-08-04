@@ -5,9 +5,9 @@ from swift.common.request_helpers import get_sys_meta_prefix
 from swift.proxy.controllers.base import get_container_info
 from eventlet import Timeout
 from swift.common.utils import register_swift_info
-
-URL = "http://141.115.103.32:8080"
-
+IP_ADDR = "141.115.103.32"
+WEB_PORT = "8081"
+URL = "http://"+IP_ADDR+":" + WEB_PORT
 ENDPOINT_PATH = "/api/experimental"
 DAG_TO_TRIGGER = "new_input"
 #
