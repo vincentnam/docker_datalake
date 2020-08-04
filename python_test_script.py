@@ -99,7 +99,8 @@ def insert_datalake(file_content, user, key, authurl, container_name,
         try:
             conn.put_object(container_name, meta_data["swift_object_id"],
                             contents=file_content,
-                            content_type=meta_data["content_type"])
+                            content_type=meta_data["content_type"])#,
+                            # headers={"x-webhook":"yes"})
 
             client.stats.swift.update_one({"type": "data_to_process_list"},
                                           {"$push":
@@ -191,3 +192,6 @@ insert_datalake(file_data, user, key, authurl, container_name,
 # swift stat -U test:tester -A http://localhost:8080/auth/v1.0 -K testing CONTAINER
 
 # sshfs vdang@co2-dl-airflow:/projets/datalake/airflow/ /data/python-project/docker_datalake/mnt_temp
+# TODO : Reinstaller Openstack Swift avec Python3
+#
+

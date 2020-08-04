@@ -19,8 +19,8 @@
                  pyxattr python-eventlet \
                  python-greenlet python-paste-deploy \
                  python-netifaces python-pip python-dns \
-                 python-mock 
-
+                 python-mock
+                 
     cd /projets/datalake
     mkdir swift_install
     cd swift_install
@@ -233,4 +233,17 @@ AUTH_tk026049cc5bea4c08a609dd327ea7e721
     
     
     
+# Functional test :
+
+    ...
+    ======
+    Totals
+    ======
+    Ran: 950 tests in 571.0000 sec.
+     - Passed: 883
+     - Skipped: 67
+     - Expected Fail: 0
+     - Unexpected Success: 0
+     - Failed: 0
+    Sum of execute time for each test: 502.9311 sec.
     
