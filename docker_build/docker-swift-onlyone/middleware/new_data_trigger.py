@@ -55,11 +55,12 @@ class NewDataTriggerMiddleware(object):
                 URL + ENDPOINT_PATH + "/dags/" + DAG_TO_TRIGGER + "/dag_runs",
                 data=json.dumps(payload))
             print(rep.text)
-        self.logger.info(rep.headers)
-        self.logger.info(rep.text)
-        # No response return = bug
+            self.logger.info(rep.headers)
+            self.logger.info(rep.text)
+            # No response return = bug
         resp = req.get_response(self.app)
         return resp
+
 def new_data_trigger_factory(global_conf, **local_conf):
     conf = global_conf.copy()
     conf.update(local_conf)
