@@ -7,7 +7,7 @@ from airflow.operators.python_operator import PythonOperator, \
     BranchPythonOperator
 from airflow.utils.dates import days_ago
 from airflow.utils.helpers import chain
-
+from time import sleep
 from pymongo import MongoClient
 
 globals()["META_MONGO_IP"] = "141.115.103.31"
@@ -72,8 +72,10 @@ def from_mongodb_to_influx(**kwargs):
     from lib.influxdbintegrator import InfluxIntegrator
     import swiftclient
     import json
+    token = "SutSmr4uKZ9DxALVa5O7CucjxWMPkccLIn9MAAvgzCxZOSgV6UUfgr3bflIc9YcetB4F3cNohsqJFqiyEXxVwA=="
     integrator = InfluxIntegrator(influx_host=globals()["GOLD_INFLUX_IP"],
-                                  influx_port=globals()["INFLUXDB_PORT"])
+                                  influx_port=globals()["INFLUXDB_PORT"],
+                                  token=token)
     swift_co = swiftclient.Connection(user=globals()["SWIFT_USER"],
                                       key=globals()["SWIFT_KEY"],
                                       authurl="http://" + globals()[
@@ -84,26 +86,27 @@ def from_mongodb_to_influx(**kwargs):
     retry = 0
 
     while True:
+        print("Try " + str(retry) + " : ", end='')
         try:
             swift_json = swift_co.get_object(
                 kwargs["dag_run"].conf["swift_container"],
                 kwargs["dag_run"].conf["swift_id"])
+
+            print("Successful")
+            print(swift_json)
             # If success : break
 
-            print(json.load(swift_json))
-            if integrator.write(
-                    [integrator.mongodoc_to_influx(json.load(swift_json[1]))],
-                    kwargs["dag_run"].conf[
-                        "swift_container"]):
-                print("successfully writed to influxdb")
-            else:
-                print("write failed to influxdb")
-            return None
+            # print(json.load(swift_json))
+
+
         except:
+            print("Failed")
             retry += 1
-            if retry >= 3:
+            if retry >= 10:
+                sleep(retry)
                 # After 3 fails, break
-                break
+                raise Exception("Can't connect to Swift.")
+
 
 
 def not_handled(**kwargs):

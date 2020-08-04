@@ -152,3 +152,68 @@ get_data = PythonOperator(task_id="Get_list",
                           start_date=days_ago(2))
 
 dag >> get_data >> done
+
+
+# https://bazaar.launchpad.net/~hudson-openstack/swift/trunk/revision/336/test/__init__.py#test/__init__.py
+
+
+
+
+
+
+#
+#
+# Jul 30 17:37:05 co2-dl-swift proxy-server:
+# Error: An error occurred:
+#012Traceback (most recent call last):
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/catch_errors.py", line 75, in handle_request
+# #012    resp = self._app_call(env)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/wsgi.py", line 1387, in _app_call
+# #012    resp = self.app(env, self._start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/gatekeeper.py", line 129, in __call__
+# #012    #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/healthcheck.py", line 52, in __call__
+# #012    return self.app(env, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/proxy_logging.py", line 424, in __call__
+# #012    iterable = self.app(env, my_start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/memcache.py", line 112, in __call__
+# #012    return self.app(env, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/listing_formats.py", line 157, in __call__
+# #012    returnself.app(env, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/swob.py", line 1570, in _wsgify
+# #012    return func(*new_args)(env, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/tempurl.py", line 504, in __call__
+# #012    return self.app(env, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/slo.py", line 1585, in __call__
+# #012    return self.handle_multipart_get_or_head(req, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/slo.py", line 1121, in handle_multipart_get_or_head
+# #012    return SloGetContext(self).handle_slo_get_or_head(req, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/slo.py", line 770, in handle_slo_get_or_head
+# #012    resp_iter = self._app_call(req.environ)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/wsgi.py", line 1387, in _app_call
+# #012    resp = self.app(env, self._start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/dlo.py", line 436, in __call__
+# #012    handle_request(req, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/dlo.py", line 374, in handle_request
+# #012    resp_iter = self._app_call(req.environ)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/wsgi.py", line 1387, in _app_call
+# #012    resp = self.app(env, self._start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/ratelimit.py", line 318, in __call__
+# #012    return self.app(env, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/crossdomain.py", line 82, in __call__
+# #012    return self.app(env, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/tempauth.py", line 341, in __call__
+# #012    return self.app(env, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/staticweb.py", line 546, in __call__
+# #012    return self.app(env, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/copy.py", line 253, in __call__
+# #012    return self.app(env, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/versioned_writes/legacy.py", line 872, in __call__
+# #012    return self.app(env, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/swob.py", line 1570, in _wsgify
+# #012    return func(*new_args)(env, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/swob.py", line 1570, in _wsgify
+# #012    return func(*new_args)(env, start_response)
+# #012  File "/projets/datalake/swift_install/swift/swift/common/middleware/proxy_logging.py", line 340, in __call__#
+# 012    return self.app(env, start_response)#012  File "/projets/datalake/swift_install/swift/swift/common/swob.py", line 1570, in _wsgify
+# #012    return func(*new_args)(env, start_response)
+# #012 TypeError: 'NoneType' object is not callable (txn: txf02db390d9604b0683824-005f22e921)

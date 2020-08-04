@@ -1,4 +1,4 @@
-# Install Influxdb centos7 
+# Install Influxdb 1.8 on Centos7 
     
     cat <<EOF | sudo tee /etc/yum.repos.d/influxdb.repo
     [influxdb]
@@ -17,3 +17,29 @@
     
     
 https://computingforgeeks.com/install-grafana-and-influxdb-on-centos-7/ pour la config 
+
+# Installation Influxdb 2.0 on Centos7
+
+    wget https://dl.influxdata.com/influxdb/releases/influxdb_2.0.0-alpha.14_linux_amd64.tar.gz
+    tar xzvf influxdb_2.0.0-alpha.14_linux_amd64.tar.gz 
+    export PATH=$PATH:/projets/datalake/influxdb/
+    sudo useradd -rs /bin/false influxdb
+    #Systemctl service creation :
+    sudo vim /lib/systemd/system/influxdb2.service 
+    
+    [Unit]                                                                                   
+    Description=InfluxDB 2.0 service file.                                                       
+    Documentation=https://v2.docs.influxdata.com/v2.0/get-started/                               
+    After=network-online.target                                                                  
+                                                                                                 
+    [Service]                                                                                    
+    User=influxdb                                                                                
+    Group=datalake                                                                               
+    ExecStart=/projets/datalake/influxdb/influxd                                                 
+    Restart=on-failure                                                                           
+                                                                                                 
+    [Install]                                                                                    
+    WantedBy=multi-user.target
+    
+    TO CHANGE : 
+    usr : datalake_admin / password : osirim_datalake_admin

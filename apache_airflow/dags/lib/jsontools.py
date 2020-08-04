@@ -29,32 +29,64 @@
 #             "duration": 127
 #         }
 #     },
-def multiple_log_to_timeserie(jsons, template = None):
-    # TODO : end this function with simple example : with simple template to create 1 time from several json documents
-    '''
-    Take a bunch of documents same logs and transform
-    it into a time serie
-    :param jsons : document of document : iterator over several
-    documents
-    :return:
-    '''
-    if template is None:
-        pass
-    else :
-        points = []
-        tm_field = Template()
-        tm_tag = Template()
-        tm_measurement = Template()
-        tm_timestamp = Template()
-        for json in jsons:
-            pass
 
-from jinja2 import Template
-if __name__=="__main__":
-    person = {'log': [{"type":"temperature", "value":14}], 'age': 34}
-    print(person.keys())
-    tm = Template("{{doc.0.log.type}}")
-    # tm = Template("My name is {{ per['name'] }} and I am {{ per['age'] }}")
-    msg = tm.render(doc=person)
+# def multiple_log_to_timeserie(jsons, template = None):
+#     # TODO : end this function with simple example : with simple template to create 1 time from several json documents
+#     '''
+#     Take a bunch of documents same logs and transform
+#     it into a time serie
+#     :param jsons : document of document : iterator over several
+#     documents
+#     :return:
+#     '''
+#     if template is None:
+#         pass
+#     else :
+#         points = []
+#         tm_field = Template()
+#         tm_tag = Template()
+#         tm_measurement = Template()
+#         tm_timestamp = Template()
+#         for json in jsons:
+#             pass
+#
+# from jinja2 import Template
+# if __name__=="__main__":
+#     person = {'log': [{"type":"temperature", "value":14}], 'age': 34}
+#     print(person.keys())
+#     tm = Template("{{doc.0.log.type}}")
+#     # tm = Template("My name is {{ per['name'] }} and I am {{ per['age'] }}")
+#     msg = tm.render(doc=person)
+#
+#     print(msg)
+def mongodoc_to_influx(json):
+    if "payload" in json:
+        return {
+            "measurement": json["payload"]["value_units"],
+            "tags": {
+                "subID": json["payload"]["subID"],
+                "input": json["payload"]["input"]
+            },
+            "time": json["date"],
+            "fields": {
+                "value": json["payload"]["value"],
+            }
+        }
+    elif "data" in json:
+        if "payload" in json["data"]:
+            return {
+                "measurement": json["data"]["payload"]["value_units"],
+                "tags": {
+                    "subID": json["data"]["payload"]["subID"],
+                    "input": json["data"]["payload"]["input"]
+                },
+                "time": json["data"]["date"],
+                "fields": {
+                    "value": json["data"]["payload"]["value"],
+                }
+            }
+        else:
+            return {}
+    else:
+        return {}
 
-    print(msg)
