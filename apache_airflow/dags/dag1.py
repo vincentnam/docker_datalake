@@ -9,7 +9,7 @@ from airflow.utils.dates import days_ago
 from airflow.utils.helpers import chain
 from time import sleep
 from pymongo import MongoClient
-
+import datetime
 globals()["META_MONGO_IP"] = "141.115.103.31"
 globals()["OPENSTACK_SWIFT_IP"] = "141.115.103.30"
 globals()["GOLD_MONGO_IP"] = "141.115.103.33"
@@ -198,6 +198,9 @@ def failed_data_processing(*args, **kwargs):
                     "dag_id": str(args[0]["dag_run"]),
                     "operation_instance": str(args[0]["task_instance"])
                 }
+            },
+            "$set": {
+                "last_modified": datetime.datetime.now()
             }
         }
     )
@@ -229,6 +232,9 @@ def successful_data_processing(*args, **kwargs):
                     "dag_id": str(args[0]["dag_run"]),
                     "operation_instance": str(args[0]["task_instance"])
                 }
+            },
+            "$set": {
+                "last_modified": datetime.datetime.now()
             }
         }
     )
