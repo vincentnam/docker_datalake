@@ -29,7 +29,7 @@ def clean_swift(container):
 
 def insert_datalake(file_content, user, key, authurl, container_name,
                     file_name=None, application=None, content_type=None,
-                    mongodb_url="127.0.0.1:27017"):
+                    mongodb_url="127.0.0.1:27017", other_data = None ):
     '''
     Insert data in the datalake :
         - In Openstack Swift for data
@@ -87,21 +87,23 @@ def insert_datalake(file_content, user, key, authurl, container_name,
     meta_data["last_modified"] = datetime.datetime.now()
     meta_data["successful_operations"] = []
     meta_data["failed_operations"] = []
+    if meta_data is not None :
+        meta_data["other_data"] = other_data
     print(meta_data)
 
     if SwiftService({}).stat(container_name)["object"] is None:
         conn.put_container(container_name)
     # Gérer l'atomicité de cette partie #
 
-    coll.insert_one(meta_data)
     retry = 0
     while True:
         try:
             conn.put_object(container_name, meta_data["swift_object_id"],
                             contents=file_content,
                             content_type=meta_data["content_type"])#,
-                            # headers={"x-webhook":"yes"})
-
+            # headers={"x-webhook":"yes"})
+            # Insert metadata over the data : only if data has been put
+            coll.insert_one(meta_data)
             client.stats.swift.update_one({"type": "data_to_process_list"},
                                           {"$push":
                                               {
@@ -185,7 +187,18 @@ container_name = "neocampus"
 
 insert_datalake(file_data, user, key, authurl, container_name,
                 application="neocampus sensors log",
-                content_type="application/json", mongodb_url="127.0.0.1:27017")
+                content_type="application/json", mongodb_url="127.0.0.1:27017",
+                other_data=
+                {
+                    "template":
+                        {
+                            "measurement":"mesurevaleur",
+                            "time":"datemesure",
+                            "fields":["value"],
+                            "tags":["idpiece","idcapteur"]
+                        }
+                }
+                )
 
 # input_csv_file("./dataset/mygates/subset.csv", sep=";", header=0, projet="mygates",authurl = "http://127.0.0.1:12345/auth/v1.0",container_name = "mygates")
 
@@ -194,4 +207,3 @@ insert_datalake(file_data, user, key, authurl, container_name,
 # sshfs vdang@co2-dl-airflow:/projets/datalake/airflow/ /data/python-project/docker_datalake/mnt_temp
 # TODO : Reinstaller Openstack Swift avec Python3
 #
-

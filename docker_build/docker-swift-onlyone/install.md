@@ -191,10 +191,10 @@ Lancement swift :
     curl -v -H 'X-Storage-User: test:tester' -H 'X-Storage-Pass: testing' http://127.0.0.1:8080/auth/v1.0
 
     curl -v -H 'X-Auth-Token: AUTH_tkf0de8b552e384218bbe5e1210ac3463b'  http://127.0.0.1:8080/v1/AUTH_test
-    AUTH_tkf0de8b552e384218bbe5e1210ac3463b
+
      
 
-AUTH_tk026049cc5bea4c08a609dd327ea7e721
+
 
      
      
@@ -247,3 +247,8 @@ AUTH_tk026049cc5bea4c08a609dd327ea7e721
      - Failed: 0
     Sum of execute time for each test: 502.9311 sec.
     
+
+# Add space to loopback device :
+    
+    # It can be done while server is on : TOP LIFE
+    dd if=/dev/zero bs=1MiB of=swift_store conv=notrunc oflag=append count=1000
