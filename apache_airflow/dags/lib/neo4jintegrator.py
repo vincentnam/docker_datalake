@@ -14,11 +14,13 @@ class Neo4jIntegrator:
 
 
     # TODO : Refactor this method name
-    def insert_image(self, metadata):
+    def insert_image(self, doc):
         """
         :param metadata:
         :return:
         """
+        #TODO : parse string to get python object not string
+        metadata = doc["other_data"]["image_content"]
         with self.driver.session() as session:
             req = "MERGE (i1:IMAGE {swift_id :" + metadata["swift_object_id"] + "}) "
 
