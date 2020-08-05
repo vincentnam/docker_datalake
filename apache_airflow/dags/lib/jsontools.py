@@ -31,7 +31,7 @@
 #     },
 
 # def multiple_log_to_timeserie(jsons, template = None):
-#     # TODO : end this function with simple example : with simple template to create 1 time from several json documents
+#     # TODO : end this function with simple example : with simple template to create 1 time from several in_json documents
 #     '''
 #     Take a bunch of documents same logs and transform
 #     it into a time serie
@@ -47,7 +47,7 @@
 #         tm_tag = Template()
 #         tm_measurement = Template()
 #         tm_timestamp = Template()
-#         for json in jsons:
+#         for in_json in jsons:
 #             pass
 #
 # from jinja2 import Template
@@ -59,31 +59,54 @@
 #     msg = tm.render(doc=person)
 #
 #     print(msg)
-def mongodoc_to_influx(json):
-    if "payload" in json:
+def mongodoc_to_influx(in_json, template=None):
+    '''
+
+    :param in_json: dict
+    :param template: dict
+    {
+        "measurement" : "field",
+        "time" : "field",
+        "tags" : ["field1","field2"],
+        "fields" : ["field1","field2"]
+    }
+    :return: dict
+    '''
+    if template is not None :
+        measurement = in_json[template["measurement"]]
+        time = in_json[template["time"]]
+        tags = [(dict_field, in_json[dict_field]) for dict_field in template["tags"]]
+        fields = [(dict_field, in_json[dict_field]) for dict_field in template["fields"]]
         return {
-            "measurement": json["payload"]["value_units"],
-            "tags": {
-                "subID": json["payload"]["subID"],
-                "input": json["payload"]["input"]
-            },
-            "time": json["date"],
-            "fields": {
-                "value": json["payload"]["value"],
-            }
+            "measurement": measurement,
+            "tags": tags,
+            "time": time,
+            "fields": fields
         }
-    elif "data" in json:
-        if "payload" in json["data"]:
+    if "payload" in in_json:
+        return {
+            "measurement": in_json["payload"]["value_units"],
+            "tags": [
+                ("subID", in_json["payload"]["subID"]),
+                ("input", in_json["payload"]["input"])
+            ],
+            "time": in_json["date"],
+            "fields": [
+                ("value", in_json["payload"]["value"])
+            ]
+        }
+    elif "data" in in_json:
+        if "payload" in in_json["data"]:
             return {
-                "measurement": json["data"]["payload"]["value_units"],
-                "tags": {
-                    "subID": json["data"]["payload"]["subID"],
-                    "input": json["data"]["payload"]["input"]
-                },
-                "time": json["data"]["date"],
-                "fields": {
-                    "value": json["data"]["payload"]["value"],
-                }
+                "measurement": in_json["data"]["payload"]["value_units"],
+                "tags": [
+                    ("subID", in_json["data"]["payload"]["subID"]),
+                     ("input", in_json["data"]["payload"]["input"])
+                ],
+                "time": in_json["data"]["date"],
+                "fields": [
+                    ("value", in_json["data"]["payload"]["value"])
+                ]
             }
         else:
             return {}

@@ -72,6 +72,7 @@ def from_mongodb_to_influx(**kwargs):
     from lib.influxdbintegrator import InfluxIntegrator
     import swiftclient
     import json
+    from lib.jsontools import mongodoc_to_influx
     token = "SutSmr4uKZ9DxALVa5O7CucjxWMPkccLIn9MAAvgzCxZOSgV6UUfgr3bflIc9YcetB4F3cNohsqJFqiyEXxVwA=="
     integrator = InfluxIntegrator(influx_host=globals()["GOLD_INFLUX_IP"],
                                   influx_port=globals()["INFLUXDB_PORT"],
@@ -83,6 +84,7 @@ def from_mongodb_to_influx(**kwargs):
                                               + globals()[
                                                   "SWIFT_REST_API_PORT"] +
                                               "/auth/v1.0")
+    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
     retry = 0
 
     while True:
@@ -91,22 +93,45 @@ def from_mongodb_to_influx(**kwargs):
             swift_json = swift_co.get_object(
                 kwargs["dag_run"].conf["swift_container"],
                 kwargs["dag_run"].conf["swift_id"])
-
-            print("Successful")
-            print(swift_json)
-            # If success : break
-
-            # print(json.load(swift_json))
-
-
-        except:
-            print("Failed")
+        except Exception as e:
             retry += 1
             if retry >= 10:
                 sleep(retry)
                 # After 3 fails, break
-                raise Exception("Can't connect to Swift.")
+                raise Exception("Failed to get swift object. " + e)
+        print("Successful")
+        json_parsed = json.loads(
+            swift_json[1].decode("utf8").replace("'", '"'))
+        # print(json_parsed)
+        print(json.dumps(json_parsed, indent=4, sort_keys=True))
+        influxdb_doc = mongodoc_to_influx(json_parsed,
+                                          template=metadata_doc["other_data"][
+                                              "template"])
+        print(json.dumps(influxdb_doc, indent=4, sort_keys=True))
+        try:
+            integrator.write(bucket=metadata_doc["swift_container"],
+                             time = influxdb_doc["time"],
+                             measurement = influxdb_doc["measurement"],
+                             field_list=influxdb_doc["fields"],
+                             tag_list=influxdb_doc["tags"])
+        except Exception as e:
+            raise e
 
+        # parsed_json = json.load(str(swift_json[1]))
+        # print(parsed_json)
+        # print(type(parsed_json))
+        # If success : break
+
+        # print(json.load(swift_json))
+        return
+        #
+        # except:
+        #     print("Failed")
+        #     retry += 1
+        #     if retry >= 10:
+        #         sleep(retry)
+        #         # After 3 fails, break
+        #         raise Exception("Can't connect to Swift.")
 
 
 def not_handled(**kwargs):
@@ -121,7 +146,10 @@ def Not_implemented_json(**kwargs):
 
 
 def check_type(**kwargs):
-    meta_base = MongoHook(globals()["MONGO_META_CONN_ID"])
+    meta_base = MongoClient(
+        "mongodb://" + globals()["META_MONGO_IP"] + ":" + globals()[
+            "MONGO_PORT"] + "/"
+    )
     # find(self, mongo_collection, query, find_one=False, mongo_db=None,
     #      **kwargs):
 
@@ -129,11 +157,13 @@ def check_type(**kwargs):
     swift_id = str(kwargs["dag_run"].conf["swift_id"])
     print(group)
     print(swift_id)
-    doc = meta_base.get_conn().swift.get_collection(group).find_one({
+    doc = meta_base.swift[group].find_one({
         "swift_object_id": swift_id})
     # .kwargs["dag_run"].conf["content_type"]. /
     # find_one("mygates", {}, find_one=False)
     print(doc)
+    kwargs["ti"].xcom_push(key="metadata_doc", value=doc)
+
     if type_dict[doc["content_type"]] in callable_dict:
         data_type = type_dict[doc["content_type"]]
         if group in callable_dict[data_type]:
@@ -217,7 +247,7 @@ branch_op = BranchPythonOperator(
     dag=dag)
 join = DummyOperator(
     task_id='dag_end',
-    trigger_rule='one_success',
+    trigger_rule='none_failed',
 
     dag=dag,
 )

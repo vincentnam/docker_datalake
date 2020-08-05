@@ -16,34 +16,53 @@ NeOCampus is an operation based in the University with numerous research laborat
 # Composition and TODO part: 
 The architecture is defined by big 3 parts : 
 
-- [ ]  Input part : the first area of the data lake that handle raw input data 
+- [x]  Input part : the first area of the data lake that handle raw input data 
     - [ ] API Rest 
         - [x] Make available the data input
         - [ ] API Rest to input 1 or more data
-    - [x] Object storage
+    - [x] Object storage : Openstack swift 
+        - [x] Unittest : OK 
+        - [x] Functionaltest : OK 
+            - Ran: 950 tests in 571.0000 sec.
+                - Passed: 883
+                - Skipped: 67
+                - Expected Fail: 0
+                - Unexpected Success: 0
+                - Failed: 0
+                - Sum of execute time for each test: 502.9311 sec.
+        - [ ] Keystone as authentication service
+        - [ ] Other Openstack services 
     - [x] MongoDb database for metadata
     - [x] Trigger for new input to launch a new Airflow job
         - [x] Create middleware for swift proxy (Webhook trigger to launch Airflow jobs)
         - [ ] Optimizations 
-- [ ]  Transformation from raw to formatted
+- [x]  The "Work zone" : Every jobs to transforms data
     - [x] Airflow deployment (docker image) 
-    - [ ] Airflow job creation / configuration 
+        - [x] Docker image 
+        - [x] Installation on VM
+        - [ ] Ressources optimization 
+            - [ ] Celery executor
+            - [ ] Hadoop for jobs
+    - [x] Airflow job creation / configuration 
         - [x] Handle hook from Swift middleware (Webhook)
         - [x] Set up jobs 
         - [ ] Handle big file (split big file reading + processing if possible)
 - [x] The "gold" zone : database to store formatted / valuable data
     - [ ] Relational database (default)
     - [x] Time serie oriented database (visualisation)
+        - [x] Json data :
+            - [x] Based on templates given (as an input in metadatabase)
     - [x] Document oriented database (transactional vision)
     - [x] Graph database 
         - [x] Image files : 
             - [x] Jpeg 
                 - [x] Nodes creation for objects in the file
                 - [ ] Automatic object detection / segmentation 
-        - [ ] 
+        - [ ] Recommendation tool  
     - [ ] ...
 
-- [ ] Set up a "log" database to log operations on data done
+- [x] Set up a "log" database to log operations on data done
+    - Operations are logged in MongoDB MetaDataBase : successful and failed operation (Airflow task + id ) + operations per day
 - [ ] Diagrams for 
     - [x] Software Architecture
         - [x] Basic
@@ -60,15 +79,16 @@ The architecture is defined by big 3 parts :
 |:-----:|:----------:|:----------:|:--:|:--:|:--:|:-:|:-:| 
 Todo |  | |||| | |
 Working|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
+Production state|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
 Optimized||||||||  
-Tested ||||||||
+Tested |<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|||||||
   
 All is installed on Osirim : need to be tested.
 ### Data model :   
 
-||Image : JPEG | Image : PNG | Text : Json |  
+| |Image : JPEG | Image : PNG | Text : Json |  
 |:---:|:---:|:----:|:---:|  
-||Neo4J : Node created for : images - objects ; links for objects in the image| <img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2636/2636568.svg" height="32">|
+|Available|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">| <img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
 ###### Neo4j data format example :
 ![alt text](git_image/neo4j_data_shema.png )
 
@@ -109,5 +129,8 @@ Aiflow DAG tools in the apache_airflow/dag/lib folder has a special nomenclature
     - Create automatically the job for new data format and the output format
         - Allow us to integrate every kind of data without human action 
 - [ ] Ensure that input into Swift and MongoDB is an atomic operation (and if one fail, the other fail)
-    - How ? : Create triggers in MongoDB and Swift to check input request response ?
-- [ ] Handle the input of same data (redondant data)
+    - How ? : May not be possible
+    - [ ] Solution : Set up a mechanism that check if data are well stored  
+- [x] Handle the input of same data (redundant data)
+    - [x] Done natively in Swift : all datas are stored even if they already are in the database
+    - [ ] Set up a mechanism to handle redundant datas
