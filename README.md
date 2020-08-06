@@ -11,6 +11,12 @@ Optionnal :
 - 8081 : Airflow (Webserver)
 - 9999 : InfluxDB web interface 
 
+Neo4J ports : 
+- 7000
+
+InfluxDB port : 
+- 8086
+
 ## How to insert data : 
 
 To develop a tool to insert data in the datalake, you have to :
