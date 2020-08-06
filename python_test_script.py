@@ -9,7 +9,7 @@ import swiftclient.service
 
 def get_id(mongodb_url):
     mongo_forid_co = MongoClient(mongodb_url)
-    return mongo_forid_co.stats.swift.find_one({"type": "object_id_file"})[
+    return mongo_forid_co.stats.swift.find_one_and_update({"type": "object_id_file"},   {"$inc": {"object_id": 1}})[
         "object_id"]
 
 
@@ -104,27 +104,24 @@ def insert_datalake(file_content, user, key, authurl, container_name,
             # headers={"x-webhook":"yes"})
             # Insert metadata over the data : only if data has been put
             coll.insert_one(meta_data)
-            client.stats.swift.update_one({"type": "data_to_process_list"},
-                                          {"$push":
-                                              {
-                                                  "data_to_process": {
-                                                      "swift_id": meta_data[
-                                                          "swift_object_id"],
-                                                      "swift_container":
-                                                          meta_data[
-                                                              "swift_container"],
-                                                      "swift_user": meta_data[
-                                                          "swift_user"],
-                                                      "content_type":
-                                                          meta_data[
-                                                              "content_type"]
-                                                  }
-                                              }
-                                          }
-                                          )
-
-            client.stats.swift.update_one({"type": "object_id_file"},
-                                          {"$inc": {"object_id": 1}})
+            # client.stats.swift.update_one({"type": "data_to_process_list"},
+            #                               {"$push":
+            #                                   {
+            #                                       "data_to_process": {
+            #                                           "swift_id": meta_data[
+            #                                               "swift_object_id"],
+            #                                           "swift_container":
+            #                                               meta_data[
+            #                                                   "swift_container"],
+            #                                           "swift_user": meta_data[
+            #                                               "swift_user"],
+            #                                           "content_type":
+            #                                               meta_data[
+            #                                                   "content_type"]
+            #                                       }
+            #                                   }
+            #                               }
+            #                               )
             return None
         except Exception as e:
             print(e)
@@ -176,7 +173,7 @@ client = MongoClient("127.0.0.1:27017")
 authurl = "http://127.0.0.1:8080/auth/v1.0"
 conn = swiftclient.Connection(user=user, key=key,
                               authurl=authurl)
-file_name = "Openstack/swift/input_file_test/log.json"
+file_name = "dataset/input_file_test/log.json"
 
 with open(file_name, "rb") as f:
     file_data = f.read()
