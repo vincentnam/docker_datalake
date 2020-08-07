@@ -79,6 +79,10 @@ For each data in this list, it will trigger a "new_input" dag to process this da
 
 ### Data integration activity diagram (Apache Airflow) : 
 
+![alt text](git_image/network_diagram.png)
+
+### Network diagram for the implementation (on OSIRIM) : 
+
 ![alt text](git_image/Sequence_Dataintegration.png)
 
 # Composition and TODO part: 
@@ -199,18 +203,22 @@ For swift :
     - Change the test users 
     - Set up a Keystone service to handle users and authentications
     - Use LDAP (maybe possible ?)
+- Size up storage
 For MongoDB (metadatabase) :
-
+- Change storage path
 For Airflow : 
 - Executor : use Celery executor for a better parallisation 
 - Handle exceptions more specifically 
 For Neo4J (Gold zone) :
 - User "neo4j" / mdp "test"
+- Change storage path
 For InfluxDB (Gold zone) :
 - Admin user (user : datalake_admin / password : osirim_datalake_admin)
 - Create users
+- Change storage path
 For MongoDB (Gold Zone) : 
 - Listening port  27017 : it will conflicts with the MongoDB metadatabase 
+- Change storage path
 
 
 
