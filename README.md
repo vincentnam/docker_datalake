@@ -16,7 +16,9 @@ Neo4J ports :
 
 InfluxDB port : 
 - 8086
+## Airflow json DAG implementation : 
 
+Dont name your task the same name of the callable : it will lead to an error
 ## How to insert data : 
 
 To develop a tool to insert data in the datalake, you have to :
@@ -101,6 +103,7 @@ The architecture is defined by big 3 parts :
     - [x] MongoDb database for metadata
     - [x] Trigger for new input to launch a new Airflow job
         - [x] Create middleware for swift proxy (Webhook trigger to launch Airflow jobs)
+        - [ ] Use X-Webhook in Swift (secure way)
         - [ ] Optimizations 
 - [x]  The "Work zone" : Every jobs to transforms data
     - [x] Airflow deployment (docker image) 
@@ -112,6 +115,7 @@ The architecture is defined by big 3 parts :
     - [x] Airflow job creation / configuration 
         - [x] Handle hook from Swift middleware (Webhook)
         - [x] Set up jobs 
+        - [ ] Find a proper way to instantiate dag from JSON file (day_ago function)
         - [ ] Handle big file (split big file reading + processing if possible)
 - [x] The "gold" zone : database to store formatted / valuable data
     - [ ] Relational database (default)
