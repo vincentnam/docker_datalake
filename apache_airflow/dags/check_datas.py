@@ -9,11 +9,14 @@ from airflow.operators.dummy_operator import DummyOperator
 import logging
 from datetime import datetime
 
-
+import os
+# The path of the file not the python binary
+cwd = os.path.dirname(os.path.abspath(__file__))
 import yaml
+
 # import configurations of different services needed :
 # IP and port of Swift, MongoDB, etc..
-with open("config.yml") as config:
+with open(cwd + "/config.yml") as config:
     y = yaml.safe_load(config)
 globals().update(y)
 

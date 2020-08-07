@@ -16,7 +16,9 @@ Neo4J ports :
 
 InfluxDB port : 
 - 8086
+## Airflow json DAG implementation : 
 
+Dont name your task the same name of the callable : it will lead to an error
 ## How to insert data : 
 
 To develop a tool to insert data in the datalake, you have to :
@@ -77,6 +79,10 @@ For each data in this list, it will trigger a "new_input" dag to process this da
 
 ### Data integration activity diagram (Apache Airflow) : 
 
+![alt text](git_image/network_diagram.png)
+
+### Network diagram for the implementation (on OSIRIM) : 
+
 ![alt text](git_image/Sequence_Dataintegration.png)
 
 # Composition and TODO part: 
@@ -101,6 +107,7 @@ The architecture is defined by big 3 parts :
     - [x] MongoDb database for metadata
     - [x] Trigger for new input to launch a new Airflow job
         - [x] Create middleware for swift proxy (Webhook trigger to launch Airflow jobs)
+        - [ ] Use X-Webhook in Swift (secure way)
         - [ ] Optimizations 
 - [x]  The "Work zone" : Every jobs to transforms data
     - [x] Airflow deployment (docker image) 
@@ -112,6 +119,7 @@ The architecture is defined by big 3 parts :
     - [x] Airflow job creation / configuration 
         - [x] Handle hook from Swift middleware (Webhook)
         - [x] Set up jobs 
+        - [ ] Find a proper way to instantiate dag from JSON file (day_ago function)
         - [ ] Handle big file (split big file reading + processing if possible)
 - [x] The "gold" zone : database to store formatted / valuable data
     - [ ] Relational database (default)
@@ -195,18 +203,22 @@ For swift :
     - Change the test users 
     - Set up a Keystone service to handle users and authentications
     - Use LDAP (maybe possible ?)
+- Size up storage
 For MongoDB (metadatabase) :
-
+- Change storage path
 For Airflow : 
 - Executor : use Celery executor for a better parallisation 
 - Handle exceptions more specifically 
 For Neo4J (Gold zone) :
 - User "neo4j" / mdp "test"
+- Change storage path
 For InfluxDB (Gold zone) :
 - Admin user (user : datalake_admin / password : osirim_datalake_admin)
 - Create users
+- Change storage path
 For MongoDB (Gold Zone) : 
 - Listening port  27017 : it will conflicts with the MongoDB metadatabase 
+- Change storage path
 
 
 
