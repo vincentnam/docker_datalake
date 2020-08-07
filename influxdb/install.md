@@ -45,8 +45,3 @@ https://computingforgeeks.com/install-grafana-and-influxdb-on-centos-7/ pour la 
     usr : datalake_admin / password : osirim_datalake_admin
     
     
-    
-{
-{"id":1},
-{"id":2}
-}
