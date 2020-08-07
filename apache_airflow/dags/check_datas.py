@@ -9,21 +9,14 @@ from airflow.operators.dummy_operator import DummyOperator
 import logging
 from datetime import datetime
 
-globals()["META_MONGO_IP"] = "141.115.103.31"
-globals()["OPENSTACK_SWIFT_IP"] = "141.115.103.30"
-globals()["GOLD_MONGO_IP"] = "141.115.103.33"
-globals()["GOLD_NEO4J_IP"] = "141.115.103.33"
-globals()["GOLD_INFLUX_IP"] = "141.115.103.33"
-globals()["MONGO_PORT"] = "27017"
-globals()["SWIFT_REST_API_PORT"] = "8080"
-globals()["INFLUXDB_PORT"] = "8086"
-globals()["NEO4J_PORT"] = "7000"
-globals()["SWIFT_USER"] = 'test:tester'
-globals()["SWIFT_KEY"] = 'testing'
 
-# Needed for airflow Hook
-globals()["MONGO_META_CONN_ID"] = "mongo_metadatabase"
-globals()["MONGO_GOLD_CONN_ID"] = "mongo_gold"
+import yaml
+# import configurations of different services needed :
+# IP and port of Swift, MongoDB, etc..
+with open("config.yml") as config:
+    y = yaml.safe_load(config)
+globals().update(y)
+
 
 default_args = {
     'owner': 'airflow',

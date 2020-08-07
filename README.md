@@ -189,6 +189,25 @@ Aiflow DAG tools in the apache_airflow/dag/lib folder has a special nomenclature
 #### For the "Gold" zone : 
 - ... 
 
+## What to change before a real deployments :
+For swift : 
+- Users authentications :
+    - Change the test users 
+    - Set up a Keystone service to handle users and authentications
+    - Use LDAP (maybe possible ?)
+For MongoDB (metadatabase) :
+
+For Airflow : 
+- Executor : use Celery executor for a better parallisation 
+- Handle exceptions more specifically 
+For Neo4J (Gold zone) :
+- User "neo4j" / mdp "test"
+For InfluxDB (Gold zone) :
+- Admin user (user : datalake_admin / password : osirim_datalake_admin)
+- Create users
+For MongoDB (Gold Zone) : 
+- Listening port  27017 : it will conflicts with the MongoDB metadatabase 
+
 
 
 ## How to go further :

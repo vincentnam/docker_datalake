@@ -10,21 +10,14 @@ from airflow.utils.helpers import chain
 from time import sleep
 from pymongo import MongoClient
 import datetime
-globals()["META_MONGO_IP"] = "141.115.103.31"
-globals()["OPENSTACK_SWIFT_IP"] = "141.115.103.30"
-globals()["GOLD_MONGO_IP"] = "141.115.103.33"
-globals()["GOLD_NEO4J_IP"] = "141.115.103.33"
-globals()["GOLD_INFLUX_IP"] = "141.115.103.33"
-globals()["MONGO_PORT"] = "27017"
-globals()["SWIFT_REST_API_PORT"] = "8080"
-globals()["INFLUXDB_PORT"] = "8086"
-globals()["NEO4J_PORT"] = "7000"
-globals()["SWIFT_USER"] = 'test:tester'
-globals()["SWIFT_KEY"] = 'testing'
 
-# Needed for airflow Hook
-globals()["MONGO_META_CONN_ID"] = "mongo_metadatabase"
-globals()["MONGO_GOLD_CONN_ID"] = "mongo_gold"
+import yaml
+# import configurations of different services needed :
+# IP and port of Swift, MongoDB, etc..
+with open("config.yml") as config:
+    y = yaml.safe_load(config)
+globals().update(y)
+
 
 # TODO : Restructure DAG architecture
 
@@ -51,6 +44,11 @@ dag = DAG(
 
 
 def content_neo4j_node_creation(**kwargs):
+    """
+
+    :param kwargs:
+    :return:
+    """
     from lib.neo4jintegrator import Neo4jIntegrator
 
     uri = "bolt://" + globals()["GOLD_NEO4J_IP"] + ":" + globals()[
@@ -68,12 +66,24 @@ def content_neo4j_node_creation(**kwargs):
     driver.insert_image(doc)
 
 
-def from_mongodb_to_influx(**kwargs):
+def from_mongodb_to_influx(token = None, nb_retry = 10, **kwargs):
+    """
+    Take a mongodb Json like, parse it to find measurement, tags, fields and timestamp
+    and create a point to insert into Influxdb.
+    :param token : authentication token for InfluxDB
+    :type token : str
+    :param kwargs: Airflow context, containing XCom and other
+    datas see Airflow doc for more informations.
+    :return: None
+    """
+    # Import are done in function to not load useless libraries in other tasks
     from lib.influxdbintegrator import InfluxIntegrator
+    from lib.jsontools import mongodoc_to_influx
     import swiftclient
     import json
-    from lib.jsontools import mongodoc_to_influx
-    token = "SutSmr4uKZ9DxALVa5O7CucjxWMPkccLIn9MAAvgzCxZOSgV6UUfgr3bflIc9YcetB4F3cNohsqJFqiyEXxVwA=="
+    # InfluxDB Token to access
+    if token is None :
+        token = "SutSmr4uKZ9DxALVa5O7CucjxWMPkccLIn9MAAvgzCxZOSgV6UUfgr3bflIc9YcetB4F3cNohsqJFqiyEXxVwA=="
     integrator = InfluxIntegrator(influx_host=globals()["GOLD_INFLUX_IP"],
                                   influx_port=globals()["INFLUXDB_PORT"],
                                   token=token)
@@ -84,25 +94,29 @@ def from_mongodb_to_influx(**kwargs):
                                               + globals()[
                                                   "SWIFT_REST_API_PORT"] +
                                               "/auth/v1.0")
+    # Pull data from XCom instance : come from "check_type" task
     metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    retry = 0
 
+    retry = 0
     while True:
         print("Try " + str(retry) + " : ", end='')
         try:
+            # swift_json is a tuple : (meta_data, data)
             swift_json = swift_co.get_object(
                 kwargs["dag_run"].conf["swift_container"],
                 kwargs["dag_run"].conf["swift_id"])
         except Exception as e:
+            # If swift is
             retry += 1
-            if retry >= 10:
+            if retry >= nb_retry:
+                # Augments sleep time to be sure to let swift get ready
                 sleep(retry)
-                # After 3 fails, break
+                # After nb_retry fails, break
                 raise Exception("Failed to get swift object. " + e)
         print("Successful")
+        # Json parsing
         json_parsed = json.loads(
             swift_json[1].decode("utf8").replace("'", '"'))
-        # print(json_parsed)
         print(json.dumps(json_parsed, indent=4, sort_keys=True))
         influxdb_doc = mongodoc_to_influx(json_parsed,
                                           template=metadata_doc["other_data"][
@@ -117,22 +131,7 @@ def from_mongodb_to_influx(**kwargs):
         except Exception as e:
             raise e
 
-        # parsed_json = json.load(str(swift_json[1]))
-        # print(parsed_json)
-        # print(type(parsed_json))
-        # If success : break
-
-        # print(json.load(swift_json))
         return
-        #
-        # except:
-        #     print("Failed")
-        #     retry += 1
-        #     if retry >= 10:
-        #         sleep(retry)
-        #         # After 3 fails, break
-        #         raise Exception("Can't connect to Swift.")
-
 
 def not_handled(**kwargs):
     raise NotImplementedError(
@@ -146,32 +145,49 @@ def Not_implemented_json(**kwargs):
 
 
 def check_type(**kwargs):
+    """
+    Check data MIME type and return the next task to trigger.
+    It depends on MIME type and container.
+
+    :param kwargs: Airflow context
+    :return:
+    """
     meta_base = MongoClient(
         "mongodb://" + globals()["META_MONGO_IP"] + ":" + globals()[
             "MONGO_PORT"] + "/"
     )
-    # find(self, mongo_collection, query, find_one=False, mongo_db=None,
-    #      **kwargs):
 
     group = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_id"])
     print(group)
     print(swift_id)
-    doc = meta_base.swift[group].find_one({
+    metadata_doc = meta_base.swift[group].find_one({
         "swift_object_id": swift_id})
     # .kwargs["dag_run"].conf["content_type"]. /
     # find_one("mygates", {}, find_one=False)
-    print(doc)
-    kwargs["ti"].xcom_push(key="metadata_doc", value=doc)
+    print(metadata_doc)
+    kwargs["ti"].xcom_push(key="metadata_doc", value=metadata_doc)
 
-    if type_dict[doc["content_type"]] in callable_dict:
-        data_type = type_dict[doc["content_type"]]
-        if group in callable_dict[data_type]:
-            return callable_dict[data_type][group]
+
+    if metadata_doc["content_type"] in task_dict:
+        if group in task_dict[metadata_doc["content_type"]] :
+            return task_dict[metadata_doc["content_type"]][group][0].task_id
+        else :
+            return task_dict[metadata_doc["content_type"]]["default"][0].task_id
+    else :
+        if group in task_dict[metadata_doc["not_handled"]]:
+            return task_dict[metadata_doc["not_handled"]][group][0].task_id
         else:
-            return callable_dict[data_type]["default"]
-    else:
-        return callable_dict["not_handled"]["default"]
+            return task_dict[metadata_doc["not_handled"]]["default"][0].task_id
+    #
+    # if type_dict[doc["content_type"]] in callable_dict:
+    #     data_type = type_dict[doc["content_type"]]
+    #     if group in callable_dict[data_type]:
+    #         return callable_dict[data_type][group]
+    #     else:
+    #         return callable_dict[data_type]["default"]
+    # else:
+    #     return callable_dict["not_handled"]["default"]
 
 
 def failed_data_processing(*args, **kwargs):
@@ -210,7 +226,6 @@ def failed_data_processing(*args, **kwargs):
 def successful_data_processing(*args, **kwargs):
     print("The data processing was a success.")
     print(kwargs.keys())
-    # print(kwargs["ti"].task_id)
     print(args[0]["execution_date"])
     print(args[0])
     group = args[0]["dag_run"].conf["swift_container"]
@@ -257,115 +272,180 @@ join = DummyOperator(
 
     dag=dag,
 )
-# Needed for lib mime type
-type_dict = {"image/jpeg": "jpeg_data", "application/json": "json_data"
-    , "image/png": "png_data", None: "not_handled"}
-# Callable_dict contains the branch to get / the first task of the branch
-callable_dict = \
-    {
-        "jpeg_data":
-            {
-                "default": "object_in_image_in_neo4j",
-                "mygates": "mygates_object_in_image_in_neo4j",
-            },
-        "json_data":
-            {
-                "default": "Not_implemented_json",
-                "neocampus": "Json_log_to_timeserie_influxdb",
-            },
-        "not_handled":
-            {
-                "default": "Nothing_to_do"
-            }
-    }
-
 task_dict = {
-    "png_data": {
-        "default": [
-            PythonOperator(
-                # TODO : Find a task_id naming solution
-                task_id="Object_in_png_in_neo4j",
-                provide_context=True,
-                python_callable=content_neo4j_node_creation,
-                start_date=days_ago(2),
-                on_failure_callback=failed_data_processing,
-                on_success_callback=successful_data_processing
-            )
-        ],
-        "mygates": [
-            PythonOperator(
-                # TODO : Find a task_id naming solution
-                task_id="Mygates_object_in_png_in_neo4j",
-                provide_context=True,
-                python_callable=content_neo4j_node_creation,
-                start_date=days_ago(2),
-                on_failure_callback=failed_data_processing,
-                on_success_callback=successful_data_processing
-            )
-        ]
-    },
-    "jpeg_data": {
-        "default": [
-            PythonOperator(
-                # TODO : Find a task_id naming solution
-                task_id="Object_in_jpeg_in_neo4j",
-                provide_context=True,
-                python_callable=content_neo4j_node_creation,
-                start_date=days_ago(2),
-                on_failure_callback=failed_data_processing,
-                on_success_callback=successful_data_processing
-            )
-        ],
-        "mygates": [
-            PythonOperator(
-                # TODO : Find a task_id naming solution
-                task_id="Mygates_object_in_jpeg_in_neo4j",
-                provide_context=True,
-                python_callable=content_neo4j_node_creation,
-                start_date=days_ago(2),
-                on_failure_callback=failed_data_processing,
-                on_success_callback=successful_data_processing
-            )
-        ]
-    },
-    "json_data": {
-        "default": [
-            PythonOperator(
-                # TODO : Find a task_id naming solution
-                task_id="Not_implemented_json",
-                provide_context=True,
-                python_callable=Not_implemented_json,
-                start_date=days_ago(2),
-                on_failure_callback=failed_data_processing,
-                on_success_callback=successful_data_processing
-            )
-        ],
-        "neocampus": [
-            PythonOperator(
-                # TODO : Find a task_id naming solution
-                task_id="Json_log_to_timeserie_influxdb",
-                provide_context=True,
-                python_callable=from_mongodb_to_influx,
-                start_date=days_ago(2),
-                on_failure_callback=failed_data_processing,
-                on_success_callback=successful_data_processing
-            )
-        ]
-    },
-    "not_handled": {
-        "default": [
-            PythonOperator(
-                # TODO : Find a task_id naming solution
-                task_id="Not_handled",
-                provide_context=True,
-                python_callable=not_handled,
-                start_date=days_ago(2),
-                on_failure_callback=failed_data_processing,
-                on_success_callback=successful_data_processing
-            )
-        ]
+        "image/png": {
+            "default": [
+                PythonOperator(
+                    # TODO : Find a task_id naming solution
+                    task_id="Object_in_png_in_neo4j",
+                    provide_context=True,
+                    python_callable=content_neo4j_node_creation,
+                    start_date=days_ago(2),
+                    on_failure_callback=failed_data_processing,
+                    on_success_callback=successful_data_processing
+                )
+            ],
+            "mygates": [
+                PythonOperator(
+                    # TODO : Find a task_id naming solution
+                    task_id="Mygates_object_in_png_in_neo4j",
+                    provide_context=True,
+                    python_callable=content_neo4j_node_creation,
+                    start_date=days_ago(2),
+                    on_failure_callback=failed_data_processing,
+                    on_success_callback=successful_data_processing
+                )
+            ]
+        },
+        "image/jpeg": {
+            "default": [
+                PythonOperator(
+                    # TODO : Find a task_id naming solution
+                    task_id="Object_in_jpeg_in_neo4j",
+                    provide_context=True,
+                    python_callable=content_neo4j_node_creation,
+                    start_date=days_ago(2),
+                    on_failure_callback=failed_data_processing,
+                    on_success_callback=successful_data_processing
+                )
+            ],
+            "mygates": [
+                PythonOperator(
+                    # TODO : Find a task_id naming solution
+                    task_id="Mygates_object_in_jpeg_in_neo4j",
+                    provide_context=True,
+                    python_callable=content_neo4j_node_creation,
+                    start_date=days_ago(2),
+                    on_failure_callback=failed_data_processing,
+                    on_success_callback=successful_data_processing
+                )
+            ]
+        },
+        "application/json": {
+            "default": [
+                PythonOperator(
+                    # TODO : Find a task_id naming solution
+                    task_id="Not_implemented_json",
+                    provide_context=True,
+                    python_callable=Not_implemented_json,
+                    start_date=days_ago(2),
+                    on_failure_callback=failed_data_processing,
+                    on_success_callback=successful_data_processing
+                )
+            ],
+            "neocampus": [
+                PythonOperator(
+                    # TODO : Find a task_id naming solution
+                    task_id="Json_log_to_timeserie_influxdb",
+                    provide_context=True,
+                    python_callable=from_mongodb_to_influx,
+                    start_date=days_ago(2),
+                    on_failure_callback=failed_data_processing,
+                    on_success_callback=successful_data_processing
+                )
+            ]
+        },
+        "not_handled": {
+            "default": [
+                PythonOperator(
+                    # TODO : Find a task_id naming solution
+                    task_id="Not_handled",
+                    provide_context=True,
+                    python_callable=not_handled,
+                    start_date=days_ago(2),
+                    on_failure_callback=failed_data_processing,
+                    on_success_callback=successful_data_processing
+                )
+            ]
+        }
     }
-}
+# task_dict = {
+#     "png_data": {
+#         "default": [
+#             PythonOperator(
+#                 # TODO : Find a task_id naming solution
+#                 task_id="Object_in_png_in_neo4j",
+#                 provide_context=True,
+#                 python_callable=content_neo4j_node_creation,
+#                 start_date=days_ago(2),
+#                 on_failure_callback=failed_data_processing,
+#                 on_success_callback=successful_data_processing
+#             )
+#         ],
+#         "mygates": [
+#             PythonOperator(
+#                 # TODO : Find a task_id naming solution
+#                 task_id="Mygates_object_in_png_in_neo4j",
+#                 provide_context=True,
+#                 python_callable=content_neo4j_node_creation,
+#                 start_date=days_ago(2),
+#                 on_failure_callback=failed_data_processing,
+#                 on_success_callback=successful_data_processing
+#             )
+#         ]
+#     },
+#     "jpeg_data": {
+#         "default": [
+#             PythonOperator(
+#                 # TODO : Find a task_id naming solution
+#                 task_id="Object_in_jpeg_in_neo4j",
+#                 provide_context=True,
+#                 python_callable=content_neo4j_node_creation,
+#                 start_date=days_ago(2),
+#                 on_failure_callback=failed_data_processing,
+#                 on_success_callback=successful_data_processing
+#             )
+#         ],
+#         "mygates": [
+#             PythonOperator(
+#                 # TODO : Find a task_id naming solution
+#                 task_id="Mygates_object_in_jpeg_in_neo4j",
+#                 provide_context=True,
+#                 python_callable=content_neo4j_node_creation,
+#                 start_date=days_ago(2),
+#                 on_failure_callback=failed_data_processing,
+#                 on_success_callback=successful_data_processing
+#             )
+#         ]
+#     },
+#     "json_data": {
+#         "default": [
+#             PythonOperator(
+#                 # TODO : Find a task_id naming solution
+#                 task_id="Not_implemented_json",
+#                 provide_context=True,
+#                 python_callable=Not_implemented_json,
+#                 start_date=days_ago(2),
+#                 on_failure_callback=failed_data_processing,
+#                 on_success_callback=successful_data_processing
+#             )
+#         ],
+#         "neocampus": [
+#             PythonOperator(
+#                 # TODO : Find a task_id naming solution
+#                 task_id="Json_log_to_timeserie_influxdb",
+#                 provide_context=True,
+#                 python_callable=from_mongodb_to_influx,
+#                 start_date=days_ago(2),
+#                 on_failure_callback=failed_data_processing,
+#                 on_success_callback=successful_data_processing
+#             )
+#         ]
+#     },
+#     "not_handled": {
+#         "default": [
+#             PythonOperator(
+#                 # TODO : Find a task_id naming solution
+#                 task_id="Not_handled",
+#                 provide_context=True,
+#                 python_callable=not_handled,
+#                 start_date=days_ago(2),
+#                 on_failure_callback=failed_data_processing,
+#                 on_success_callback=successful_data_processing
+#             )
+#         ]
+#     }
+# }
 
 run_this_first >> branch_op
 
