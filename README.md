@@ -1,3 +1,5 @@
+Some more documentation is available on a google drive document at this address : https://docs.google.com/document/d/1QdtPktYoVD6AEcN_ctmKFChGfKwCS-Whj59pyjaHBqg/edit?usp=sharing
+
 # docker_datalake
 Docker POC for datalake : neOCampus internship for 2nd year of Master in Statistic and Decisional Computing (SID at Université Toulouse 3 - Paul-Sabatier in Toulouse)
 # Context :
