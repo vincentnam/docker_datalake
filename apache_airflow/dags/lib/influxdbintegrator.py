@@ -1,12 +1,13 @@
 from influxdb_client import InfluxDBClient, Point
-
+from influxdb_client.client.write_api import SYNCHRONOUS
 class InfluxIntegrator:
-    def __init__(self, influx_host="141.115.103.33", influx_port=8086,
-                 **kwargs):
-        self.influx_client = InfluxDBClient(url="http://"+influx_host +
-                                                ":"+str(influx_port), **kwargs)
+    def __init__(self, influx_url="http://141.115.103.33:9999",
+                 token = None, org=None, **kwargs):
+        self.org = org
+        self.token = token
+        self.influx_client = InfluxDBClient(url=influx_url, token=token, org=org, **kwargs)
         # Default write option is Batching
-        self.write_api = self.influx_client.write_api()
+        self.write_api = self.influx_client.write_api(write_options=SYNCHRONOUS)
         self.query_api = self.influx_client.query_api()
         # self.database_list = self.influx_client.get_list_database()
 
@@ -35,7 +36,7 @@ class InfluxIntegrator:
         for tag_tuple in tag_list:
             point.tag(tag_tuple[0], tag_tuple[1])
 
-        self.write_api.write(bucket=bucket, record=point, **kwargs)
+        print(self.write_api.write(bucket=bucket, record=point, org= self.org, **kwargs))
 
 
 

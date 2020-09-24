@@ -40,7 +40,7 @@ To develop a tool to insert data in the datalake, you have to :
         test:tester_neocampus_119:2020-08-04T14:42:38, externally triggered: True>") :
             - If the task has been triggered by the proxy-server trigger, it contains :
                 - "manual"
-                - the date
+                - the date=
             - If the task has been triggered by the "Check_data_to_process" dag, it contains ("%s_%s_%s:%s"): 
                 - the user
                 - the container

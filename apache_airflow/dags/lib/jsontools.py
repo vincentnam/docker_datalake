@@ -59,6 +59,19 @@
 #     msg = tm.render(doc=person)
 #
 #     print(msg)
+def mongodoc_to_influx_list(doc,template=None):
+    date, uri, payload = doc
+    value = payload.pop("value")
+    return {
+            "measurement": value,
+            "tags": [("uri", uri)],
+            "time": date,
+            "fields": [
+                (key, payload[key]) for key in payload.keys()
+            ]
+        }
+
+
 def mongodoc_to_influx(in_json, template=None):
     '''
 
