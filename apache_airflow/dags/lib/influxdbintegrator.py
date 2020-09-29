@@ -1,4 +1,4 @@
-from influxdb_client import InfluxDBClient, Point
+from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 class InfluxIntegrator:
     def __init__(self, influx_url="http://141.115.103.33:9999",
@@ -27,7 +27,7 @@ class InfluxIntegrator:
         :return:
         '''
         point = Point(measurement)
-        point.time(time)
+        point.time(time,WritePrecision.MS)
         if not field_list :
             # TODO : Create an exception NoDataException
             raise Exception("Not point to write in database.")
@@ -36,7 +36,7 @@ class InfluxIntegrator:
         for tag_tuple in tag_list:
             point.tag(tag_tuple[0], tag_tuple[1])
 
-        print(self.write_api.write(bucket=bucket, record=point, org= self.org, **kwargs))
+        self.write_api.write(bucket=bucket, record=point, org= self.org, **kwargs)
 
 
 

@@ -1,3 +1,6 @@
+import datetime
+
+
 # TODO : create tools to process JSON :
 #    - TODO : create tools to process sensor log into InfluxDB
 #    - TODO : IA FOR JSON TEMPLATE : AUTOMATIC TEMPLATE / INFORMATION RECOGNITION FOR A LIST OF DOCUMENT WITH DIFFERENTS STRUCTURE
@@ -59,17 +62,31 @@
 #     msg = tm.render(doc=person)
 #
 #     print(msg)
+
+
+
+
 def mongodoc_to_influx_list(doc,template=None):
-    date, uri, payload = doc
-    value = payload.pop("value")
-    return {
-            "measurement": value,
-            "tags": [("uri", uri)],
-            "time": date,
-            "fields": [
-                (key, payload[key]) for key in payload.keys()
-            ]
-        }
+    device,date, uri, payload = doc
+    # value_u = payload.pop("value_units")
+    fields_key = list(payload.keys())
+    # print(doc)
+    # print(fields_key)
+    rep={}
+    rep["measurement"] = device
+    rep["time"] = date
+    rep["tags"] = []
+    rep["fields"] = []
+
+    for key in payload.keys():
+        if key == "value":
+            rep["fields"].append((key, float(payload[key])))
+        else:
+            rep["tags"].append((key, payload[key]))
+
+    rep["tags"].append(("uri",uri))
+    # print(rep)
+    return rep
 
 
 def mongodoc_to_influx(in_json, template=None):
