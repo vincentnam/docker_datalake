@@ -148,6 +148,7 @@ The architecture is defined by big 3 parts :
     - [ ] Sequence diagram
         - [x] Basic
         - [ ] Advanced
+- [ ] Add metadata over transformed data in the goldzone (and be able to find the list of process done to create this processed data)
 # What services are available now : 
 #### Services : 
 
