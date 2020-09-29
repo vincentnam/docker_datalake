@@ -1,0 +1,33 @@
+{
+  "_id": ObjectId("5a498364adf801e9707ddff1"),
+  "idcapteur": 10,
+  "subId": "ilot3",
+  "device": "luminosity",
+  "data": {
+    "date": "2018-01-01T00:40:04.345219",
+    "payload": {
+      "subID": "ilot3",
+      "input": 110,
+      "value_units": "lux",
+      "value": 14,
+      "unitID": "inside"
+    },
+    "uri": "u4/302/luminosity/ilot3"
+  },
+  "mesurevaleur": [
+    {
+      "idlibv": 3,
+      "valeur": 14.0
+    }
+  ],
+  "building": "u4",
+  "room": "302",
+  "idpiece": 1,
+  "uri": "u4/302/luminosity/ilot3",
+  "idMesure": 3384116,
+  "datemesure": datetime.datetime(2018,  1,  1,  0,  40,  4,  345000)
+}
+
+
+
+      "subID","input","value_units","value", "unitID"

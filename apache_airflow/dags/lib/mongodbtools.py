@@ -88,6 +88,12 @@ class MongoTools:
     def neocampus_data_processing(self, doc):
         # 1: DATA TIME
         try :
+
+            if('device' in doc.keys()):
+                device = doc["device"]
+            else:
+                raise Exception("No device field found : no measurement type")
+
             _measureTime = None
             if ('datemesure' in doc.keys()):
                 _measureTime = doc['datemesure']
@@ -146,8 +152,8 @@ class MongoTools:
                     payload = json.loads(payload.decode('utf-8'))
                 except Exception as ex:
                     payload = json.loads(payload)
-
-            return _dataTime, _uri, payload
+            print(_dataTime)
+            return device,_dataTime, _uri, payload
         except Exception as e :
             #TODO : save error doc id
             pass
@@ -158,18 +164,34 @@ if __name__ == "__main__":
     mongoset = mongotool.load()
     data_point = set([])
     aux= 0
-    influxd= influxdbintegrator.InfluxIntegrator(influx_url="http://localhost:9999", token="_3ROe3ch2t0jgq0zVdgnh1lRrvtB-9ARCKQL2vtfR2Kr63eBKamyxKID8GdcytpRl9yNLy2zQzYQlJTzP-2bFQ==", org="admin")
+    influxd= influxdbintegrator.InfluxIntegrator(influx_url="http://localhost:9999",
+                                                 token="K3Wg148PJaSNP2WO7wCwy9_WvrOPr3mga5a5drldJbFxqv8Ss7ONDTofLGmd_QFj9EIJp0g_C5nYTPH8nJ_PtA==",
+                                                 org="test")
     for i in mongoset["iterators"][0] :
-
+        # print(i)
         point = jsontools.mongodoc_to_influx_list(
             mongotool.neocampus_data_processing(i))
-        influxd.write(bucket="admin",
-                      measurement=point["tags"][0][1].split("/")[2],
+        point['time'] =point['time']
+        print(point)
+
+        influxd.write(bucket="test",
+                      measurement=point["measurement"],
                       time = point["time"], field_list=point["fields"],
-                      tag_list=point["tags"])
+                       tag_list=point["tags"])
         print(aux)
         aux+=1
-
-        if aux == 1000 :
+        # PROBLEME : création des points : measurements pas bon ?
+        if aux == 100000 :
             break
+
+    # import influxdb_client
+    # from influxdb_client import InfluxDBClient, Point, WritePrecision
+    #
+    # client = InfluxDBClient(url="http://localhost:9999", token="rJ1fDpYDP3ElLO-FesJtfmu-p_f4jo8NHRLR3-6elKbQHVvyAgONZwNoa_1xX2kK3qml-LJIyHQ4UasH8FoqHw==")
+    # write_api = client.write_api()
+    # point = Point("mem") \
+    #     .tag("host", "host1") \
+    #     .field("used_percent", 23.43234543) \
+    #     .time(1556896326, WritePrecision.NS)
+    # write_api.write("test", "admin", point)
 
