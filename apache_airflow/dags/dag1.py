@@ -14,6 +14,7 @@ import os
 
 cwd = os.path.dirname(os.path.abspath(__file__))
 import yaml
+import json
 
 # import configurations of different services needed :
 # IP and port of Swift, MongoDB, etc..
@@ -272,10 +273,8 @@ branch_op = BranchPythonOperator(
 join = DummyOperator(
     task_id='dag_end',
     trigger_rule='none_failed',
-
     dag=dag,
 )
-import json
 
 
 def construct_operator(**kwargs):
@@ -287,7 +286,86 @@ def construct_operator(**kwargs):
             kwargs[arg] = callable_dict[kwargs[arg]]
     return kwargs["operator"](start_date=days_ago(0), **kwargs)
 
-
+task_dict = {
+    "db_dump":{
+        "mongo":{},
+        "influxdb":{},
+        "sql":{}
+    },
+    "data":{
+        "text/csv":{},
+        "application/json":{
+            "default": [
+                PythonOperator(
+                    # TODO : Find a task_id naming solution
+                    task_id="Not_implemented_json",
+                    provide_context=True,
+                    python_callable=Not_implemented_json_call,
+                    start_date=days_ago(2),
+                    on_failure_callback=failed_data_processing,
+                    on_success_callback=successful_data_processing
+                )
+            ],
+            "neocampus": [
+                PythonOperator(
+                    # TODO : Find a task_id naming solution
+                    task_id="Json_log_to_timeserie_influxdb",
+                    provide_context=True,
+                    python_callable=from_mongodb_to_influx,
+                    start_date=days_ago(2),
+                    on_failure_callback=failed_data_processing,
+                    on_success_callback=successful_data_processing
+                )
+        ]},
+        "image/png":{
+            "default": [
+            PythonOperator(
+                # TODO : Find a task_id naming solution
+                task_id="Object_in_png_in_neo4j",
+                provide_context=True,
+                python_callable=content_neo4j_node_creation,
+                start_date=days_ago(2),
+                on_failure_callback=failed_data_processing,
+                on_success_callback=successful_data_processing
+            )
+        ],
+            "mygates": [
+                PythonOperator(
+                    # TODO : Find a task_id naming solution
+                    task_id="Mygates_object_in_png_in_neo4j",
+                    provide_context=True,
+                    python_callable=content_neo4j_node_creation,
+                    start_date=days_ago(2),
+                    on_failure_callback=failed_data_processing,
+                    on_success_callback=successful_data_processing
+                )
+            ]},
+        "image/jpeg":{
+            "default": [
+                PythonOperator(
+                    # TODO : Find a task_id naming solution
+                    task_id="Object_in_jpeg_in_neo4j",
+                    provide_context=True,
+                    python_callable=content_neo4j_node_creation,
+                    start_date=days_ago(2),
+                    on_failure_callback=failed_data_processing,
+                    on_success_callback=successful_data_processing
+                )
+            ],
+            "mygates": [
+                PythonOperator(
+                    # TODO : Find a task_id naming solution
+                    task_id="Mygates_object_in_jpeg_in_neo4j",
+                    provide_context=True,
+                    python_callable=content_neo4j_node_creation,
+                    start_date=days_ago(2),
+                    on_failure_callback=failed_data_processing,
+                    on_success_callback=successful_data_processing
+                )
+            ]
+        }
+    }
+}
 task_dict = {
     "image/png": {
         "default": [
@@ -487,7 +565,7 @@ for data_type in distros_dict:
         sub_pipe = []
         for task in distros_dict[data_type][owner_group]:
             sub_pipe.append(construct_operator(**task))
-        pipeline.append([*sub_pipe, ])
+        pipeline.append([*sub_pipe,])
 
 for list in pipeline:
     chain(branch_op, *list, join)
