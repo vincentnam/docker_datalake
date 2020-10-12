@@ -165,24 +165,27 @@ if __name__ == "__main__":
     data_point = set([])
     aux= 0
     influxd= influxdbintegrator.InfluxIntegrator(influx_url="http://localhost:9999",
-                                                 token="K3Wg148PJaSNP2WO7wCwy9_WvrOPr3mga5a5drldJbFxqv8Ss7ONDTofLGmd_QFj9EIJp0g_C5nYTPH8nJ_PtA==",
+                                                 token="nfd23prECgPsUjNkwPZ95L6sw74u5dNAwUy2ChMp9giyD_Bor7Hbnvp3W1hMaqN2Qrk0J_oyaIUtpZpcEXcohQ==",
                                                  org="test")
     for i in mongoset["iterators"][0] :
         # print(i)
-        point = jsontools.mongodoc_to_influx_list(
-            mongotool.neocampus_data_processing(i))
-        point['time'] =point['time']
-        print(point)
+        try:
+            point = jsontools.mongodoc_to_influx_list(
+                mongotool.neocampus_data_processing(i))
+            point['time'] =point['time']
+            print(point)
 
-        influxd.write(bucket="test",
-                      measurement=point["measurement"],
-                      time = point["time"], field_list=point["fields"],
-                       tag_list=point["tags"])
-        print(aux)
-        aux+=1
-        # PROBLEME : création des points : measurements pas bon ?
-        if aux == 100000 :
-            break
+            influxd.write(bucket="test",
+                          measurement=point["measurement"],
+                          time = point["time"], field_list=point["fields"],
+                           tag_list=point["tags"])
+            print(aux)
+            aux+=1
+            # PROBLEME : création des points : measurements pas bon ?
+            if aux == 300000:
+                break
+        except :
+            continue
 
     # import influxdb_client
     # from influxdb_client import InfluxDBClient, Point, WritePrecision

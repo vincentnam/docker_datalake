@@ -13,11 +13,11 @@ def get_id(mongodb_url):
         "object_id"]
 
 
-def init_id():
+def init_id(mongo_url):
     # USE IT ONLY ONE TIME !!
     id_doc = {"type": "object_id_file", "object_id": 0}
-    client = MongoClient("127.0.0.1:27017").stats.swift
-    if MongoClient("127.0.0.1:27017").stats.swift.find_one(
+    client = MongoClient(mongo_url).stats.swift
+    if MongoClient(mongo_url).stats.swift.find_one(
             {"type": "object_id_file"}) is None:
         client.insert_one(id_doc)
     client.create_index("type", unique=True)
@@ -28,7 +28,7 @@ def clean_swift(container):
 
 
 def insert_datalake(file_content, user, key, authurl, container_name,
-                    file_name=None, application=None, content_type=None,
+                    file_name=None, data_process = "default", application=None, content_type=None,
                     mongodb_url="127.0.0.1:27017", other_data = None ):
     '''
     Insert data in the datalake :
@@ -59,11 +59,12 @@ def insert_datalake(file_content, user, key, authurl, container_name,
     :type content_type : str
     :param mongodb_url: the MongoDB IP_ADDR with Port
     :type mongodb_url : str
-
+    :param data_process : process the data in default pipeline or custom one
+    :type data_process : str : "default" or "custom"
     '''
     conn = swiftclient.Connection(user=user, key=key,
                                   authurl=authurl)
-    client = MongoClient(mongodb_url)
+    client = MongoClient(mongodb_url, connect=False)
     db = client.swift
     coll = db[container_name]
     if content_type is not None:
@@ -74,6 +75,7 @@ def insert_datalake(file_content, user, key, authurl, container_name,
         meta_data["content_type"] = content_type
     else:
         meta_data["content_type"] = "None"
+    meta_data["data_processing"]= data_process
     meta_data["swift_user"] = user
     meta_data["swift_container"] = container_name
     meta_data["swift_object_id"] = str(get_id(mongodb_url))
@@ -157,7 +159,14 @@ def input_csv_file(csv_file, **kwargs):
                         mongodb_url="127.0.0.1:27017")
         break
 
+import os
 
+cwd = os.path.dirname(os.path.abspath(__file__))
+import yaml
+import json
+with open(cwd + "/apache_airflow/dags/config.yml", "r") as config:
+    y = yaml.safe_load(config)
+globals().update(y)
 # TODO: Finir le JSON des fichiers
 
 # TODO : Voire pour la segmentation d'image (https://github.com/facebookresearch/Detectron2)
@@ -165,15 +174,16 @@ def input_csv_file(csv_file, **kwargs):
 
 user = 'test:tester'
 key = 'testing'
+mongo_url = globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"]
+# mongo_url = "127.0.0.1:" + globals()["MONGO_PORT"]
+client = MongoClient(globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"])
+# init_id(mongo_url)
 
-client = MongoClient("127.0.0.1:27017")
-# init_id()
 
-
-authurl = "http://127.0.0.1:8080/auth/v1.0"
+authurl = "http://"+ globals()["OPENSTACK_SWIFT_IP"]+":"+globals()["SWIFT_REST_API_PORT"]+"/auth/v1.0"
 conn = swiftclient.Connection(user=user, key=key,
                               authurl=authurl)
-file_name = "dataset/input_file_test/log.json"
+file_name = "/home/vdang/PycharmProjects/docker_datalake/apache_airflow/dags/dag1.json"
 
 with open(file_name, "rb") as f:
     file_data = f.read()
@@ -182,9 +192,9 @@ file_content = open(file_name, "r")
 print(file_data)
 container_name = "neocampus"
 
-insert_datalake(file_data, user, key, authurl, container_name,
-                application="neocampus sensors log",
-                content_type="application/json", mongodb_url="127.0.0.1:27017",
+insert_datalake(file_data, user, key, authurl, container_name, data_process="custom",
+                application="osirim test",
+                content_type="bson", mongodb_url=mongo_url,#globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"],
                 other_data=
                 {
                     "template":
