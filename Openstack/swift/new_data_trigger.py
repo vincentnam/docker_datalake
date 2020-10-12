@@ -45,7 +45,7 @@ class NewDataTriggerMiddleware(object):
                     "conf": {"swift_id": obj, "swift_container": container,
                              "swift_user": account, "swift_version": version}}
                 rep = requests.post(
-                    URL + ENDPOINT_PATH + "/dags/new_input/dag_runs",
+                    URL + ENDPOINT_PATH + "/dags/test/dag_runs",
                     data=json.dumps(payload))
                 print(rep.text)
                 self.logger.info(rep.headers)
@@ -59,6 +59,10 @@ class NewDataTriggerMiddleware(object):
             resp = req.get_response(self.app)
 
             return resp
+
+        resp = req.get_response(self.app)
+
+        return resp
 
 
 def new_data_trigger_factory(global_conf, **local_conf):
