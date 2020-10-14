@@ -28,7 +28,7 @@ def clean_swift(container):
 
 
 def insert_datalake(file_content, user, key, authurl, container_name,
-                    file_name=None, data_process = "default", application=None, content_type=None,
+                    file_name, data_process = "default", application=None, content_type=None,
                     mongodb_url="127.0.0.1:27017", other_data = None ):
     '''
     Insert data in the datalake :
@@ -83,14 +83,15 @@ def insert_datalake(file_content, user, key, authurl, container_name,
         meta_data["application"] = application
     else:
         meta_data["application"] = user + "_" + container_name
-    if file_name is not None:
-        meta_data["swift_object_name"] = file_name
+    meta_data["original_object_name"] = file_name
     meta_data["creation_date"] = datetime.datetime.now()
     meta_data["last_modified"] = datetime.datetime.now()
     meta_data["successful_operations"] = []
     meta_data["failed_operations"] = []
     if meta_data is not None :
         meta_data["other_data"] = other_data
+    else:
+        meta_data["other_data"] ={}
     print(meta_data)
 
     if SwiftService({}).stat(container_name)["object"] is None:
@@ -159,6 +160,63 @@ def input_csv_file(csv_file, **kwargs):
                         mongodb_url="127.0.0.1:27017")
         break
 
+# import os
+#
+# cwd = os.path.dirname(os.path.abspath(__file__))
+# import yaml
+# import json
+# with open(cwd + "/apache_airflow/dags/config.yml", "r") as config:
+#     y = yaml.safe_load(config)
+# globals().update(y)
+# # TODO: Finir le JSON des fichiers
+#
+# # TODO : Voire pour la segmentation d'image (https://github.com/facebookresearch/Detectron2)
+#
+#
+# user = 'test:tester'
+# key = 'testing'
+# mongo_url = globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"]
+# # mongo_url = "127.0.0.1:" + globals()["MONGO_PORT"]
+# client = MongoClient(globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"])
+# # init_id(mongo_url)
+#
+#
+# authurl = "http://"+ globals()["OPENSTACK_SWIFT_IP"]+":"+globals()["SWIFT_REST_API_PORT"]+"/auth/v1.0"
+# conn = swiftclient.Connection(user=user, key=key,
+#                               authurl=authurl)
+# path = "/home/vdang/PycharmProjects/docker_datalake/apache_airflow/dags/"
+# file_name = "dag1.json"
+#
+# with open(path+file_name, "rb") as f:
+#     file_data = f.read()
+#
+# file_content = open(path+file_name, "r")
+# print(file_data)
+# container_name = "neocampus"
+#
+# insert_datalake(file_data, user, key, authurl, container_name, data_process="custom",
+#                 application="osirim test", file_name=file_name,
+#                 content_type="bson", mongodb_url=mongo_url,#globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"],
+#                 other_data=
+#                 {
+#                     "template":
+#                         {
+#                             "measurement":"mesurevaleur",
+#                             "time":"datemesure",
+#                             "fields":["value"],
+#                             "tags":["idpiece","idcapteur"]
+#                         }
+#                 }
+#                 )
+#
+# # input_csv_file("./dataset/mygates/subset.csv", sep=";", header=0, projet="mygates",authurl = "http://127.0.0.1:12345/auth/v1.0",container_name = "mygates")
+#
+# # swift stat -U test:tester -A http://localhost:8080/auth/v1.0 -K testing CONTAINER
+#
+# # sshfs vdang@co2-dl-airflow:/projets/datalake/airflow/ /data/python-project/docker_datalake/mnt_temp
+# # TODO : Reinstaller Openstack Swift avec Python3
+# #
+
 import os
 
 cwd = os.path.dirname(os.path.abspath(__file__))
@@ -183,28 +241,19 @@ client = MongoClient(globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"])
 authurl = "http://"+ globals()["OPENSTACK_SWIFT_IP"]+":"+globals()["SWIFT_REST_API_PORT"]+"/auth/v1.0"
 conn = swiftclient.Connection(user=user, key=key,
                               authurl=authurl)
-file_name = "/home/vdang/PycharmProjects/docker_datalake/apache_airflow/dags/dag1.json"
+path = "/home/vdang/Desktop/data/neocampus-mongodb_dump.mar20/"
+file_name = "energy.bson"
 
-with open(file_name, "rb") as f:
+with open(path+file_name, "rb") as f:
     file_data = f.read()
 
-file_content = open(file_name, "r")
-print(file_data)
+file_content = open(path+file_name, "r")
+# print(file_data)
 container_name = "neocampus"
 
 insert_datalake(file_data, user, key, authurl, container_name, data_process="custom",
-                application="osirim test",
-                content_type="bson", mongodb_url=mongo_url,#globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"],
-                other_data=
-                {
-                    "template":
-                        {
-                            "measurement":"mesurevaleur",
-                            "time":"datemesure",
-                            "fields":["value"],
-                            "tags":["idpiece","idcapteur"]
-                        }
-                }
+                application="import mongodb", file_name=file_name,
+                content_type="bson", mongodb_url=mongo_url#globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"],
                 )
 
 # input_csv_file("./dataset/mygates/subset.csv", sep=";", header=0, projet="mygates",authurl = "http://127.0.0.1:12345/auth/v1.0",container_name = "mygates")
