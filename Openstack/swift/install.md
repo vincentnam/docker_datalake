@@ -44,7 +44,7 @@ Création de loopback device (for xattr over NFSv3)
     
     sudo chown vdang:datalake /projets/datalake/swift_storage/swift_store
     mkdir /mnt/swift_store
-    # Si on est pas dans le dossier, on peut pas monter, pourquoi ?
+    # Si on est pas dans le dossier, on peut pas monter, pourquoi ? 
     cd /projets/datalake/swift_storage/
     # Option : read-write, loop 
     sudo mount -o loop,noatime,nodiratime,nobarrier,logbufs=8  swift_store /mnt/swift_store/   
@@ -90,8 +90,9 @@ Post loopback creation :
     # **Make sure to include the trailing slash after /srv/$x/**
     for x in {1..4}; do sudo chown -R vdang:datalake /srv/$x/; done
 
-    # Resize 
+    # Resize : STOP SWIFT SERVICES BEFORE INCREASE SIZE OF LOOPBACK DEVICE
     # dd if=/dev/zero bs=1MiB of=/path/to/file conv=notrunc oflag=append count=xxx
+    dd if=/dev/zero bs=1MiB of=/datalake/swift_storage/swift_store conv=notrunc oflag=append,nonblock count=32000 status=progress 
 
 Installation de rsync: 
 
@@ -252,3 +253,56 @@ Lancement swift :
     
     # It can be done while server is on : TOP LIFE
     dd if=/dev/zero bs=1MiB of=swift_store conv=notrunc oflag=append count=1000
+    
+    
+    
+# Debugg : Impossible de PUT object :
+    
+    check owner for : 
+        - /mnt/swift_store and sub_folder
+        - /var/run/swift
+        - /var/cache/swift
+        
+    it has to be the same user that the one has launch Swift (i.e. vdang(:datalake) here) 
+    
+    
+# New loopback device :
+    truncate -s 32GB swift_store
+    mkfs.xfs swift_store 
+    sudo mount -o loop,noatime,nodiratime,nobarrier,logbufs=8 swift_store /mnt/swift_store/
+    remakerings 
+    sudo mkdir /mnt/swift_store/1 /mnt/swift_store/2 /mnt/swift_store/3 /mnt/swift_store/4
+    sudo mkdir -p /srv/1/node/sdb1 /srv/1/node/sdb5 \
+              /srv/2/node/sdb2 /srv/2/node/sdb6 \
+              /srv/3/node/sdb3 /srv/3/node/sdb7 \
+              /srv/4/node/sdb4 /srv/4/node/sdb8
+              
+              
+              
+              
+# Update before refactoring
+
+# Restart swift service
+
+    
+    sudo mount -o loop,noatime,nodiratime,nobarrier,logbufs=8  /datalake/swift_storage/swift_store_dev1 /mnt/swift_store/1
+    sudo mount -o loop,noatime,nodiratime,nobarrier,logbufs=8  /datalake/swift_storage/swift_store_dev2 /mnt/swift_store/2   
+    sudo mount -o loop,noatime /datalake/swift_storage/swift_tmp /mnt/swift_tmp/
+    sudo chown -R vdang:datalake /var/run/swift/    
+    sudo mount --bind /mnt/swift_tmp/ /tmp/
+    sudo chmod -R 1777 /mnt/swift_tmp/
+    
+    sudo chown -R root:adm /var/log/swift
+    sudo chmod -R g+w /var/log/swift
+    
+    sudo mkdir /var/run/swift
+    sudo chown vdang:datalake /var/run/swift
+    sudo chown -R vdang:datalake /srv/*
+    sudo chown vdang:datalake /mnt/swift_store
+    sudo chown vdang:datalake /mnt/swift_tmp
+    remakerings
+    startmain       
+       
+    
+ ### Warning !
+ Airflow has to be launched to make swift works.
