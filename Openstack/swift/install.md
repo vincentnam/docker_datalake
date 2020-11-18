@@ -277,3 +277,31 @@ Lancement swift :
               /srv/3/node/sdb3 /srv/3/node/sdb7 \
               /srv/4/node/sdb4 /srv/4/node/sdb8
               
+              
+              
+              
+# Update before refactoring
+
+# Restart swift service
+
+    
+    sudo mount -o loop,noatime,nodiratime,nobarrier,logbufs=8  /datalake/swift_storage/swift_store_dev1 /mnt/swift_store/1
+    sudo mount -o loop,noatime,nodiratime,nobarrier,logbufs=8  /datalake/swift_storage/swift_store_dev2 /mnt/swift_store/2   
+    sudo mount -o loop,noatime /datalake/swift_storage/swift_tmp /mnt/swift_tmp/
+    sudo chown -R vdang:datalake /var/run/swift/    
+    sudo mount --bind /mnt/swift_tmp/ /tmp/
+    sudo chmod -R 1777 /mnt/swift_tmp/
+    
+    sudo chown -R root:adm /var/log/swift
+    sudo chmod -R g+w /var/log/swift
+    
+    sudo mkdir /var/run/swift
+    sudo chown vdang:datalake /var/run/swift
+    sudo chown -R vdang:datalake /srv/*
+    sudo chown vdang:datalake /mnt/swift_store
+    sudo chown vdang:datalake /mnt/swift_tmp
+    remakerings
+    startmain       
+       
+    
+    
