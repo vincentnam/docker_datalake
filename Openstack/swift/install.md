@@ -304,4 +304,5 @@ Lancement swift :
     startmain       
        
     
-    
+ ### Warning !
+ Airflow has to be launched to make swift works.
