@@ -91,9 +91,9 @@ For each data in this list, it will trigger a "new_input" dag to process this da
 The architecture is defined by big 3 parts : 
 
 - [x]  Input part : the first area of the data lake that handle raw input data 
-    - [ ] API Rest 
+    - [x] API Rest 
         - [x] Make available the data input
-        - [ ] API Rest to input 1 or more data
+        - [X] API Rest to input 1 or more data
     - [x] Object storage : Openstack swift 
         - [x] Unittest : OK 
         - [x] Functionaltest : OK 
@@ -107,6 +107,7 @@ The architecture is defined by big 3 parts :
         - [ ] Keystone as authentication service
         - [ ] Other Openstack services 
     - [x] MongoDb database for metadata
+        - [ ] Replication for single point of failure problem (REALLY IMPORTANT ! -> if MongoDB datas are corrupted, all data in the datalake are useless)  
     - [x] Trigger for new input to launch a new Airflow job
         - [x] Create middleware for swift proxy (Webhook trigger to launch Airflow jobs)
         - [ ] Use X-Webhook in Swift (secure way)
@@ -122,7 +123,7 @@ The architecture is defined by big 3 parts :
         - [x] Handle hook from Swift middleware (Webhook)
         - [x] Set up jobs 
         - [ ] Find a proper way to instantiate dag from JSON file (day_ago function)
-        - [ ] Handle big file (split big file reading + processing if possible)
+        - [x] Handle big file (split big file reading + processing if possible)
 - [x] The "gold" zone : database to store formatted / valuable data
     - [ ] Relational database (default)
     - [x] Time serie oriented database (visualisation)
@@ -149,6 +150,7 @@ The architecture is defined by big 3 parts :
         - [x] Basic
         - [ ] Advanced
 - [ ] Add metadata over transformed data in the goldzone (and be able to find the list of process done to create this processed data)
+- [ ] Docker + Kubernetes + Ansible for automatic deployment 
 # What services are available now : 
 #### Services : 
 
