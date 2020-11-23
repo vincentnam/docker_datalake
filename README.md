@@ -1,27 +1,143 @@
-Some more documentation is available on a google drive document at this address : https://docs.google.com/document/d/1QdtPktYoVD6AEcN_ctmKFChGfKwCS-Whj59pyjaHBqg/edit?usp=sharing
+# Data lake architecture POC hosted on OSIRIM (https://osirim.irit.fr/site/)
 
-# docker_datalake
-Docker POC for datalake : neOCampus internship for 2nd year of Master in Statistic and Decisional Computing (SID at Université Toulouse 3 - Paul-Sabatier in Toulouse)
-# Context :
-NeOCampus is an operation based in the University with numerous research laboratory. A big part of the network used in this operation is used by sensors and effector. But we can find a lot of other kind of informations. The goal of this project is to create an architecture of data lake that can handle the needs and the data in neOCampus operation.
-# TCP ports : 
-Needed : 
-- 8080 : Swift 
-- 27017 : MongoDB metadatabase
+This repository is the main working repository for the data lake architecture.
+The goals are : 
+- Create an opensource architecture for data management based on data lake architecture
+- Handle any type of data 
+- Handle any volumetry of datas
+- Make it easy to deploy the architecture
+- Make an interoperable architecture through the usage of REST API whenever it is possible
 
-Optionnal : 
-- 8081 : Airflow (Webserver)
-- 9999 : InfluxDB web interface 
+##### Contact :
+At this point (23/11/2020), all the development have been done by DANG Vincent-Nam : 
 
-Neo4J ports : 
-- 7000
+Vincent-Nam.Dang@irit.fr / dang.vincentnam@gmail.com 
+https://www.linkedin.com/in/vincent-nam-dang/  
 
-InfluxDB port : 
-- 8086
-## Airflow json DAG implementation : 
 
-Dont name your task the same name of the callable : it will lead to an error
-## How to insert data : 
+
+
+
+## Context
+This project is supported by neOCampus, OSIRIM, the CNRS, the IRIT and the SMAC team in IRIT. 
+
+This project has been started with a internship for 2nd year of Master in Statistic and Decisional Computing (SID at Université Toulouse 3 - Paul-Sabatier in Toulouse) funded by neOCampus. 
+The project has been continued through a 1year-fixed-term contract by the CNRS and the OSIRIM platform.
+
+- NeOCampus is an operation based in the University with numerous research laboratory. A big part of the network used in this operation is used by sensors and effector. But we can find a lot of other kind of informations. The goal of this project is to create an architecture of data lake that can handle the needs and the data in neOCampus operation.
+- OSIRIM (Observatoire des Systèmes d'Indexation et de Recherche d'Information Multimedia) is one of IRIT's platforms. It is mainly supported by the European Regional Development Fund (ERDF), the French government, the Midi-Pyrénées region and the Centre National de la Recherche Scientifique (CNRS).
+- The SMAC team is interested in modeling and problem solving in complex systems using multi-agen technology. ( https://www.irit.fr/departement/intelligence-collective-interaction/equipe-smac/ )
+
+# The project :
+
+## Current architecture: 
+![alt text](./git_image/DataLakeArchiV0-Objectif-Zone.png)
+
+The architecture is divided in 5 functional areas :
+- Raw data management area (also known as the landing area)
+- Process area
+- Processed data area (also known as the gold zone)
+- Services area
+- Security and monitoring area
+
+### Area descriptions : 
+
+Each area has its own goal : 
+
+![alt text](./git_image/DataLakeArchiV0.png)
+
+### Raw data management area / landing area : 
+
+The purpose of this area is to handle, store and make available raw data. Each data is stored as is waiting to be processed and transformed into an information.
+
+This area is the core of the architecture, where every data are stored and every service of this architecture are working on. 
+This area is composed with 2 services :
+- Openstack swift (https://wiki.openstack.org/wiki/Swift) : 
+    - Openstack Swift is a cloud storage software. It is an object-oriented store. It is a part of the Openstack cloud platform deployment and has been built for scale and optimized for durability, availability, and concurrency across the entire data set. 
+    - Its role is to store all input data as an object. It can handle any type of file or data of any size. 
+- MongoDB (https://www.mongodb.com/) :
+    - Document oriented NoSQL database. It has been built as a NoSQL database made for high volumetry input. 
+    - Its role is to store meta data over the data inserted in Openstack Swift and to make it possible to follow and store data over data and be able to know what is stored in Openstack Swift.
+
+A third service has been integrated in the conception for data stream input :
+- Apache Kafka (https://kafka.apache.org/):
+    - Apache Kafka is an open-source distributed event streaming platform.
+    - Its initial purpose is to handle MQTT message from sensors to raw data management area.
+    
+### Process area
+This area is composed by 1 service that will handle every workflow and jobs of data processing :
+- Apache Airflow (https://airflow.apache.org/)
+    - Job and workflow scheduler application. This service make it possible to schedule and monitor workflows written in Python.
+    - Based on direct acyclic graphs, the data life is easily monitored.
+    - It process raw data from the raw data management area to the processed data area by applying custom workflows developed by and for users needs. 
+
+The deployment of a Hadoop cluster has been thought but the idea could be not implemented or kept.
+
+### Processed data area / gold zone : 
+This area is there to create values over data. Its role is to provide information and allow external application to work on data.
+The processed data area is supposed to host any database that is needed by users. 
+As no real need have been expressed, no real use case are implemented here. 
+But some use cases have been imagined :
+- InfluxDB (https://www.influxdata.com/):
+    - Time serie oriented database with data visualization tools natively integrated.
+    - The purpose of this database is to store formatted sensors readings and make it possible to visualize those data easily.
+- Neo4J (https://neo4j.com/): 
+    - Graph oriented database with data visualization tools natively integrated.
+    - The purpose of this database is to store metadata over blob data (image, sound, video) to create a recommendation system for dataset creation.
+- MongoDB (https://www.mongodb.com/):
+    - Same database as the metadata database used in the raw data management area.
+    - The purpose here is to store data for in-production applications
+    
+### Services area :
+This functional area includes every service to make this platform user-friendly. At this point (23/11/2020), 3 services have been designed :
+- Data insertion and download services :
+    - Composed with 2 services : web GUI and REST API.
+        - The web GUI is based on NodeJS server with a React application for user-friendly data insertion. The data are inserted or shown through a graphical user interface to make it easy to use.
+        - The REST API is developed with python Flask API to make it possible to programmatically use the data management services (insert data in raw data management area or download data from processed data area)
+- Real-time data consumption service :
+    - No solution have been found at this point (23/11/2020) to answer this need.
+    - The purpose of this service is to make it possible to consume data in a real-time process (initially designed for autOCampus project in neOCampus)
+- Streaming data consumption service :
+    - No solution have been found at this point (23/11/2020) to answer this need.
+    - The purpose of this service is to make it possible to consume data as a stream for application that works in streaming mode. It has been initialy designed for online machine learning application. 
+
+### Security and monitoring area : 
+The purpose of this area is to make it possible to monitor the whole architecture for administrators and give 3 level monitoring.
+The area has to be adapted to the host platform so services could change with deployment.
+- First monitoring level : User level
+    - Openstack Keystone (https://wiki.openstack.org/wiki/Keystone)
+        - This service is here to identify and authenticate users in the architecture.
+        - It integrate itself well with Openstack Swift and over other authentication services as LDAP or NIS that allow to maintain pre-existing authentication services. 
+- Second monitoring level : Service level
+    - Openstack Ceilometer (https://docs.openstack.org/ceilometer/latest/):
+        - This service is a telemetry service for Openstack services. 
+        - The objective is to monitor services state and usages for sizing in operation.
+- Third level : Network and system level
+    - SNMP + Zabbix : 
+        - SNMP is a standard protocol of network management. It allow us to follow machine resources consumption and network usage.
+        - Combine with Zabbix, this is a service of network and system monitoring with graphical user interface.
+
+This area has to be work more to better design it. Prometheus could be used to monitor Network and System level and other services could be used for other levels. 
+
+## Activity Diagram : 
+The data life in this architecture is described in this diagram : 
+
+![alt text](./git_image/Sequence_Datalake.png)
+
+- First, data are inserted simultaneously in Openstack Swift and MongoDB meta database.
+- Then, a webhook is triggered by swift proxy to trigger the Airflow workflow for new data containing metadata over the data inserted.
+- Depending on the data type, the user and the user group / project, the data is processed, transformed and inserted in the corresponding database in the processed data area. 
+- Every operations are logged in the metadata database.
+ 
+### Data integration activity diagram (Apache Airflow) : 
+![alt text](git_image/network_diagram.png)
+
+The Proof of Concept hosted on Osirim is hosted on several VM.
+Each service has its own virtual machine. 
+Data storage is made on a NFS bay. At this point (23/11/2020), the POC is not adapted for this platform and wont be deployed in a production state on OSIRIM.
+
+# How to insert a data : 
+![alt text](git_image/Sequence_Dataintegration.png)
 
 To develop a tool to insert data in the datalake, you have to :
 - Get the Swift ID counter and increase it (use "find_one_and_update" to do it with the same operation and reduce chances of data incoherence between 2 instances)
@@ -63,7 +179,41 @@ To develop a tool to insert data in the datalake, you have to :
 - Put the data in Swift (with content_type and the swift_id)
 - Put the metadata in MongoDB
 
-## Process a data already inserted :
+# Data formats :
+## Openstack Swift :
+Object inserted in Openstack swift are renamed with a number id. 
+This id is incremented by 1 for every object insert. It allows to follow easily the number of object stored in Openstack Swift.
+
+Only the renamed data are store in Openstack swift. Every metadata are stored in the metadata database (MongoDB).
+Each object is stored on a container that match to the project or the user group / team.
+## MongoDB metadata database : 
+(23/11/2020) The metadata database is designed in several parts :
+- "stats" database :
+    - "swift" collection : 
+        - contains only 1 document : 
+            - { "_id" : ..., "type" : "object_id_file", "object_id" : last_available_swift_id }
+            - used to rename and follow Swift object id
+        - could be used to store other data
+- "swift" database :
+    - a collection for each project has to be created :
+        - contains 1 document for each object. Each document contains : 
+            - "_id" : MongoDB default ID , 
+            - "content_type" : type of data / MIME type ,
+            - "data_processing" : type of data processing in Airflow ("custom" or "default") for pipeline choosing,
+            - "swift_user" : authenticated user that inserted the data, 
+            - "swift_container" : Openstack Swift container referring to project / user group,
+            - "swift_object_id" : id from "object_id_file" in stats database,
+            - "application" : description of the purpose of the data,
+            - "original_object_name" : original name ,
+            - "creation_date" : ISODate("..."),
+            - "last_modified" : ISODate("..."),
+            - "successful_operations" : [ ] : list of successful operations done on the data,
+            - "failed_operations" : [ ] : list of failed operations done on the data, 
+            - "other_data" : {...} : anything that is needed to know on the data (custom metadata inserted by user) 
+                     
+
+
+## How to process a data already inserted :
 
 There is a document in "stats" database in "swift" collection in MongoDB that contains list of data to process that will be check every 5 minutes by "Check_data_to_process" dag. Adding a swift
 You'll have to add a document in this list containing : 
@@ -73,50 +223,58 @@ You'll have to add a document in this list containing :
 - content_type 
 For each data in this list, it will trigger a "new_input" dag to process this data.
 
-## Architecture (it might change in the future) : 
-![alt text](./git_image/DataLakeArchiV0.png)
-## Activity Diagram : 
-### Data lake
-![alt text](./git_image/Sequence_Datalake.png)
 
-### Data integration activity diagram (Apache Airflow) : 
 
-![alt text](git_image/network_diagram.png)
+# TCP ports : 
+Needed : 
+- 8080 : Swift 
+- 27017 : MongoDB metadatabase
 
-### Network diagram for the implementation (on OSIRIM) : 
+Optionnal : 
+- 8081 : Airflow (Webserver)
+- 9999 : InfluxDB web interface 
 
-![alt text](git_image/Sequence_Dataintegration.png)
+Neo4J ports : 
+- 7000
 
-# Composition and TODO part: 
-The architecture is defined by big 3 parts : 
+InfluxDB port : 
+- 8086
 
-- [x]  Input part : the first area of the data lake that handle raw input data 
-    - [x] API Rest 
-        - [x] Make available the data input
-        - [X] API Rest to input 1 or more data
-    - [x] Object storage : Openstack swift 
-        - [x] Unittest : OK 
-        - [x] Functionaltest : OK 
-            - Ran: 950 tests in 571.0000 sec.
-                - Passed: 883
-                - Skipped: 67
-                - Expected Fail: 0
-                - Unexpected Success: 0
-                - Failed: 0
-                - Sum of execute time for each test: 502.9311 sec.
-        - [ ] Keystone as authentication service
-        - [ ] Other Openstack services 
-    - [x] MongoDb database for metadata
-        - [ ] Replication for single point of failure problem (REALLY IMPORTANT ! -> if MongoDB datas are corrupted, all data in the datalake are useless)  
-    - [x] Trigger for new input to launch a new Airflow job
-        - [x] Create middleware for swift proxy (Webhook trigger to launch Airflow jobs)
-        - [ ] Use X-Webhook in Swift (secure way)
-        - [ ] Optimizations 
-- [x]  The "Work zone" : Every jobs to transforms data
+#TODO list : 
+(23/11/2020) At this point, the architecture development is described in this diagram
+![alt text](./git_image/DataLakeArchiV0-actual.png)
+
+####Datalake architecture 
+- [x]  Raw data mangement area : 
+    - [x] Batch mode for data insertion
+        - [x] API Rest 
+            - [x] Make available the data input
+            - [X] API Rest to input 1 or more data
+        - [x] Object storage : Openstack swift 
+            - [x] Unittest : OK 
+            - [x] Functionaltest : OK 
+                - Ran: 950 tests in 571.0000 sec.
+                    - Passed: 883
+                    - Skipped: 67
+                    - Expected Fail: 0
+                    - Unexpected Success: 0
+                    - Failed: 0
+                    - Sum of execute time for each test: 502.9311 sec.
+            - [ ] Keystone as authentication service
+            - [ ] Other Openstack services 
+        - [x] MongoDb database for metadata
+            - [ ] Replication for single point of failure problem (REALLY IMPORTANT ! -> if MongoDB datas are corrupted, all data in the datalake are useless)  
+        - [x] Trigger for new input to launch a new Airflow job
+            - [x] Create middleware for swift proxy (Webhook trigger to launch Airflow jobs)
+            - [ ] Use X-Webhook in Swift (secure way)
+            - [ ] Optimizations 
+    - [ ] Streaming mode for data insertion
+        - [ ] Kafta integration
+- [x]  The process area
     - [x] Airflow deployment (docker image) 
         - [x] Docker image 
         - [x] Installation on VM
-        - [ ] Ressources optimization 
+        - [ ] Resources optimization 
             - [ ] Celery executor
             - [ ] Hadoop for jobs
     - [x] Airflow job creation / configuration 
@@ -124,11 +282,12 @@ The architecture is defined by big 3 parts :
         - [x] Set up jobs 
         - [ ] Find a proper way to instantiate dag from JSON file (day_ago function)
         - [x] Handle big file (split big file reading + processing if possible)
-- [x] The "gold" zone : database to store formatted / valuable data
+- [x] The processed data area / the gold zone : 
     - [ ] Relational database (default)
     - [x] Time serie oriented database (visualisation)
         - [x] Json data :
-            - [x] Based on templates given (as an input in metadatabase)
+            - [x] Based on templates given (as an input in metadatabase) 
+            - [ ] Improve done work
     - [x] Document oriented database (transactional vision)
     - [x] Graph database 
         - [x] Image files : 
@@ -137,9 +296,38 @@ The architecture is defined by big 3 parts :
                 - [ ] Automatic object detection / segmentation 
         - [ ] Recommendation tool  
     - [ ] ...
-
+- [x] The services area : 
+    - [x] RESTFUL API for data insertion and download
+        - [x] Python api with Flask 
+            - [x] Insertion
+            - [x] Download data from database in processed data area
+            - [ ] Download data from raw data management area
+        - [ ] Improve implementation
+    - [x] Web GUI for data insertion and data visualization
+        - [x] Dashboard creation
+        - [x] Data download with React + Express backend server
+            - [x] Drag'n'drop insertion 
+            - [x] Progress bar
+            - [ ] Handle SLO Openstack Swift insertion (Static Large Object) for > 1 Go files
+        - [x] Data visualization with React + D3.JS
+            - [x] Basic time series visualization
+            - [x] Basic graph visualization
+            - [ ] Complex visualization from several different databases
+        - [ ] Beautiful dashboard development
+    - [ ] Real-time data consumption
+    - [ ] Streaming data consumption
+- [ ] Security and monitoring area : 
+    - [ ] Design the whole area 
+    - [ ] Deploy area 
 - [x] Set up a "log" database to log operations on data done
-    - Operations are logged in MongoDB MetaDataBase : successful and failed operation (Airflow task + id ) + operations per day
+    - [x] Operations are logged in MongoDB MetaDataBase : successful and failed operation (Airflow task + id ) + operations per day
+
+####Other things to do : 
+
+- [ ] Add metadata over transformed data in the goldzone (and be able to find the list of process done to create this processed data)
+- [ ] Automatic deployment : Docker + Kubernetes + Ansible
+
+####Documentation : 
 - [ ] Diagrams for 
     - [x] Software Architecture
         - [x] Basic
@@ -149,8 +337,6 @@ The architecture is defined by big 3 parts :
     - [ ] Sequence diagram
         - [x] Basic
         - [ ] Advanced
-- [ ] Add metadata over transformed data in the goldzone (and be able to find the list of process done to create this processed data)
-- [ ] Docker + Kubernetes + Ansible for automatic deployment 
 # What services are available now : 
 #### Services : 
 
@@ -237,3 +423,12 @@ For MongoDB (Gold Zone) :
 - [x] Handle the input of same data (redundant data)
     - [x] Done natively in Swift : all datas are stored even if they already are in the database
     - [ ] Set up a mechanism to handle redundant datas
+    
+#### Other informations :
+##### Airflow json DAG implementation : 
+
+Dont name your task the same name of the callable : it will lead to an error
+    
+### More documentation
+
+Some more documentation is available on a google drive document at this address : https://docs.google.com/document/d/1QdtPktYoVD6AEcN_ctmKFChGfKwCS-Whj59pyjaHBqg/edit?usp=sharing
