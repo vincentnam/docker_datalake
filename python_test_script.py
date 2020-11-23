@@ -263,3 +263,5 @@ insert_datalake(file_data, user, key, authurl, container_name, data_process="cus
 # sshfs vdang@co2-dl-airflow:/projets/datalake/airflow/ /data/python-project/docker_datalake/mnt_temp
 # TODO : Reinstaller Openstack Swift avec Python3
 #
+
+
