@@ -322,12 +322,12 @@ InfluxDB port :
 - [x] Set up a "log" database to log operations on data done
     - [x] Operations are logged in MongoDB MetaDataBase : successful and failed operation (Airflow task + id ) + operations per day
 
-####Other things to do : 
+#### Other things to do : 
 
 - [ ] Add metadata over transformed data in the goldzone (and be able to find the list of process done to create this processed data)
 - [ ] Automatic deployment : Docker + Kubernetes + Ansible
 
-####Documentation : 
+#### Documentation : 
 - [ ] Diagrams for 
     - [x] Software Architecture
         - [x] Basic
