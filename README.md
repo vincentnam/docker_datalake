@@ -240,11 +240,11 @@ Neo4J ports :
 InfluxDB port : 
 - 8086
 
-#TODO list : 
+# TODO list : 
 (23/11/2020) At this point, the architecture development is described in this diagram
 ![alt text](./git_image/DataLakeArchiV0-actual.png)
 
-####Datalake architecture 
+#### Datalake architecture 
 - [x]  Raw data mangement area : 
     - [x] Batch mode for data insertion
         - [x] API Rest 
