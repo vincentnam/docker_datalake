@@ -21,7 +21,7 @@
                  python-netifaces python-pip python-dns \
                  python-mock
                  
-    cd /projets/datalake
+    cd /datalake
     mkdir swift_install
     cd swift_install
     sudo pip install --upgrade pip
