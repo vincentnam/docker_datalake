@@ -431,6 +431,7 @@ For MongoDB (Gold Zone) :
 #### Other informations :
 ##### Start Openstack Swift docker container : 
 
+    docker build -f ./swift/Ubuntu1604.Dockerfile -t ubuntuswift ./swift/
     docker run -p 8080:8080 --privileged --device /dev/loop0 --device /dev/loop-control -it ubuntuswift
 
 ##### Airflow json DAG implementation : 
