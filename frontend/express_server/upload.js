@@ -2,10 +2,58 @@ const IncomingForm = require('formidable').IncomingForm
 const request = require('request')
 const streamBuffers = require('stream-buffers')
 const Swiftclient = require('openstack-swift-client')
-const authenticator = new Swiftclient.SwiftAuthenticator('http://141.115.103.30:8080/auth/v1.0', 'test:tester', 'testing');
-const client = new Swiftclient(authenticator)
+const swift_authenticator = new Swiftclient.SwiftAuthenticator('http://141.115.103.30:8080/auth/v1.0', 'test:tester', 'testing');
+const swift_client = new Swiftclient(swift_authenticator)
 const stream_lib = require("stream")
 const mongo = require("mongodb")
+
+
+swift_client.container.create = function (name, stream, meta, extra) {
+    return this.authenticator.authenticate().then(auth => new Promise((resolve, reject) => {
+        const req = request({
+            method: 'PUT',
+            uri: `${auth.url + this.urlSuffix}/${name}`,
+            headers: this.headers(meta, extra, auth.token)
+        }).on('error', err => {
+            reject(err);
+        }).on('response', response => {
+            if (response.statusCode === 201) {
+                resolve({
+                    etag: response.headers.etag
+                });
+            } else {
+                reject(new Error(`HTTP ${response.statusCode}`));
+            }
+        });
+
+        stream.pipe(req);
+    }));
+}
+swift_client.container.createStaticLargeObject = function (name, manifestList, meta, extra) {
+    // for manifestList
+    extra = Object.assign({
+        'content-type': 'application/json'
+    }, extra);
+
+    return this.authenticator.authenticate().then(auth => new Promise((resolve, reject) => {
+        request({
+            uri: `${auth.url + this.urlSuffix}/${name}?multipart-manifest=put`,
+            method: 'PUT',
+            headers: this.headers(meta, extra, auth.token),
+            json: manifestList
+        }).on('error', err => {
+            reject(err);
+        }).on('response', response => {
+            if (response.statusCode === 201) {
+                resolve(response);
+            } else {
+                reject(new Error(`HTTP ${response.statusCode}`));
+            }
+        });
+    }));
+}
+
+
 module.exports = function upload(req, res) {
     let body = []
     let counter = 0
@@ -17,7 +65,7 @@ module.exports = function upload(req, res) {
         console.log(body)
         console.log(req.headers)
         const container_name = "my-test2"
-        let container = client.container(container_name);
+        let container = swift_client.container(container_name);
         const buffer = Buffer.concat(body)
         const filename = "test2"
         const stream = new stream_lib.Readable()
@@ -41,17 +89,15 @@ module.exports = function upload(req, res) {
                 swift_id = res["object_id"]
                 console.log(result["object_id"])
                 // In the mongoDB callback -> we need to wait the answer
+
                 container.create(swift_id, stream).catch(e =>{
                         if (e.message === "HTTP 404"){
                             client.create(container_name);
                             container = client.container(container_name);
                             container.create(result["object_id"], stream).then(console.log("Fichier ajouté !"));
-
                             console.log("Rentre dans le 404")
                         }
-
                     }
-
                 )
 
                 client.db("swift").collection(container_name).insertOne({
