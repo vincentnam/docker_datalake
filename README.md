@@ -429,6 +429,10 @@ For MongoDB (Gold Zone) :
     - [ ] Set up a mechanism to handle redundant datas
     
 #### Other informations :
+##### Start Openstack Swift docker container : 
+
+    docker run -p 8080:8080 --privileged --device /dev/loop0 --device /dev/loop-control -it ubuntuswift
+
 ##### Airflow json DAG implementation : 
 
 Dont name your task the same name of the callable : it will lead to an error
