@@ -434,6 +434,13 @@ For MongoDB (Gold Zone) :
     docker build -f ./swift/Ubuntu1604.Dockerfile -t ubuntuswift ./swift/
     docker run -p 8080:8080 --privileged --device /dev/loop0 --device /dev/loop-control -it ubuntuswift
 
+To make data persistant, use docker volume bind 
+    
+    docker run -p 8080:8080 --privileged --device /dev/loop0 --device /dev/loop-control -v /tmp/dev:/data_dev/1 -it ubuntuswift
+
+The volumes are mounted in /tmp, you have to use a mountable object : dev or loopbackdevice file.
+
+
 ##### Airflow json DAG implementation : 
 
 Dont name your task the same name of the callable : it will lead to an error
