@@ -180,6 +180,9 @@ To develop a tool to insert data in the datalake, you have to :
 - Put the metadata in MongoDB
 
 # Data formats :
+
+![alt text](git_image/DataLakeArchiV0-24_11_2020%20-%20Data%20exchanges.png)
+
 ## Openstack Swift :
 Object inserted in Openstack swift are renamed with a number id. 
 This id is incremented by 1 for every object insert. It allows to follow easily the number of object stored in Openstack Swift.
@@ -243,6 +246,11 @@ InfluxDB port :
 # TODO list : 
 (23/11/2020) At this point, the architecture development is described in this diagram
 ![alt text](./git_image/DataLakeArchiV0-actual.png)
+
+
+
+Data exchanges at this point are described in the following schema.
+![alt text](./git_image/DataLakeArchiV0-24_11_2020%20-%20Current%20data%20exchanges.png)
 
 #### Datalake architecture 
 - [x]  Raw data mangement area : 
@@ -326,6 +334,7 @@ InfluxDB port :
 
 - [ ] Add metadata over transformed data in the goldzone (and be able to find the list of process done to create this processed data)
 - [ ] Automatic deployment : Docker + Kubernetes + Ansible
+- [ ] Define a licence (certainly MIT licence) : ask for project supervisors
 
 #### Documentation : 
 - [ ] Diagrams for 
