@@ -15,6 +15,11 @@
         name: device-mapper-persistent-data
         state: latest
 
+    - name: Install device-mapper-persistent-data
+      yum:
+        name: python3-pip
+        state: latest
+      become: yes
     - name: Install lvm2
       yum:
         name: lvm2
@@ -54,8 +59,33 @@
         enabled: yes
       become: yes
 
-    - name: Git clone Openstack Swift container branch
+    - name : Install Git
+      yum:
+        name: git
+        state: latest
+      become: yes
+    - name: Git clone docker_datalake
       git:
-        repo: https://github.com/vincentnam/docker_datalake.git
-        version: docker
-        dest: /tmp/
+         repo: https://github.com/vincentnam/docker_datalake.git
+         version: docker
+         dest: /tmp/docker_datalake
+    - name: Install Docker Module for Python
+      pip:
+        name: docker-py
+        extra_args: --user
+#    Python2 used : no solution found for the moment
+# Problem come from yum (needs python2)
+# TODO : use python3 for docker build
+    - name: Openstack Swift container building
+      community.general.docker_image:
+        build:
+          path: /tmp/docker_datalake/Openstack/swift
+          dockerfile: Ubuntu1604.Dockerfile
+        name: ubuntuswift
+        tag: latest
+        push: no
+# TODO : Set docker run args
+    - name: Start Swift container
+      community.general.docker_container:
+        name: openstack_swift
+        image: ubuntuswift
