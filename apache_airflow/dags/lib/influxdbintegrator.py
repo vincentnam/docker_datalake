@@ -1,7 +1,7 @@
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 class InfluxIntegrator:
-    def __init__(self, influx_url="http://141.115.103.33:9999",
+    def __init__(self, influx_url="http://141.115.103.33:8086",
                  token = None, org=None, **kwargs):
         self.org = org
         self.token = token
@@ -38,6 +38,13 @@ class InfluxIntegrator:
 
         self.write_api.write(bucket=bucket, record=point, org= self.org, **kwargs)
 
+
+    def write_dataframe(self,df, bucket,measurement : str,
+              time ,
+              tag_list : list = [],
+              **kwargs):
+        self.write_api.write(bucket, record=df, org= self.org,
+                             data_frame_measurement_name = measurement, data_frame_tag_columns = tag_list)
 
 
 #
