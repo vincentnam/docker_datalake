@@ -171,7 +171,7 @@ authurl = "http://"+ globals()["OPENSTACK_SWIFT_IP"]+":"+globals()["SWIFT_REST_A
 conn = swiftclient.Connection(user=user, key=key,
                               authurl=authurl)
 path = cwd + "/"
-file_name = "synop.202011.csv.zip"
+file_name = "synop.202011.csv"
 file_uri = path+file_name
 with open(file_uri , "rb") as f:
     file_data = f.read()
@@ -192,11 +192,11 @@ container_name = "DataNoos"
 f = magic.Magic(mime=True, uncompress=False)
 insert_datalake(path, file_name, user, key, authurl, container_name, data_process="custom",
                 description="DataNoos demo : Meteo France synop weather observations in 11/2020",
-                mongodb_url=mongo_url, other_data=other_data
+                mongodb_url=mongo_url, other_data=other_data, content_type="application/csv"
                 )
 
 path = cwd + "/"
-file_name = "synop.202011.zip"
+file_name = "synop.202011.csv"
 file_uri = path+file_name
 h = magic.Magic(mime=True, uncompress=True)
 print(h.from_file(file_uri))

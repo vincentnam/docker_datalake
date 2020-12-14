@@ -19,6 +19,9 @@ from pymongo import MongoClient
 import datetime
 import os
 from airflow.operators.bash_operator import BashOperator
+
+from influxdbintegrator import InfluxIntegrator
+
 cwd = os.path.dirname(os.path.abspath(__file__))
 import yaml
 import json
@@ -131,7 +134,7 @@ def workflow_selection(**kwargs):
     # WAIT THE OBJECT HAS BEEN INSERTED
     print("kwargs['dag_run'].conf")
     print(kwargs["dag_run"].conf)
-    metadata_doc = meta_base.swift.neocampus.find_one({
+    metadata_doc = meta_base.swift[kwargs["dag_run"].conf["swift_container"]].find_one({
         "swift_object_id": str(swift_id)})
     kwargs["ti"].xcom_push(key="metadata_doc", value=metadata_doc)
     print(metadata_doc)
@@ -309,6 +312,8 @@ def neocampus_mongoimport(**kwargs):
     os.system("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d "+
               metadata_doc["swift_container"] +" -c " + metadata_doc["original_object_name"]
               + " /datalake/airflow/airflow_tmp/"+ metadata_doc["original_object_name"] + "'")
+
+
 custom = BranchPythonOperator(
     task_id='custom',
     provide_context=True,
@@ -334,6 +339,109 @@ neocampus_bson_mongorestore = PythonOperator(
     provide_context=True,
     dag=dag,
 )
+
+def datanoos_branching(**kwargs):
+    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    # TODO : 14/10/2020 REFACTOR DICT_TASK
+    type_to_task = {"application/csv": "datanoos_ba_huy_csv_ts"}
+
+    return type_to_task[metadata_doc["content_type"]]
+
+
+def datanoos_ba_huy_csv_ts(**kwargs):
+    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    print(metadata_doc)
+    metadata = metadata_doc["other_data"]
+    print(metadata["dataset_id"])
+    if metadata["dataset_id"] == "doi:10.5072/FK2/ILRD2U":
+        print("Réalisation de traitements pour le dataset doi:10.5072/FK2/ILRD2U ")
+
+
+def datanoos_zip(**kwargs):
+    print("Pas encore implémenté")
+
+
+def datanoos_insert_influx(**kwargs):
+    import pandas as pd
+    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    #TODO : 13/10/2020 DIRECT READ FILE IF LOOPBACK DEVICE ARE REMOVED (if swift can directly write on storage servers)
+
+    print("kwargs['dag_run'].conf")
+    print(kwargs["dag_run"].conf)
+    # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
+    # client_mongo = MongoClient("141.115.103.31:27017")
+    # req_mongo = {"swift_object_id": swift_id}
+    # doc = client_mongo.swift.neocampus.find_one(req_mongo)
+    # print(doc["original_object_name"])
+    # TODO : 13/10/2020 CHANGE USERS / PASS
+    user, password = 'test:tester', 'testing'
+    # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
+    url = 'http://141.115.103.30:8080/auth/v1.0'
+    headers = {'X-Storage-User': user,
+               'X-Storage-Pass': password
+               }
+    token_response = urlopen(Request(url, headers=headers)).getheaders()
+
+
+    opener = urllib.request.build_opener()
+    opener.addheaders = []
+
+    for i in token_response:
+        if i[0] == "X-Auth-Token":
+            opener.addheaders.append(i)
+        if i[0] == "X-Storage-Url":
+            url = i
+    print(url[1])
+
+    urllib.request.install_opener(opener)
+    # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
+    urllib.request.urlretrieve(url[1] + "/"+metadata_doc["swift_container"]+"/"+metadata_doc["swift_object_id"],
+                               "/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"])
+    csv = pd.read_csv("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"], na_values="mq",
+                      index_col="date")
+    # Remove all the "unnamed" columns
+    csv = csv.loc[:, ~csv.columns.str.contains('^Unnamed')]
+    print(os.path.dirname(os.path.abspath(__file__)))
+    token = "DEa8frzE8NKVlJqzpsUcFKIbFYBzSKaXD7XTNJQhIV4tRveazt-PTJigvxrHrh0wXmUtWDw0NeCK7GL1D_zIpg=="
+    org = "test"
+    bucket = "DataNoos"
+    df_influx_integrator = InfluxIntegrator(token=token, org=org)
+    print(kwargs["dag_run"].dag_id)
+    print(csv)
+    print(csv.keys())
+    for index in csv:
+        if index is not "numer_sta":
+            df_influx_integrator.write_dataframe(csv,bucket,index,tag_list=["numer_sta"], time= None)
+
+
+
+DataNoos = BranchPythonOperator(
+    task_id='DataNoos',
+    provide_context=True,
+    python_callable=datanoos_branching,
+    dag=dag
+)
+datanoos_ba_huy_csv_ts= PythonOperator(
+    task_id='datanoos_ba_huy_csv_ts',
+    python_callable=datanoos_ba_huy_csv_ts,
+    provide_context=True,
+    dag=dag,
+)
+datanoos_zip= PythonOperator(
+    task_id='datanoos_zip',
+    python_callable=datanoos_zip,
+    provide_context=True,
+    dag=dag,
+)
+datanoos_insert_influxdb= PythonOperator(
+    task_id='datanoos_insert_influxdb',
+    python_callable=datanoos_insert_influx,
+    provide_context=True,
+    dag=dag,
+)
+
+
+
 # Airflow user / data_processing password
 branch_op >> [default, custom]
 default >> [db_dump, data]
@@ -341,10 +449,9 @@ default >> [db_dump, data]
 data >> [json, csv, png] >> join
 db_dump >> [mongo_db, SQL] >> join
 
-custom >> [neocampus]
+custom >> [neocampus, DataNoos]
 neocampus >> [ neocampus_bson_get]
 neocampus_bson_get >> neocampus_bson_mongorestore >> join
-
-
-
-
+DataNoos >> [datanoos_ba_huy_csv_ts, datanoos_zip]
+datanoos_ba_huy_csv_ts >> datanoos_insert_influxdb >> join
+datanoos_zip >> join
