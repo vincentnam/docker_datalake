@@ -44,3 +44,4 @@ https://computingforgeeks.com/install-grafana-and-influxdb-on-centos-7/ pour la 
     TO CHANGE : 
     usr : datalake_admin / password : osirim_datalake_admin
 
+## IF DATA SEEM TO NOT BE WRITTEN, CHANGE THE TIME WINDOWS (default : 5 minutes)
