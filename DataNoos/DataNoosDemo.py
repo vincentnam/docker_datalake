@@ -1,17 +1,11 @@
 from pymongo import MongoClient
-
-
 import yaml
-
 import swiftclient.service
 from swiftclient.service import SwiftService
 import datetime
-
 import os
-
 import swiftclient.service
 import magic
-
 
 cwd = os.path.dirname(os.path.abspath(__file__))
 print(cwd)
@@ -80,12 +74,9 @@ def insert_datalake(file_path,file_name, user, key, authurl, container_name,
         # TODO : Check MIME type
         magic_obj = magic.Magic(mime=True, uncompress=False)
         content_type = f.from_file(file_full_path)
-
+    ## Construction des méta données
     meta_data = {}
-
-
     if content_type is not None:
-
         meta_data["content_type"] = content_type
     else:
         meta_data["content_type"] = "None"
@@ -126,28 +117,8 @@ def insert_datalake(file_path,file_name, user, key, authurl, container_name,
         try:
             conn.put_object(container_name, meta_data["swift_object_id"],
                             contents=file_content,
-                            content_type=meta_data["content_type"])#,
-            # headers={"x-webhook":"yes"})
-            # Insert metadata over the data : only if data has been put
+                            content_type=meta_data["content_type"])
             coll.insert_one(meta_data)
-            # client.stats.swift.update_one({"type": "data_to_process_list"},
-            #                               {"$push":
-            #                                   {
-            #                                       "data_to_process": {
-            #                                           "swift_id": meta_data[
-            #                                               "swift_object_id"],
-            #                                           "swift_container":
-            #                                               meta_data[
-            #                                                   "swift_container"],
-            #                                           "swift_user": meta_data[
-            #                                               "swift_user"],
-            #                                           "content_type":
-            #                                               meta_data[
-            #                                                   "content_type"]
-            #                                       }
-            #                                   }
-            #                               }
-            #                               )
             return None
         except Exception as e:
             print(e)

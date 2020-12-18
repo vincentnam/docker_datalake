@@ -17,8 +17,23 @@ https://www.linkedin.com/in/vincent-nam-dang/
 
 
 
+## Table of content
 
-## Context
+- [Context](#context)
+    - [TER](#typo3-extension-repository)
+    - [Composer](#composer)
+- [TYPO3 setup](#typo3-setup)
+    - [Extension](#extension)
+    - [Database](#database)
+- [Page setup](#page-setup)
+    - [Upload the page tree file](#upload-the-page-tree-file)
+    - [Go to the import view](#go-to-the-import-view)
+    - [Import the page tree](#import-the-page-tree)
+    - [SEO-friendly URLs](#seo-friendly-urls)
+- [License](#license)
+- [Links](#links)
+
+# Context
 This project is supported by neOCampus, OSIRIM, the CNRS, the IRIT and the SMAC team in IRIT. 
 
 This project has been started with a internship for 2nd year of Master in Statistic and Decisional Computing (SID at Université Toulouse 3 - Paul-Sabatier in Toulouse) funded by neOCampus. 
@@ -354,12 +369,7 @@ Production state|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg
 
   
 All is installed on Osirim : need to be tested.
-### Data model :   
-
-| |Image : JPEG | Image : PNG | Text : Json |  
-|:---:|:---:|:----:|:---:|  
-|Available|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">| <img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
-###### Neo4j data format example :
+###### Neo4j example usage for image recommandation system :
 ![alt text](git_image/neo4j_data_shema.png )
 
 # How to run : 
@@ -447,4 +457,8 @@ Dont name your task the same name of the callable : it will lead to an error
     
 ### More documentation
 
-Some more documentation is available on a google drive document at this address : https://docs.google.com/document/d/1QdtPktYoVD6AEcN_ctmKFChGfKwCS-Whj59pyjaHBqg/edit?usp=sharing
+Other markdown files are in folder of each service containing some more information over the service.
+
+### Licence 
+
+Todo : Apache 2.0 licence ?
