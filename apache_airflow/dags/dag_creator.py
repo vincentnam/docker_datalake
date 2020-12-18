@@ -40,6 +40,40 @@ import json
 #   "failed_operations" : [ ],
 #   "other_data" : { "template" : { "measurement" : "mesurevaleur", "time" : "datemesure", "fields" : [ "value" ], "tags" : [ "idpiece", "idcapteur" ] } }
 #   }
+
+
+def on_failure_callback(context):
+    print(context)
+    print(context.get("dag_run"))
+    print(context["ti"])
+    conf = context.get("dag_run").conf
+    meta_base = MongoClient(
+        "mongodb://" + globals()["META_MONGO_IP"] + ":" + globals()[
+            "MONGO_PORT"] + "/"
+    )
+    print(meta_base.swift[conf["swift_id"]].find_one_and_update({
+        "swift_object_id": conf["swift_id"]}, {
+        '$push': {"failed_operations":str(context.get("dag_run"))} ,
+        '$set':{"last_modified" : datetime.datetime.now().isoformat()}
+    }))
+
+def on_success_callback(context):
+    print(context)
+    print(context.get("dag_run"))
+    print(context.get("dag_run").conf)
+    print(context["ti"])
+    conf = context.get("dag_run").conf
+    meta_base = MongoClient(
+        "mongodb://" + globals()["META_MONGO_IP"] + ":" + globals()[
+            "MONGO_PORT"] + "/"
+    )
+    print(meta_base.swift[conf["swift_id"]].find_one_and_update({
+        "swift_object_id": conf["swift_id"]}, {
+        '$push': {"successful_operations":str(context.get("dag_run"))} ,
+        '$set':{"last_modified" : datetime.datetime.now().isoformat()}
+    }))
+
+
 def check_type(**kwargs):
     """
     Check data MIME type and return the next task to trigger.
@@ -457,6 +491,8 @@ datanoos_ba_huy_csv_ts= PythonOperator(
     python_callable=datanoos_ba_huy_csv_ts,
     provide_context=True,
     dag=dag,
+    on_failure_callback=on_failure_callback,
+    on_success_callback=on_success_callback
 )
 datanoos_zip= PythonOperator(
     task_id='datanoos_zip',
