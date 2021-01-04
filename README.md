@@ -401,6 +401,10 @@ The DAG can be customized with parameters.
 
 The "task_2" will be chained to "task_1" and will be run after it. Each task can be define with a run condition (as "all_success", "all_failed", "at least 1 task is successful", etc..).
 It is possible to create several branches to make several way for processing. The tools used for it are branching operators (see https://airflow.apache.org/docs/apache-airflow/1.10.14/concepts.html#branching)
+Branching is done the same way but you can chain a list of task to branch it. The branching will have to return the task name of the next task to run.
+
+    
+    branch_operator >> [way_1 , way_2] 
 
 
 ### Integrate a new process pipeline in Airflow  <a name="IntegrateanewprocesspipelineinAirflow"></a>
