@@ -414,8 +414,6 @@ Branching is done the same way but you can link a list of task to branch it. The
 ### Integrate a new process pipeline in Airflow  <a name="IntegrateanewprocesspipelineinAirflow"></a>
 [Return to the table of content](#Tableofcontent)
 
-TODO : Explain how to add a new Airflow pipeline 
-
 04/01/2021 : 
 Right now, it is not possible to easily add a pipeline or a task in Airflow.
 The way to do it is to change the actual working pipeline. Indeed, only one is triggered by the Openstack Swift proxy when a new data is added. 
