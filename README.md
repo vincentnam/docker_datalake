@@ -62,6 +62,7 @@ The goals are :
 
 # Context <a name="Context"></a>
 [Return to the table of content](#Tableofcontent)
+
 This project is supported by neOCampus, OSIRIM, the CNRS, the IRIT and the SMAC team in IRIT. 
 
 This project has been started with a internship for 2nd year of Master in Statistic and Decisional Computing (SID at Université Toulouse 3 - Paul-Sabatier in Toulouse) funded by neOCampus. 
@@ -75,6 +76,7 @@ The project has been continued through a 1year-fixed-term contract by the CNRS a
 
 ## Current architecture <a name="Currentarchitecture"></a>
 [Return to the table of content](#Tableofcontent)
+
 ![alt text](./git_image/DataLakeArchiV0-Objectif-Zone.png)
 
 The architecture is divided in 5 functional areas :
@@ -182,9 +184,6 @@ TODO : Refactor and update -> new data analysis and new horizons are set
 |:-----:|:----------:|:----------:|:--:|:--:|:--:|:-:|:-:| 
 Todo |  | |||| | |
 Working|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
-Production state|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
-Optimized||||||||  
-Production state|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">| |<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
 
   
 All is installed on Osirim : need to be tested.
