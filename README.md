@@ -17,7 +17,7 @@ The goals are :
 - [The project](#Context)
     * [Current architecture](#Currentarchitecture)
     * [Areas Description](#AreasDescription)
-        + [Raw data management area / landing area](#Rawdatamanagementareaorlanding area )
+        + [Raw data management area / landing area](#Rawdatamanagementareaorlandingarea)
         + [Process area](#Processarea)
         + [Consumption zone or processed data area or gold zone](#Consumptionzoneorprocesseddataareaorgoldzone)
         + [Services area](#Servicesarea)
