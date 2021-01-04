@@ -34,10 +34,6 @@ def init_id(mongodb_url):
     client.create_index("type", unique=True)
 
 
-def clean_swift(container):
-    pass
-
-
 def insert_datalake(file_content, user, key, authurl, container_name,
                     file_name, data_process = "default", application=None, content_type=None,
                     mongodb_url="127.0.0.1:27017", other_data = None ):
