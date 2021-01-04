@@ -307,6 +307,9 @@ Consumption zone :
 [Return to the table of content](#Tableofcontent)
 
 TODO : Openstack, MongoDB, API Rest for insertion, web gui, etc..
+Openstack Swift : REST API (see documentation)
+MongoDB : API in several languages (Pymongo in Python as an example)
+Airflow : Web server GUI and REST API (see documentation)
 
 ### Deploy the architecture <a name="Deploythearchitecture"></a>
 [Return to the table of content](#Tableofcontent)
@@ -331,7 +334,7 @@ In addition to these basic building blocks, there are many more specific operato
 (Cf. Airflow documentation)
 
 The python operator may be the most useful. To use it, there are 2 steps to follow : 
-- First, create the python function to be done by the task, exemple : 
+- First, create the python function to be done by the task, example : 
 
 <b></b>
 
@@ -435,7 +438,7 @@ Tasks have to be named but 2 tasks have to have different name. The naming conve
     PROJECT_USER_TASKNAME
 
 with PROJECT the name of the project or the team in which you work in / with, USER is your username, 
-TASKNAME is a string that quickly describe the task (exemple : data_cleaning, feature_extraction, etc...).
+TASKNAME is a string that quickly describe the task (example : data_cleaning, feature_extraction, etc...).
 It will be easy and fast to integrate the new pipeline.
   
 #### Problems already encountered <a name="Problemsalreadyencountered"></a>
