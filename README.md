@@ -317,7 +317,7 @@ If you want to insert data in the datalake (a file) : use the "insert_datalake()
 
 ### Create an Airflow job <a name="CreateanAirflowjob"></a>
 [Return to the table of content](#Tableofcontent)
-Jobs (or tasks) are done through Operators in Airflow (https://airflow.apache.org/docs/apache-airflow/1.10.14/concepts.html#concepts-operators).
+Jobs (or tasks) are done through Operators in Airflow (https://airflow.apache.org/docs/apache-airflow/1.10.14/concepts.html#concepts-operators). The definition of a job or a task is done through a python script.
 To create a task that will fit in one or more pipeline, an operator has to be used which are defined in the Airflow package.
 Several operators exists and each one is used for a specific use, including : 
 - BashOperator - executes a bash command
@@ -331,27 +331,56 @@ In addition to these basic building blocks, there are many more specific operato
 
 The python operator may be the most useful. To use it, there are 2 steps to follow : 
 - First, create the python function to be done by the task, exemple : 
+
+
     def print_context(ds, **kwargs):
     print(ds)
     return 'Whatever you return gets printed in the logs'
     
-- Then, define an operator that will run this function.
+- Then, define an operator that will run this function. You have to define the DAG (Directed Acyclic Graph) in which the task will be run but each function can be reused in another Operator.
 
-run_this = PythonOperator(
-    task_id='print_the_context',
-    provide_context=True,
-    python_callable=print_context,
-    dag=dag,
-)
+
+    run_this = PythonOperator(
+        task_id='print_the_context',
+        provide_context=True,
+        python_callable=print_context,
+        dag=dag,
+    )
 
 A context can be provided with PythonOperator (always provided in version 2.0) that will allow to give arguments to the function through the **kwargs dict. You can use it as a dictionary and create new keys to provide the data you need. 
 This dictionary contains already a lot of information over the dag run (date, id, etc...) but also contains a "ti" or a "task_instance" (depends on .. ?) key that contains the XCom (for cross-communication) object that allow to pull and push information or objects.
 - You can push data to pass it to another task (kwargs['task_instance'].xcom_push(key="thekey",value="thevalue"))
 - You can pull data from previous task from its return or from a xcom_pull() (("kwargs['task_instance'].xcom_pull(task_ids='ID_OF_THE_TASK')" or "kwargs['ti'].xcom_pull(task_ids='ID_OF_THE_TASK')"))
 
+Look at the documentation for more information (https://airflow.apache.org/docs/apache-airflow/1.10.14/).
 
 ### Create an Airflow pipeline <a name="CreateanAirflowpipeline"></a>
 [Return to the table of content](#Tableofcontent)
+
+Airflow is based on DAG (Directed Acyclic Graph) to implement pipeline / workflows (http://airflow.apache.org/docs/apache-airflow/1.10.14/concepts.html#dags). The definition of a pipeline / workflow is done through a python script
+The definition of a pipeline is quite straight forward :
+- Define a DAG object 
+
+    
+    default_args = {
+        'start_date': datetime(2016, 1, 1),
+        'owner': 'airflow'
+    }
+    
+    dag = DAG('my_dag', default_args=default_args)
+
+The DAG can be customized with parameters.
+
+- Define the relation between task in your dags.
+    
+    
+    task_1 = DummyOperator('task_1', dag=dag)
+    task_2 = DummyOperator('task_2', dag=dag)
+    task_1 >> task_2 # Define dependencies
+
+The "task_2" will be chained to "task_1" and will be run after it. Each task can be define with a run condition (as "all_success", "all_failed", "at least 1 task is successful", etc..).
+It is possible to create several branches to make several way for processing. The tools used for it are branching operators (see https://airflow.apache.org/docs/apache-airflow/1.10.14/concepts.html#branching)
+
 
 ### Integrate a new process pipeline in Airflow  <a name="IntegrateanewprocesspipelineinAirflow"></a>
 [Return to the table of content](#Tableofcontent)
