@@ -95,7 +95,7 @@ The architecture is divided in 5 functional areas :
 - Services area
 - Security and monitoring area
 
-### Areas description
+### Areas description <a name="Areas description"></a>
 
 Each area has its own goal : 
 
