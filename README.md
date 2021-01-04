@@ -110,6 +110,7 @@ A third service has been integrated in the conception for data stream input :
     
 #### Process area <a name="Processarea"></a>
 [Return to the table of content](#Tableofcontent)
+
 This area is composed by 1 service that will handle every workflow and jobs of data processing :
 - Apache Airflow (https://airflow.apache.org/)
     - Job and workflow scheduler application. This service make it possible to schedule and monitor workflows written in Python.
@@ -120,6 +121,7 @@ The deployment of a Hadoop cluster has been thought but the idea could be not im
 
 #### Consumption zone or processed data area or gold zone <a name="Consumptionzoneorprocesseddataareaorgoldzone"></a>  
 [Return to the table of content](#Tableofcontent)
+
 This area is there to create values over data. Its role is to provide information and allow external application to work on data.
 The processed data area is supposed to host any database that is needed by users. 
 As no real need have been expressed, no real use case are implemented here. 
@@ -136,6 +138,7 @@ But some use cases have been imagined :
     
 #### Services area <a name="Servicesarea"></a>  
 [Return to the table of content](#Tableofcontent)
+
 This functional area includes every service to make this platform user-friendly. At this point (23/11/2020), 3 services have been designed :
 - Data insertion and download services :
     - Composed with 2 services : web GUI and REST API.
@@ -150,6 +153,7 @@ This functional area includes every service to make this platform user-friendly.
 
 #### Security and monitoring area  <a name="Securityandmonitoringarea"></a>  
 [Return to the table of content](#Tableofcontent)
+
 The purpose of this area is to make it possible to monitor the whole architecture for administrators and give 3 level monitoring.
 The area has to be adapted to the host platform so services could change with deployment.
 - First monitoring level : User level
@@ -169,6 +173,7 @@ This area has to be work more to better design it. Prometheus could be used to m
 
 ### Services available <a name="Servicesavailable"></a> 
 [Return to the table of content](#Tableofcontent)
+
 TODO : Refactor and update -> new data analysis and new horizons are set
 
 | |Swift | Metadata `MongoDB` | Airflow |Airflow `Jobs` | Neo4J `"Gold" zone`|InfluxDB`"Gold" zone`|Mongodb`"Gold" zone`  
@@ -203,6 +208,7 @@ Aiflow DAG tools in the apache_airflow/dag/lib folder has a special nomenclature
 ## Diagrams <a name="Diagrams"></a>
 ### Activity diagram  <a name="Activitydiagram"></a>
 [Return to the table of content](#Tableofcontent)
+
 The data life in this architecture is described in this diagram : 
 
 ![alt text](./git_image/Sequence_Datalake.png)
@@ -214,6 +220,7 @@ The data life in this architecture is described in this diagram :
  
 ### Data integration activity diagram for Apache Airflow <a name="DataintegrationactivitydiagramforApacheAirflow"></a>
 [Return to the table of content](#Tableofcontent)
+
 ![alt text](git_image/network_diagram.png)
 
 The Proof of Concept hosted on Osirim is hosted on several VM.
@@ -222,6 +229,7 @@ Data storage is made on a NFS bay. At this point (23/11/2020), the POC is not ad
 ## How to <a name="Howto"></a>
 ### Insert a new data <a name="Insertanewdata"></a>
 [Return to the table of content](#Tableofcontent)
+
 ![alt text](git_image/Sequence_Dataintegration.png)
 
 To develop a tool to insert data in the datalake, you have to :
@@ -265,6 +273,7 @@ To develop a tool to insert data in the datalake, you have to :
 - Put the metadata in MongoDB
 ### Process a data already inserted <a name="Processadataalreadyinserted"></a>
 [Return to the table of content](#Tableofcontent)
+
 There is a document in "stats" database in "swift" collection in MongoDB that contains list of data to process that will be check every 5 minutes by "Check_data_to_process" dag. Adding a swift
 You'll have to add a document in this list containing : 
 - swift_id 
@@ -293,10 +302,12 @@ Consumption zone :
 - 7000 :Neo4J
 #### API descrption <a name="APIdescription"></a>
 [Return to the table of content](#Tableofcontent)
+
 TODO : Openstack, MongoDB, API Rest for insertion, web gui, etc..
 
 ### Deploy the architecture <a name="Deploythearchitecture"></a>
 [Return to the table of content](#Tableofcontent)
+
 TODO : Finish ansible, make fully automatic deployment with ansible (see docker branch) 
 - docker-compose up 
 
@@ -304,16 +315,20 @@ If you want to insert data in the datalake (a file) : use the "insert_datalake()
 
 ### Integrate a new process pipeline in Airflow  <a name="IntegrateanewprocesspipelineinAirflow"></a>
 [Return to the table of content](#Tableofcontent)
+
 TODO : Explain how to add a new Airflow pipeline 
 #### Problems already encountered <a name="Problemsalreadyencountered"></a>
 [Return to the table of content](#Tableofcontent)
+
 Dont name your task the same name of the callable : it will lead to an error
     
 ## Data formats in <a name="Dataformatsin"></a>
 [Return to the table of content](#Tableofcontent)
+
 ![alt text](git_image/DataLakeArchiV0-24_11_2020%20-%20Data%20exchanges.png)
 ### Openstack Swift  <a name="OpenstackSwift"></a>
 [Return to the table of content](#Tableofcontent)
+
 Object inserted in Openstack swift are renamed with a number id. 
 This id is incremented by 1 for every object insert. It allows to follow easily the number of object stored in Openstack Swift.
 
@@ -321,6 +336,7 @@ Only the renamed data are store in Openstack swift. Every metadata are stored in
 Each object is stored on a container that match to the project or the user group / team.
 ### MongoDB metadata database  <a name="MongoDBmetadatadatabase"></a>
 [Return to the table of content](#Tableofcontent)
+
 (23/11/2020) The metadata database is designed in several parts :
 - "stats" database :
     - "swift" collection : 
@@ -356,6 +372,7 @@ Data exchanges at this point are described in the following schema.
 
 # TODO  <a name="TODO"></a>
 [Return to the table of content](#Tableofcontent)
+
 (23/11/2020) At this point, the architecture development is described in this diagram
 ![alt text](./git_image/DataLakeArchiV0-actual.png)
 
@@ -528,6 +545,7 @@ Everything should be possible to be used in this area
 
 ### Start Openstack Swift docker container <a name="StartOpenstackSwiftdockercontainer"></a>
 [Return to the table of content](#Tableofcontent)
+
 TODO : Refactor, update 
 
     docker build -f ./swift/Ubuntu1604.Dockerfile -t ubuntuswift ./swift/
@@ -542,17 +560,20 @@ The volumes are mounted in /tmp, you have to use a mountable object : dev or loo
 
 ## More documentation <a name="Moredocumentation"></a>
 [Return to the table of content](#Tableofcontent)
+
 Other markdown files are in folder of each service containing some more information over the service.
 A pdf is available in the repository. This pdf contains the internship report that I made for the internship. 
 It is mainly made of design thinking.
 
 ## Licence <a name="Licence"></a>
 [Return to the table of content](#Tableofcontent)
+
 Todo : Apache 2.0 licence ?
 
 
 ### Contacts <a name="Contacts"></a>
 [Return to the table of content](#Tableofcontent)
+
 04/01/2021 : 
 
 DANG Vincent-Nam (Repository owner, intern and engineer working on the project)
