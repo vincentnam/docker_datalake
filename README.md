@@ -332,6 +332,7 @@ In addition to these basic building blocks, there are many more specific operato
 The python operator may be the most useful. To use it, there are 2 steps to follow : 
 - First, create the python function to be done by the task, exemple : 
 
+<b></b>
 
     def print_context(ds, **kwargs):
     print(ds)
@@ -339,6 +340,7 @@ The python operator may be the most useful. To use it, there are 2 steps to foll
     
 - Then, define an operator that will run this function. You have to define the DAG (Directed Acyclic Graph) in which the task will be run but each function can be reused in another Operator.
 
+<b></b>
 
     run_this = PythonOperator(
         task_id='print_the_context',
@@ -361,9 +363,7 @@ Airflow is based on DAG (Directed Acyclic Graph) to implement pipeline / workflo
 The definition of a pipeline is quite straight forward :
 - Define a DAG object 
 
-
-
-
+<b></b>
     
     default_args = {
         'start_date': datetime(2016, 1, 1),
@@ -372,13 +372,11 @@ The definition of a pipeline is quite straight forward :
     
     dag = DAG('my_dag', default_args=default_args)
 
-
-
-
 The DAG can be customized with parameters.
 
 - Define the relation between task in your dags.
-    
+
+<b></b>    
     
     task_1 = DummyOperator('task_1', dag=dag)
     task_2 = DummyOperator('task_2', dag=dag)
