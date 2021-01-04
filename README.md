@@ -17,44 +17,44 @@ The goals are :
 - [The project](#Context)
     * [Current architecture](#Currentarchitecture)
     * [Areas Description](#AreasDescription)
-        + [Raw data management area / landing area](#Raw data management area or landing area )
-        + [Process area](#Process area)
-        + [Consumption zone or processed data area or gold zone](#Consumption zone or processed data area or gold zone)
-        + [Services area](#Services area)
-        + [Security and monitoring area](#Security and monitoring area )
-    * [Services available](#Services available)
-    * [Tools used](#Tools used)
+        + [Raw data management area / landing area](#Rawdatamanagementareaorlanding area )
+        + [Process area](#Processarea)
+        + [Consumption zone or processed data area or gold zone](#Consumptionzoneorprocesseddataareaorgoldzone)
+        + [Services area](#Servicesarea)
+        + [Security and monitoring area](#Securityandmonitoringarea )
+    * [Services available](#Servicesavailable)
+    * [Tools used](#Toolsused)
     * [Diagrams](#Diagrams)
-        + [Activity Diagram](#Activity Diagram)
-        + [Data integration activity diagram for Apache Airflow](#Data integration activity diagram for Apache Airflow)
-    * [How to](#How to)
-        + [Insert a new data](#Insert a new data)
-        + [How to process a data already inserted](#How to process a data already inserted)
-        + [Access to services - TODO](#Access to services)
-            - [TCP Ports used](#TCP Ports used)
-            - [API description - TODO](#API descrption)
-        + [Deploy the architecture](#Deploy the architecture)
-        + [Integrate a new process pipeline in Airflow](#Integrate a new process pipeline in Airflow)
-            - [Problems already encountered](#Integrate a new process pipeline in Airflow)
-    * [Data formats in](#Data formats in)
-        + [Openstack Swift](#Openstack Swift)
-        + [MongoDB metadata database - TO REFACTOR](#MongoDB metadata database)
-    + [Data exchanges between services](#Data exchanges between services)
+        + [Activity Diagram](#ActivityDiagram)
+        + [Data integration activity diagram for Apache Airflow](#DataintegrationactivitydiagramforApacheAirflow)
+    * [How to](#Howto)
+        + [Insert a new data](#Insertanewdata)
+        + [Process a data already inserted](#Processadataalreadyinserted)
+        + [Access to services - TODO](#Accesstoservices)
+            - [TCP Ports used](#TCPPortsused)
+            - [API description - TODO](#APIdescrption)
+        + [Deploy the architecture](#Deploythearchitecture)
+        + [Integrate a new process pipeline in Airflow](#IntegrateanewprocesspipelineinAirflow)
+            - [Problems already encountered](#Problemsalreadyencountered)
+    * [Data formats in](#Dataformatsin)
+        + [Openstack Swift](#OpenstackSwift)
+        + [MongoDB metadata database - TO REFACTOR](#MongoDBmetadatadatabase)
+    + [Data exchanges between services](#Dataexchangesbetweenservices)
 - [TODO](#TODO)
-    * [Development on the project](#Development on the project)
-    * [Development for the project](#Development for the projet)
-        + [Around the architecture](#Around the architecture)
+    * [Development on the project](#Developmentontheproject)
+    * [Development for the project](#Developmentfortheprojet)
+        + [Around the architecture](#Aroundthearchitecture)
         + [Documentation](#Documentation)
-        + [What to change for a production deployment](#What to change for a production deployment)
-        + [How to go further](#How to go further)
-            -[Neo4j example usage for image recommandation system](#Neo4j example usage for image recommandation system)
-- [Other informations](#Other informations)
-    * [Tools not used](#Tools not used)
-        + [In the input area](#In the input area)
-        + [In process area](#In process area)
-        + [In processed data area](#In processed data area)
-    * [Start Openstack Swift docker container](#Start Openstack Swift docker container)
-    * [More documentation](#More documentation)
+        + [What to change for a production deployment](#Whattochangeforaproductiondeployment)
+        + [How to go further](#Howtogofurther)
+            -[Neo4J as image recommendation system](#Neo4Jasimagerecommendationsystem)
+- [Other informations](#Otherinformations)
+    * [Tools not used](#Toolsnotused)
+        + [In the input area](#Intheinputarea)
+        + [In process area](#Inprocessarea)
+        + [In processed data area](#Inprocesseddataarea)
+    * [Start Openstack Swift docker container](#StartOpenstackSwiftdockercontainer)
+    * [More documentation](#Moredocumentation)
     * [Licence](#Licence)
 - [Contacts](#Contacts)
     
@@ -87,7 +87,7 @@ Each area has its own goal :
 
 ![alt text](./git_image/DataLakeArchiV0.png)
 
-#### Raw data management area or landing area <a name="Raw data management area or landing area"></a>
+#### Raw data management area or landing area <a name="Rawdatamanagementareaorlandingarea"></a>
 
 The purpose of this area is to handle, store and make available raw data. Each data is stored as is waiting to be processed and transformed into an information.
 
@@ -105,7 +105,7 @@ A third service has been integrated in the conception for data stream input :
     - Apache Kafka is an open-source distributed event streaming platform.
     - Its initial purpose is to handle MQTT message from sensors to raw data management area.
     
-#### Process area
+#### Process area <a name="Processarea"></a>
 This area is composed by 1 service that will handle every workflow and jobs of data processing :
 - Apache Airflow (https://airflow.apache.org/)
     - Job and workflow scheduler application. This service make it possible to schedule and monitor workflows written in Python.
@@ -114,7 +114,7 @@ This area is composed by 1 service that will handle every workflow and jobs of d
 
 The deployment of a Hadoop cluster has been thought but the idea could be not implemented or kept.
 
-#### Consumption zone or processed data area or gold zone  
+#### Consumption zone or processed data area or gold zone <a name="Consumptionzoneorprocesseddataareaorgoldzone"></a>  
 This area is there to create values over data. Its role is to provide information and allow external application to work on data.
 The processed data area is supposed to host any database that is needed by users. 
 As no real need have been expressed, no real use case are implemented here. 
@@ -129,7 +129,7 @@ But some use cases have been imagined :
     - Same database as the metadata database used in the raw data management area.
     - The purpose here is to store data for in-production applications
     
-#### Services area 
+#### Services area <a name="Servicesarea"></a>  
 This functional area includes every service to make this platform user-friendly. At this point (23/11/2020), 3 services have been designed :
 - Data insertion and download services :
     - Composed with 2 services : web GUI and REST API.
@@ -142,7 +142,7 @@ This functional area includes every service to make this platform user-friendly.
     - No solution have been found at this point (23/11/2020) to answer this need.
     - The purpose of this service is to make it possible to consume data as a stream for application that works in streaming mode. It has been initialy designed for online machine learning application. 
 
-#### Security and monitoring area  
+#### Security and monitoring area  <a name="Securityandmonitoringarea"></a>  
 The purpose of this area is to make it possible to monitor the whole architecture for administrators and give 3 level monitoring.
 The area has to be adapted to the host platform so services could change with deployment.
 - First monitoring level : User level
@@ -160,7 +160,7 @@ The area has to be adapted to the host platform so services could change with de
 
 This area has to be work more to better design it. Prometheus could be used to monitor Network and System level and other services could be used for other levels. 
 
-### Services available
+### Services available <a name="Servicesavailable"></a> 
 TODO : Refactor and update -> new data analysis and new horizons are set
 
 | |Swift | Metadata `MongoDB` | Airflow |Airflow `Jobs` | Neo4J `"Gold" zone`|InfluxDB`"Gold" zone`|Mongodb`"Gold" zone`  
@@ -175,7 +175,7 @@ Production state|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg
 All is installed on Osirim : need to be tested.
 
 
-### Tools used 
+### Tools used <a name="Toolsused"></a>
 
 - MongoDb
 - Openstack Swift
@@ -191,8 +191,8 @@ Aiflow DAG tools in the apache_airflow/dag/lib folder has a special nomenclature
 - *integrator : implemented tool to put data into a specific database 
 
 
-## Diagrams
-### Activity Diagram  
+## Diagrams <a name="Diagrams"></a>
+### Activity diagram  <a name="Activitydiagram"></a>
 The data life in this architecture is described in this diagram : 
 
 ![alt text](./git_image/Sequence_Datalake.png)
@@ -202,14 +202,14 @@ The data life in this architecture is described in this diagram :
 - Depending on the data type, the user and the user group / project, the data is processed, transformed and inserted in the corresponding database in the processed data area. 
 - Every operations are logged in the metadata database.
  
-### Data integration activity diagram for Apache Airflow
+### Data integration activity diagram for Apache Airflow <a name="DataintegrationactivitydiagramforApacheAirflow"></a>
 ![alt text](git_image/network_diagram.png)
 
 The Proof of Concept hosted on Osirim is hosted on several VM.
 Each service has its own virtual machine. 
 Data storage is made on a NFS bay. At this point (23/11/2020), the POC is not adapted for this platform and wont be deployed in a production state on OSIRIM.
-## How to
-### Insert a new data
+## How to <a name="Howto"></a>
+### Insert a new data <a name="Insertanewdata"></a>
 ![alt text](git_image/Sequence_Dataintegration.png)
 
 To develop a tool to insert data in the datalake, you have to :
@@ -251,7 +251,7 @@ To develop a tool to insert data in the datalake, you have to :
 - Check if the swift container exists. If not, creates it.
 - Put the data in Swift (with content_type and the swift_id)
 - Put the metadata in MongoDB
-### How to process a data already inserted
+### Process a data already inserted <a name="Processadataalreadyinserted"></a>
 
 There is a document in "stats" database in "swift" collection in MongoDB that contains list of data to process that will be check every 5 minutes by "Check_data_to_process" dag. Adding a swift
 You'll have to add a document in this list containing : 
@@ -261,9 +261,9 @@ You'll have to add a document in this list containing :
 - content_type 
 For each data in this list, it will trigger a "new_input" dag to process this data.
 
-### Access to services 
+### Access to services  <a name="Accesstoservices"></a>
 
-#### TCP Ports used 
+#### TCP Ports used  <a name="TCPPortsused"></a>
  
 Raw data area : 
 - 8080 : Swift 
@@ -278,29 +278,29 @@ Consumption zone :
     - 8086 : Influxdb web interface
 
 - 7000 :Neo4J
-#### API descrption
+#### API descrption <a name="APIdescription"></a>
 TODO : Openstack, MongoDB, API Rest for insertion, web gui, etc..
 
-### Deploy the architecture
+### Deploy the architecture <a name="Deploythearchitecture"></a>
 TODO : Finish ansible, make fully automatic deployment with ansible (see docker branch) 
 - docker-compose up 
 
 If you want to insert data in the datalake (a file) : use the "insert_datalake()" function in  ["python_test_script.py"](./python_test_script.py) 
 
-### Integrate a new process pipeline in Airflow 
+### Integrate a new process pipeline in Airflow  <a name="IntegrateanewprocesspipelineinAirflow"></a>
 TODO : Explain how to add a new Airflow pipeline 
-#### Problems already encountered
+#### Problems already encountered <a name="Problemsalreadyencountered"></a>
 Dont name your task the same name of the callable : it will lead to an error
     
-## Data formats in
+## Data formats in <a name="Dataformatsin"></a>
 ![alt text](git_image/DataLakeArchiV0-24_11_2020%20-%20Data%20exchanges.png)
-### Openstack Swift 
+### Openstack Swift  <a name="OpenstackSwift"></a>
 Object inserted in Openstack swift are renamed with a number id. 
 This id is incremented by 1 for every object insert. It allows to follow easily the number of object stored in Openstack Swift.
 
 Only the renamed data are store in Openstack swift. Every metadata are stored in the metadata database (MongoDB).
 Each object is stored on a container that match to the project or the user group / team.
-### MongoDB metadata database 
+### MongoDB metadata database  <a name="MongoDBmetadatadatabase"></a>
 (23/11/2020) The metadata database is designed in several parts :
 - "stats" database :
     - "swift" collection : 
@@ -326,19 +326,19 @@ Each object is stored on a container that match to the project or the user group
             - "other_data" : {...} : anything that is needed to know on the data (custom metadata inserted by user) 
                      
 
-## Data exchanges between services
+## Data exchanges between services <a name="Dataexchangesbetweenservices"></a>
 
 Data exchanges at this point are described in the following schema.
 ![alt text](./git_image/DataLakeArchiV0-24_11_2020%20-%20Current%20data%20exchanges.png)
 
 
 
-# TODO: 
+# TODO  <a name="TODO"></a>
 (23/11/2020) At this point, the architecture development is described in this diagram
 ![alt text](./git_image/DataLakeArchiV0-actual.png)
 
 
-## Development on the project
+## Development on the project  <a name="Developmentontheproject"></a>
 TODO list for the project development (i.e. the datalake architecture)
 TODO : Update TODO list
 - [x]  Raw data mangement area : 
@@ -418,12 +418,12 @@ TODO : Update TODO list
 - [x] Set up a "log" database to log operations on data done
     - [x] Operations are logged in MongoDB MetaDataBase : successful and failed operation (Airflow task + id ) + operations per day
 
-## Development for the projet
-### Around the architecture
+## Development for the projet <a name="Developmentfortheproject"></a>
+### Around the architecture  <a name="Aroundtheproject"></a>
 - [ ] Add metadata over transformed data in the goldzone (and be able to find the list of process done to create this processed data)
 - [ ] Automatic deployment : Docker + Kubernetes + Ansible
 - [ ] Define a licence (certainly MIT licence) : ask for project supervisors
-### Documentation 
+### Documentation  <a name="Documentation"></a>
 - [ ] Diagrams for 
     - [x] Software Architecture
         - [x] Basic
@@ -436,7 +436,7 @@ TODO : Update TODO list
 
 
  
-### What to change for a production deployment
+### What to change for a production deployment <a name="Whattochangeforaproductiondeployment"></a>
 For swift : 
 - Users authentications :
     - Change the test users 
@@ -461,7 +461,7 @@ For MongoDB (Gold Zone) :
 
 
 
-### How to go further 
+### How to go further  <a name="Howtogofurther"></a>
 - [ ] Job creation automatization for Airflow 
     - Create automatically the job for new data format and the output format
         - Allow us to integrate every kind of data without human action 
@@ -472,28 +472,28 @@ For MongoDB (Gold Zone) :
     - [x] Done natively in Swift : all datas are stored even if they already are in the database
     - [ ] Set up a mechanism to handle redundant datas
 
-#### Neo4j example usage for image recommandation system
+#### Neo4J as image recommendation system <a name="Neo4Jasimagerecommendationsystem"></a>
 TODO : Refactor, update and explain
 ![alt text](git_image/neo4j_data_shema.png )
 
 
 
 
-# Other informations 
+# Other information <a name="Otherinformation"></a>
 
-## Tools not used
+## Tools not used <a name="Toolsnotused"></a>
 
-### In the input area
+### In the input area <a name="Intheinputarea"></a>
 - <img src="https://mapr.com/products/apache-hbase/assets/hbase-logo.png" height="42"> HBase : need for raw input data, HBase would have been used as a key / value database while it's a column store database + difficult to handle raw data reading
 
-### In process area
+### In process area <a name="Inprocessarea"></a>
 - <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/TalendLogoCoral.png" height="42"> Talend : difficulties to install on Linux + difficulties to find version that can be integrated in the POC
 
-### In processed data area
+### In processed data area <a name="Inprocesseddataarea"></a>
 Everything should be possible to be used in this area
 
 
-### Start Openstack Swift docker container 
+### Start Openstack Swift docker container <a name="StartOpenstackSwiftdockercontainer"></a>
 TODO : Refactor, update 
 
     docker build -f ./swift/Ubuntu1604.Dockerfile -t ubuntuswift ./swift/
@@ -506,18 +506,18 @@ To make data persistant, use docker volume bind
 The volumes are mounted in /tmp, you have to use a mountable object : dev or loopbackdevice file.
 
 
-## More documentation
+## More documentation <a name="Moredocumentation"></a>
 
 Other markdown files are in folder of each service containing some more information over the service.
 A pdf is available in the repository. This pdf contains the internship report that I made for the internship. 
 It is mainly made of design thinking.
 
-## Licence 
+## Licence <a name="Licence"></a>
 
 Todo : Apache 2.0 licence ?
 
 
-### Contacts :
+### Contacts <a name="Contacts"></a>
 
 04/01/2021 : 
 
