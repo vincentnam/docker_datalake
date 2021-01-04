@@ -272,6 +272,9 @@ To develop a tool to insert data in the datalake, you have to :
 - Check if the swift container exists. If not, creates it.
 - Put the data in Swift (with content_type and the swift_id)
 - Put the metadata in MongoDB
+
+The "python_test_script.py" is a example script made to add a new data. It has been done to do test but it can be reused to make an insertion script or a REST API.
+
 ### Process a data already inserted <a name="Processadataalreadyinserted"></a>
 [Return to the table of content](#Tableofcontent)
 
