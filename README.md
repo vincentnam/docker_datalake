@@ -282,6 +282,8 @@ You'll have to add a document in this list containing :
 - swift_container
 - swift_user
 - content_type 
+
+
 For each data in this list, it will trigger a "new_input" dag to process this data.
 DISCLAIMER : "new_input" is actually disable for testing. The actual pipeline is "test" until integration of new pipeline has been done.
 
