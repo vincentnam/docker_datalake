@@ -366,7 +366,8 @@ This dictionary contains already a lot of information over the dag run (date, id
 
     
     kwargs['task_instance'].xcom_pull(task_ids='ID_OF_THE_TASK') 
-                            or 
+<b>OR </b>
+
     kwargs['ti'].xcom_pull(task_ids='ID_OF_THE_TASK')
 
 Look at the documentation for more information (https://airflow.apache.org/docs/apache-airflow/1.10.14/).
