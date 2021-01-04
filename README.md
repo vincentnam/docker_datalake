@@ -283,6 +283,7 @@ You'll have to add a document in this list containing :
 - swift_user
 - content_type 
 For each data in this list, it will trigger a "new_input" dag to process this data.
+DISCLAIMER : "new_input" is actually disable for testing. The actual pipeline is "test" until integration of new pipeline has been done.
 
 ### Access to services  <a name="Accesstoservices"></a>
 
@@ -416,7 +417,7 @@ TODO : Explain how to add a new Airflow pipeline
 Right now, it is not possible to easily add a pipeline or a task in Airflow.
 The way to do it is to change the actual working pipeline. Indeed, only one is triggered by the Openstack Swift proxy when a new data is added. 
 
-To add a task or a sub-pipeline / sub-workflow, it will be needed to modify the "./apache_airflow/dags/dag_creator.py" and modify the "custom path" in the dag:
+To add a task or a sub-pipeline / sub-workflow, it will be needed to modify the "./apache_airflow/dags/dag_creator.py" (at the end of the script) and modify the "custom path" in the dag:
 
     custom >> [the_first_task_of_the_sub_pipeline]
     the_first_task_of_the_sub_pipeline >> ... >> join
