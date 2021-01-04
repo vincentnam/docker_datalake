@@ -8,17 +8,72 @@ The goals are :
 - Make it easy to deploy the architecture
 - Make an interoperable architecture through the usage of REST API whenever it is possible
 
-##### Contact :
-At this point (23/11/2020), all the development have been done by DANG Vincent-Nam : 
-
-Vincent-Nam.Dang@irit.fr / dang.vincentnam@gmail.com 
-https://www.linkedin.com/in/vincent-nam-dang/  
 
 
 
 
+##Table of content
+- [Context](#Context)
+- [The project](#Context)
+    - [Current architecture](#Current architecture)
+    - [Areas Description](#Areas Description)
+        - [Raw data management area / landing area](#Raw data management area or landing area )
+        - [Process area](#Process area)
+        - [Consumption zone or processed data area or gold zone](#Consumption zone or processed data area or gold zone)
+        - [Services area](#Services area)
+        - [Security and monitoring area](#Security and monitoring area )
+    - [Services available](#Services available)
+    - [Tools used](#Tools used)
+    - [Diagrams](#Diagrams)
+        - [Activity Diagram](#Activity Diagram)
+        - [Data integration activity diagram for Apache Airflow](#Data integration activity diagram for Apache Airflow)
+    - [How to](#How to)
+        - [Insert a new data](#Insert a new data)
+        - [How to process a data already inserted](#How to process a data already inserted)
+        - [Access to services - TODO](#Access to services)
+            - [TCP Ports used](#TCP Ports used)
+            - [API description - TODO](#API descrption)
+        - [Deploy the architecture](#Deploy the architecture)
+        - [Integrate a new process pipeline in Airflow](#Integrate a new process pipeline in Airflow)
+            - [Problems already encountered](#Integrate a new process pipeline in Airflow)
+    - [Data formats in](#Data formats in)
+        - [Openstack Swift](#Openstack Swift)
+        - [MongoDB metadata database - TO REFACTOR](#MongoDB metadata database)
+    - [Data exchanges between services](#Data exchanges between services)
+- [TODO](#TODO)
+    - [Development on the project](#Development on the project)
+    - [Development for the project](#Development for the projet)
+        - [Around the architecture](#Around the architecture)
+        - [Documentation](#Documentation)
+        - [What to change for a production deployment](#What to change for a production deployment)
+        - [How to go further](#How to go further)
+            -[Neo4j example usage for image recommandation system](#Neo4j example usage for image recommandation system)
+- [Other informations](#Other informations)
+    - [Tools not used](#Tools not used)
+        - [In the input area](#In the input area)
+        - [In process area](#In process area)
+        - [In processed data area](#In processed data area)
+    - [Start Openstack Swift docker container](#Start Openstack Swift docker container)
+    - [More documentation](#More documentation)
+    - [Licence](#Licence)
+- [Contacts](#Contacts)
+    
+    
+- [Table of content](#Table of content)
+    - [Test](#typo3-extension-repository)
+    - [Composer](#composer)
+- [TYPO3 setup](#typo3-setup)
+    - [Extension](#extension)
+    - [Database](#database)
+- [Page setup](#page-setup)
+    - [Upload the page tree file](#upload-the-page-tree-file)
+    - [Go to the import view](#go-to-the-import-view)
+    - [Import the page tree](#import-the-page-tree)
+    - [SEO-friendly URLs](#seo-friendly-urls)
+- [License](#license)
+- [Links](#links)
 
-## Context
+# Context
 This project is supported by neOCampus, OSIRIM, the CNRS, the IRIT and the SMAC team in IRIT. 
 
 This project has been started with a internship for 2nd year of Master in Statistic and Decisional Computing (SID at Université Toulouse 3 - Paul-Sabatier in Toulouse) funded by neOCampus. 
@@ -28,9 +83,9 @@ The project has been continued through a 1year-fixed-term contract by the CNRS a
 - OSIRIM (Observatoire des Systèmes d'Indexation et de Recherche d'Information Multimedia) is one of IRIT's platforms. It is mainly supported by the European Regional Development Fund (ERDF), the French government, the Midi-Pyrénées region and the Centre National de la Recherche Scientifique (CNRS).
 - The SMAC team is interested in modeling and problem solving in complex systems using multi-agen technology. ( https://www.irit.fr/departement/intelligence-collective-interaction/equipe-smac/ )
 
-# The project :
+# The project 
 
-## Current architecture: 
+## Current architecture 
 ![alt text](./git_image/DataLakeArchiV0-Objectif-Zone.png)
 
 The architecture is divided in 5 functional areas :
@@ -40,13 +95,13 @@ The architecture is divided in 5 functional areas :
 - Services area
 - Security and monitoring area
 
-### Area descriptions : 
+### Areas description : 
 
 Each area has its own goal : 
 
 ![alt text](./git_image/DataLakeArchiV0.png)
 
-### Raw data management area / landing area : 
+#### Raw data management area or landing area 
 
 The purpose of this area is to handle, store and make available raw data. Each data is stored as is waiting to be processed and transformed into an information.
 
@@ -64,7 +119,7 @@ A third service has been integrated in the conception for data stream input :
     - Apache Kafka is an open-source distributed event streaming platform.
     - Its initial purpose is to handle MQTT message from sensors to raw data management area.
     
-### Process area
+#### Process area
 This area is composed by 1 service that will handle every workflow and jobs of data processing :
 - Apache Airflow (https://airflow.apache.org/)
     - Job and workflow scheduler application. This service make it possible to schedule and monitor workflows written in Python.
@@ -73,7 +128,7 @@ This area is composed by 1 service that will handle every workflow and jobs of d
 
 The deployment of a Hadoop cluster has been thought but the idea could be not implemented or kept.
 
-### Processed data area / gold zone : 
+#### Consumption zone or processed data area or gold zone  
 This area is there to create values over data. Its role is to provide information and allow external application to work on data.
 The processed data area is supposed to host any database that is needed by users. 
 As no real need have been expressed, no real use case are implemented here. 
@@ -88,7 +143,7 @@ But some use cases have been imagined :
     - Same database as the metadata database used in the raw data management area.
     - The purpose here is to store data for in-production applications
     
-### Services area :
+#### Services area 
 This functional area includes every service to make this platform user-friendly. At this point (23/11/2020), 3 services have been designed :
 - Data insertion and download services :
     - Composed with 2 services : web GUI and REST API.
@@ -101,7 +156,7 @@ This functional area includes every service to make this platform user-friendly.
     - No solution have been found at this point (23/11/2020) to answer this need.
     - The purpose of this service is to make it possible to consume data as a stream for application that works in streaming mode. It has been initialy designed for online machine learning application. 
 
-### Security and monitoring area : 
+#### Security and monitoring area  
 The purpose of this area is to make it possible to monitor the whole architecture for administrators and give 3 level monitoring.
 The area has to be adapted to the host platform so services could change with deployment.
 - First monitoring level : User level
@@ -119,7 +174,39 @@ The area has to be adapted to the host platform so services could change with de
 
 This area has to be work more to better design it. Prometheus could be used to monitor Network and System level and other services could be used for other levels. 
 
-## Activity Diagram : 
+### Services available
+TODO : Refactor and update -> new data analysis and new horizons are set
+
+| |Swift | Metadata `MongoDB` | Airflow |Airflow `Jobs` | Neo4J `"Gold" zone`|InfluxDB`"Gold" zone`|Mongodb`"Gold" zone`  
+|:-----:|:----------:|:----------:|:--:|:--:|:--:|:-:|:-:| 
+Todo |  | |||| | |
+Working|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
+Production state|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
+Optimized||||||||  
+Production state|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">| |<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
+
+  
+All is installed on Osirim : need to be tested.
+
+
+### Tools used 
+
+- MongoDb
+- Openstack Swift
+- Apache Airflow 
+- Neo4J
+- Influxdb
+- NodeJS
+- React
+- Flask
+
+Aiflow DAG tools in the apache_airflow/dag/lib folder has a special nomenclature : 
+- *tools : all the tools from a database or to process a specific data type 
+- *integrator : implemented tool to put data into a specific database 
+
+
+## Diagrams
+### Activity Diagram  
 The data life in this architecture is described in this diagram : 
 
 ![alt text](./git_image/Sequence_Datalake.png)
@@ -129,14 +216,14 @@ The data life in this architecture is described in this diagram :
 - Depending on the data type, the user and the user group / project, the data is processed, transformed and inserted in the corresponding database in the processed data area. 
 - Every operations are logged in the metadata database.
  
-### Data integration activity diagram (Apache Airflow) : 
+### Data integration activity diagram for Apache Airflow
 ![alt text](git_image/network_diagram.png)
 
 The Proof of Concept hosted on Osirim is hosted on several VM.
 Each service has its own virtual machine. 
 Data storage is made on a NFS bay. At this point (23/11/2020), the POC is not adapted for this platform and wont be deployed in a production state on OSIRIM.
-
-# How to insert a data : 
+## How to
+### Insert a new data
 ![alt text](git_image/Sequence_Dataintegration.png)
 
 To develop a tool to insert data in the datalake, you have to :
@@ -178,18 +265,56 @@ To develop a tool to insert data in the datalake, you have to :
 - Check if the swift container exists. If not, creates it.
 - Put the data in Swift (with content_type and the swift_id)
 - Put the metadata in MongoDB
+### How to process a data already inserted
 
-# Data formats :
+There is a document in "stats" database in "swift" collection in MongoDB that contains list of data to process that will be check every 5 minutes by "Check_data_to_process" dag. Adding a swift
+You'll have to add a document in this list containing : 
+- swift_id 
+- swift_container
+- swift_user
+- content_type 
+For each data in this list, it will trigger a "new_input" dag to process this data.
 
+### Access to services 
+
+#### TCP Ports used 
+ 
+Raw data area : 
+- 8080 : Swift 
+- 27017 : MongoDB metadatabase
+
+Process zone : 
+- 8081 : Airflow (Webserver)
+
+Consumption zone : 
+- Influxdb ports depends on InfluxDB version used (InfluxDB 2 beta version or RC version)  
+    - 9999 : InfluxDB web interface  
+    - 8086 : Influxdb web interface
+
+- 7000 :Neo4J
+#### API descrption
+TODO : Openstack, MongoDB, API Rest for insertion, web gui, etc..
+
+### Deploy the architecture
+TODO : Finish ansible, make fully automatic deployment with ansible (see docker branch) 
+- docker-compose up 
+
+If you want to insert data in the datalake (a file) : use the "insert_datalake()" function in  ["python_test_script.py"](./python_test_script.py) 
+
+### Integrate a new process pipeline in Airflow 
+TODO : Explain how to add a new Airflow pipeline 
+#### Problems already encountered
+Dont name your task the same name of the callable : it will lead to an error
+    
+## Data formats in
 ![alt text](git_image/DataLakeArchiV0-24_11_2020%20-%20Data%20exchanges.png)
-
-## Openstack Swift :
+### Openstack Swift 
 Object inserted in Openstack swift are renamed with a number id. 
 This id is incremented by 1 for every object insert. It allows to follow easily the number of object stored in Openstack Swift.
 
 Only the renamed data are store in Openstack swift. Every metadata are stored in the metadata database (MongoDB).
 Each object is stored on a container that match to the project or the user group / team.
-## MongoDB metadata database : 
+### MongoDB metadata database 
 (23/11/2020) The metadata database is designed in several parts :
 - "stats" database :
     - "swift" collection : 
@@ -215,44 +340,21 @@ Each object is stored on a container that match to the project or the user group
             - "other_data" : {...} : anything that is needed to know on the data (custom metadata inserted by user) 
                      
 
-
-## How to process a data already inserted :
-
-There is a document in "stats" database in "swift" collection in MongoDB that contains list of data to process that will be check every 5 minutes by "Check_data_to_process" dag. Adding a swift
-You'll have to add a document in this list containing : 
-- swift_id 
-- swift_container
-- swift_user
-- content_type 
-For each data in this list, it will trigger a "new_input" dag to process this data.
-
-
-
-# TCP ports : 
-Needed : 
-- 8080 : Swift 
-- 27017 : MongoDB metadatabase
-
-Optionnal : 
-- 8081 : Airflow (Webserver)
-- 9999 : InfluxDB web interface 
-
-Neo4J ports : 
-- 7000
-
-InfluxDB port : 
-- 8086
-
-# TODO list : 
-(23/11/2020) At this point, the architecture development is described in this diagram
-![alt text](./git_image/DataLakeArchiV0-actual.png)
-
-
+## Data exchanges between services
 
 Data exchanges at this point are described in the following schema.
 ![alt text](./git_image/DataLakeArchiV0-24_11_2020%20-%20Current%20data%20exchanges.png)
 
-#### Datalake architecture 
+
+
+# TODO: 
+(23/11/2020) At this point, the architecture development is described in this diagram
+![alt text](./git_image/DataLakeArchiV0-actual.png)
+
+
+## Development on the project
+TODO list for the project development (i.e. the datalake architecture)
+TODO : Update TODO list
 - [x]  Raw data mangement area : 
     - [x] Batch mode for data insertion
         - [x] API Rest 
@@ -330,13 +432,12 @@ Data exchanges at this point are described in the following schema.
 - [x] Set up a "log" database to log operations on data done
     - [x] Operations are logged in MongoDB MetaDataBase : successful and failed operation (Airflow task + id ) + operations per day
 
-#### Other things to do : 
-
+## Development for the projet
+### Around the architecture
 - [ ] Add metadata over transformed data in the goldzone (and be able to find the list of process done to create this processed data)
 - [ ] Automatic deployment : Docker + Kubernetes + Ansible
 - [ ] Define a licence (certainly MIT licence) : ask for project supervisors
-
-#### Documentation : 
+### Documentation 
 - [ ] Diagrams for 
     - [x] Software Architecture
         - [x] Basic
@@ -346,58 +447,10 @@ Data exchanges at this point are described in the following schema.
     - [ ] Sequence diagram
         - [x] Basic
         - [ ] Advanced
-# What services are available now : 
-#### Services : 
 
-| |Swift | Metadata `MongoDB` | Airflow |Airflow `Jobs` | Neo4J `"Gold" zone`|InfluxDB`"Gold" zone`|Mongodb`"Gold" zone`  
-|:-----:|:----------:|:----------:|:--:|:--:|:--:|:-:|:-:| 
-Todo |  | |||| | |
-Working|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
-Production state|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
-Optimized||||||||  
-Production state|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">| |<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
 
-  
-All is installed on Osirim : need to be tested.
-### Data model :   
-
-| |Image : JPEG | Image : PNG | Text : Json |  
-|:---:|:---:|:----:|:---:|  
-|Available|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">| <img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height="32">|
-###### Neo4j data format example :
-![alt text](git_image/neo4j_data_shema.png )
-
-# How to run : 
-- docker-compose up 
-
-If you want to insert data in the datalake (a file) : use the "insert_datalake()" function in  ["python_test_script.py"](./python_test_script.py) 
  
-
-## Tools : 
-
-- MongoDb
-- Openstack Swift
-- Apache Airflow 
-- Neo4J
-- Influxdb
-
-
-Aiflow DAG tools in the apache_airflow/dag/lib folder has a special nomenclature : 
-- *tools : all the tools from a database or to process a specific data type 
-- *integrator : implemented tool to put data into a specific database 
-
-## Not used : 
-
-##### In the input area :
-- <img src="https://mapr.com/products/apache-hbase/assets/hbase-logo.png" height="42"> HBase : need for raw input data, HBase would have been used as a key / value database while it's a column store database + difficult to handle raw data reading
-
-#### For the raw-to-formatted data transformer : 
-- <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/TalendLogoCoral.png" height="42"> Talend : difficulties to install on Linux + difficulties to find version that can be integrated in the POC
-
-#### For the "Gold" zone : 
-- ... 
-
-## What to change before a real deployments :
+### What to change for a production deployment
 For swift : 
 - Users authentications :
     - Change the test users 
@@ -422,7 +475,7 @@ For MongoDB (Gold Zone) :
 
 
 
-## How to go further :
+### How to go further 
 - [ ] Job creation automatization for Airflow 
     - Create automatically the job for new data format and the output format
         - Allow us to integrate every kind of data without human action 
@@ -432,12 +485,56 @@ For MongoDB (Gold Zone) :
 - [x] Handle the input of same data (redundant data)
     - [x] Done natively in Swift : all datas are stored even if they already are in the database
     - [ ] Set up a mechanism to handle redundant datas
-    
-#### Other informations :
-##### Airflow json DAG implementation : 
 
-Dont name your task the same name of the callable : it will lead to an error
-    
-### More documentation
+#### Neo4j example usage for image recommandation system
+TODO : Refactor, update and explain
+![alt text](git_image/neo4j_data_shema.png )
 
-Some more documentation is available on a google drive document at this address : https://docs.google.com/document/d/1QdtPktYoVD6AEcN_ctmKFChGfKwCS-Whj59pyjaHBqg/edit?usp=sharing
+
+
+
+# Other informations 
+
+## Tools not used
+
+### In the input area
+- <img src="https://mapr.com/products/apache-hbase/assets/hbase-logo.png" height="42"> HBase : need for raw input data, HBase would have been used as a key / value database while it's a column store database + difficult to handle raw data reading
+
+### In process area
+- <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/TalendLogoCoral.png" height="42"> Talend : difficulties to install on Linux + difficulties to find version that can be integrated in the POC
+
+### In processed data area
+Everything should be possible to be used in this area
+
+
+### Start Openstack Swift docker container 
+TODO : Refactor, update 
+
+    docker build -f ./swift/Ubuntu1604.Dockerfile -t ubuntuswift ./swift/
+    docker run -p 8080:8080 --privileged --device /dev/loop0 --device /dev/loop-control -it ubuntuswift
+
+To make data persistant, use docker volume bind 
+    
+    docker run -p 8080:8080 --privileged --device /dev/loop0 --device /dev/loop-control -v /tmp/dev:/data_dev/1 -it ubuntuswift
+
+The volumes are mounted in /tmp, you have to use a mountable object : dev or loopbackdevice file.
+
+
+## More documentation
+
+Other markdown files are in folder of each service containing some more information over the service.
+A pdf is available in the repository. This pdf contains the internship report that I made for the internship. 
+It is mainly made of design thinking.
+
+## Licence 
+
+Todo : Apache 2.0 licence ?
+
+
+### Contacts :
+
+04/01/2021 : 
+
+DANG Vincent-Nam (Repository owner, intern and engineer working on the project)
+Vincent-Nam.Dang@irit.fr / dang.vincentnam@gmail.com 
+https://www.linkedin.com/in/vincent-nam-dang/  
