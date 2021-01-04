@@ -399,9 +399,9 @@ The DAG can be customized with parameters.
     task_2 = DummyOperator('task_2', dag=dag)
     task_1 >> task_2 # Define dependencies
 
-The "task_2" will be chained to "task_1" and will be run after it. Each task can be define with a run condition (as "all_success", "all_failed", "at least 1 task is successful", etc..).
+The "task_2" will be linked to "task_1" and will be run after it. Each task can be define with a run condition (as "all_success", "all_failed", "at least 1 task is successful", etc..).
 It is possible to create several branches to make several way for processing. The tools used for it are branching operators (see https://airflow.apache.org/docs/apache-airflow/1.10.14/concepts.html#branching)
-Branching is done the same way but you can chain a list of task to branch it. The branching will have to return the task name of the next task to run.
+Branching is done the same way but you can link a list of task to branch it. The branching will have to return the task name of the next task to run.
 
     
     branch_operator >> [way_1 , way_2] 
@@ -412,10 +412,31 @@ Branching is done the same way but you can chain a list of task to branch it. Th
 
 TODO : Explain how to add a new Airflow pipeline 
 
+04/01/2021 : 
+Right now, it is not possible to easily add a pipeline or a task in Airflow.
+The way to do it is to change the actual working pipeline. Indeed, only one is triggered by the Openstack Swift proxy when a new data is added. 
 
+To add a task or a sub-pipeline / sub-workflow, it will be needed to modify the "./apache_airflow/dags/dag_creator.py" and modify the "custom path" in the dag:
 
+    custom >> [the_first_task_of_the_sub_pipeline]
+    the_first_task_of_the_sub_pipeline >> ... >> join
+    
+TODO : Add a way to read and parse files in directory and create jobs and dags in function of the content.
 
+For the implementation on OSIRIM, as access are restricted, the best way to add pipeline is to create a python script with : 
+- all the functions and the task with operators written in the same file
+- create a dummy DAG (optional)
+- link all the task (eventually with branching)  
 
+The new pipeline will be added in the "custom" branch as a new way.
+Tasks have to be named but 2 tasks have to have different name. The naming convention will be : 
+
+    PROJECT_USER_TASKNAME
+
+with PROJECT the name of the project or the team in which you work in / with, USER is your username, 
+TASKNAME is a string that quickly describe the task (exemple : data_cleaning, feature_extraction, etc...).
+It will be easy and fast to integrate the new pipeline.
+  
 #### Problems already encountered <a name="Problemsalreadyencountered"></a>
 [Return to the table of content](#Tableofcontent)
 
@@ -515,8 +536,8 @@ TODO : Update TODO list
     - [x] Airflow job creation / configuration 
         - [x] Handle hook from Swift middleware (Webhook)
         - [x] Set up jobs 
-        - [ ] Find a proper way to instantiate dag from JSON file (day_ago function)
-        - [x] Handle big file (split big file reading + processing if possible)
+        - [ ] Handle big file (split big file reading + processing if possible)
+    - [ ] Find a proper way to add new task / pipeline ( dag from JSON file ?) 
 - [x] The processed data area / the gold zone : 
     - [ ] Relational database (default)
     - [x] Time serie oriented database (visualisation)
