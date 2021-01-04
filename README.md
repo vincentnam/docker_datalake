@@ -87,7 +87,7 @@ Each area has its own goal :
 
 ![alt text](./git_image/DataLakeArchiV0.png)
 
-#### Raw data management area or landing area 
+#### Raw data management area or landing area <a name="Raw data management area or landing area"></a>
 
 The purpose of this area is to handle, store and make available raw data. Each data is stored as is waiting to be processed and transformed into an information.
 
