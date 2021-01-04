@@ -33,6 +33,8 @@ The goals are :
             - [TCP Ports used](#TCPPortsused)
             - [API description - TODO](#APIdescrption)
         + [Deploy the architecture](#Deploythearchitecture)
+        + [Create an Airflow job](#CreateanAirflowjob)
+        + [Create an Airflow pipeline](#CreateanAirflowpipeline)
         + [Integrate a new process pipeline in Airflow](#IntegrateanewprocesspipelineinAirflow)
             - [Problems already encountered](#Problemsalreadyencountered)
     * [Data formats in](#Dataformatsin)
@@ -313,10 +315,53 @@ TODO : Finish ansible, make fully automatic deployment with ansible (see docker 
 
 If you want to insert data in the datalake (a file) : use the "insert_datalake()" function in  ["python_test_script.py"](./python_test_script.py) 
 
+### Create an Airflow job <a name="CreateanAirflowjob"></a>
+[Return to the table of content](#Tableofcontent)
+Jobs (or tasks) are done through Operators in Airflow (https://airflow.apache.org/docs/apache-airflow/1.10.14/concepts.html#concepts-operators).
+To create a task that will fit in one or more pipeline, an operator has to be used which are defined in the Airflow package.
+Several operators exists and each one is used for a specific use, including : 
+- BashOperator - executes a bash command
+- PythonOperator - calls an arbitrary Python function
+- EmailOperator - sends an email
+- SimpleHttpOperator - sends an HTTP request
+- MySqlOperator, SqliteOperator, PostgresOperator, MsSqlOperator, OracleOperator, JdbcOperator, etc. - executes a SQL command
+- Sensor - an Operator that waits (polls) for a certain time, file, database row, S3 key, etc…
+In addition to these basic building blocks, there are many more specific operators: DockerOperator, HiveOperator, S3FileTransformOperator, PrestoToMySqlTransfer, SlackAPIOperator…
+(Cf. Airflow documentation)
+
+The python operator may be the most useful. To use it, there are 2 steps to follow : 
+- First, create the python function to be done by the task, exemple : 
+    def print_context(ds, **kwargs):
+    print(ds)
+    return 'Whatever you return gets printed in the logs'
+    
+- Then, define an operator that will run this function.
+
+run_this = PythonOperator(
+    task_id='print_the_context',
+    provide_context=True,
+    python_callable=print_context,
+    dag=dag,
+)
+
+A context can be provided with PythonOperator (always provided in version 2.0) that will allow to give arguments to the function through the **kwargs dict. You can use it as a dictionary and create new keys to provide the data you need. 
+This dictionary contains already a lot of information over the dag run (date, id, etc...) but also contains a "ti" or a "task_instance" (depends on .. ?) key that contains the XCom (for cross-communication) object that allow to pull and push information or objects.
+- You can push data to pass it to another task (kwargs['task_instance'].xcom_push(key="thekey",value="thevalue"))
+- You can pull data from previous task from its return or from a xcom_pull() (("kwargs['task_instance'].xcom_pull(task_ids='ID_OF_THE_TASK')" or "kwargs['ti'].xcom_pull(task_ids='ID_OF_THE_TASK')"))
+
+
+### Create an Airflow pipeline <a name="CreateanAirflowpipeline"></a>
+[Return to the table of content](#Tableofcontent)
+
 ### Integrate a new process pipeline in Airflow  <a name="IntegrateanewprocesspipelineinAirflow"></a>
 [Return to the table of content](#Tableofcontent)
 
 TODO : Explain how to add a new Airflow pipeline 
+
+
+
+
+
 #### Problems already encountered <a name="Problemsalreadyencountered"></a>
 [Return to the table of content](#Tableofcontent)
 
@@ -406,6 +451,7 @@ TODO : Update TODO list
     - [ ] Streaming mode for data insertion
         - [ ] Kafta integration
 - [x]  The process area
+    - [ ] Upgrade to version 2.0 (stable) if possible
     - [x] Airflow deployment (docker image) 
         - [x] Docker image 
         - [x] Installation on VM
@@ -564,6 +610,11 @@ The volumes are mounted in /tmp, you have to use a mountable object : dev or loo
 Other markdown files are in folder of each service containing some more information over the service.
 A pdf is available in the repository. This pdf contains the internship report that I made for the internship. 
 It is mainly made of design thinking.
+
+Tools used in this architecture also have documentation :
+- Airflow https://airflow.apache.org/docs/ 
+- Openstack Swift  https://wiki.openstack.org/wiki/Swift
+
 
 ## Licence <a name="Licence"></a>
 [Return to the table of content](#Tableofcontent)
