@@ -15,8 +15,8 @@ The goals are :
 ## Table of content
 - [Context](#Context)
 - [The project](#Context)
-    * [Current architecture](#Current architecture)
-    * [Areas Description](#Areas Description)
+    * [Current architecture](#Currentarchitecture)
+    * [Areas Description](#AreasDescription)
         + [Raw data management area / landing area](#Raw data management area or landing area )
         + [Process area](#Process area)
         + [Consumption zone or processed data area or gold zone](#Consumption zone or processed data area or gold zone)
@@ -58,20 +58,6 @@ The goals are :
     * [Licence](#Licence)
 - [Contacts](#Contacts)
     
-    
-- [Table of content](#Table of content)
-    - [Test](#typo3-extension-repository)
-    - [Composer](#composer)
-- [TYPO3 setup](#typo3-setup)
-    - [Extension](#extension)
-    - [Database](#database)
-- [Page setup](#page-setup)
-    - [Upload the page tree file](#upload-the-page-tree-file)
-    - [Go to the import view](#go-to-the-import-view)
-    - [Import the page tree](#import-the-page-tree)
-    - [SEO-friendly URLs](#seo-friendly-urls)
-- [License](#license)
-- [Links](#links)
 
 # Context
 This project is supported by neOCampus, OSIRIM, the CNRS, the IRIT and the SMAC team in IRIT. 
@@ -85,7 +71,7 @@ The project has been continued through a 1year-fixed-term contract by the CNRS a
 
 # The project 
 
-## Current architecture
+## Current architecture <a name="Currentarchitecture"></a>
 ![alt text](./git_image/DataLakeArchiV0-Objectif-Zone.png)
 
 The architecture is divided in 5 functional areas :
@@ -95,7 +81,7 @@ The architecture is divided in 5 functional areas :
 - Services area
 - Security and monitoring area
 
-### Areas description <a name="Areas description"></a>
+### Areas description <a name="Areasdescription"></a>
 
 Each area has its own goal : 
 
