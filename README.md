@@ -361,6 +361,9 @@ Airflow is based on DAG (Directed Acyclic Graph) to implement pipeline / workflo
 The definition of a pipeline is quite straight forward :
 - Define a DAG object 
 
+
+
+
     
     default_args = {
         'start_date': datetime(2016, 1, 1),
@@ -368,6 +371,9 @@ The definition of a pipeline is quite straight forward :
     }
     
     dag = DAG('my_dag', default_args=default_args)
+
+
+
 
 The DAG can be customized with parameters.
 
