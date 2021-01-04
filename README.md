@@ -352,14 +352,16 @@ The python operator may be the most useful. To use it, there are 2 steps to foll
 A context can be provided with PythonOperator (always provided in version 2.0) that will allow to give arguments to the function through the **kwargs dict. You can use it as a dictionary and create new keys to provide the data you need. 
 This dictionary contains already a lot of information over the dag run (date, id, etc...) but also contains a "ti" or a "task_instance" (depends on .. ?) key that contains the XCom (for cross-communication) object that allow to pull and push information or objects.
 - You can push data to pass it to another task 
+
+
 <b></b>
-    
-    
+        
     kwargs['task_instance'].xcom_push(key="thekey",value="thevalue"))
     or
     kwargs["key"] = value
     
 - You can pull data from previous task from its return or from a xcom_pull() 
+
 <b></b>
 
     
