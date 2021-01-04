@@ -357,7 +357,8 @@ This dictionary contains already a lot of information over the dag run (date, id
 <b></b>
         
     kwargs['task_instance'].xcom_push(key="thekey",value="thevalue"))
-    or
+<b>OR </b>
+
     kwargs["key"] = value
     
 - You can pull data from previous task from its return or from a xcom_pull() 
