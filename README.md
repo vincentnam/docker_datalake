@@ -14,6 +14,7 @@ The goals are :
 
 ## Table of content <a name="Tableofcontent"></a>
 - [The project](#Context)
+    * [Concept](#Concept)
     * [Current architecture](#Currentarchitecture)
     * [Areas Description](#AreasDescription)
         + [Raw data management area / landing area](#Rawdatamanagementareaorlandingarea)
@@ -73,6 +74,23 @@ The project has been continued through a 1year-fixed-term contract by the CNRS a
 - The SMAC team is interested in modeling and problem solving in complex systems using multi-agen technology. ( https://www.irit.fr/departement/intelligence-collective-interaction/equipe-smac/ )
 
 # The project <a name="Theproject"></a>
+
+## Concept <a name="Concept"></a>
+[Return to the table of content](#Tableofcontent)
+
+Data-oriented project are most of the time driven by the use case. 
+Whether it is for employee data storage, for reporting, for anomaly detection, for application operation, etc.., it requires a specific architecture based on a database.
+![alt text](./git_image/NoDatalake_simplediag.png)
+Those kind of architecture needs to be secured, well dimensioned and administered. 
+But if another use case is deployed, the whole process has to be done again for each new use case. It costs time and resources (human and server resources).
+
+The data lake allows to share the whole architecture for security, authentication, server allocation services for any kind of data driven project.
+Moreover, the solution proposed here allow to integrate any kind of data management, data analysis or reporting solution in a unique solution.
+![alt text](./git_image/Datalake_simplediag.png)
+
+It reduces costs for **high volumetry** and a **high variety** of data project or companies. 
+This solution has been designed to integrate solutions that has already been deployed, as authentication systems, database solutions or data analysis solutions. 
+The initial resource investment is higher than simple database solution but it is reduced for new other solutions.
 
 ## Current architecture <a name="Currentarchitecture"></a>
 [Return to the table of content](#Tableofcontent)
