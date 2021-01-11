@@ -35,13 +35,16 @@ def init_id(mongodb_url):
 
 
 def insert_datalake(file_content, user, key, authurl, container_name,
-                    file_name, data_process = "default", application=None, content_type=None,
-                    mongodb_url="127.0.0.1:27017", other_data = None ):
+                    file_name, processed_data_area_service, data_process = "default",
+                    application=None, content_type=None,
+                    mongodb_url="127.0.0.1:27017",other_data = None ):
     '''
     Insert data in the datalake :
         - In Openstack Swift for data
         - In MongoDB for metadata
 
+    :param processed_data_area_service: list of services in the processed data area in which to insert data
+    :type processed_data_area_service : list[str]
     :param file_content: the data to insert :
         with open(file_name, "rb") as f:
             file_data = f.read()
@@ -95,6 +98,7 @@ def insert_datalake(file_content, user, key, authurl, container_name,
     meta_data["last_modified"] = datetime.datetime.now()
     meta_data["successful_operations"] = []
     meta_data["failed_operations"] = []
+    meta_data["processed_data_area_service"] = processed_data_area_service
     if meta_data is not None :
         meta_data["other_data"] = other_data
     else:
@@ -164,7 +168,8 @@ file_content = open(path+file_name, "r")
 
 container_name = "neocampus"
 
-insert_datalake(file_data, user, key, authurl, container_name, data_process="custom",
+insert_datalake(file_data, user, key, authurl, container_name,processed_data_area_service=["MongoDB"],
+                data_process="custom",
                 application="import mongodb", file_name=file_name,
                 content_type="bson", mongodb_url=mongo_url)
 
