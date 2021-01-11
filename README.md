@@ -51,6 +51,8 @@ The goals are :
         + [How to go further](#Howtogofurther)
             -[Neo4J as image recommendation system](#Neo4Jasimagerecommendationsystem)
 - [Other informations](#Otherinformations)
+    * [Over used tools](#Overusedtools)
+        + [MsSQL 20xx](#MsSQL20xx)
     * [Tools not used](#Toolsnotused)
         + [In the input area](#Intheinputarea)
         + [In process area](#Inprocessarea)
@@ -218,6 +220,7 @@ All is installed on Osirim : need to be tested.
 - NodeJS
 - React
 - Flask
+- Microsoft Server SQL 2017 
 
 Aiflow DAG tools in the apache_airflow/dag/lib folder has a special nomenclature : 
 - *tools : all the tools from a database or to process a specific data type 
@@ -674,6 +677,19 @@ TODO : Refactor, update and explain
 
 
 # Other information <a name="Otherinformation"></a>
+
+## Used tools <a name="Usedtoolsother"></a>
+
+### MsSQL 20xx <a name="MsSQL20xx"></a>
+[Return to the table of content](#Tableofcontent)
+
+The Microsoft Server SQL 20xx (i.e. 2017 or 2019) are deployed through Docker container. A password is needed to set up the database which come from :
+- Environment with a variable
+- Parameter given to the container when the container is ran
+- A hidden file ".env" in the host folder containing environment variables 
+
+**If this password is not set, the container will crash on boot.**
+
 
 ## Tools not used <a name="Toolsnotused"></a>
 [Return to the table of content](#Tableofcontent)
