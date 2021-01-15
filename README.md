@@ -696,7 +696,7 @@ The Microsoft Server SQL 20xx (i.e. 2017 or 2019) are deployed through Docker co
 
 ### In the input area <a name="Intheinputarea"></a>
 - <img src="https://mapr.com/products/apache-hbase/assets/hbase-logo.png" height="42"> HBase : need for raw input data, HBase would have been used as a key / value database while it's a column store database + difficult to handle raw data reading
-
+- Apache Nifi
 ### In process area <a name="Inprocessarea"></a>
 - <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/TalendLogoCoral.png" height="42"> Talend : difficulties to install on Linux + difficulties to find version that can be integrated in the POC
 
