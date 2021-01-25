@@ -1,10 +1,21 @@
 from pymongo import MongoClient
-
 import swiftclient.service
 from swiftclient.service import SwiftService
 import datetime
-
+import pandas as pd
+import mimetypes
 import swiftclient.service
+import os
+import yaml
+
+
+cwd = os.path.dirname(os.path.abspath(__file__))
+with open(cwd + "/apache_airflow/dags/config.yml", "r") as config:
+    y = yaml.safe_load(config)
+globals().update(y)
+# TODO: Finir le JSON des fichiers
+# TODO : Reinstaller Openstack Swift avec Python3
+# TODO : Voire pour la segmentation d'image (https://github.com/facebookresearch/Detectron2)
 
 
 def get_id(mongodb_url):
@@ -13,28 +24,27 @@ def get_id(mongodb_url):
         "object_id"]
 
 
-def init_id(mongo_url):
+def init_id(mongodb_url):
     # USE IT ONLY ONE TIME !!
     id_doc = {"type": "object_id_file", "object_id": 0}
-    client = MongoClient(mongo_url).stats.swift
-    if MongoClient(mongo_url).stats.swift.find_one(
+    client = MongoClient(mongodb_url).stats.swift
+    if MongoClient(mongodb_url).stats.swift.find_one(
             {"type": "object_id_file"}) is None:
         client.insert_one(id_doc)
     client.create_index("type", unique=True)
 
 
-def clean_swift(container):
-    pass
-
-
 def insert_datalake(file_content, user, key, authurl, container_name,
-                    file_name, data_process = "default", application=None, content_type=None,
-                    mongodb_url="127.0.0.1:27017", other_data = None ):
+                    file_name, processed_data_area_service, data_process = "default",
+                    application=None, content_type=None,
+                    mongodb_url="127.0.0.1:27017",other_data = None ):
     '''
     Insert data in the datalake :
         - In Openstack Swift for data
         - In MongoDB for metadata
 
+    :param processed_data_area_service: list of services in the processed data area in which to insert data
+    :type processed_data_area_service : list[str]
     :param file_content: the data to insert :
         with open(file_name, "rb") as f:
             file_data = f.read()
@@ -88,6 +98,7 @@ def insert_datalake(file_content, user, key, authurl, container_name,
     meta_data["last_modified"] = datetime.datetime.now()
     meta_data["successful_operations"] = []
     meta_data["failed_operations"] = []
+    meta_data["processed_data_area_service"] = processed_data_area_service
     if meta_data is not None :
         meta_data["other_data"] = other_data
     else:
@@ -97,46 +108,21 @@ def insert_datalake(file_content, user, key, authurl, container_name,
     if SwiftService({}).stat(container_name)["object"] is None:
         conn.put_container(container_name)
     # Gérer l'atomicité de cette partie #
-
+#####################################################
     retry = 0
     while True:
         try:
             conn.put_object(container_name, meta_data["swift_object_id"],
                             contents=file_content,
-                            content_type=meta_data["content_type"])#,
-            # headers={"x-webhook":"yes"})
-            # Insert metadata over the data : only if data has been put
+                            content_type=meta_data["content_type"])
             coll.insert_one(meta_data)
-            # client.stats.swift.update_one({"type": "data_to_process_list"},
-            #                               {"$push":
-            #                                   {
-            #                                       "data_to_process": {
-            #                                           "swift_id": meta_data[
-            #                                               "swift_object_id"],
-            #                                           "swift_container":
-            #                                               meta_data[
-            #                                                   "swift_container"],
-            #                                           "swift_user": meta_data[
-            #                                               "swift_user"],
-            #                                           "content_type":
-            #                                               meta_data[
-            #                                                   "content_type"]
-            #                                       }
-            #                                   }
-            #                               }
-            #                               )
             return None
         except Exception as e:
             print(e)
             retry += 1
             if retry > 3:
                 return None
-
-
 #####################################
-import pandas as pd
-import os
-import mimetypes
 
 
 def input_csv_file(csv_file, **kwargs):
@@ -160,75 +146,6 @@ def input_csv_file(csv_file, **kwargs):
                         mongodb_url="127.0.0.1:27017")
         break
 
-# import os
-#
-# cwd = os.path.dirname(os.path.abspath(__file__))
-# import yaml
-# import json
-# with open(cwd + "/apache_airflow/dags/config.yml", "r") as config:
-#     y = yaml.safe_load(config)
-# globals().update(y)
-# # TODO: Finir le JSON des fichiers
-#
-# # TODO : Voire pour la segmentation d'image (https://github.com/facebookresearch/Detectron2)
-#
-#
-# user = 'test:tester'
-# key = 'testing'
-# mongo_url = globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"]
-# # mongo_url = "127.0.0.1:" + globals()["MONGO_PORT"]
-# client = MongoClient(globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"])
-# # init_id(mongo_url)
-#
-#
-# authurl = "http://"+ globals()["OPENSTACK_SWIFT_IP"]+":"+globals()["SWIFT_REST_API_PORT"]+"/auth/v1.0"
-# conn = swiftclient.Connection(user=user, key=key,
-#                               authurl=authurl)
-# path = "/home/vdang/PycharmProjects/docker_datalake/apache_airflow/dags/"
-# file_name = "dag1.json"
-#
-# with open(path+file_name, "rb") as f:
-#     file_data = f.read()
-#
-# file_content = open(path+file_name, "r")
-# print(file_data)
-# container_name = "neocampus"
-#
-# insert_datalake(file_data, user, key, authurl, container_name, data_process="custom",
-#                 application="osirim test", file_name=file_name,
-#                 content_type="bson", mongodb_url=mongo_url,#globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"],
-#                 other_data=
-#                 {
-#                     "template":
-#                         {
-#                             "measurement":"mesurevaleur",
-#                             "time":"datemesure",
-#                             "fields":["value"],
-#                             "tags":["idpiece","idcapteur"]
-#                         }
-#                 }
-#                 )
-#
-# # input_csv_file("./dataset/mygates/subset.csv", sep=";", header=0, projet="mygates",authurl = "http://127.0.0.1:12345/auth/v1.0",container_name = "mygates")
-#
-# # swift stat -U test:tester -A http://localhost:8080/auth/v1.0 -K testing CONTAINER
-#
-# # sshfs vdang@co2-dl-airflow:/projets/datalake/airflow/ /data/python-project/docker_datalake/mnt_temp
-# # TODO : Reinstaller Openstack Swift avec Python3
-# #
-
-import os
-
-cwd = os.path.dirname(os.path.abspath(__file__))
-import yaml
-import json
-with open(cwd + "/apache_airflow/dags/config.yml", "r") as config:
-    y = yaml.safe_load(config)
-globals().update(y)
-# TODO: Finir le JSON des fichiers
-
-# TODO : Voire pour la segmentation d'image (https://github.com/facebookresearch/Detectron2)
-
 
 user = 'test:tester'
 key = 'testing'
@@ -248,20 +165,13 @@ with open(path+file_name, "rb") as f:
     file_data = f.read()
 
 file_content = open(path+file_name, "r")
-# print(file_data)
+
 container_name = "neocampus"
 
-insert_datalake(file_data, user, key, authurl, container_name, data_process="custom",
+insert_datalake(file_data, user, key, authurl, container_name,processed_data_area_service=["MongoDB"],
+                data_process="custom",
                 application="import mongodb", file_name=file_name,
-                content_type="bson", mongodb_url=mongo_url#globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"],
-                )
+                content_type="bson", mongodb_url=mongo_url)
 
-# input_csv_file("./dataset/mygates/subset.csv", sep=";", header=0, projet="mygates",authurl = "http://127.0.0.1:12345/auth/v1.0",container_name = "mygates")
-
-# swift stat -U test:tester -A http://localhost:8080/auth/v1.0 -K testing CONTAINER
-
-# sshfs vdang@co2-dl-airflow:/projets/datalake/airflow/ /data/python-project/docker_datalake/mnt_temp
-# TODO : Reinstaller Openstack Swift avec Python3
-#
 
 
