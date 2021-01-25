@@ -18,6 +18,7 @@ The goals are :
     * [Current architecture](#Currentarchitecture)
     * [Areas Description](#AreasDescription)
         + [Raw data management area / landing area](#Rawdatamanagementareaorlandingarea)
+        + [Metadata management area](#Metadatamanagementarea)
         + [Process area](#Processarea)
         + [Consumption zone or processed data area or gold zone](#Consumptionzoneorprocesseddataareaorgoldzone)
         + [Services area](#Servicesarea)
@@ -97,10 +98,11 @@ The initial resource investment is higher than simple database solution but it i
 ## Current architecture <a name="Currentarchitecture"></a>
 [Return to the table of content](#Tableofcontent)
 
-![alt text](./git_image/DataLakeArchiV0-Objectif-Zone.png)
+![alt text](./git_image/DataLakeArchiV0-12_01_2021-DesignRework.png)
 
-The architecture is divided in 5 functional areas :
+The architecture is divided in 6 functional areas :
 - Raw data management area (also known as the landing area)
+- Metadata management area 
 - Process area
 - Processed data area (also known as the gold zone)
 - Services area
@@ -111,7 +113,6 @@ The architecture is divided in 5 functional areas :
 
 Each area has its own goal : 
 
-![alt text](./git_image/DataLakeArchiV0.png)
 
 #### Raw data management area or landing area <a name="Rawdatamanagementareaorlandingarea"></a>
 [Return to the table of content](#Tableofcontent)
@@ -123,15 +124,29 @@ This area is composed with 2 services :
 - Openstack swift (https://wiki.openstack.org/wiki/Swift) : 
     - Openstack Swift is a cloud storage software. It is an object-oriented store. It is a part of the Openstack cloud platform deployment and has been built for scale and optimized for durability, availability, and concurrency across the entire data set. 
     - Its role is to store all input data as an object. It can handle any type of file or data of any size. 
-- MongoDB (https://www.mongodb.com/) :
-    - Document oriented NoSQL database. It has been built as a NoSQL database made for high volumetry input. 
-    - Its role is to store meta data over the data inserted in Openstack Swift and to make it possible to follow and store data over data and be able to know what is stored in Openstack Swift.
 
-A third service has been integrated in the conception for data stream input :
+Another service has been integrated in the conception for data stream input :
 - Apache Kafka (https://kafka.apache.org/):
     - Apache Kafka is an open-source distributed event streaming platform.
     - Its initial purpose is to handle MQTT message from sensors to raw data management area.
     
+
+#### Metadata management area <a name="Metadatamanagementarea"></a>
+
+-> TODO : redesign this area : 
+    - Define which metadata to keep in which service (i.e. at the moment, it should be : models (i.e. links betweens metadata in neo4j) and metadata in mongodb)
+    - Seems to be more collections in Mongodb for each type of document 
+
+
+
+- MongoDB (https://www.mongodb.com/) :
+    - Document oriented NoSQL database. It has been built as a NoSQL database made for high volumetry input. 
+    - Its role is to store meta data over the data inserted in Openstack Swift and to make it possible to follow and store data over data and be able to know what is stored in Openstack Swift.
+    - Operations logs ?
+- Neo4J (https://neo4j.com)
+    - Pipelines / workflows definition
+    - Metadata format (class diagram ?)
+
 #### Process area <a name="Processarea"></a>
 [Return to the table of content](#Tableofcontent)
 
@@ -159,7 +174,8 @@ But some use cases have been imagined :
 - MongoDB (https://www.mongodb.com/):
     - Same database as the metadata database used in the raw data management area.
     - The purpose here is to store data for in-production applications
-    
+- SQL Database (MsSQL Server 2017 ?)
+
 #### Services area <a name="Servicesarea"></a>  
 [Return to the table of content](#Tableofcontent)
 
