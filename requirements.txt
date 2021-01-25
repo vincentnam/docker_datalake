@@ -3,3 +3,5 @@ pymongo
 influxdb-client
 neo4j
 python-swiftclient
+pandas
+PyYAML
