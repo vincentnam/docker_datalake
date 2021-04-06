@@ -8,7 +8,7 @@ from swift.common.utils import register_swift_info
 
 URL = "http://141.115.103.32:8081"
 ENDPOINT_PATH = "/api/experimental"
-
+DAG_NAME="test"
 #
 # import ConfigParser
 # config = ConfigParser.ConfigParser().read(CONFIG_PATH).sections()
@@ -45,7 +45,7 @@ class NewDataTriggerMiddleware(object):
                     "conf": {"swift_id": obj, "swift_container": container,
                              "swift_user": account, "swift_version": version}}
                 rep = requests.post(
-                    URL + ENDPOINT_PATH + "/dags/test/dag_runs",
+                    URL + ENDPOINT_PATH + "/dags/"+DAG_NAME+"/dag_runs",
                     data=json.dumps(payload))
                 print(rep.text)
                 self.logger.info(rep.headers)
