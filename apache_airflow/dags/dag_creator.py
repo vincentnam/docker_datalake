@@ -19,6 +19,9 @@ from pymongo import MongoClient
 import datetime
 import os
 from airflow.operators.bash_operator import BashOperator
+
+from influxdbintegrator import InfluxIntegrator
+
 cwd = os.path.dirname(os.path.abspath(__file__))
 import yaml
 import json
@@ -37,11 +40,44 @@ import json
 #   "failed_operations" : [ ],
 #   "other_data" : { "template" : { "measurement" : "mesurevaleur", "time" : "datemesure", "fields" : [ "value" ], "tags" : [ "idpiece", "idcapteur" ] } }
 #   }
+
+
+def on_failure_callback(context):
+    print(context)
+    print(context.get("dag_run"))
+    print(context["ti"])
+    conf = context.get("dag_run").conf
+    meta_base = MongoClient(
+        "mongodb://" + globals()["META_MONGO_IP"] + ":" + globals()[
+            "MONGO_PORT"] + "/"
+    )
+    print(meta_base.swift[conf["swift_id"]].find_one_and_update({
+        "swift_object_id": conf["swift_id"]}, {
+        '$push': {"failed_operations":str(context.get("dag_run"))} ,
+        '$set':{"last_modified" : datetime.datetime.now().isoformat()}
+    }))
+
+def on_success_callback(context):
+    print(context)
+    print(context.get("dag_run"))
+    print(context.get("dag_run").conf)
+    print(context["ti"])
+    conf = context.get("dag_run").conf
+    meta_base = MongoClient(
+        "mongodb://" + globals()["META_MONGO_IP"] + ":" + globals()[
+            "MONGO_PORT"] + "/"
+    )
+    print(meta_base.swift[conf["swift_id"]].find_one_and_update({
+        "swift_object_id": conf["swift_id"]}, {
+        '$push': {"successful_operations":str(context.get("dag_run"))} ,
+        '$set':{"last_modified" : datetime.datetime.now().isoformat()}
+    }))
+
+
 def check_type(**kwargs):
     """
     Check data MIME type and return the next task to trigger.
     It depends on MIME type and container.
-
     :param kwargs: Airflow context
     :return:
     """
@@ -131,7 +167,7 @@ def workflow_selection(**kwargs):
     # WAIT THE OBJECT HAS BEEN INSERTED
     print("kwargs['dag_run'].conf")
     print(kwargs["dag_run"].conf)
-    metadata_doc = meta_base.swift.neocampus.find_one({
+    metadata_doc = meta_base.swift[kwargs["dag_run"].conf["swift_container"]].find_one({
         "swift_object_id": str(swift_id)})
     kwargs["ti"].xcom_push(key="metadata_doc", value=metadata_doc)
     print(metadata_doc)
@@ -309,6 +345,8 @@ def neocampus_mongoimport(**kwargs):
     os.system("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d "+
               metadata_doc["swift_container"] +" -c " + metadata_doc["original_object_name"]
               + " /datalake/airflow/airflow_tmp/"+ metadata_doc["original_object_name"] + "'")
+
+
 custom = BranchPythonOperator(
     task_id='custom',
     provide_context=True,
@@ -334,6 +372,361 @@ neocampus_bson_mongorestore = PythonOperator(
     provide_context=True,
     dag=dag,
 )
+
+def datanoos_branching(**kwargs):
+    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    # TODO : 14/10/2020 REFACTOR DICT_TASK
+    type_to_task = {"application/csv": "datanoos_ba_huy_csv_ts"}
+
+    return type_to_task[metadata_doc["content_type"]]
+
+
+def datanoos_ba_huy_csv_ts(**kwargs):
+    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    print(metadata_doc)
+    metadata = metadata_doc["other_data"]
+    print(metadata["dataset_id"])
+    if metadata["dataset_id"] == "doi:10.5072/FK2/ILRD2U":
+        print("Réalisation de traitements pour le dataset doi:10.5072/FK2/ILRD2U ")
+
+
+def datanoos_zip(**kwargs):
+    print("Pas encore implémenté")
+
+
+def datanoos_insert_influx(**kwargs):
+
+    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    #TODO : 13/10/2020 DIRECT READ FILE IF LOOPBACK DEVICE ARE REMOVED (if swift can directly write on storage servers)
+
+    print("kwargs['dag_run'].conf")
+    print(kwargs["dag_run"].conf)
+    # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
+    # client_mongo = MongoClient("141.115.103.31:27017")
+    # req_mongo = {"swift_object_id": swift_id}
+    # doc = client_mongo.swift.neocampus.find_one(req_mongo)
+    # print(doc["original_object_name"])
+    # TODO : 13/10/2020 CHANGE USERS / PASS
+    user, password = 'test:tester', 'testing'
+    # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
+    url = 'http://141.115.103.30:8080/auth/v1.0'
+    headers = {'X-Storage-User': user,
+               'X-Storage-Pass': password
+               }
+    token_response = urlopen(Request(url, headers=headers)).getheaders()
+
+
+    opener = urllib.request.build_opener()
+    opener.addheaders = []
+
+    for i in token_response:
+        if i[0] == "X-Auth-Token":
+            opener.addheaders.append(i)
+        if i[0] == "X-Storage-Url":
+            url = i
+    print(url[1])
+
+    urllib.request.install_opener(opener)
+    # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
+    urllib.request.urlretrieve(url[1] + "/"+metadata_doc["swift_container"]+"/"+metadata_doc["swift_object_id"],
+                               "/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"])
+
+    from influxdb_client import InfluxDBClient, Point, WritePrecision
+    from influxdb_client.client.write_api import WriteOptions
+    import rx
+    from rx import operators as ops
+    from csv import DictReader
+
+    def parse_row(row):
+
+        list_field = ["pmer", "tend", "cod_tend", "dd", "ff", "t", "td", "u", "vv", "ww", "w1", "w2", "n", "nbas",
+                      "hbas", "cl", "cm", "ch",
+                      "pres", "niv_bar", "geop", "tend24", "tn12", "tn24", "tx12", "tx24", "tminsol", "sw", "tw",
+                      "raf10", "rafper", "per"
+            , "etat_sol", "ht_neige", "ssfrai", "perssfrai", "rr1", "rr3", "rr6", "rr12", "rr24", "phenspe1",
+                      "phenspe2", "phenspe3",
+                      "phenspe4", "nnuage1", "ctype1", "hnuage1", "nnuage2", "ctype2", "hnuage2", "nnuage3", "ctype3",
+                      "hnuage3", "nnuage4",
+                      "ctype4", "hnuage4"]
+
+        point = Point("MeteoFrance_data") \
+            .tag("station", row["numer_sta"]) \
+            .time(datetime.datetime.strptime(str(row['date']), "%Y%m%d%H%M%S"), write_precision=WritePrecision.S)
+        for field in list_field:
+            if row[field] != "mq":
+                point.field(field, float(row[field]))
+        return point
+    token = "c5bgd7j6fJ-YpWiuM8EAQHTlIJmKphEaC72iCzFgzXRtldJYKdDDjvHkUz0cfDEVejDCuU9fnpWGzoS56vupZA=="
+    org="test"
+    bucket="DataNoos"
+
+    data = rx \
+        .from_iterable(DictReader(open("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"], 'r'))) \
+        .pipe(ops.map(lambda row: parse_row(row)))
+
+    client = InfluxDBClient(url="http://141.115.103.33:8086", token=token, org=org, debug=True)
+
+    """
+    Create client that writes data in batches with 50_000 items.
+    """
+    write_api = client.write_api(write_options=WriteOptions(batch_size=1000, flush_interval=100))
+
+    """
+    Write data into InfluxDB
+    """
+    write_api.write(bucket=bucket, record=data)
+    write_api.__del__()
+
+
+
+DataNoos = BranchPythonOperator(
+    task_id='DataNoos',
+    provide_context=True,
+    python_callable=datanoos_branching,
+    dag=dag
+)
+datanoos_ba_huy_csv_ts= PythonOperator(
+    task_id='datanoos_ba_huy_csv_ts',
+    python_callable=datanoos_ba_huy_csv_ts,
+    provide_context=True,
+    dag=dag,
+    on_failure_callback=on_failure_callback,
+    on_success_callback=on_success_callback
+)
+datanoos_zip= PythonOperator(
+    task_id='datanoos_zip',
+    python_callable=datanoos_zip,
+    provide_context=True,
+    dag=dag,
+)
+datanoos_insert_influxdb= PythonOperator(
+    task_id='datanoos_insert_influxdb',
+    python_callable=datanoos_insert_influx,
+    provide_context=True,
+    dag=dag,
+)
+
+
+
+def IDEAS_use_case_branching(**kwargs):
+    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    #TODO : 14/10/2020 REFACTOR DICT_TASK
+    type_to_task = {"batch": "IDEAS_batch", "stream": "IDEAS_stream"}
+    return type_to_task[metadata_doc["other_data"]["flow_type"]]
+
+
+IDEAS_use_case = BranchPythonOperator(
+    task_id='IDEAS_use_case_branching',
+    provide_context=True,
+    python_callable=IDEAS_use_case_branching,
+    dag=dag
+)
+
+
+def IDEAS_batch(**kwargs):
+    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    # TODO : 14/10/2020 REFACTOR DICT_TASK
+    type_to_task = {"application/csv": "IDEAS_csv_ts"}
+
+    return type_to_task[metadata_doc["content_type"]]
+
+IDEAS_batch = PythonOperator(
+    task_id='IDEAS_batch',
+    python_callable=IDEAS_batch,
+    provide_context=True,
+    dag=dag,
+)
+
+
+def IDEAS_insert_influx(**kwargs):
+
+    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    #TODO : 13/10/2020 DIRECT READ FILE IF LOOPBACK DEVICE ARE REMOVED (if swift can directly write on storage servers)
+
+    print("kwargs['dag_run'].conf")
+    print(kwargs["dag_run"].conf)
+    # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
+    # client_mongo = MongoClient("141.115.103.31:27017")
+    # req_mongo = {"swift_object_id": swift_id}
+    # doc = client_mongo.swift.neocampus.find_one(req_mongo)
+    # print(doc["original_object_name"])
+    # TODO : 13/10/2020 CHANGE USERS / PASS
+    user, password = 'test:tester', 'testing'
+    # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
+    url = 'http://141.115.103.30:8080/auth/v1.0'
+    headers = {'X-Storage-User': user,
+               'X-Storage-Pass': password
+               }
+    token_response = urlopen(Request(url, headers=headers)).getheaders()
+
+
+    opener = urllib.request.build_opener()
+    opener.addheaders = []
+
+    for i in token_response:
+        if i[0] == "X-Auth-Token":
+            opener.addheaders.append(i)
+        if i[0] == "X-Storage-Url":
+            url = i
+    print(url[1])
+
+    urllib.request.install_opener(opener)
+    # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
+    urllib.request.urlretrieve(url[1] + "/"+metadata_doc["swift_container"]+"/"+metadata_doc["swift_object_id"],
+                               "/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"])
+
+    from influxdb_client import InfluxDBClient, Point, WritePrecision
+    from influxdb_client.client.write_api import WriteOptions
+    import rx
+    from rx import operators as ops
+    from csv import DictReader
+
+    def parse_row(row):
+
+        list_field = ["pmer", "tend", "cod_tend", "dd", "ff", "t", "td", "u", "vv", "ww", "w1", "w2", "n", "nbas",
+                      "hbas", "cl", "cm", "ch",
+                      "pres", "niv_bar", "geop", "tend24", "tn12", "tn24", "tx12", "tx24", "tminsol", "sw", "tw",
+                      "raf10", "rafper", "per"
+            , "etat_sol", "ht_neige", "ssfrai", "perssfrai", "rr1", "rr3", "rr6", "rr12", "rr24", "phenspe1",
+                      "phenspe2", "phenspe3",
+                      "phenspe4", "nnuage1", "ctype1", "hnuage1", "nnuage2", "ctype2", "hnuage2", "nnuage3", "ctype3",
+                      "hnuage3", "nnuage4",
+                      "ctype4", "hnuage4"]
+
+        point = Point("MeteoFrance_data") \
+            .tag("station", row["numer_sta"]) \
+            .time(datetime.datetime.strptime(str(row['date']), "%Y%m%d%H%M%S"), write_precision=WritePrecision.S)
+        for field in list_field:
+            if row[field] != "mq":
+                point.field(field, float(row[field]))
+        return point
+    token = "c5bgd7j6fJ-YpWiuM8EAQHTlIJmKphEaC72iCzFgzXRtldJYKdDDjvHkUz0cfDEVejDCuU9fnpWGzoS56vupZA=="
+    org="IDEAS_org"
+    bucket="IDEAS_bucket"
+
+    data = rx \
+        .from_iterable(DictReader(open("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"], 'r'))) \
+        .pipe(ops.map(lambda row: parse_row(row)))
+
+    client = InfluxDBClient(url="http://141.115.103.33:8086", token=token, org=org, debug=True)
+
+    """
+    Create client that writes data in batches with 50_000 items.
+    """
+    write_api = client.write_api(write_options=WriteOptions(batch_size=1000, flush_interval=100))
+
+    """
+    Write data into InfluxDB
+    """
+    write_api.write(bucket=bucket, record=data)
+    write_api.__del__()
+
+
+IDEAS_insert_csv_to_ts= PythonOperator(
+    task_id='IDEAS_insert_csv_in_time-serie',
+    python_callable=IDEAS_insert_influx,
+    provide_context=True,
+    dag=dag,
+    on_failure_callback=on_failure_callback,
+    on_success_callback=on_success_callback
+)
+
+
+
+
+
+
+
+def IDEAS_stream(**kwargs):
+    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    # TODO : 14/10/2020 REFACTOR DICT_TASK
+    type_to_task = {"application/json": "IDEAS_sensors_json"}
+
+    return type_to_task[metadata_doc["content_type"]]
+
+
+
+IDEAS_stream = PythonOperator(
+    task_id='IDEAS_stream',
+    python_callable=IDEAS_stream,
+    provide_context=True,
+    dag=dag,
+)
+
+
+def IDEAS_sensors_json_ts(**kwargs):
+    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    #TODO : 13/10/2020 DIRECT READ FILE IF LOOPBACK DEVICE ARE REMOVED (if swift can directly write on storage servers)
+
+    print("kwargs['dag_run'].conf")
+    print(kwargs["dag_run"].conf)
+    # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
+    # client_mongo = MongoClient("141.115.103.31:27017")
+    # req_mongo = {"swift_object_id": swift_id}
+    # doc = client_mongo.swift.neocampus.find_one(req_mongo)
+    # print(doc["original_object_name"])
+    # TODO : 13/10/2020 CHANGE USERS / PASS
+    user, password = 'test:tester', 'testing'
+    # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
+    url = 'http://141.115.103.30:8080/auth/v1.0'
+    headers = {'X-Storage-User': user,
+               'X-Storage-Pass': password
+               }
+    token_response = urlopen(Request(url, headers=headers)).getheaders()
+
+
+    opener = urllib.request.build_opener()
+    opener.addheaders = []
+
+    for i in token_response:
+        if i[0] == "X-Auth-Token":
+            opener.addheaders.append(i)
+        if i[0] == "X-Storage-Url":
+            url = i
+    print(url[1])
+
+    urllib.request.install_opener(opener)
+    # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
+    urllib.request.urlretrieve(url[1] + "/"+metadata_doc["swift_container"]+"/"+metadata_doc["swift_object_id"],
+                               "/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"])
+
+    from influxdb_client import InfluxDBClient
+    from influxdb_client.client.write_api import WriteOptions
+    from datetime import datetime
+
+
+    token = "c5bgd7j6fJ-YpWiuM8EAQHTlIJmKphEaC72iCzFgzXRtldJYKdDDjvHkUz0cfDEVejDCuU9fnpWGzoS56vupZA=="
+    org="test"
+
+    data_dict = eval(open("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"],"r").read())
+    value = data_dict.pop("value")
+    value_unit = data_dict.pop("value_units")
+    data_dict_key= list(data_dict.keys())
+    client = InfluxDBClient(url="http://141.115.103.33:8086", token=token, org=org, debug=True)
+
+    """
+    Create client that writes data in batches with 50_000 items.
+    """
+    write_api = client.write_api(write_options=WriteOptions(batch_size=1000, flush_interval=100))
+    write_api.write("IDEAS_bucket", "IDEAS_org", {"measurement": value_unit,
+                                                  "tags": dict([(key, data_dict[key]) for key in data_dict_key]),
+                                   "fields": {"value":value}, "time": datetime.now()})
+
+    """
+    Write data into InfluxDB
+    """
+
+    write_api.__del__()
+
+
+IDEAS_sensors_insert = PythonOperator(
+    task_id='IDEAS_insert_influxdb',
+    python_callable=IDEAS_sensors_json_ts,
+    provide_context=True,
+    dag=dag,
+)
+
+
 # Airflow user / data_processing password
 branch_op >> [default, custom]
 default >> [db_dump, data]
@@ -341,10 +734,24 @@ default >> [db_dump, data]
 data >> [json, csv, png] >> join
 db_dump >> [mongo_db, SQL] >> join
 
-custom >> [neocampus]
+custom >> [neocampus, DataNoos, IDEAS_use_case]
 neocampus >> [ neocampus_bson_get]
 neocampus_bson_get >> neocampus_bson_mongorestore >> join
+DataNoos >> [datanoos_ba_huy_csv_ts, datanoos_zip]
+datanoos_ba_huy_csv_ts >> datanoos_insert_influxdb >> join
+datanoos_zip >> join
+IDEAS_use_case >> [IDEAS_batch, IDEAS_stream]
+IDEAS_batch >> [IDEAS_insert_csv_to_ts]
+IDEAS_stream >> [IDEAS_sensors_insert]
+
+# Custom branching : based on metadata_doc["swift_container"]
 
 
+# To add a pipeline :
+# Custom : Add a branch in custom flow -> based on swift_container
+# Ideas_use_case : create 2 path : datanoos csv
+#                                   Neocampus json
+#
 
-
+# Other_type = {
+# flow_type : "stream" ou "batch"
