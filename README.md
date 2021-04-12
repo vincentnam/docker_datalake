@@ -23,6 +23,11 @@ The goals are :
         + [Consumption zone or processed data area or gold zone](#Consumptionzoneorprocesseddataareaorgoldzone)
         + [Services area](#Servicesarea)
         + [Security and monitoring area](#Securityandmonitoringarea )
+    * [Data pipeline in the architecture](#AreasDescription)
+        + [Batch data](#Batchdata)
+            - [Light process](#Batchdata_lightprocess)
+            - [Heavy process](#Batchdata_heavyprocess)
+        + [Stream data](#Streamdata)
     * [Services available](#Servicesavailable)
     * [Tools used](#Toolsused)
     * [Diagrams](#Diagrams)
@@ -98,7 +103,7 @@ The initial resource investment is higher than simple database solution but it i
 ## Current architecture <a name="Currentarchitecture"></a>
 [Return to the table of content](#Tableofcontent)
 
-![alt text](./git_image/DataLakeArchiV0-12_01_2021-DesignRework.png)
+![alt text](./git_image/DatalakeArchi.V0-12_04_2021-CurrentArchitecture.png)
 
 The architecture is divided in 6 functional areas :
 - Raw data management area (also known as the landing area)
@@ -108,13 +113,13 @@ The architecture is divided in 6 functional areas :
 - Services area
 - Security and monitoring area
 
-### Areas description <a name="Areasdescription"></a>
+## Areas description <a name="Areasdescription"></a>
 [Return to the table of content](#Tableofcontent)
 
 Each area has its own goal : 
 
 
-#### Raw data management area or landing area <a name="Rawdatamanagementareaorlandingarea"></a>
+### Raw data management area or landing area <a name="Rawdatamanagementareaorlandingarea"></a>
 [Return to the table of content](#Tableofcontent)
 
 The purpose of this area is to handle, store and make available raw data. Each data is stored as is waiting to be processed and transformed into an information.
@@ -131,7 +136,7 @@ Another service has been integrated in the conception for data stream input :
     - Its initial purpose is to handle MQTT message from sensors to raw data management area.
     
 
-#### Metadata management area <a name="Metadatamanagementarea"></a>
+### Metadata management area <a name="Metadatamanagementarea"></a>
 
 -> TODO : redesign this area : 
     - Define which metadata to keep in which service (i.e. at the moment, it should be : models (i.e. links betweens metadata in neo4j) and metadata in mongodb)
@@ -147,18 +152,23 @@ Another service has been integrated in the conception for data stream input :
     - Pipelines / workflows definition
     - Metadata format (class diagram ?)
 
-#### Process area <a name="Processarea"></a>
+### Process area <a name="Processarea"></a>
 [Return to the table of content](#Tableofcontent)
 
-This area is composed by 1 service that will handle every workflow and jobs of data processing :
+This area is headed by Apache Airflow that will handle and manage every workflow and jobs of data processing and sub services deployed and managed by Apache Airflow :
 - Apache Airflow (https://airflow.apache.org/)
     - Job and workflow scheduler application. This service make it possible to schedule and monitor workflows written in Python.
     - Based on direct acyclic graphs, the data life is easily monitored.
     - It process raw data from the raw data management area to the processed data area by applying custom workflows developed by and for users needs. 
 
-The deployment of a Hadoop cluster has been thought but the idea could be not implemented or kept.
+- Apache Spark (https://spark.apache.org/): 
+    - Used for ressources allocations for data processing on large dataset with high parallelization
+    - Used in Lambda or Kappa architecture or real-time data analysis pipeline 
+    - **Warning** : some optimizations has to be done to be efficient with Openstack Swift (cf : https://lsds.doc.ic.ac.uk/sites/default/files/swift-analytics_ic2e17_crv.pdf ). In this architecture, we can save file path directly to make it faster in metadata storage (with no overhead as it designed to store this kind of metadata)
+    
+The deployment of a Hadoop cluster has been thought but the idea could be not implemented or kept. Indeed, hadoop is designed to handle large files and can't handle well small files (cf default block size : 64MB ou 128MB)
 
-#### Consumption zone or processed data area or gold zone <a name="Consumptionzoneorprocesseddataareaorgoldzone"></a>  
+### Consumption zone or processed data area or gold zone <a name="Consumptionzoneorprocesseddataareaorgoldzone"></a>  
 [Return to the table of content](#Tableofcontent)
 
 This area is there to create values over data. Its role is to provide information and allow external application to work on data.
@@ -176,7 +186,7 @@ But some use cases have been imagined :
     - The purpose here is to store data for in-production applications
 - SQL Database (MsSQL Server 2017 ?)
 
-#### Services area <a name="Servicesarea"></a>  
+### Services area <a name="Servicesarea"></a>  
 [Return to the table of content](#Tableofcontent)
 
 This functional area includes every service to make this platform user-friendly. At this point (23/11/2020), 3 services have been designed :
@@ -184,14 +194,25 @@ This functional area includes every service to make this platform user-friendly.
     - Composed with 2 services : web GUI and REST API.
         - The web GUI is based on NodeJS server with a React application for user-friendly data insertion. The data are inserted or shown through a graphical user interface to make it easy to use.
         - The REST API is developed with python Flask API to make it possible to programmatically use the data management services (insert data in raw data management area or download data from processed data area)
+
+- Data stream insertion : 
+    - Apache Spark Streaming (https://spark.apache.org/docs/latest/streaming-programming-guide.html): 
+        - This library allow to create stream and process theses data with Apache Spark
+        - Functionally separated from Apache Spark, it based on Apache Spark and can't work stand alone
+    
+
 - Real-time data consumption service :
     - No solution have been found at this point (23/11/2020) to answer this need.
     - The purpose of this service is to make it possible to consume data in a real-time process (initially designed for autOCampus project in neOCampus)
+
 - Streaming data consumption service :
     - No solution have been found at this point (23/11/2020) to answer this need.
     - The purpose of this service is to make it possible to consume data as a stream for application that works in streaming mode. It has been initialy designed for online machine learning application. 
 
-#### Security and monitoring area  <a name="Securityandmonitoringarea"></a>  
+
+(12/04/2021) Data consumption may be done through RESTful API, direct access to real-time database (InfluxDB as an exemple) or create direct access 
+
+### Security and monitoring area  <a name="Securityandmonitoringarea"></a>  
 [Return to the table of content](#Tableofcontent)
 
 The purpose of this area is to make it possible to monitor the whole architecture for administrators and give 3 level monitoring.
@@ -211,7 +232,52 @@ The area has to be adapted to the host platform so services could change with de
 
 This area has to be work more to better design it. Prometheus could be used to monitor Network and System level and other services could be used for other levels. 
 
-### Services available <a name="Servicesavailable"></a> 
+## Data pipeline in the architecture <a name="Datapipeline"></a>
+
+This project is fully placed in the Big data world (see "4 V's of Big data", sometimes 5 or more V are described.). We split the data into 2 distinct groups with distinct goals, perspectives and requirements : 
+- Batch data 
+- Stream data
+
+Batch data main goal is to be **stored**. Batch data are defined to stay on disk with a long lifespan. Those data will be processed, valuated and consumed on a different timescale than the production.
+Stream data main goal is to be **processed**. Stream data are defined to be generated and as quickly as possible processed for consumption. This data is eventually stored to be consumed again later or in another way.
+The architecture handle batch data as main goal but it will be enhanced to handle stream data and eventually near-real time data processing, depending on implementation and tools used.
+
+We base our approach on the expressed needs but also on this scientific paper : https://www.researchgate.net/publication/333653951_Big_data_stream_analysis_a_systematic_literature_review.
+### Batch data <a name="Batchdata"></a>
+Batch data can also be split into 2 distinct groups : light process and heavy process. 
+The light processes include the reading, formatting processes and all the processed made to make the data available.
+Heavy processes are processes which aim to create data from master data such as data mining, data analysis or machine learning.  
+#### Light process <a name="Batchdata_lightprocess"></a>
+![alt text](./git_image/Light_process_Batch_data_pipeline.png)
+
+1. Data are inserted through API designed in the service zone. All batch data are inserted through the RESTful API. For security reasons, the RESTful API (Flask) is accessible behind an Reverse Proxy. The RESTful API handle insertions of data and metadata (respectively Openstack Swift and Mongodb).
+2. Web trigger is raised from the Openstack Swift proxy triggering an Apache Airflow workflow with minimum metadata to retrieve the data. 
+3. Apache Airflow workflow process metadata (type, project or every metadata needed to branching through the workflow easily). Data is eventually read from Openstack Swift and each process are logged in metadata zone. 
+4. The last step of each workflow has to be the storage of each processed data. Intermediate results could be stored if needed and all the data could even be stored in Openstack Swift.
+5. Once the data processed, it can be consumed through the RESTful API from tools in consumptions zone. A direct access could be designed if needed.
+
+
+#### Heavy process <a name="Batchdata_heavyprocess"></a>
+![alt text](./git_image/Heavy_process_Batch_data_pipeline.png)
+For heavy process, minor differences can be observed in the process area, otherwise no differences exist.  
+4. The data is send to Apache Spark cluster. Data are processed in the same way as with Apache Airflow except that resources are allocated by Apache Spark. It can be seen as a tool in Apache Airflow tool box.
+
+### Stream data <a name="Streamdata"></a>
+![alt text](./git_image/Stream_data_pipeline.png)
+Stream data pipeline is different as goals are differents. The first step is to define and instantiate the stream. As it is not a step of data input, it is the 0 step.
+
+0. User ou administrator has to create a stream. As we can assume that each data in the stream (especially in IoT) as the same metadata, the metadata are defined 1 time for the whole stream. Each sample will be linked to this metadata. This way, Apache Airflow can instantiate the stream through Apache Spark and Apache Spark Stream. 
+    1. Apache Airflow instantiate a stream lifechecker workflow scheduled at regular interval. It will be able to update metadata (exemple : number of samples).
+
+
+1. The sample is send to Apache Spark Streaming. The sample is directly sent to Apache Spark to be processed as faster as possible.
+2. 2 tasks have to be done in parallel. We have to process the data and store it in a consumption tool as the main objective and store it in the raw data storage.
+3. This step is depending on the implementation. Indeed, the more secure way is to define consumption through RESTful API (and reverse proxy) but it could be not possible with tools used and a direct access will be needed.
+
+The same pipeline is defined for near-real time but some customization may be needed. Indeed, the time constraint is conditionned by tools performances and tools used. We place ourselves in near real-time, not in real-time or hard real-time. The goal is to consume the data in the same time scale as the production.
+
+
+## Services available <a name="Servicesavailable"></a> 
 [Return to the table of content](#Tableofcontent)
 
 TODO : Refactor and update -> new data analysis and new horizons are set
@@ -225,7 +291,7 @@ Working|<img src="https://image.flaticon.com/icons/svg/2165/2165867.svg" height=
 All is installed on Osirim : need to be tested.
 
 
-### Tools used <a name="Toolsused"></a>
+## Tools used <a name="Toolsused"></a>
 [Return to the table of content](#Tableofcontent)
 
 - MongoDb
