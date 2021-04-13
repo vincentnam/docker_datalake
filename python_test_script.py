@@ -156,8 +156,8 @@ client = MongoClient(globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"])
 
 
 authurl = "http://"+ globals()["OPENSTACK_SWIFT_IP"]+":"+globals()["SWIFT_REST_API_PORT"]+"/auth/v1.0"
-conn = swiftclient.Connection(user=user, key=key,
-                              authurl=authurl)
+# conn = swiftclient.Connection(user=user, key=key,
+#                               authurl=authurl)
 path = "/home/vdang/Desktop/data/neocampus-mongodb_dump.mar20/"
 file_name = "energy.bson"
 

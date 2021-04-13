@@ -516,7 +516,7 @@ def IDEAS_use_case_branching(**kwargs):
 
 
 IDEAS_use_case = BranchPythonOperator(
-    task_id='IDEAS_use_case_branching',
+    task_id='IDEAS_use_case',
     provide_context=True,
     python_callable=IDEAS_use_case_branching,
     dag=dag
@@ -707,7 +707,7 @@ def IDEAS_sensors_json_ts(**kwargs):
     """
     Create client that writes data in batches with 50_000 items.
     """
-    write_api = client.write_api(write_options=WriteOptions(batch_size=1000, flush_interval=100))
+    write_api = client.write_api(write_options=WriteOptions(batch_size=1, flush_interval=1))
     write_api.write("IDEAS_bucket", "IDEAS_org", {"measurement": value_unit,
                                                   "tags": dict([(key, data_dict[key]) for key in data_dict_key]),
                                    "fields": {"value":value}, "time": datetime.now()})
