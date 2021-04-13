@@ -486,7 +486,7 @@ DataNoos = BranchPythonOperator(
     dag=dag
 )
 datanoos_ba_huy_csv_ts= PythonOperator(
-    task_id='datanoos_ba_huy_csv_ts',
+    task_id='datanoos_csv_ts',
     python_callable=datanoos_ba_huy_csv_ts,
     provide_context=True,
     dag=dag,
@@ -741,8 +741,8 @@ DataNoos >> [datanoos_ba_huy_csv_ts, datanoos_zip]
 datanoos_ba_huy_csv_ts >> datanoos_insert_influxdb >> join
 datanoos_zip >> join
 IDEAS_use_case >> [IDEAS_batch, IDEAS_stream]
-IDEAS_batch >> [IDEAS_insert_csv_to_ts]
-IDEAS_stream >> [IDEAS_sensors_insert]
+IDEAS_batch >> [IDEAS_insert_csv_to_ts] >> join
+IDEAS_stream >> [IDEAS_sensors_insert] >> join
 
 # Custom branching : based on metadata_doc["swift_container"]
 
