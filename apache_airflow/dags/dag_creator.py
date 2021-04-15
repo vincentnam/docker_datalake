@@ -700,20 +700,24 @@ def IDEAS_sensors_json_ts(**kwargs):
 
     token = "_ZENYvIw_Kiw6CsFCDCcchj-IcZijU9K21WD31DKfsjQVwBU-W3mPGqSM-RLTa7PPru5Piy9TZK7wn7ykp8thw=="
     org="IDEAS"
+    bucket= "IDEAS_stream"
+    from influxdb_client import InfluxDBClient, Point, WritePrecision
 
 
     value = data_dict.pop("value")
     value_unit = data_dict.pop("value_units")
     data_dict_key= list(data_dict.keys())
     client = InfluxDBClient(url="http://141.115.103.33:8086", token=token, org=org, debug=True)
+    point = Point(value_unit).field("value", value).time(datetime.utcnow(), WritePrecision.NS)
+    for key,value in [(key, data_dict[key]) for key in data_dict_key]:
+        point.tag(key, value)
+
 
     """
     Create client that writes data in batches with 50_000 items.
     """
     write_api = client.write_api(write_options=WriteOptions(batch_size=1, flush_interval=1))
-    write_api.write("IDEAS_stream", "IDEAS", {"measurement": value_unit,
-                                                  "tags": dict([(key, data_dict[key]) for key in data_dict_key]),
-                                   "fields": {"value":value}, "time": datetime.now()})
+    write_api.write(bucket, org, point)
 
     """
     Write data into InfluxDB
