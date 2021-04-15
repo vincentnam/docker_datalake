@@ -601,8 +601,8 @@ def IDEAS_insert_influx(**kwargs):
                 point.field(field, float(row[field]))
         return point
     token = "c5bgd7j6fJ-YpWiuM8EAQHTlIJmKphEaC72iCzFgzXRtldJYKdDDjvHkUz0cfDEVejDCuU9fnpWGzoS56vupZA=="
-    org="IDEAS_org"
-    bucket="IDEAS_bucket"
+    org="IDEAS"
+    bucket="IDEAS_batch"
 
     data = rx \
         .from_iterable(DictReader(open("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"], 'r'))) \
