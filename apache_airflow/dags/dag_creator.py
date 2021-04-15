@@ -653,9 +653,9 @@ IDEAS_stream = PythonOperator(
     dag=dag,
 )
 
-
 def IDEAS_sensors_json_ts(**kwargs):
     metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+
     #TODO : 13/10/2020 DIRECT READ FILE IF LOOPBACK DEVICE ARE REMOVED (if swift can directly write on storage servers)
 
     print("kwargs['dag_run'].conf")
@@ -684,21 +684,24 @@ def IDEAS_sensors_json_ts(**kwargs):
         if i[0] == "X-Storage-Url":
             url = i
     print(url[1])
-
+    import ast
     urllib.request.install_opener(opener)
     # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
-    urllib.request.urlretrieve(url[1] + "/"+metadata_doc["swift_container"]+"/"+metadata_doc["swift_object_id"],
-                               "/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"])
-
+    request = urllib.request.urlopen(url[1] + "/"+metadata_doc["swift_container"]+"/"+metadata_doc["swift_object_id"])
+    print(request)
+    data = request.read()
+    print(data)
+    dict_str = data.decode("UTF-8")
+    data_dict = ast.literal_eval(dict_str)
+    print(data_dict)
     from influxdb_client import InfluxDBClient
     from influxdb_client.client.write_api import WriteOptions
     from datetime import datetime
 
+    token = "_ZENYvIw_Kiw6CsFCDCcchj-IcZijU9K21WD31DKfsjQVwBU-W3mPGqSM-RLTa7PPru5Piy9TZK7wn7ykp8thw=="
+    org="IDEAS"
 
-    token = "c5bgd7j6fJ-YpWiuM8EAQHTlIJmKphEaC72iCzFgzXRtldJYKdDDjvHkUz0cfDEVejDCuU9fnpWGzoS56vupZA=="
-    org="test"
 
-    data_dict = eval(open("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"],"r").read())
     value = data_dict.pop("value")
     value_unit = data_dict.pop("value_units")
     data_dict_key= list(data_dict.keys())
@@ -708,7 +711,7 @@ def IDEAS_sensors_json_ts(**kwargs):
     Create client that writes data in batches with 50_000 items.
     """
     write_api = client.write_api(write_options=WriteOptions(batch_size=1, flush_interval=1))
-    write_api.write("IDEAS_bucket", "IDEAS_org", {"measurement": value_unit,
+    write_api.write("IDEAS_stream", "IDEAS", {"measurement": value_unit,
                                                   "tags": dict([(key, data_dict[key]) for key in data_dict_key]),
                                    "fields": {"value":value}, "time": datetime.now()})
 
@@ -717,6 +720,7 @@ def IDEAS_sensors_json_ts(**kwargs):
     """
 
     write_api.__del__()
+
 
 
 IDEAS_sensors_insert = PythonOperator(

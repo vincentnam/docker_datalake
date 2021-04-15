@@ -3,7 +3,7 @@ from pymongo import MongoClient
 import swiftclient.service
 from swiftclient.service import SwiftService
 import datetime
-
+import ast
 
 def get_id(mongodb_url):
     mongo_forid_co = MongoClient(mongodb_url)
@@ -112,22 +112,28 @@ def on_connect(client, userdata, flags, rc):
     client.unsubscribe("$SYS/#")
 
 
+
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
+    print(type(msg.payload))
+    dict_str = msg.payload.decode("UTF-8")
+    mydata = ast.literal_eval(dict_str)
+    print(mydata)
     user = 'test:tester'
     key = 'testing'
     mongo_url = "141.115.103.31" + ":" + "27017"
     client = MongoClient("141.115.103.31" + ":" + "27017")
-    # init_id(mongo_url)
+
     time = str(datetime.datetime.now())
-    msg["time"] = time
+
+    mydata["time"] = time
     authurl = "http://" + "141.115.103.30" + ":" + "8080" + "/auth/v1.0"
     file_name = msg.topic + "_" + time
     container_name = "IDEAS_use_case"
 
-    insert_datalake(msg.payload, user, key, authurl, container_name, processed_data_area_service=["InfluxDB"],
-                    data_process="custom",
+    insert_datalake(str(mydata).encode(), user, key, authurl, container_name, processed_data_area_service=["InfluxDB"],
+                    data_process="custom",  other_data={"flow_type":"stream"},
                     application="sensor reading", file_name=file_name,
                     content_type="application/json", mongodb_url=mongo_url)
 
