@@ -7,12 +7,6 @@ import os
 import swiftclient.service
 import magic
 
-cwd = os.path.dirname(os.path.abspath(__file__))
-print(cwd)
-with open(cwd + "/../apache_airflow/dags/config.yml", "r") as config:
-    y = yaml.safe_load(config)
-globals().update(y)
-
 
 def get_id(mongodb_url):
     mongo_forid_co = MongoClient(mongodb_url)
@@ -128,22 +122,23 @@ def insert_datalake(file_path,file_name, user, key, authurl, container_name,
 
 #####################################
 
-
-
 user = 'test:tester'
 key = 'testing'
-mongo_url = globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"]
-client = MongoClient(globals()["META_MONGO_IP"] + ":" + globals()["MONGO_PORT"])
 
+mongo_url = "141.115.103.31" + ":" + "27017"
+client = MongoClient("141.115.103.31" + ":" + "27017")
 
+time = str(datetime.datetime.now())
 
-authurl = "http://"+ globals()["OPENSTACK_SWIFT_IP"]+":"+globals()["SWIFT_REST_API_PORT"]+"/auth/v1.0"
+authurl = "http://" + "141.115.103.30" + ":" + "8080" + "/auth/v1.0"
+container_name = "IDEAS_use_case"
+
 conn = swiftclient.Connection(user=user, key=key,
                               authurl=authurl)
-path = cwd + "/"
+path = "./"
 file_name = "synop.2021041515.csv"
 file_uri = path+file_name
-with open(file_uri , "rb") as f:
+with open(file_uri, "rb") as f:
     file_data = f.read()
 
 file_content = open(path+file_name, "r")
@@ -159,15 +154,10 @@ other_data = {
 }
 
 
-container_name = "DataNoos"
-f = magic.Magic(mime=True, uncompress=False)
 insert_datalake(path, file_name, user, key, authurl, container_name, data_process="custom",
                 description="DataNoos demo : Meteo France synop weather observations in 11/2020",
                 mongodb_url=mongo_url, other_data=other_data, content_type="application/csv"
                 )
 
-path = cwd + "/"
-file_name = "synop.2021041515.csv"
-file_uri = path+file_name
-h = magic.Magic(mime=True, uncompress=True)
-print(h.from_file(file_uri))
+
+
