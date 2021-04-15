@@ -708,7 +708,7 @@ def IDEAS_sensors_json_ts(**kwargs):
     value_unit = data_dict.pop("value_units")
     data_dict_key= list(data_dict.keys())
     client = InfluxDBClient(url="http://141.115.103.33:8086", token=token, org=org, debug=True)
-    point = Point(value_unit).field("value", value).time(datetime.utcnow(), WritePrecision.NS)
+    point = Point(value_unit).field("value", value)
     for key,value in [(key, data_dict[key]) for key in data_dict_key]:
         point.tag(key, value)
 

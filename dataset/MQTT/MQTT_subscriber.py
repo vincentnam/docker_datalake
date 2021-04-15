@@ -150,7 +150,7 @@ PORT = 0
 client.username_pw_set(username=user, password=password)
 
 client.connect(URL, PORT , 60)
-client.subscribe("u4/300/")
+client.subscribe("u4/300/#")
 # Blocking call that processes network traffic, dispatches callbacks and
 # handles reconnecting.
 # Other loop*() functions are available that give a threaded interface and a
