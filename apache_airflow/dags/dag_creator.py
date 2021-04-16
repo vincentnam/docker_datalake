@@ -654,6 +654,10 @@ IDEAS_stream = PythonOperator(
 )
 
 def IDEAS_sensors_json_ts(**kwargs):
+
+    from datetime import datetime
+    date = datetime.utcnow()
+
     metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
 
     #TODO : 13/10/2020 DIRECT READ FILE IF LOOPBACK DEVICE ARE REMOVED (if swift can directly write on storage servers)
@@ -694,34 +698,74 @@ def IDEAS_sensors_json_ts(**kwargs):
     dict_str = data.decode("UTF-8")
     data_dict = ast.literal_eval(dict_str)
     print(data_dict)
-    from influxdb_client import InfluxDBClient
-    from influxdb_client.client.write_api import WriteOptions
-    from datetime import datetime
-
-    token = "_ZENYvIw_Kiw6CsFCDCcchj-IcZijU9K21WD31DKfsjQVwBU-W3mPGqSM-RLTa7PPru5Piy9TZK7wn7ykp8thw=="
-    org="IDEAS"
-    bucket= "IDEAS_stream"
-    from influxdb_client import InfluxDBClient, Point, WritePrecision
-
 
     value = data_dict.pop("value")
     value_unit = data_dict.pop("value_units")
-    data_dict_key= list(data_dict.keys())
-    client = InfluxDBClient(url="http://141.115.103.33:8086", token=token, org=org, debug=True)
-    point = Point(value_unit).field("value", value)
-    for key,value in [(key, data_dict[key]) for key in data_dict_key]:
-        point.tag(key, value)
+    data_dict_key_list = list(data_dict.keys())
 
 
-    """
-    Create client that writes data in batches with 50_000 items.
-    """
-    write_api = client.write_api(write_options=WriteOptions(batch_size=1, flush_interval=1))
-    write_api.write(bucket, org, point)
+    from influxdb_client import InfluxDBClient, Point, WritePrecision
+    from influxdb_client.client.write_api import SYNCHRONOUS
 
-    """
-    Write data into InfluxDB
-    """
+    # You can generate a Token from the "Tokens Tab" in the UI
+    token = "ZaPmyJYZa8HjFQZkOmT-ybhli8UZ-KloUD93QngF1CMlwZjFZmgw6sJAZzAZgKkgzqJG12_Sq8IqVr_JOeW63g=="
+    org = "IDEAS"
+    bucket = "IDEAS_stream"
+
+    client = InfluxDBClient(url="http://141.115.103.33:8086", token=token)
+
+
+
+    write_api = client.write_api(write_options=SYNCHRONOUS)
+
+    if isinstance(type(value),list):
+        assert(len(value) == len(value_unit)), "Malformed input data : Value list has not the same length than value_units"
+
+        for val, ind in enumerate(value):
+
+            point = Point(value_unit[ind]) \
+                .field("value", val) \
+                .time(date, WritePrecision.NS)
+            for key in data_dict_key_list:
+                point.tag(key, data_dict[key])
+            write_api.write(bucket, org, point)
+    else:
+        point = Point(value_unit) \
+            .field("value", value) \
+            .time(date, WritePrecision.NS)
+        for key in data_dict_key_list:
+            point.tag(key, data_dict[key])
+        write_api.write(bucket, org, point)
+
+    # from influxdb_client import InfluxDBClient
+    # from influxdb_client.client.write_api import WriteOptions
+    # from datetime import datetime
+    #
+    # value = data_dict.pop("value")
+    # value_unit = data_dict.pop("value_units")
+    # data_dict_key = list(data_dict.keys())
+    #
+    # token = "_ZENYvIw_Kiw6CsFCDCcchj-IcZijU9K21WD31DKfsjQVwBU-W3mPGqSM-RLTa7PPru5Piy9TZK7wn7ykp8thw=="
+    # org="IDEAS"
+    # bucket= "IDEAS_stream"
+    # from influxdb_client import InfluxDBClient, Point, WritePrecision
+    #
+    #
+    # client = InfluxDBClient(url="http://141.115.103.33:8086", token=token, org=org, debug=True)
+    # point = Point(value_unit).field("value", value)
+    # for key,value in [(key, data_dict[key]) for key in data_dict_key]:
+    #     point.tag(key, value)
+    #
+    #
+    # """
+    # Create client that writes data in batches with 50_000 items.
+    # """
+    # write_api = client.write_api(write_options=WriteOptions(batch_size=1, flush_interval=1))
+    # write_api.write(bucket, org, point)
+    #
+    # """
+    # Write data into InfluxDB
+    # """
 
     write_api.__del__()
 
@@ -763,3 +807,6 @@ IDEAS_stream >> [IDEAS_sensors_insert] >> join
 
 # Other_type = {
 # flow_type : "stream" ou "batch"
+
+
+# record is missing label windowPeriod
