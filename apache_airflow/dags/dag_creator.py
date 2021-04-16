@@ -596,8 +596,7 @@ def IDEAS_insert_influx(**kwargs):
         print(str(row['date']))
         point = Point("MeteoFrance_data") \
             .tag("station", row["numer_sta"]) \
-            .time(datetime.datetime.utcnow(), write_precision=WritePrecision.NS)
-            # .time(datetime.datetime.strptime(str(row['date']), "%Y%m%d%H%M%S").strftime('%Y-%m-%dT%H:%M:%SZ'),write_precision=WritePrecision.S)
+            .time(datetime.datetime.strptime(str(row['date']), "%Y%m%d%H%M%S").strftime('%Y-%m-%dT%H:%M:%SZ'),write_precision=WritePrecision.S)
         for field in list_field:
             if row[field] != "mq":
                 point.field(field, float(row[field]))
@@ -623,7 +622,7 @@ def IDEAS_insert_influx(**kwargs):
     """
     Write data into InfluxDB
     """
-    write_api.write(bucket=bucket, record=data)
+    write_api.write(bucket=bucket, org=org, record=data)
     write_api.__del__()
 
 
