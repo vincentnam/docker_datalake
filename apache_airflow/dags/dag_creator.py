@@ -593,7 +593,6 @@ def IDEAS_insert_influx(**kwargs):
                       "hnuage3", "nnuage4",
                       "ctype4", "hnuage4"]
 
-        print(str(row['date']))
         point = Point("MeteoFrance_data") \
             .tag("station", row["numer_sta"]) \
             .time(datetime.datetime.strptime(str(row['date']), "%Y%m%d%H%M%S").strftime('%Y-%m-%dT%H:%M:%SZ'),write_precision=WritePrecision.S)
@@ -607,12 +606,10 @@ def IDEAS_insert_influx(**kwargs):
     bucket = "IDEAS_batch"
 
     client = InfluxDBClient(url="http://141.115.103.33:8086", token=token)
-    print(open("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"], 'r').read())
+
     data = rx \
         .from_iterable(DictReader(open("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"], 'r'))) \
         .pipe(ops.map(lambda row: parse_row(row)))
-    print(data)
-
 
     """
     Create client that writes data in batches with 50_000 items.
