@@ -448,7 +448,7 @@ def datanoos_insert_influx(**kwargs):
                       "phenspe4", "nnuage1", "ctype1", "hnuage1", "nnuage2", "ctype2", "hnuage2", "nnuage3", "ctype3",
                       "hnuage3", "nnuage4",
                       "ctype4", "hnuage4"]
-
+        print(str(row['date']))
         point = Point("MeteoFrance_data") \
             .tag("station", row["numer_sta"]) \
             .time(datetime.datetime.strptime(str(row['date']), "%Y%m%d%H%M%S").strftime('%Y-%m-%dT%H:%M:%SZ'), write_precision=WritePrecision.S)
