@@ -125,7 +125,7 @@ def on_message(client, userdata, msg):
     mongo_url = "141.115.103.31" + ":" + "27017"
     client = MongoClient("141.115.103.31" + ":" + "27017")
 
-    time = str(datetime.datetime.now())
+    time = str(datetime.datetime.utcnow())
 
     mydata["time"] = time
     authurl = "http://" + "141.115.103.30" + ":" + "8080" + "/auth/v1.0"
