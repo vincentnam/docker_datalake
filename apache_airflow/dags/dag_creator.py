@@ -596,8 +596,8 @@ def IDEAS_insert_influx(**kwargs):
         print(str(row['date']))
         point = Point("MeteoFrance_data") \
             .tag("station", row["numer_sta"]) \
-            .time(datetime.datetime.strptime(str(row['date']), "%Y%m%d%H%M%S").strftime('%Y-%m-%dT%H:%M:%SZ'),
-                  write_precision=WritePrecision.S)
+            .time(datetime.datetime.utcnow(), write_precision=WritePrecision.NS)
+            # .time(datetime.datetime.strptime(str(row['date']), "%Y%m%d%H%M%S").strftime('%Y-%m-%dT%H:%M:%SZ'),write_precision=WritePrecision.S)
         for field in list_field:
             if row[field] != "mq":
                 point.field(field, float(row[field]))
@@ -612,7 +612,7 @@ def IDEAS_insert_influx(**kwargs):
     data = rx \
         .from_iterable(DictReader(open("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"], 'r'))) \
         .pipe(ops.map(lambda row: parse_row(row)))
-
+    print(data)
 
 
     """
