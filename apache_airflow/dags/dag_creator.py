@@ -608,7 +608,7 @@ def IDEAS_insert_influx(**kwargs):
     bucket = "IDEAS_batch"
 
     client = InfluxDBClient(url="http://141.115.103.33:8086", token=token)
-    print(DictReader(open("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"], 'r')))
+    print(open("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"], 'r').read())
     data = rx \
         .from_iterable(DictReader(open("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"], 'r'))) \
         .pipe(ops.map(lambda row: parse_row(row)))
