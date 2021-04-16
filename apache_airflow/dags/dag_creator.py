@@ -600,15 +600,17 @@ def IDEAS_insert_influx(**kwargs):
             if row[field] != "mq":
                 point.field(field, float(row[field]))
         return point
-    token = "c5bgd7j6fJ-YpWiuM8EAQHTlIJmKphEaC72iCzFgzXRtldJYKdDDjvHkUz0cfDEVejDCuU9fnpWGzoS56vupZA=="
-    org="IDEAS"
-    bucket="IDEAS_batch"
+    token = "ZaPmyJYZa8HjFQZkOmT-ybhli8UZ-KloUD93QngF1CMlwZjFZmgw6sJAZzAZgKkgzqJG12_Sq8IqVr_JOeW63g=="
+    org = "IDEAS"
+    bucket = "IDEAS_batch"
+
+    client = InfluxDBClient(url="http://141.115.103.33:8086", token=token)
 
     data = rx \
         .from_iterable(DictReader(open("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"], 'r'))) \
         .pipe(ops.map(lambda row: parse_row(row)))
 
-    client = InfluxDBClient(url="http://141.115.103.33:8086", token=token, org=org, debug=True)
+
 
     """
     Create client that writes data in batches with 50_000 items.
