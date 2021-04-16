@@ -526,7 +526,7 @@ IDEAS_use_case = BranchPythonOperator(
 def IDEAS_batch(**kwargs):
     metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
     # TODO : 14/10/2020 REFACTOR DICT_TASK
-    type_to_task = {"application/csv": "IDEAS_csv_ts"}
+    type_to_task = {"application/csv": "IDEAS_insert_csv_in_time-serie"}
 
     return type_to_task[metadata_doc["content_type"]]
 
@@ -608,7 +608,7 @@ def IDEAS_insert_influx(**kwargs):
     bucket = "IDEAS_batch"
 
     client = InfluxDBClient(url="http://141.115.103.33:8086", token=token)
-
+    print(DictReader(open("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"], 'r')))
     data = rx \
         .from_iterable(DictReader(open("/datalake/airflow/airflow_tmp/"+metadata_doc["original_object_name"], 'r'))) \
         .pipe(ops.map(lambda row: parse_row(row)))
