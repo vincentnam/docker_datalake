@@ -451,7 +451,7 @@ def datanoos_insert_influx(**kwargs):
 
         point = Point("MeteoFrance_data") \
             .tag("station", row["numer_sta"]) \
-            .time(datetime.datetime.strptime(str(row['date']), "%Y%m%d%H%M%S"), write_precision=WritePrecision.S)
+            .time(datetime.datetime.strptime(str(row['date']), "%Y%m%d%H%M%S").strftime('%Y-%m-%dT%H:%M:%SZ'), write_precision=WritePrecision.S)
         for field in list_field:
             if row[field] != "mq":
                 point.field(field, float(row[field]))
