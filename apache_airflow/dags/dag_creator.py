@@ -702,7 +702,11 @@ def IDEAS_sensors_json_ts(**kwargs):
     value = data_dict.pop("value")
     value_unit = data_dict.pop("value_units")
     data_dict_key_list = list(data_dict.keys())
-
+    try:
+        date = data_dict.pop("time")
+        print("time to handle")
+    except:
+        print("no time to pop")
 
     from influxdb_client import InfluxDBClient, Point, WritePrecision
     from influxdb_client.client.write_api import SYNCHRONOUS
