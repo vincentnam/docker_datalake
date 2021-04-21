@@ -6,13 +6,17 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 In the project directory, you can run:
 
-### `npm start`
+### 'docker-compose up --build'
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Runs the command `npm start` in the Docker container the app in the development mode.\
+Open [http://localhost:3001](http://localhost:3001) to view it in the browser.
 
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
+
+All the commands below have to be ran in the container. You can access it by :
+    1) the software Docker by selecting the "datalake-react-front" container and clicking on "CLI" button,
+    2) launching the command "docker exec -it react bash" in Unix systems
 
 ### `npm test`
 
@@ -63,7 +67,7 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/a
 
 ### Deployment
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+# TODO - Deployment has to be done with a separate file docker-compose for staging and production.
 
 ### `npm run build` fails to minify
 
