@@ -3,24 +3,19 @@ import React from "react";
 export class Header extends React.Component {
     render() {
         return(
-            <nav className="navbar navbar-default">
-                <div className="container">
-                    <div className="navbar-header">
-                        <ul>
-                            <li>
-                                <a href="#">Home</a>
-                            </li>
-                            <li>
-                                <a href="#">Data Visualization</a>
-                            </li>
-                            <li>
-                                <a href="#">Download</a>
-                            </li>
-                            <li>
-                                <a href="#">Upload</a>
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="/">Datalake</a>
+                    <div class="collapse navbar-collapse" id="navbarText">
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            <li class="nav-item">
+                                <a class="nav-link active" aria-current="page" href="/">Retour</a>
                             </li>
                         </ul>
                     </div>
+                </div>
+                <div>
+                    <a class="btn btn-outline-primary" href="#" role="button">Déconnexion</a>
                 </div>
             </nav>
         );
