@@ -4,15 +4,13 @@ import './index.css';
 import reportWebVitals from './reportWebVitals';
 import 'bootstrap/dist/css/bootstrap.css';
 import { Home } from './components/Home';
-import { Header } from './components/Header';
 import { DataViz } from './components/DataViz';
 import { Upload } from './components/Upload';
 import { Download } from './components/Download';
 import {
   BrowserRouter as Router,
   Switch,
-  Route,
-  Link
+  Route
 } from 'react-router-dom';
 
 ReactDOM.render(

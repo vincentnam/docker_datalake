@@ -7,9 +7,10 @@ export class Home extends React.Component {
                 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
                     <div class="container-fluid">
                         <a class="navbar-brand" href="/">Datalake</a>
+
                     <div>
                     </div>
-                        <a class="btn btn-outline-primary" href="#" role="button">Déconnexion</a>
+                        <a class="btn btn-outline-primary" href="/logout" role="button">Logout</a>
                     </div>
                 </nav>
                 <div class="p-4">

@@ -15,7 +15,7 @@ export class Header extends React.Component {
                     </div>
                 </div>
                 <div>
-                    <a class="btn btn-outline-primary" href="#" role="button">Déconnexion</a>
+                    <a class="btn btn-outline-primary" href="/logout" role="button">Déconnexion</a>
                 </div>
             </nav>
         );
