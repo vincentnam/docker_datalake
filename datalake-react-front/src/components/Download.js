@@ -1,6 +1,7 @@
 import React from 'react';
 import { Header } from './Header';
 import Dropzone from 'react-dropzone';
+import { config } from '../configmeta/config';
 
 export class Download extends React.Component {
     constructor() {
@@ -11,7 +12,7 @@ export class Download extends React.Component {
         this.state = {
             files: [],
             meta: '',
-            metier: 'meteo',
+            metier: 0,
             data: [],
             file: [],
         };
@@ -34,6 +35,18 @@ export class Download extends React.Component {
         event.preventDefault();
     }
 
+    SelectMetier(){
+        const metiers = config.metiers;
+        const listMetiers = metiers.map((metier) => 
+            <option value={metier.id}>{}</option>
+        );
+        return (
+            <select value={this.state.metier} onChange={this.handleChange} name="metier" class="form-control">
+                {listMetiers}
+            </select>
+        );
+    }
+
     render() {
         const files = this.state.files.map(file => (
             <li key={file.name}>
@@ -49,11 +62,7 @@ export class Download extends React.Component {
                     <form onSubmit={this.handleSubmit}>
                         <div class="form-group">
                             <label>Type de métadonnée</label>
-                            <select value={this.state.metier} onChange={this.handleChange} name="metier" class="form-control">
-                                <option value="meteo">Météo</option>
-                                <option value="capteur">Capteur</option>
-                                <option selected value="camera">Camera</option>
-                            </select>
+                            <SelectMetier />
                         </div>
                         
                         <div class="mb-3">
