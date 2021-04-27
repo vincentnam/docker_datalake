@@ -35,7 +35,6 @@ export class Download extends React.Component {
         event.preventDefault();
     }
 
-    //Select Type Métadonnée
     SelectMetier(){
         const metiers = config.metiers;
         const listMetiers = metiers.map((metier) => 
