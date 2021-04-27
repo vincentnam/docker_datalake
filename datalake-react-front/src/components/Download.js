@@ -12,6 +12,7 @@ export class Download extends React.Component {
             files: [],
             meta: '',
             metier: 'meteo',
+            data: [],
             file: [],
         };
         this.handleChange = this.handleChange.bind(this);
