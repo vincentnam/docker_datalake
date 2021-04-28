@@ -65,20 +65,13 @@ export class Upload extends React.Component {
                 type.map((t) => {
                     if (t.id === this.state.type) {
                         listMeta = t.metadonnees.map((meta) => {
-                            console.log(meta);
-                            if(meta.type === "number"){
+                            if(meta.type === "number" || meta.type === "text"){
                                 <div class="mb-3">
-                                    <label class="form-label">Métadonnée</label>
-                                    <textarea value={this.state.meta} onChange={this.handleChange} name="meta" class="form-control" />
+                                    <label class="form-label">{meta.label}</label>
+                                    <input type={meta.type} value={this.state.meta} onChange={this.handleChange} name="meta" class="form-control" />
                                 </div>
                             }
                             if(meta.type === "textarea"){
-                                <div class="mb-3">
-                                    <label class="form-label">Métadonnée</label>
-                                    <textarea value={this.state.meta} onChange={this.handleChange} name="meta" class="form-control" rows="3" />
-                                </div>
-                            }
-                            if(meta.type === "text"){
                                 <div class="mb-3">
                                     <label class="form-label">Métadonnée</label>
                                     <textarea value={this.state.meta} onChange={this.handleChange} name="meta" class="form-control" rows="3" />
@@ -93,7 +86,7 @@ export class Upload extends React.Component {
                     {listMeta}
                 </div>
                 
-            )
+            );
         }
 
 
@@ -108,7 +101,6 @@ export class Upload extends React.Component {
                             <SelectMetier />
                         </div>
                         <Metadonnees />
-                        
                         <div class="form-group">
                             <Dropzone value={this.state.file} onChange={this.handleChange} name="file" onDrop={this.onDrop}>
                                 {({getRootProps, getInputProps}) => (
