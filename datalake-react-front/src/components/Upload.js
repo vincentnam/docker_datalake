@@ -35,7 +35,6 @@ export class Upload extends React.Component {
         event.preventDefault();
     }
 
-    
 
     render() {
         const files = this.state.files.map(file => (
@@ -63,21 +62,23 @@ export class Upload extends React.Component {
             let listMeta = null;
             types.map((type) => (
                 type.map((t) => {
-                    if (t.id === this.state.type) {
-                        listMeta = t.metadonnees.map((meta) => {
-                            if(meta.type === "number" || meta.type === "text"){
-                                <div class="mb-3">
-                                    <label class="form-label">{meta.label}</label>
-                                    <input type={meta.type} value={this.state.meta} onChange={this.handleChange} name="meta" class="form-control" />
-                                </div>
-                            }
-                            if(meta.type === "textarea"){
-                                <div class="mb-3">
-                                    <label class="form-label">Métadonnée</label>
-                                    <textarea value={this.state.meta} onChange={this.handleChange} name="meta" class="form-control" rows="3" />
-                                </div>
-                            }
-                        });
+                    if (t.id === parseInt(this.state.type)) {
+                        listMeta = (
+                            t.metadonnees.map((meta) => {
+                                if(meta.type === "number" || meta.type === "text")
+                                    return  <div class="mb-3">
+                                                <label class="form-label">{meta.label}</label>
+                                                <input type={meta.type} value={this.state.meta} onChange={this.handleChange} name="meta" class="form-control" />
+                                            </div>
+                                
+                                if(meta.type === "textarea")
+                                    return  <div class="mb-3">
+                                                <label class="form-label">Métadonnée</label>
+                                                <textarea value={this.state.meta} onChange={this.handleChange} name="meta" class="form-control" rows="3" />
+                                            </div>
+                                
+                            })
+                        );
                     }
                 })
             ));
