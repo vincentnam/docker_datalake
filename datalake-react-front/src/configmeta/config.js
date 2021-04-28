@@ -3,15 +3,20 @@ export const config = {
         {
             "id": 0,
             "label": "Veuillez choisir votre type de métadonnée ...",
-            "metadonnee": []
+            "metadonnees": [
+                {
+                    "label": "Métadonnée 2",
+                    "type": "text"
+                }
+            ]
         },
         {
             "id": 1,
             "label": "Météo",
-            "metadonnee": [
+            "metadonnees": [
                 {
                     "label": "Métadonnée 1",
-                    "type": "textarea"
+                    "type": "text"
                 },
                 {
                     "label": "Métadonnée 2",
@@ -22,7 +27,7 @@ export const config = {
         {
             "id": 2,
             "label": "Capteur",
-            "metadonnee": [
+            "metadonnees": [
                 {
                     "label": "Métadonnée 1",
                     "type": "textarea"
@@ -40,7 +45,7 @@ export const config = {
         {
             "id": 3,
             "label": "Autre métadonnée",
-            "metadonnee": [
+            "metadonnees": [
                 {
                     "label": "Métadonnée 1",
                     "type": "textarea"
