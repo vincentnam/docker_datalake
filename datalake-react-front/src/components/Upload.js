@@ -68,13 +68,13 @@ export class Upload extends React.Component {
                                 if(meta.type === "number" || meta.type === "text")
                                     return  <div class="mb-3">
                                                 <label class="form-label">{meta.label}</label>
-                                                <input type={meta.type} value={this.state.meta} onChange={this.handleChange} name="meta" class="form-control" />
+                                                <input type={meta.type} onChange={this.handleChange} id={meta.value} class="form-control" />
                                             </div>
                                 
                                 if(meta.type === "textarea")
                                     return  <div class="mb-3">
                                                 <label class="form-label">Métadonnée</label>
-                                                <textarea value={this.state.meta} onChange={this.handleChange} name="meta" class="form-control" rows="3" />
+                                                <textarea onChange={this.handleChange} id={meta.value} class="form-control" rows="3" />
                                             </div>
                                 
                             })
