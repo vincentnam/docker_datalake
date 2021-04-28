@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Header } from './Header';
 import Dropzone from 'react-dropzone';
 import { config } from '../configmeta/config';
@@ -18,6 +18,17 @@ export class Upload extends React.Component {
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+
+        const types = [config.types];
+        types.map((type) => (
+            type.map((t) => {
+                if (t.id === parseInt(this.state.type)) {
+                    t.metadonnees.map((m) => {
+                        [ m.id, m.useState] = useState('');
+                    })
+                }
+            })
+        ));
     }
 
     handleChange(event) {
@@ -31,7 +42,18 @@ export class Upload extends React.Component {
     }
     
     handleSubmit(event) {
-        alert(this.state.type +' '+ this.state.meta + ' '+ JSON.stringify(this.state.files));
+        const types = [config.types];
+        types.map((type) => (
+            type.map((t) => {
+                if (t.id === parseInt(this.state.type)) {
+                    t.metadonnees.map((meta) => {
+                        let m = document.getElementById(meta.id).value;
+                        console.log(m);
+                    })
+                }
+            })
+        ));
+        alert(this.state.type +' '+ this.meta1 + ' '+ JSON.stringify(this.state.files));
         event.preventDefault();
     }
 
@@ -66,15 +88,15 @@ export class Upload extends React.Component {
                         listMeta = (
                             t.metadonnees.map((meta) => {
                                 if(meta.type === "number" || meta.type === "text")
-                                    return  <div class="mb-3">
+                                    return  <div key={meta.id} class="mb-3">
                                                 <label class="form-label">{meta.label}</label>
-                                                <input type={meta.type} onChange={this.handleChange} id={meta.value} class="form-control" />
+                                                <input type={meta.type} id={meta.id} class="form-control" />
                                             </div>
                                 
                                 if(meta.type === "textarea")
-                                    return  <div class="mb-3">
+                                    return  <div key={meta.id} class="mb-3">
                                                 <label class="form-label">Métadonnée</label>
-                                                <textarea onChange={this.handleChange} id={meta.value} class="form-control" rows="3" />
+                                                <textarea id={meta.id} class="form-control" rows="3" />
                                             </div>
                                 
                             })
@@ -103,7 +125,7 @@ export class Upload extends React.Component {
                         </div>
                         <Metadonnees />
                         <div class="form-group">
-                            <Dropzone value={this.state.file} onChange={this.handleChange} name="file" onDrop={this.onDrop}>
+                            <Dropzone value={this.state.file} name="file" onDrop={this.onDrop}>
                                 {({getRootProps, getInputProps}) => (
                                 <section>
                                     <div {...getRootProps({className: 'drop d-flex justify-content-center'})}>
