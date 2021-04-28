@@ -12,7 +12,7 @@ export class Download extends React.Component {
         this.state = {
             files: [],
             meta: '',
-            metier: 0,
+            type: 0,
             data: [],
             file: [],
         };
@@ -31,21 +31,11 @@ export class Download extends React.Component {
     }
     
     handleSubmit(event) {
-        alert(this.state.metier +' '+ this.state.meta + ' '+ JSON.stringify(this.state.files));
+        alert(this.state.type +' '+ this.state.meta + ' '+ JSON.stringify(this.state.files));
         event.preventDefault();
     }
 
-    SelectMetier(){
-        const metiers = config.metiers;
-        const listMetiers = metiers.map((metier) => 
-            <option value={metier.id}>{}</option>
-        );
-        return (
-            <select value={this.state.metier} onChange={this.handleChange} name="metier" class="form-control">
-                {listMetiers}
-            </select>
-        );
-    }
+    
 
     render() {
         const files = this.state.files.map(file => (
@@ -53,6 +43,19 @@ export class Download extends React.Component {
                 {JSON.stringify(file)}
             </li>
         ));
+
+        const SelectMetier = () => {
+            const types = config.types;
+            const listTypes = types.map((type) => 
+                <option value={type.id}>{type.label}</option>
+            );
+            return (
+                <select value={this.state.type} onChange={this.handleChange} name="type" class="form-control">
+                    {listTypes}
+                </select>
+            );
+        }
+
 
         return(
             <div>

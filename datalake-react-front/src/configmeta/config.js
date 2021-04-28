@@ -1,5 +1,10 @@
 export const config = {
-    "metiers": [
+    "types": [
+        {
+            "id": 0,
+            "label": "Veuillez choisir votre type de métadonnée ...",
+            "metadonnee": []
+        },
         {
             "id": 1,
             "label": "Météo",
