@@ -7,7 +7,7 @@ export class Download extends React.Component {
             <div>
                 <Header />
                 <div class="p-4">
-                    <p>Upload</p>
+                    <p>Download</p>
                 </div>
             </div>
         );
