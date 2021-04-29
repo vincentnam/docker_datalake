@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { Header } from './Header';
 import Dropzone from 'react-dropzone';
 import { config } from '../configmeta/config';
+// import api from '../api/api';
 
 export class Upload extends React.Component {
     constructor() {
@@ -18,17 +19,6 @@ export class Upload extends React.Component {
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
-
-        const types = [config.types];
-        types.map((type) => (
-            type.map((t) => {
-                if (t.id === parseInt(this.state.type)) {
-                    t.metadonnees.map((m) => {
-                        [ m.id, m.useState] = useState('');
-                    })
-                }
-            })
-        ));
     }
 
     handleChange(event) {
@@ -53,15 +43,64 @@ export class Upload extends React.Component {
                 }
             })
         ));
-        alert(this.state.type +' '+ this.meta1 + ' '+ JSON.stringify(this.state.files));
+        const dataFiles = [];
+        this.state.files.map((file) => {
+            const typeFile = file.name.slice(file.name.lastIndexOf('.') + 1);
+            let data = null;
+            console.log(typeFile);
+            if (typeFile === "csv") {
+                console.log('csv');
+            }
+            if (typeFile === "excel") {
+                console.log('excel');
+            }
+            if (typeFile === "sql") {
+                console.log('sql');
+            }
+            if (typeFile === "png" || typeFile === 'PNG') {
+                console.log('png');
+            }
+            if (typeFile === "txt") {
+                console.log('txt');
+                var rawFile = new XMLHttpRequest();
+                rawFile.open("GET", `file://${file.name}`, false);
+                rawFile.onreadystatechange = function ()
+                {
+                    if(rawFile.readyState === 4)
+                    {
+                        if(rawFile.status === 200 || rawFile.status === 0)
+                        {
+                            data = rawFile.responseText;
+                        }
+                    }
+                }
+                rawFile.send(null);
+            }
+            dataFiles.push(data);
+        });
+        console.log(dataFiles);
+        alert(this.state.type +' '+ this.meta1 + ' '+ JSON.stringify());
         event.preventDefault();
+        // const type = parseInt(this.state.type);
+        // api.post('/storage', {
+        //     idType: type,
+        //     data: "dataFile",
+        //     meta1: '',
+        //     meta2: '',
+        // })
+        // .then(function (response) {
+        //     console.log(response);
+        // })
+        // .catch(function (error) {
+        //     console.log(error);
+        // });
     }
 
 
     render() {
         const files = this.state.files.map(file => (
             <li key={file.name}>
-                {JSON.stringify(file)}
+                {JSON.stringify(file.name)}
             </li>
         ));
 

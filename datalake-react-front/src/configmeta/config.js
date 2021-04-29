@@ -14,13 +14,11 @@ export const config = {
                     "label": "Métadonnée 1",
                     "type": "text",
                     "id": "meta1",
-                    "useState": "useMeta1"
                 },
                 {
                     "label": "Métadonnée 2",
                     "type": "text",
                     "id": "meta2",
-                    "useState": "useMeta2"
                 }
             ]
         },
@@ -32,19 +30,16 @@ export const config = {
                     "label": "Métadonnée 1",
                     "type": "textarea",
                     "id": "meta1",
-                    "useState": "useMeta1"
                 },
                 {
                     "label": "Métadonnée 2",
                     "type": "text",
                     "id": "meta2",
-                    "useState": "useMeta2"
                 },
                 {
                     "label": "Métadonnée 3",
                     "type": "number",
                     "id": "meta3",
-                    "useState": "useMeta3"
                 }
             ]
         },
@@ -56,7 +51,6 @@ export const config = {
                     "label": "Métadonnée 1",
                     "type": "textarea",
                     "id": "meta1",
-                    "useState": "useMeta1"
                 }
             ]
         }
