@@ -16,6 +16,8 @@ export class Upload extends React.Component {
             type: 0,
             data: [],
             file: [],
+            premieremeta: '',
+            deuxiememeta: '',
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -32,54 +34,52 @@ export class Upload extends React.Component {
     }
     
     handleSubmit(event) {
-        const types = [config.types];
-        types.map((type) => (
-            type.map((t) => {
-                if (t.id === parseInt(this.state.type)) {
-                    t.metadonnees.map((meta) => {
-                        let m = document.getElementById(meta.id).value;
-                        console.log(m);
-                    })
-                }
-            })
-        ));
-        const dataFiles = [];
-        this.state.files.map((file) => {
-            const typeFile = file.name.slice(file.name.lastIndexOf('.') + 1);
-            let data = null;
-            console.log(typeFile);
-            if (typeFile === "csv") {
-                console.log('csv');
-            }
-            if (typeFile === "excel") {
-                console.log('excel');
-            }
-            if (typeFile === "sql") {
-                console.log('sql');
-            }
-            if (typeFile === "png" || typeFile === 'PNG') {
-                console.log('png');
-            }
-            if (typeFile === "txt") {
-                console.log('txt');
-                var rawFile = new XMLHttpRequest();
-                rawFile.open("GET", `file://${file.name}`, false);
-                rawFile.onreadystatechange = function ()
-                {
-                    if(rawFile.readyState === 4)
-                    {
-                        if(rawFile.status === 200 || rawFile.status === 0)
-                        {
-                            data = rawFile.responseText;
-                        }
-                    }
-                }
-                rawFile.send(null);
-            }
-            dataFiles.push(data);
-        });
-        console.log(dataFiles);
-        alert(this.state.type +' '+ this.meta1 + ' '+ JSON.stringify());
+        // const dataFiles = [];
+        // this.state.files.map((file) => {
+        //     const typeFile = file.name.slice(file.name.lastIndexOf('.') + 1);
+        //     let data = null;
+        //     console.log(typeFile);
+        //     if (typeFile === "json") {
+        //         console.log('json');
+        //     }
+        //     if (typeFile === "csv") {
+        //         console.log('csv');
+        //     }
+        //     if (typeFile === "xlsx") {
+        //         console.log('excel');
+        //     }
+        //     if (typeFile === "sql") {
+        //         console.log('sql');
+        //     }
+        //     if (typeFile === "png" || typeFile === 'PNG') {
+        //         console.log('png');
+        //         const fileUri = file.name;
+        //         const httpResponse = fetch(fileUri);
+        //         if (!httpResponse.ok) throw new Error(`${fileUri} not found`);
+                
+        //         const buffer: ArrayBuffer = httpResponse.arrayBuffer();
+        //         const bytes: Uint8Array = new Uint8Array(buffer);
+        //     }
+        //     if (typeFile === "txt") {
+        //         console.log('txt');
+        //         var rawFile = new XMLHttpRequest();
+        //         rawFile.open("GET", `file://${file.name}`, true);
+        //         rawFile.onreadystatechange = function ()
+        //         {
+        //             if(rawFile.readyState === 4)
+        //             {
+        //                 if(rawFile.status === 200 || rawFile.status === 0)
+        //                 {
+        //                     data = rawFile.responseText;
+        //                 }
+        //             }
+        //         }
+        //         rawFile.send(null);
+        //     }
+        //     dataFiles.push(data);
+        // });
+        // console.log(dataFiles);
+        alert(this.state.type +' '+ this.state.premieremeta +' '+ this.state.deuxiememeta + ' '+ JSON.stringify(this.state.files));
         event.preventDefault();
         // const type = parseInt(this.state.type);
         // api.post('/storage', {
@@ -118,39 +118,6 @@ export class Upload extends React.Component {
             );
         }
 
-        const Metadonnees = () => {
-            const types = [config.types];
-            let listMeta = null;
-            types.map((type) => (
-                type.map((t) => {
-                    if (t.id === parseInt(this.state.type)) {
-                        listMeta = (
-                            t.metadonnees.map((meta) => {
-                                if(meta.type === "number" || meta.type === "text")
-                                    return  <div key={meta.id} class="mb-3">
-                                                <label class="form-label">{meta.label}</label>
-                                                <input type={meta.type} id={meta.id} class="form-control" />
-                                            </div>
-                                
-                                if(meta.type === "textarea")
-                                    return  <div key={meta.id} class="mb-3">
-                                                <label class="form-label">Métadonnée</label>
-                                                <textarea id={meta.id} class="form-control" rows="3" />
-                                            </div>
-                                
-                            })
-                        );
-                    }
-                })
-            ));
-            return (
-                <div>
-                    {listMeta}
-                </div>
-                
-            );
-        }
-
 
         return(
             <div>
@@ -162,7 +129,14 @@ export class Upload extends React.Component {
                             <label>Type de métadonnée</label>
                             <SelectMetier />
                         </div>
-                        <Metadonnees />
+                        <div class="mb-3">
+                            <label class="form-label">Métadonnée générique 1</label>
+                            <input type="text" value={this.state.premieremeta} name="premieremeta" onChange={this.handleChange} class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Métadonnée</label>
+                            <textarea value={this.state.deuxiememeta} onChange={this.handleChange} name="deuxiememeta" class="form-control" rows="3" />
+                        </div>
                         <div class="form-group">
                             <Dropzone value={this.state.file} name="file" onDrop={this.onDrop}>
                                 {({getRootProps, getInputProps}) => (
