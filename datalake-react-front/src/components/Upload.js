@@ -116,8 +116,8 @@ export class Upload extends React.Component {
         event.preventDefault();
         // const type = parseInt(this.state.type);
         // api.post('/storage', {
-        //     idType: type,
-        //     data: "dataFile",
+        //     idType: this.state.type,
+        //     data: this.state.files,
         //     meta1: '',
         //     meta2: '',
         // })
