@@ -2,7 +2,7 @@ import React from "react";
 import { Header } from './Header';
 import Dropzone from 'react-dropzone';
 import { config } from '../configmeta/config';
-// import api from '../api/api';
+import api from '../api/api';
 
 export class Upload extends React.Component {
     constructor() {
@@ -44,21 +44,6 @@ export class Upload extends React.Component {
                     if (typeFile === "xlsx") {
                         console.log('excel');
                         // à faire
-                    }
-                    if (typeFile === "sql") {
-                        console.log('sql');
-                        reader.readAsBinaryString(file);
-                        reader.onload = function(e) {
-                            var contents = e.target.result;
-                            var res = contents.split("\n");
-                            let data = {
-                                "type": typeFile,
-                                "data": res
-                            }
-                            f.push(data);
-                            console.log(contents);
-                        };
-                        reader.readAsText(file);
                     }
                     if (typeFile === "png" || typeFile === 'PNG') {
                         console.log('png');
@@ -118,19 +103,19 @@ export class Upload extends React.Component {
     handleSubmit(event) {
         alert(this.state.type +' '+ this.state.premieremeta +' '+ this.state.deuxiememeta + ' '+ JSON.stringify(this.state.files));
         event.preventDefault();
-        // const type = parseInt(this.state.type);
-        // api.post('/storage', {
-        //     idType: this.state.type,
-        //     data: this.state.files,
-        //     meta1: '',
-        //     meta2: '',
-        // })
-        // .then(function (response) {
-        //     console.log(response);
-        // })
-        // .catch(function (error) {
-        //     console.log(error);
-        // });
+        const type = parseInt(this.state.type);
+        api.post('/storage', {
+            idType: type,
+            data: this.state.files,
+            premieremeta: this.state.premieremeta,
+            deuxiememeta: this.state.deuxiememeta,
+        })
+        .then(function (response) {
+            console.log(response);
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
     }
 
 
