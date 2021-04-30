@@ -38,6 +38,7 @@ export class Upload extends React.Component {
                                 "data": csvData
                             }
                             f.push(newData);
+                            console.log(newData);
                         }
                     }
                     if (typeFile === "xlsx") {
@@ -67,7 +68,7 @@ export class Upload extends React.Component {
                                 "data": contents
                             }
                             f.push(data);
-                            console.log(contents);
+                            console.log(data);
                         };
                         reader.readAsDataURL(file);
                     }
@@ -80,7 +81,7 @@ export class Upload extends React.Component {
                                 "data": contents
                             }
                             f.push(data);
-                            console.log(contents);
+                            console.log(data);
                         };
                         reader.readAsText(file);
                     }
