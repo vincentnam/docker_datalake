@@ -8,7 +8,85 @@ export class Upload extends React.Component {
     constructor() {
         super();
         this.onDrop = (files) => {
-            this.setState({files})
+            const f = [];
+            files.map((file) => { 
+                    var reader = new FileReader();
+                    const typeFile = file.name.slice(file.name.lastIndexOf('.') + 1);
+                    if (typeFile === "json") {
+                        console.log('json');
+                        console.log(file);
+                    }
+                    if (typeFile === "csv") {
+                        console.log('csv');
+                        var obj_csv = {
+                            size:0,
+                            dataFile:[]
+                        };
+                        reader.readAsBinaryString(file);
+                        reader.onload = function (e) {
+                            console.log(e);
+                            obj_csv.size = e.total;
+                            obj_csv.dataFile = e.target.result;
+                            const data = obj_csv.dataFile;
+                            let csvData = [];
+                            let lbreak = data.split("\n");
+                            lbreak.forEach(res => {
+                                csvData.push(res.split(","));
+                            });
+                            let newData = {
+                                "type": typeFile,
+                                "data": csvData
+                            }
+                            f.push(newData);
+                        }
+                    }
+                    if (typeFile === "xlsx") {
+                        console.log('excel');
+                    }
+                    if (typeFile === "sql") {
+                        console.log('sql');
+                        reader.readAsBinaryString(file);
+                        reader.onload = function(e) {
+                            var contents = e.target.result;
+                            let data = {
+                                "type": typeFile,
+                                "data": contents
+                            }
+                            f.push(data);
+                            console.log(contents);
+                        };
+                        reader.readAsText(file);
+                    }
+                    if (typeFile === "png" || typeFile === 'PNG') {
+                        console.log('png');
+                        reader.onload = function(e) {
+                            var contents = e.target.result;
+
+                            let data = {
+                                "type": typeFile,
+                                "data": contents
+                            }
+                            f.push(data);
+                            console.log(contents);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                    if (typeFile === "txt") {
+                        console.log('txt');
+                        reader.onload = function(e) {
+                            var contents = e.target.result;
+                            let data = {
+                                "type": typeFile,
+                                "data": contents
+                            }
+                            f.push(data);
+                            console.log(contents);
+                        };
+                        reader.readAsText(file);
+                    }
+                    
+            });
+            this.setState({files: f});
         };
         this.state = {
             files: [],
@@ -34,51 +112,6 @@ export class Upload extends React.Component {
     }
     
     handleSubmit(event) {
-        // const dataFiles = [];
-        // this.state.files.map((file) => {
-        //     const typeFile = file.name.slice(file.name.lastIndexOf('.') + 1);
-        //     let data = null;
-        //     console.log(typeFile);
-        //     if (typeFile === "json") {
-        //         console.log('json');
-        //     }
-        //     if (typeFile === "csv") {
-        //         console.log('csv');
-        //     }
-        //     if (typeFile === "xlsx") {
-        //         console.log('excel');
-        //     }
-        //     if (typeFile === "sql") {
-        //         console.log('sql');
-        //     }
-        //     if (typeFile === "png" || typeFile === 'PNG') {
-        //         console.log('png');
-        //         const fileUri = file.name;
-        //         const httpResponse = fetch(fileUri);
-        //         if (!httpResponse.ok) throw new Error(`${fileUri} not found`);
-                
-        //         const buffer: ArrayBuffer = httpResponse.arrayBuffer();
-        //         const bytes: Uint8Array = new Uint8Array(buffer);
-        //     }
-        //     if (typeFile === "txt") {
-        //         console.log('txt');
-        //         var rawFile = new XMLHttpRequest();
-        //         rawFile.open("GET", `file://${file.name}`, true);
-        //         rawFile.onreadystatechange = function ()
-        //         {
-        //             if(rawFile.readyState === 4)
-        //             {
-        //                 if(rawFile.status === 200 || rawFile.status === 0)
-        //                 {
-        //                     data = rawFile.responseText;
-        //                 }
-        //             }
-        //         }
-        //         rawFile.send(null);
-        //     }
-        //     dataFiles.push(data);
-        // });
-        // console.log(dataFiles);
         alert(this.state.type +' '+ this.state.premieremeta +' '+ this.state.deuxiememeta + ' '+ JSON.stringify(this.state.files));
         event.preventDefault();
         // const type = parseInt(this.state.type);
