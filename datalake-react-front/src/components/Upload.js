@@ -14,7 +14,7 @@ export class Upload extends React.Component {
                     const typeFile = file.name.slice(file.name.lastIndexOf('.') + 1);
                     if (typeFile === "json") {
                         console.log('json');
-                        console.log(file);
+                        // à faire
                     }
                     if (typeFile === "csv") {
                         console.log('csv');
@@ -43,15 +43,17 @@ export class Upload extends React.Component {
                     }
                     if (typeFile === "xlsx") {
                         console.log('excel');
+                        // à faire
                     }
                     if (typeFile === "sql") {
                         console.log('sql');
                         reader.readAsBinaryString(file);
                         reader.onload = function(e) {
                             var contents = e.target.result;
+                            var res = contents.split("\n");
                             let data = {
                                 "type": typeFile,
-                                "data": contents
+                                "data": res
                             }
                             f.push(data);
                             console.log(contents);
@@ -62,10 +64,10 @@ export class Upload extends React.Component {
                         console.log('png');
                         reader.onload = function(e) {
                             var contents = e.target.result;
-
+                            let result = contents.slice(contents.lastIndexOf(',') + 1);
                             let data = {
                                 "type": typeFile,
-                                "data": contents
+                                "data": result
                             }
                             f.push(data);
                             console.log(data);
@@ -76,9 +78,10 @@ export class Upload extends React.Component {
                         console.log('txt');
                         reader.onload = function(e) {
                             var contents = e.target.result;
+                            var res = contents.split("\n");
                             let data = {
                                 "type": typeFile,
-                                "data": contents
+                                "data": res
                             }
                             f.push(data);
                             console.log(data);
