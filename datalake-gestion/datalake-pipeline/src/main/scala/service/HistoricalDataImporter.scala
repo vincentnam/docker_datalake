@@ -1,17 +1,17 @@
 package service
 
+import config.Configuration
 import model.Sensor
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 
-object HistoricalDataImporter {
+import java.io.File
+
+class HistoricalDataImporter(conf: Configuration) {
 
   val spark = SparkSession
     .builder.appName("test")
     .master ("local[*]")
     .getOrCreate()
-
-
 
   import spark.implicits._
 
@@ -20,13 +20,14 @@ object HistoricalDataImporter {
    * @param path
    * @return
    */
-  def importData(path: String): RDD[Row] = {
+  def importData(path: String): DataFrame = {
     val inputCSV = spark
       .read
       .format("csv")
       .option("header", "true")
       .load(path)
-      .rdd
+
+    val file = new File(path)
 
     inputCSV
   }
@@ -47,13 +48,5 @@ object HistoricalDataImporter {
       row.getAs[String]("payload.subID"),
       row.getAs[String]("payload.unitID"),
     )
-  }
-
-  def insertData: Unit = {
-
-  }
-
-  def insertMetadata: Unit = {
-
   }
 }

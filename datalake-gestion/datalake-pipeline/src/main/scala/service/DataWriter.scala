@@ -1,17 +1,19 @@
 package service
 
+import config.Configuration
 import org.javaswift.joss.client.factory.{AccountFactory, AuthenticationMethod}
+import org.javaswift.joss.model.StoredObject
 
-import java.io.ByteArrayInputStream
+import java.io.{ByteArrayInputStream, File}
+import scala.util.{Failure, Success, Try}
 
-object DataWriter {
+class DataWriter(conf: Configuration) {
   val account = new AccountFactory()
     .setAuthenticationMethod(AuthenticationMethod.BASIC)
-    .setUsername("test:tester")
-    .setPassword("testing")
-    .setAuthUrl("http://10.200.156.252:8080/auth/v1.0")
+    .setUsername(conf.swiftUser)
+    .setPassword(conf.swiftPwd)
+    .setAuthUrl("http://"+ conf.swiftHost +":"+ conf.swiftPort + "/auth/v1.0")
     .createAccount()
-  println(account.list().size())
 
   /**
    *
@@ -19,7 +21,7 @@ object DataWriter {
    * @param id id to get from Mongo
    * @param blob data to be stored
    */
-  def put(containerName: String, id: String, blob: Array[Byte]) = {
+  def put(containerName: String, id: String, blob: Array[Byte]): Try[StoredObject] = {
     // get or create container
     val container = account.getContainer(containerName)
     if(!container.exists()) {
@@ -29,9 +31,22 @@ object DataWriter {
     val inputStream = new ByteArrayInputStream(blob)
     val obj = container.getObject(id)
 
-    obj.uploadObject(inputStream)
+    try {
+      obj.uploadObject(inputStream)
+      Success(obj)
+    } catch {
+      case e: Exception => {
+        Failure(e)
+      }
+    }
   }
 
+  /**
+   *
+   * @param containerName
+   * @param id
+   * @return
+   */
   def get(containerName: String, id: String) = {
     val container = account.getContainer(containerName)
     val obj = container.getObject(id)

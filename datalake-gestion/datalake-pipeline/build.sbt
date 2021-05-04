@@ -23,3 +23,5 @@ libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.12.8"
 
 // https://mvnrepository.com/artifact/com.google.code.gson/gson
 libraryDependencies += "com.google.code.gson" % "gson" % "2.8.6"
+
+libraryDependencies += "com.typesafe" % "config" % "1.4.1"
