@@ -17,17 +17,16 @@ class HistoricalDataImporter(conf: Configuration) {
 
   /**
    *
-   * @param path
    * @return
    */
-  def importData(path: String): DataFrame = {
+  def importData(): DataFrame = {
     log.info("Importing csv file")
 
     val inputCSV = spark
       .read
       .format("csv")
       .option("header", "true")
-      .load(path)
+      .load(conf.csvPath)
 
     inputCSV
   }

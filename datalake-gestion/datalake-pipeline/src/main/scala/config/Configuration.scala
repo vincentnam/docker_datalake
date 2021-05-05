@@ -12,6 +12,7 @@ class Configuration(config: Config) extends Serializable {
   val swiftPort = config.getString("swift.port")
   val swiftUser = config.getString("swift.user")
   val swiftPwd = config.getString("swift.pass")
+  val csvPath = config.getString("data.path")
 
   val appName = config.getString("app.name")
 
