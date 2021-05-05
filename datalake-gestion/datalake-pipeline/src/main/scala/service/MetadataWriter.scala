@@ -8,6 +8,8 @@ import config.Configuration
 
 class MetadataWriter(conf: Configuration) {
 
+  @transient lazy val log = org.apache.log4j.LogManager.getLogger(getClass.getName)
+
   val mongodbUri = "mongodb://" + conf.mongoHost + ":" + conf.mongoPort + "/"
 
   val spark = SparkSession
@@ -37,6 +39,8 @@ class MetadataWriter(conf: Configuration) {
           dataProcess: String, application: String, originalObjectName: String,successfulOperations: Array[String],
           failedOperations: Array[String], otherData: String)= {
 
+    log.info("Writing metadata to Swift database")
+
     val historicalMetaData = HistoricalMetaData(contentType,dataProcess, swiftUser, containerName, id, application, originalObjectName,
       successfulOperations, failedOperations, processedDataAreaService, otherData)
 
@@ -58,6 +62,8 @@ class MetadataWriter(conf: Configuration) {
    *
    */
   def putIntoStatsAndGetSwiftId(): Int = {
+
+    log.info("Getting last swift ID for new object")
 
     val swiftCollection = spark.read.format("com.mongodb.spark.sql.DefaultSource")
       .options(Map("uri" -> mongodbUri, "database" -> "stats", "collection" -> "swift")).load()
@@ -98,6 +104,9 @@ class MetadataWriter(conf: Configuration) {
    *  Used to reset id if insertion to Openstack Swift failed
    */
   def resetLastSwiftId(): Unit = {
+
+    log.info("Reseting last swift ID")
+
     val swiftCollection = spark.read.format("com.mongodb.spark.sql.DefaultSource")
       .options(Map("uri" -> mongodbUri, "database" -> "stats", "collection" -> "swift")).load()
 

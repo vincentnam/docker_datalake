@@ -4,12 +4,12 @@ import config.Configuration
 import model.Sensor
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 
-import java.io.File
-
 class HistoricalDataImporter(conf: Configuration) {
 
+  @transient lazy val log = org.apache.log4j.LogManager.getLogger(getClass.getName)
+
   val spark = SparkSession
-    .builder.appName("test")
+    .builder
     .master ("local[*]")
     .getOrCreate()
 
@@ -21,13 +21,13 @@ class HistoricalDataImporter(conf: Configuration) {
    * @return
    */
   def importData(path: String): DataFrame = {
+    log.info("Importing csv file")
+
     val inputCSV = spark
       .read
       .format("csv")
       .option("header", "true")
       .load(path)
-
-    val file = new File(path)
 
     inputCSV
   }

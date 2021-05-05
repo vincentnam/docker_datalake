@@ -5,4 +5,4 @@ target/
 .vscode/
 null/
 project/
-META-INF/
+*/META-INF/*
