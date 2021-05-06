@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import os
 from flask import Flask, jsonify, request, send_file, url_for
 import io, pathlib
@@ -9,12 +8,7 @@ app = Flask(
     __name__,
     static_folder='static'    
 )
-=======
-from flask import Flask, jsonify, request
-from flask_cors import CORS
 
-app = Flask(__name__)
->>>>>>> f703551... added API route to get metadata - selection items and pagination
 CORS(app)
 
 @app.route('/')
@@ -28,11 +22,7 @@ def get_metadata():
     limit = request.args.get('limit', type = int)
     offset = request.args.get('offset', type = int)
 
-<<<<<<< HEAD
     mongoClient = pymongo.MongoClient(os.environ.get('url'))
-=======
-    mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
->>>>>>> f703551... added API route to get metadata - selection items and pagination
     db = mongoClient["swift"]
     collection = db["neocampus"]
     nb_objects = collection.find().count()
@@ -50,7 +40,6 @@ def get_metadata():
     print(output)
 
     return jsonify({'result' : output})
-<<<<<<< HEAD
   
 '''def get_all_file_paths(directory):
   
@@ -95,9 +84,6 @@ def getPlotCSV():
     full_url = request.url_root + url_for('static', filename='my_python_files.zip')
     return full_url
     '''
-=======
->>>>>>> f703551... added API route to get metadata - selection items and pagination
-
 
 if __name__ == '__main__':
     app.run()
