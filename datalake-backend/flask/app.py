@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 
@@ -15,7 +16,7 @@ def get_metadata():
     limit = request.args.get('limit', type = int)
     offset = request.args.get('offset', type = int)
 
-    mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
+    mongoClient = pymongo.MongoClient(os.environ.get('url'))
     db = mongoClient["swift"]
     collection = db["neocampus"]
     nb_objects = collection.find().count()
