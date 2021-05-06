@@ -32,7 +32,7 @@ export class Download extends React.Component {
                 this.setState(
                     { elements: res.data }
                 );
-            })
+        })
     }
 
     getElements() {
@@ -144,7 +144,7 @@ export class Download extends React.Component {
 
                             }) }
 
-                            <div class="commentBox">
+                         <div class="commentBox">
 
                                 <ReactPaginate
                                     previousLabel={'previous'}
@@ -167,7 +167,7 @@ export class Download extends React.Component {
                                     nextClassName={'page-item'}
                                     nextLinkClassName={'page-link'}
                                 />
-                            </div>
+                        </div>
                                
                         </tbody>
                     </table>
