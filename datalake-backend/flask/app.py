@@ -37,7 +37,6 @@ def get_metadata():
         })
     
     output['length'] = nb_objects
-    print(output)
 
     return jsonify({'result' : output})
   

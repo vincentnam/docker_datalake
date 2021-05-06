@@ -11,6 +11,8 @@ services:
     command: ./entrypoint.sh
     expose:
       - "5000"
+    environments :
+      - URL="mongodb://localhost:27017/"
     restart: always
 
   nginx:
