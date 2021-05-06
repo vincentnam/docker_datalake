@@ -8,7 +8,7 @@ import $ from 'jquery';
 export class Download extends React.Component {
     selectedElements = []
     elements = {}
-    url = "http://127.0.0.1:5000/raw-data"
+    url = process.env.REACT_APP_ENDPOINT
     perPage = 3
 
     constructor(props) {
@@ -24,17 +24,6 @@ export class Download extends React.Component {
             elements: {},
             offset: 0
         };
-
-        /*this.elements = { 
-            0: { id: 2, title: 4, metadata: 7 }, 
-            1: { id: 0, title: 10, metadata: 0}, 
-            2: { id: 0, title: 0, metadata: 0 }, 
-            3: { id: 0, title: 0, metadata: 0 }, 
-            4: { id: 0, title: 0, metadata: 0 }, 
-            5: { id: 0, title: 0, metadata: 0 } 
-        }*/
-
-
     }
 
     componentDidMount(){
@@ -71,6 +60,31 @@ export class Download extends React.Component {
         console.log('validation data');
         let selectedElements = this.getSelectedElements()
         console.log(selectedElements)
+
+        /*$.ajax({
+            url: this.url + '/raw-file',
+            type: 'GET',
+      
+            success: (data) => {
+                let content = data
+                var blob = new Blob([data], {type: "octet/stream"});
+                console.log('blob')
+                console.log(blob)
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+
+                // TODO : get dynamically
+                link.download = 'sensors.csv'
+                
+                link.click();
+                window.URL.revokeObjectURL(url);
+            },
+      
+            error: (xhr, status, err) => {
+              console.error(this.url, status, err.toString()); // eslint-disable-line
+            },
+          });*/
     }
 
     componentDidMount() {
@@ -88,7 +102,7 @@ export class Download extends React.Component {
 
     loadObjectsFromServer() {
         $.ajax({
-          url: this.url,
+          url: this.url + '/raw-data',
           data: { limit: this.perPage, offset: this.state.offset },
           dataType: 'json',
           type: 'GET',
@@ -108,10 +122,8 @@ export class Download extends React.Component {
 
     render() {
         let elts = []
-        console.log(this.state.elements)
         if(this.state.elements){
             elts = this.state.elements
-            console.log(elts)
         }
         let selectedElements = this.state.selectedElements
         let handler = this.handler
@@ -135,7 +147,7 @@ export class Download extends React.Component {
                                 
                             { Object.keys(elts).map(function(key, index){ 
             
-                                return <RowItem key={index} item={elts[key]} handler={handler} />
+                                return <RowItem key={index} item={elts[key]} handler={handler} selectedElements={selectedElements} />
 
                             }) }
 
