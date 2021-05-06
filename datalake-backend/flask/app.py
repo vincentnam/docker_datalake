@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -34,6 +34,14 @@ def get_metadata():
 
     return jsonify({'result' : output})
 
+'''@app.route("/raw-file")
+def getPlotCSV():
+    return send_file('sensors.csv',
+        mimetype='text/csv',
+        attachment_filename='sensors.csv',
+        as_attachment=True
+    )
+'''
 
 if __name__ == '__main__':
     app.run()
