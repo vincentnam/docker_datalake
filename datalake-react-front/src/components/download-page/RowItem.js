@@ -1,15 +1,16 @@
 import React from "react";
-import Moment from 'moment';
 
 export class RowItem extends React.Component {
 
     constructor(props) {
         super(props);
         this.props = props
+        console.log(this.props)
     }
 
     handleChange = (event) => {
         let selectedElement = { 
+            id: this.props.item.id,
             title: this.props.item.title, 
             metadata: this.props.item.metadata
         }
@@ -21,10 +22,9 @@ export class RowItem extends React.Component {
     render() {
         return(
             <tr>
-                <td scope="row">{ this.props.item.swift_object_id }</td>
-                <td>{ this.props.item.swift_user }</td>
-                <td>{ this.props.item.original_object_name }</td>
-                <td>{ Moment(this.props.item.creation_date).format('YYYY-MM-DD hh:mm:ss') }</td>
+                <th scope="row">{ this.props.item.id }</th>
+                <td>{ this.props.item.title }</td>
+                <td>{ this.props.item.metadata }</td>
                 <td>
                     <div class="form-check">
                         <input class="form-check-input" onChange={this.handleChange} type="checkbox" value="" id="flexCheckDefault" />
