@@ -61,7 +61,7 @@ export class Download extends React.Component {
         let selectedElements = this.getSelectedElements()
         console.log(selectedElements)
 
-        /*$.ajax({
+        $.ajax({
             url: this.url + '/raw-file',
             type: 'GET',
       
@@ -77,7 +77,7 @@ export class Download extends React.Component {
             error: (xhr, status, err) => {
               console.error(this.url, status, err.toString()); // eslint-disable-line
             },
-          });*/
+          });
     }
 
     componentDidMount() {
