@@ -4,14 +4,16 @@ import './index.css';
 import reportWebVitals from './reportWebVitals';
 import 'bootstrap/dist/css/bootstrap.css';
 import { Home } from './components/Home';
+import { Header } from './components/Header';
 import { DataViz } from './components/DataViz';
 import { Upload } from './components/Upload';
+import { Download } from './components/Download';
 import {
   BrowserRouter as Router,
   Switch,
-  Route
+  Route,
+  Link
 } from 'react-router-dom';
-import { Download } from './components/download-page/Download';
 
 ReactDOM.render(
   <React.StrictMode>
