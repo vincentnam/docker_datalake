@@ -2,28 +2,16 @@ import React from "react";
 import Moment from 'moment';
 
 export class RowItem extends React.Component {
-    checked = false
 
     constructor(props) {
         super(props);
         this.props = props
     }
 
-    isSelected() {
-        if(this.props.selectedElements) {
-            if(this.props.selectedElements.includes(this.props.item)){
-                return true
-            }
-        }
-    }
-
     handleChange = (event) => {
-
         let selectedElement = { 
-            swift_object_id: this.props.item.swift_object_id,
-            swift_user: this.props.item.swift_user, 
-            original_object_name: this.props.item.original_object_name,
-            creation_date: this.props.item.creation_date
+            title: this.props.item.title, 
+            metadata: this.props.item.metadata
         }
         
 
@@ -31,7 +19,6 @@ export class RowItem extends React.Component {
     }
 
     render() {
-
         return(
             <tr>
                 <td scope="row">{ this.props.item.swift_object_id }</td>
