@@ -9,10 +9,11 @@ services:
       - ./flask:/app
       - ./flask/uwsgi/log:/var/uwsgi/log
     command: ./entrypoint.sh
+    environment:
+      - FLASK_APP=neocampus
+      - FLASK_ENV=production
     expose:
       - "5000"
-    environments :
-      - URL="mongodb://localhost:27017/"
     restart: always
 
   nginx:

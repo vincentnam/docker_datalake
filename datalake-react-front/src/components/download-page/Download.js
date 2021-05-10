@@ -27,12 +27,12 @@ export class Download extends React.Component {
     }
 
     componentDidMount(){
-        /*axios.get(this.url)
+        axios.get(this.url)
             .then(res => {
                 this.setState(
                     { elements: res.data }
                 );
-            })*/
+        })
     }
 
     getElements() {
@@ -125,20 +125,6 @@ export class Download extends React.Component {
         if(this.state.elements){
             elts = this.state.elements
         }
-        elts = [
-            {
-                swift_object_id: "1",
-                swift_user: "1", 
-                original_object_name: "Name 1",
-                creation_date: "2019-01-01 08:00:00"
-            },
-            {
-                swift_object_id: "2",
-                swift_user: "2", 
-                original_object_name: "Name 2",
-                creation_date: "2019-01-01 09:00:00"
-            }
-        ]
         let selectedElements = this.state.selectedElements
         let handler = this.handler
 
@@ -165,7 +151,7 @@ export class Download extends React.Component {
 
                             }) }
 
-                         { /*<div class="commentBox">
+                         <div class="commentBox">
 
                                 <ReactPaginate
                                     previousLabel={'previous'}
@@ -188,7 +174,7 @@ export class Download extends React.Component {
                                     nextClassName={'page-item'}
                                     nextLinkClassName={'page-link'}
                                 />
-                        </div> */ }
+                        </div>
                                
                         </tbody>
                     </table>
