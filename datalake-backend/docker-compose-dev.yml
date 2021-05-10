@@ -8,7 +8,7 @@ services:
     volumes:
       - ./flask:/app
     environment:
-      - FLASK_APP=app.py
+      - FLASK_APP=neocampus
       - FLASK_ENV=development
     command: flask run --host=0.0.0.0
     ports:
