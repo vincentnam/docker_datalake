@@ -54,7 +54,6 @@ def storage():
     if idType == 3:
         print("Autres capteurs")
         
-    print("test")
     retour = dict()
     retour = {"retour": {
         "idT": idType,
