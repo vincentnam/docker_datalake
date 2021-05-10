@@ -10,7 +10,6 @@ CORS(app)
 def hello():
     return 'Hello Modis!'
 
-<<<<<<< HEAD
 @app.route('/storage', methods= ['GET', 'POST'])
 def storage(self):
     idType = request.form['idType']
