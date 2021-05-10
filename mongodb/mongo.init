@@ -1,0 +1,8 @@
+#create stats db
+use stats
+
+#create swift collection with an index on _id
+db.createCollection("swift", { autoIndexID : true })
+
+#create swit db
+use swift
