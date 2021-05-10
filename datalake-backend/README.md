@@ -1,6 +1,14 @@
 # Web Service
 
-Run
+### Config
+
+Create the config file and set the variables for the current environment
+
+```
+cp flask/neocampus/config.py.sample flask/neocampus/config.py
+```
+
+### Run
 
 - production
     ```shell
@@ -11,13 +19,13 @@ Run
     docker-compose -f docker-compose-dev.yml up -d
     ```
 
-Stop
+### Stop
 
 ```shell
 docker-compose down
 ```
 
-Monitor log
+### Monitor log
 
 ```shell
 docker-compose logs -f

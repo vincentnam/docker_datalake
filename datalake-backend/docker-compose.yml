@@ -9,6 +9,9 @@ services:
       - ./flask:/app
       - ./flask/uwsgi/log:/var/uwsgi/log
     command: ./entrypoint.sh
+    environment:
+      - FLASK_APP=neocampus
+      - FLASK_ENV=production
     expose:
       - "5000"
     restart: always
