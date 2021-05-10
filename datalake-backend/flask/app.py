@@ -1,7 +1,7 @@
 import os
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
-
+import pymongo
 
 app = Flask(__name__)
 CORS(app)
@@ -10,23 +10,32 @@ CORS(app)
 def hello():
     return 'Hello Modis!'
 
-@app.route('/storage', methods= ['GET', 'POST'])
-def storage(self):
-    idType = request.form['idType']
+@app.route('/storage')
+def storage():
+    idType = request.args.get('idType')
     print(idType)
-    data =  request.form['data']
+    data =  request.args.get('data')
     print(data)
-    premieremeta =  request.form['premieremeta']
+    premieremeta =  request.args.get('premieremeta')
     print(premieremeta)
-    deuxiememeta =  request.form['deuxiememeta']
+    deuxiememeta =  request.args.get('deuxiememeta')
     print(deuxiememeta)
     
-    return 'storage'
+    retour = dict()
+    retour = {"retour": {
+        "idType": idType,
+        "data": data,
+        "premieremeta": premieremeta,
+        "deuxiememeta": deuxiememeta
+    }}
+    print(retour)
+    
+    return jsonify(retour)
 
 
 @app.route('/raw-data')
 def get_metadata():
-    import pymongo
+
 
     limit = request.args.get('limit', type = int)
     offset = request.args.get('offset', type = int)
