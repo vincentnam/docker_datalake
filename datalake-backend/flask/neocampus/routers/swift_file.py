@@ -3,6 +3,7 @@ import uuid
 from zipfile import ZipFile
 from flask import Blueprint, jsonify, current_app, request, send_from_directory
 from ..services import swift
+from ..services import mongo
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
@@ -44,23 +45,31 @@ def storage():
     data =  request.get_json()["data"]
     premieremeta =  request.get_json()["premieremeta"]
     deuxiememeta =  request.get_json()["deuxiememeta"]
+    meta = dict()
+    meta = {
+        "idT": idType,
+        "meta1": premieremeta,
+        "meta2": deuxiememeta
+    }
+    
+    print(meta)
+    
+    resultMongo = mongo.add_data_in_collection('neocampus', meta)
     
     if idType == 1:
         print("Météo")
+        resultSwift = swift.upload_object_file('container_name', resultMongo['original_object_name'], data)
         
     if idType == 2:
         print("Capteur")
-        
+        resultSwift = swift.upload_object_file('container_name', resultMongo['original_object_name'], data)
+
     if idType == 3:
         print("Autres capteurs")
-        
-    retour = dict()
-    retour = {"retour": {
-        "idT": idType,
-        "data": data,
-        "meta1": premieremeta,
-        "meta2": deuxiememeta
-    }}
-    
-    return retour
+        resultSwift = swift.upload_object_file('container_name', resultMongo['original_object_name'], data)
+
+    return jsonify({
+        "mongo": resultMongo,
+        "swift": resultSwift
+        })
 

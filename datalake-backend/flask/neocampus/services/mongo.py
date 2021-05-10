@@ -28,3 +28,15 @@ def get_collections(db_name, offset, limit):
     collections = collection.find().skip(offset).limit(limit)
 
     return nb_objects, collections
+
+def add_data_in_collection(db_name, document):
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.swift
+    collection = mongo_db[db_name]
+
+    collection.insert_one(document)
+    
+    cursor = collection.find().one()
+    return cursor
+
