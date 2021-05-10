@@ -45,6 +45,7 @@ def storage():
     data =  request.get_json()["data"]
     premieremeta =  request.get_json()["premieremeta"]
     deuxiememeta =  request.get_json()["deuxiememeta"]
+    filesType =  request.get_json()["filesType"]
     meta = dict()
     meta = {
         "idT": idType,
@@ -58,15 +59,15 @@ def storage():
     
     if idType == 1:
         print("Météo")
-        resultSwift = swift.upload_object_file('container_name', resultMongo['original_object_name'], data)
+        resultSwift = swift.upload_object_file('container_name', resultMongo['original_object_name'], data, filesType)
         
     if idType == 2:
         print("Capteur")
-        resultSwift = swift.upload_object_file('container_name', resultMongo['original_object_name'], data)
+        resultSwift = swift.upload_object_file('container_name', resultMongo['original_object_name'], data, filesType)
 
     if idType == 3:
         print("Autres capteurs")
-        resultSwift = swift.upload_object_file('container_name', resultMongo['original_object_name'], data)
+        resultSwift = swift.upload_object_file('container_name', resultMongo['original_object_name'], data, filesType)
 
     return jsonify({
         "mongo": resultMongo,

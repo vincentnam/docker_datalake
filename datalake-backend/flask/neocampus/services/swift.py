@@ -27,7 +27,7 @@ def download_object_file(container_name, object_id):
     return file_path
 
 
-def upload_object_file(container_name, object_id, data):
+def upload_object_file(container_name, object_id, data, filesType):
     """
     convert swift object to file and down it
     :param container_name: swift container name
