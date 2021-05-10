@@ -37,3 +37,21 @@ def swift_files():
 def download(filename):
     swift_files_directory = os.path.join(current_app.root_path, current_app.config['SWIFT_FILES_DIRECTORY'])
     return send_from_directory(directory=swift_files_directory, filename=filename)
+
+@swift_file_bp.route('/storage', methods=['POST'])
+def storage():
+    idType = request.get_json()["idType"]
+    data =  request.get_json()["data"]
+    premieremeta =  request.get_json()["premieremeta"]
+    deuxiememeta =  request.get_json()["deuxiememeta"]
+    
+    retour = dict()
+    retour = {"retour": {
+        "idT": idType,
+        "data": data,
+        "meta1": premieremeta,
+        "meta2": deuxiememeta
+    }}
+    
+    return retour
+
