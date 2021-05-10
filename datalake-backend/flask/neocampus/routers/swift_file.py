@@ -45,6 +45,16 @@ def storage():
     premieremeta =  request.get_json()["premieremeta"]
     deuxiememeta =  request.get_json()["deuxiememeta"]
     
+    if idType == 1:
+        print("Météo")
+        
+    if idType == 2:
+        print("Capteur")
+        
+    if idType == 3:
+        print("Autres capteurs")
+        
+        
     retour = dict()
     retour = {"retour": {
         "idT": idType,
