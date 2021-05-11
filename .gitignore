@@ -8,3 +8,4 @@ Talend
 .idea
 venv
 __pycache__/
+reference.conf
