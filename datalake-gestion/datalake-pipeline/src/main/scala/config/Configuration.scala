@@ -21,5 +21,5 @@ class Configuration(config: Config) extends Serializable {
     .master ("local[*]")
     .getOrCreate()
 
-  spark.sparkContext.setLogLevel("INFO")
+  spark.sparkContext.setLogLevel("ERROR")
 }

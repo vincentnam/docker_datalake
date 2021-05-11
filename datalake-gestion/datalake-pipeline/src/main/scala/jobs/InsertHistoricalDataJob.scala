@@ -13,7 +13,7 @@ object InsertHistoricalDataJob {
 
   val projectName = "neOCampus"
 
-  def insert(): Unit ={
+  def start(): Unit ={
     log.info("Launching historical neOCampus data insertion into Data Lake")
 
     val configuration: Config = ConfigFactory.load()
@@ -30,7 +30,7 @@ object InsertHistoricalDataJob {
 
     val dataWriter = new DataWriter(conf)
 
-    val inserted = dataWriter.put("neoCampus", id.toString, Serialization.serialization(data))
+    val inserted = dataWriter.put("neOCampus", id.toString, Serialization.serialization(data))
 
     // handle atomic insertion & failure
     inserted match {
@@ -41,7 +41,7 @@ object InsertHistoricalDataJob {
           "sensors.csv",null,null,null)
       }
       case Failure(exception) => {
-        println(s"Execption Occured while inserting data into data lake. Reseting swift Id : $exception")
+        log.error(s"Execption Occured while inserting data into data lake. Reseting swift Id : $exception")
         metadataWriter.resetLastSwiftId()
       }
     }

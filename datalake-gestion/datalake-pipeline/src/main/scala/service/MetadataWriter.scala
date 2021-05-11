@@ -112,8 +112,6 @@ class MetadataWriter(conf: Configuration) {
 
     val lastId = swiftCollection.select("object_id").first().getInt(0) - 1
 
-    println(s"last id : $lastId")
-
     if(lastId >= 0)
       swiftCollection.withColumn("object_id", lit(lastId)).write
         .format("com.mongodb.spark.sql.DefaultSource")

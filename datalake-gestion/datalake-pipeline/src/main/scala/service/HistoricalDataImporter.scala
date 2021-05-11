@@ -10,7 +10,7 @@ class HistoricalDataImporter(conf: Configuration) {
 
   val spark = SparkSession
     .builder
-    .master ("local[*]")
+    .master ("local[*]") // To change on cluster mode
     .getOrCreate()
 
   import spark.implicits._
