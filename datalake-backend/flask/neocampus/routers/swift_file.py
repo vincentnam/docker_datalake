@@ -3,7 +3,6 @@ import uuid
 from zipfile import ZipFile
 from flask import Blueprint, jsonify, current_app, request, send_from_directory
 from ..services import swift
-from ..services import mongo
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
@@ -42,35 +41,24 @@ def download(filename):
 @swift_file_bp.route('/storage', methods=['POST'])
 def storage():
     idType = request.get_json()["idType"]
-    data =  request.get_json()["data"]
+    file =  request.get_json()["file"]
     premieremeta =  request.get_json()["premieremeta"]
     deuxiememeta =  request.get_json()["deuxiememeta"]
-    filesType =  request.get_json()["filesType"]
+    typeFile =  request.get_json()["typeFile"]
     meta = dict()
     meta = {
         "idT": idType,
+        "file": file,
+        "typeFile": typeFile,
         "meta1": premieremeta,
         "meta2": deuxiememeta
     }
     
+    meta = request.get_json()
+    
     print(meta)
     
-    resultMongo = mongo.add_data_in_collection('neocampus', meta)
-    
-    if idType == 1:
-        print("Météo")
-        resultSwift = swift.upload_object_file('container_name', resultMongo['original_object_name'], data, filesType)
-        
-    if idType == 2:
-        print("Capteur")
-        resultSwift = swift.upload_object_file('container_name', resultMongo['original_object_name'], data, filesType)
+    # resultMongo = mongo.add_data_in_collection('neocampus', meta)
 
-    if idType == 3:
-        print("Autres capteurs")
-        resultSwift = swift.upload_object_file('container_name', resultMongo['original_object_name'], data, filesType)
-
-    return jsonify({
-        "mongo": resultMongo,
-        "swift": resultSwift
-        })
+    return jsonify(meta)
 

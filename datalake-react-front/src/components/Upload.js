@@ -10,79 +10,20 @@ export class Upload extends React.Component {
         this.onDrop = (files) => {
             const f = [];
             files.map((file) => { 
-                    var reader = new FileReader();
-                    const typeFile = file.name.slice(file.name.lastIndexOf('.') + 1);
-                    if (typeFile === "json") {
-                        console.log('json');
-                        // à faire
-                    }
-                    if (typeFile === "csv") {
-                        console.log('csv');
-                        var obj_csv = {
-                            size:0,
-                            dataFile:[]
-                        };
-                        reader.readAsBinaryString(file);
-                        reader.onload = function (e) {
-                            console.log(e);
-                            obj_csv.size = e.total;
-                            obj_csv.dataFile = e.target.result;
-                            const data = obj_csv.dataFile;
-                            let csvData = [];
-                            let lbreak = data.split("\n");
-                            lbreak.forEach(res => {
-                                csvData.push(res.split(","));
-                            });
-                            let newData = {
-                                "type": typeFile,
-                                "data": csvData
-                            }
-                            f.push(newData);
-                            console.log(newData);
-                        }
-                    }
-                    if (typeFile === "xlsx") {
-                        console.log('excel');
-                        // à faire
-                    }
-                    if (typeFile === "png" || typeFile === 'PNG') {
-                        console.log('png');
-                        reader.onload = function(e) {
-                            var contents = e.target.result;
-                            let result = contents.slice(contents.lastIndexOf(',') + 1);
-                            let data = {
-                                "type": typeFile,
-                                "data": result
-                            }
-                            f.push(data);
-                            console.log(data);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                    if (typeFile === "txt") {
-                        console.log('txt');
-                        reader.onload = function(e) {
-                            var contents = e.target.result;
-                            var res = contents.split("\n");
-                            let data = {
-                                "type": typeFile,
-                                "data": res
-                            }
-                            f.push(data);
-                            console.log(data);
-                        };
-                        reader.readAsText(file);
-                    }
-                    
+                const typeFile = file.name.slice(file.name.lastIndexOf('.') + 1);
+                this.setState({typeFile: typeFile});
+                const filename = file.name.split('.')[0]
+                this.setState({file: filename});
             });
-            this.setState({files: f});
+            
         };
         this.state = {
             files: [],
             meta: '',
+            typeFile: '',
             type: 0,
             data: [],
-            file: [],
+            file: '',
             premieremeta: '',
             deuxiememeta: '',
         };
@@ -101,12 +42,13 @@ export class Upload extends React.Component {
     }
     
     handleSubmit(event) {
-        alert(this.state.type +' '+ this.state.premieremeta +' '+ this.state.deuxiememeta + ' '+ JSON.stringify(this.state.files));
         event.preventDefault();
+        let headers = {'Accept': "application/json"}
         const type = parseInt(this.state.type);
-        api.post('/storage', {
+        api.post('http://localhost/storage', {
             idType: type,
-            data: this.state.files,
+            typeFile: this.state.typeFile,
+            file: this.state.file,
             premieremeta: this.state.premieremeta,
             deuxiememeta: this.state.deuxiememeta,
         })
