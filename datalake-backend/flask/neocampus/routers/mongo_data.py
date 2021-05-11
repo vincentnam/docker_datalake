@@ -4,12 +4,18 @@ from ..services import mongo
 mongo_data_bp = Blueprint('mongo_data_bp', __name__)
 
 
-@mongo_data_bp.route('/raw-data')
+@mongo_data_bp.route('/raw-data', methods=['POST'])
 def get_metadata():
-    limit = request.args.get('limit', type=int)
-    offset = request.args.get('offset', type=int)
+    params = {
+        'limit': request.get_json()['limit'],
+        'offset': request.get_json()['offset'],
+        'filetype': request.get_json()['filetype'],
+        'beginDate': request.get_json()['beginDate'],
+        'endDate': request.get_json()['endDate']
+    }
 
-    nb_objects, mongo_collections = mongo.get_collections("neocampus", offset, limit)
+    nb_objects, mongo_collections = mongo.get_metadata("neocampus", params)
+    mongo_collections = list(mongo_collections)
 
     output = {'objects': []}
     for obj in mongo_collections:
