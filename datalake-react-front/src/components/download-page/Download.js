@@ -4,6 +4,7 @@ import { RowItem } from './RowItem';
 import axios from 'axios';
 import ReactPaginate from 'react-paginate';
 import $ from 'jquery';
+import { Filters } from "./Filters";
 
 export class Download extends React.Component {
     selectedElements = []
@@ -131,6 +132,7 @@ export class Download extends React.Component {
         return(
             <div>
                 <Header />
+                <Filters />
                 <div class="p-4">
                     <p>Download page</p>
                     <table class="table">
