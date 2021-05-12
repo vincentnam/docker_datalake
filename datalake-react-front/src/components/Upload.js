@@ -11,9 +11,13 @@ export class Upload extends React.Component {
             const f = [];
             files.map((file) => { 
                 const typeFile = file.name.slice(file.name.lastIndexOf('.') + 1);
+                const filename = file.name;
+                var reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => this.setState({file: reader.result});
                 this.setState({typeFile: typeFile});
-                // const filename = file.name.split('.')[0]
-                this.setState({file: file});
+                this.setState({filename: filename});
+
             });
             
         };
@@ -21,6 +25,7 @@ export class Upload extends React.Component {
             files: [],
             meta: '',
             typeFile: '',
+            filename: '',
             type: 0,
             data: [],
             file: '',
@@ -48,6 +53,7 @@ export class Upload extends React.Component {
         api.post('http://localhost/storage', {
             idType: type,
             typeFile: this.state.typeFile,
+            filename: this.state.filename,
             file: this.state.file,
             premieremeta: this.state.premieremeta,
             deuxiememeta: this.state.deuxiememeta,

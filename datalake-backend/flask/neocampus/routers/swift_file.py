@@ -4,6 +4,7 @@ from zipfile import ZipFile
 from flask import Blueprint, jsonify, current_app, request, send_from_directory
 from ..services import swift
 from ..services import mongo
+import base64
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
@@ -43,33 +44,51 @@ def download(filename):
 def storage():
     idType = request.get_json()["idType"]
     file =  request.get_json()["file"]
+    filename =  request.get_json()["filename"]
     premieremeta =  request.get_json()["premieremeta"]
     deuxiememeta =  request.get_json()["deuxiememeta"]
     typeFile =  request.get_json()["typeFile"]
     meta = dict()
+
+    dataFile = file.split(",")
+    dataFile = dataFile[1]
+    dataFile = base64.b64decode(dataFile)
+    dataFile = str(dataFile)
+    dataFile = dataFile.split("'")
+    file_content = ''.join(map(str.capitalize, dataFile[1:]))
+    
+    
     meta = {
         "idT": idType,
-        "file": file,
+        "file": file_content,
+        "filename": filename,
         "typeFile": typeFile,
         "meta1": premieremeta,
         "meta2": deuxiememeta
     }
     
-    meta = request.get_json()
     
     print(meta)
     # Envoie dans swift (file)
-    resultSwift = swift.upload_object_file('neocampus', file)
-    print(resultSwift)
+    # resultSwift = swift.upload_object_file('neocampus', file)
+    # print(resultSwift)
     # Premier envoie dans mongo avec l'id Swift (db stats, collection swift et incrementer de 1  )
     # Deuxieme envoie dans mongo avec l'id Swift (db swift, collection neocampus et envoie des metadata)
-    # id = mongo.get_id()
-    # if id == None:
-    #     mongo.init_id()
-    # insert_datalake(file_data, user, key, authurl, container_name,processed_data_area_service=["MongoDB"],
-    #             data_process="custom",
-    #             application="import mongodb", file_name=file_name,
-    #             content_type="bson", mongodb_url=mongo_url)
+    id = mongo.get_id()
+    if id == None:
+        mongo.init_id()
+        
+    container_name = "neocampus"
+    mongodb_url = current_app.config['MONGO_URL']
+    user = current_app.config['SWIFT_USER']
+    key = current_app.config['SWIFT_KEY']
+    authurl = current_app.config['SWIFT_AUTHURL']
+    content_type = typeFile
+    application = None
+    data_process = "custom"
+    processed_data_area_service=["MongoDB"]
+    mongo.insert_datalake(file_content, user, key, authurl, container_name,processed_data_area_service,
+                data_process, application, filename, content_type, mongodb_url)
 
     return jsonify(meta)
 

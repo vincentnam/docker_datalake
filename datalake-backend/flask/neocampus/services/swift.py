@@ -26,18 +26,3 @@ def download_object_file(container_name, object_id):
 
     return file_path
 
-
-def upload_object_file(container_name, file):
-    """
-    convert swift object to file and down it
-    :param container_name: swift container name
-    :param object_id: swift object id
-    :return: saved file path in flask
-    """
-    swift_conn = swiftclient.Connection(user=current_app.config['SWIFT_USER'], key=current_app.config['SWIFT_KEY'],
-                                        authurl=current_app.config['SWIFT_AUTHURL'])    
-    with open(file["path"], 'rb') as f:
-        file_data = f.read()
-    return swift_conn.put_object(container_name, file["path"], file_data)
-    
-    
