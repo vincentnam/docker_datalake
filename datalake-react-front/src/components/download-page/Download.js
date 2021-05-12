@@ -5,6 +5,7 @@ import axios from 'axios';
 import ReactPaginate from 'react-paginate';
 import $ from 'jquery';
 import { Filters } from "./Filters";
+//import useForceUpdate from 'use-force-update';
 
 export class Download extends React.Component {
     selectedElements = []
@@ -18,12 +19,18 @@ export class Download extends React.Component {
         // Bind the this context to the handler function
         this.handler = this.handler.bind(this);
         this.validate = this.validate.bind(this)
+        this.setFiletype = this.setFiletype.bind(this);
+        this.setBeginDate = this.setBeginDate.bind(this);
+        this.setEndDate = this.setEndDate.bind(this);
 
         // Set some state
         this.state = {
             selectedElement: {},
             elements: {},
-            offset: 0
+            offset: 0,
+            filetype: '',
+            beginDate: '',
+            endDate: ''
         };
     }
 
@@ -102,11 +109,24 @@ export class Download extends React.Component {
       };
 
     loadObjectsFromServer() {
+        //const forceUpdate = useForceUpdate();
+
         $.ajax({
           url: this.url + '/raw-data',
-          data: { limit: this.perPage, offset: this.state.offset },
+          data: JSON.stringify({ 
+            limit: this.perPage, 
+            offset: this.state.offset,
+            filetype: this.state.filetype,
+            beginDate: this.state.beginDate,
+            endDate: this.state.endDate
+          }),
+          xhrFields: {
+            withCredentials: true
+         },
+         crossDomain: true,
+         contentType: 'application/json; charset=utf-8',
           dataType: 'json',
-          type: 'GET',
+          type: 'POST',
     
           success: (data) => {
             this.setState({
@@ -119,7 +139,31 @@ export class Download extends React.Component {
             console.error(this.url, status, err.toString()); // eslint-disable-line
           },
         });
+
+        //forceUpdate()
       }
+
+    setFiletype(value) {
+        let filetype = value;
+
+        this.state.filetype = filetype;
+        this.loadObjectsFromServer()
+        return this.setState({filetype: this.state.filetype})
+    }
+
+    setBeginDate(value) {
+        let beginDate = value;
+        this.state.beginDate = beginDate;
+        this.loadObjectsFromServer()
+        return this.setState({beginDate: this.state.beginDate})
+    }
+
+    setEndDate(value) {
+        let endDate = value;
+        this.state.endDate = endDate;
+        this.loadObjectsFromServer()
+        return this.setState({endDate: this.state.endDate})
+    }
 
     render() {
         let elts = []
@@ -128,11 +172,24 @@ export class Download extends React.Component {
         }
         let selectedElements = this.state.selectedElements
         let handler = this.handler
+        let setFiletype = this.setFiletype
+        let setBeginDate = this.setBeginDate
+        let setEndDate = this.setEndDate
+        let filterData = {
+            'filetype': this.state.filetype,
+            'beginDate': this.state.beginDate,
+            'endDate': this.state.endDate
+        }
 
         return(
             <div>
                 <Header />
-                <Filters />
+                <Filters 
+                    setFiletype={setFiletype} 
+                    setBeginDate={setBeginDate}
+                    setEndDate={setEndDate}
+                    data={filterData}
+                />
                 <div class="p-4">
                     <p>Download page</p>
                     <table class="table">
@@ -175,6 +232,7 @@ export class Download extends React.Component {
                                     previousLinkClassName={'page-link'}
                                     nextClassName={'page-item'}
                                     nextLinkClassName={'page-link'}
+                                    forcePage={this.state.selected}
                                 />
                         </div>
                                
