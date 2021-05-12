@@ -12,8 +12,8 @@ export class Upload extends React.Component {
             files.map((file) => { 
                 const typeFile = file.name.slice(file.name.lastIndexOf('.') + 1);
                 this.setState({typeFile: typeFile});
-                const filename = file.name.split('.')[0]
-                this.setState({file: filename});
+                // const filename = file.name.split('.')[0]
+                this.setState({file: file});
             });
             
         };

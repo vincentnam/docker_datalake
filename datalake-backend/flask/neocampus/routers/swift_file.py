@@ -3,6 +3,7 @@ import uuid
 from zipfile import ZipFile
 from flask import Blueprint, jsonify, current_app, request, send_from_directory
 from ..services import swift
+from ..services import mongo
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
@@ -57,8 +58,18 @@ def storage():
     meta = request.get_json()
     
     print(meta)
-    
-    # resultMongo = mongo.add_data_in_collection('neocampus', meta)
+    # Envoie dans swift (file)
+    resultSwift = swift.upload_object_file('neocampus', file)
+    print(resultSwift)
+    # Premier envoie dans mongo avec l'id Swift (db stats, collection swift et incrementer de 1  )
+    # Deuxieme envoie dans mongo avec l'id Swift (db swift, collection neocampus et envoie des metadata)
+    # id = mongo.get_id()
+    # if id == None:
+    #     mongo.init_id()
+    # insert_datalake(file_data, user, key, authurl, container_name,processed_data_area_service=["MongoDB"],
+    #             data_process="custom",
+    #             application="import mongodb", file_name=file_name,
+    #             content_type="bson", mongodb_url=mongo_url)
 
     return jsonify(meta)
 
