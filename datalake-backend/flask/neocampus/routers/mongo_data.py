@@ -1,10 +1,12 @@
 from flask import Blueprint, jsonify, request
 from ..services import mongo
+from flask_cors import cross_origin
 
 mongo_data_bp = Blueprint('mongo_data_bp', __name__)
 
 
 @mongo_data_bp.route('/raw-data', methods=['POST'])
+@cross_origin(supports_credentials=True)
 def get_metadata():
     params = {
         'limit': request.get_json()['limit'],

@@ -2,6 +2,28 @@ import React from "react";
 import { FormGroup, FormLabel, Form } from "react-bootstrap";
 
 export class Filters extends React.Component {
+    constructor(props) {
+        super(props);
+        this.props = props
+        this.setFiletype = this.setFiletype.bind(this);
+        this.setBeginDate = this.setBeginDate.bind(this);
+        this.setEndDate = this.setEndDate.bind(this);
+    }
+
+    setFiletype(event) {
+        let filetype = event.target.value;
+        this.props.setFiletype(filetype)      
+    }
+
+    setBeginDate(event) {
+        let beginDate = event.target.value;
+        this.props.setBeginDate(beginDate)
+    }
+
+    setEndDate(event) {
+        let endDate = event.target.value;
+        this.props.setEndDate(endDate)
+    }
 
     render() {
         return (
@@ -12,8 +34,8 @@ export class Filters extends React.Component {
                         <div class="form-row">
                             <div class="form-group col-md-4">
                                 <label for="inputCity">Type de fichier</label>
-                                <Form.Control as="select" custom>
-                                    <option selected>Veullez sélectionner un type</option>
+                                <Form.Control as="select" custom value={this.props.data.filetype} onChange={this.setFiletype}>
+                                    <option selected value=''>Veullez sélectionner un type</option>
                                     <option value="csv">CSV</option>
                                     <option value="json">JSON</option>
                                     <option value="other">Autres</option>
@@ -22,14 +44,14 @@ export class Filters extends React.Component {
                             <div class="form-group col-md-4">
                                 <FormGroup>
                                     <FormLabel>Date de début</FormLabel>
-                                    <Form.Control type="date" name='beginDate' />
-                                </FormGroup>;
+                                    <Form.Control type="date" name='beginDate' value={this.props.data.beginDate} onChange={this.setBeginDate} />
+                                </FormGroup>
                             </div>
                             <div class="form-group col-md-4">
                                 <FormGroup>
                                     <FormLabel>Date de fin</FormLabel>
-                                    <Form.Control type="date" name='endDate' />
-                                </FormGroup>;
+                                    <Form.Control type="date" name='endDate' value={this.props.data.endDate} onChange={this.setEndDate} />
+                                </FormGroup>
                             </div>
                         </div>
                     </form>
