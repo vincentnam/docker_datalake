@@ -57,7 +57,6 @@ def storage():
     dataFile = dataFile.split("'")
     file_content = ''.join(map(str.capitalize, dataFile[1:]))
     
-    
     meta = {
         "idT": idType,
         "file": file_content,
@@ -66,19 +65,12 @@ def storage():
         "meta1": premieremeta,
         "meta2": deuxiememeta
     }
-    
-    
     print(meta)
     # Envoie dans swift (file)
-    # resultSwift = swift.upload_object_file('neocampus', file)
-    # print(resultSwift)
     # Premier envoie dans mongo avec l'id Swift (db stats, collection swift et incrementer de 1  )
     # Deuxieme envoie dans mongo avec l'id Swift (db swift, collection neocampus et envoie des metadata)
-    id = mongo.get_id()
-    if id == None:
-        mongo.init_id()
         
-    container_name = "neocampus"
+    container_name = "neOCampus"
     mongodb_url = current_app.config['MONGO_URL']
     user = current_app.config['SWIFT_USER']
     key = current_app.config['SWIFT_KEY']
@@ -87,8 +79,12 @@ def storage():
     application = None
     data_process = "custom"
     processed_data_area_service=["MongoDB"]
-    mongo.insert_datalake(file_content, user, key, authurl, container_name,processed_data_area_service,
-                data_process, application, filename, content_type, mongodb_url)
+    other_data = {
+        "meta1": premieremeta,
+        "meta2": deuxiememeta
+    }
+    mongo.insert_datalake(file_content, user, key, authurl, container_name,filename,processed_data_area_service,
+                        data_process, application, content_type, mongodb_url, other_data)
 
     return jsonify(meta)
 

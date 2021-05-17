@@ -1,6 +1,7 @@
 from flask import current_app
 from pymongo import MongoClient
 import swiftclient
+from swiftclient.service import SwiftService
 import datetime
 
 
@@ -67,7 +68,7 @@ def insert_datalake(file_content, user, key, authurl, container_name,
     meta_data["data_processing"]= data_process
     meta_data["swift_user"] = user
     meta_data["swift_container"] = container_name
-    meta_data["swift_object_id"] = str(get_id(mongodb_url))
+    meta_data["swift_object_id"] = str(get_id()+1)
     if application is not None:
         meta_data["application"] = application
     else:
@@ -83,8 +84,9 @@ def insert_datalake(file_content, user, key, authurl, container_name,
     else:
         meta_data["other_data"] ={}
     print(meta_data)
-
-    if swiftclient.service({}).stat(container_name)["object"] is None:
+    _opts = {}
+    stats_it = SwiftService(_opts).stat(container=container_name, objects=None, options=None)
+    if stats_it["object"] is None:
         conn.put_container(container_name)
     retry = 0
     while True:

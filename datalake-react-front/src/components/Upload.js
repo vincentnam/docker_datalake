@@ -8,9 +8,8 @@ export class Upload extends React.Component {
     constructor() {
         super();
         this.onDrop = (files) => {
-            const f = [];
             files.map((file) => { 
-                const typeFile = file.name.slice(file.name.lastIndexOf('.') + 1);
+                const typeFile = file.type;
                 const filename = file.name;
                 var reader = new FileReader();
                 reader.readAsDataURL(file);
@@ -48,7 +47,6 @@ export class Upload extends React.Component {
     
     handleSubmit(event) {
         event.preventDefault();
-        let headers = {'Accept': "application/json"}
         const type = parseInt(this.state.type);
         api.post('http://localhost/storage', {
             idType: type,
@@ -96,7 +94,7 @@ export class Upload extends React.Component {
                     <h4>Stockage de données</h4>
                     <form onSubmit={this.handleSubmit}>
                         <div class="form-group">
-                            <label>Type de métadonnée</label>
+                            <label>Type de données</label>
                             <SelectMetier />
                         </div>
                         <div class="mb-3">
@@ -104,7 +102,7 @@ export class Upload extends React.Component {
                             <input type="text" value={this.state.premieremeta} name="premieremeta" onChange={this.handleChange} class="form-control" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Métadonnée</label>
+                            <label class="form-label">Métadonnée  générique 2</label>
                             <textarea value={this.state.deuxiememeta} onChange={this.handleChange} name="deuxiememeta" class="form-control" rows="3" />
                         </div>
                         <div class="form-group">
