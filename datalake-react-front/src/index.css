@@ -13,5 +13,9 @@ code {
 }
 
 .drop {
-  border: 1px solid;
+  border: 2px dashed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 5em;
 }

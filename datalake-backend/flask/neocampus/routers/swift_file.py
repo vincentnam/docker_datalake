@@ -57,19 +57,6 @@ def storage():
     dataFile = dataFile.split("'")
     file_content = ''.join(map(str.capitalize, dataFile[1:]))
     
-    meta = {
-        "idT": idType,
-        "file": file_content,
-        "filename": filename,
-        "typeFile": typeFile,
-        "meta1": premieremeta,
-        "meta2": deuxiememeta
-    }
-    print(meta)
-    # Envoie dans swift (file)
-    # Premier envoie dans mongo avec l'id Swift (db stats, collection swift et incrementer de 1  )
-    # Deuxieme envoie dans mongo avec l'id Swift (db swift, collection neocampus et envoie des metadata)
-        
     container_name = "neOCampus"
     mongodb_url = current_app.config['MONGO_URL']
     user = current_app.config['SWIFT_USER']

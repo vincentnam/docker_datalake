@@ -83,7 +83,6 @@ def insert_datalake(file_content, user, key, authurl, container_name,
         meta_data["other_data"] = other_data
     else:
         meta_data["other_data"] ={}
-    print(meta_data)
     _opts = {}
     stats_it = SwiftService(_opts).stat(container=container_name, objects=None, options=None)
     if stats_it["object"] is None:
