@@ -21,6 +21,7 @@ export class Download extends React.Component {
         this.handler = this.handler.bind(this);
         this.validate = this.validate.bind(this)
         this.setFiletype = this.setFiletype.bind(this);
+        this.setDatatype = this.setDatatype.bind(this);
         this.setBeginDate = this.setBeginDate.bind(this);
         this.setEndDate = this.setEndDate.bind(this);
         this.validateFilters = this.validateFilters.bind(this)
@@ -55,20 +56,16 @@ export class Download extends React.Component {
     }
 
     handler(selectedElement, event) {
-
          // if checked
          if(event.target.checked) {
-            //this.props.selectedElements.push(selectedElement)
             this.selectedElements.push(selectedElement)
 
         } else {
-            //this.props.selectedElements.splice(selectedElement)
             this.selectedElements = this.selectedElements.filter( (element) => JSON.stringify(element) !== JSON.stringify(selectedElement) )
         }
     }
 
     validate() {
-        console.log('validation data');
         let selectedElements = this.getSelectedElements()
         let body = []
         selectedElements.map(element => {
@@ -117,14 +114,13 @@ export class Download extends React.Component {
       };
 
     loadObjectsFromServer() {
-        //const forceUpdate = useForceUpdate();
-
         $.ajax({
           url: this.url + '/raw-data',
           data: JSON.stringify({ 
             limit: this.perPage, 
             offset: this.state.offset,
             filetype: this.state.filetype,
+            dataType: this.state.dataType,
             beginDate: this.state.beginDate,
             endDate: this.state.endDate
           }),
@@ -147,8 +143,6 @@ export class Download extends React.Component {
             console.error(this.url, status, err.toString()); // eslint-disable-line
           },
         });
-
-        //forceUpdate()
       }
 
     setFiletype(value) {
@@ -158,7 +152,7 @@ export class Download extends React.Component {
         return this.setState({filetype: this.state.filetype})
     }
 
-    setDataType(value) {
+    setDatatype(value) {
         let dataType = value;
 
         this.state.dataType = dataType;
@@ -191,7 +185,7 @@ export class Download extends React.Component {
         let setFiletype = this.setFiletype
         let setBeginDate = this.setBeginDate
         let setEndDate = this.setEndDate
-        let setDataType = this.setDataType
+        let setDatatype = this.setDatatype
         let validateFilters = this.validateFilters
         let filterData = {
             'filetype': this.state.filetype,
@@ -206,7 +200,7 @@ export class Download extends React.Component {
                     setFiletype={setFiletype} 
                     setBeginDate={setBeginDate}
                     setEndDate={setEndDate}
-                    setDataType={setDataType}
+                    setDatatype={setDatatype}
                     validateFilters={validateFilters}
                     data={filterData}
                 />
@@ -226,7 +220,7 @@ export class Download extends React.Component {
                         </thead>
                         <tbody>
 
-                            { !elts ? <tr> <td colspan='7' class="text-center">No data found</td> </tr> : 
+                            { !elts.length ? <tr> <td colspan='7' class="text-center">No data found</td> </tr> : 
                                 
                              Object.keys(elts).map(function(key, index){ 
             
@@ -236,38 +230,42 @@ export class Download extends React.Component {
 
                             }) }
 
-                         <div class="commentBox">
+                        { elts.length ? 
+                            <div class="commentBox">
 
-                                <ReactPaginate
-                                    previousLabel={'previous'}
-                                    nextLabel={'next'}
-                                    breakLabel={'...'}
-                                    breakClassName={'break-me'}
-                                    pageCount={this.state.pageCount}
-                                    marginPagesDisplayed={2}
-                                    pageRangeDisplayed={5}
-                                    onPageChange={this.handlePageClick}
-                                    containerClassName={'pagination'}
-                                    activeClassName={'active'}
-                                    breakClassName={'page-item'}
-                                    breakLinkClassName={'page-link'}
-                                    containerClassName={'pagination'}
-                                    pageClassName={'page-item'}
-                                    pageLinkClassName={'page-link'}
-                                    previousClassName={'page-item'}
-                                    previousLinkClassName={'page-link'}
-                                    nextClassName={'page-item'}
-                                    nextLinkClassName={'page-link'}
-                                    forcePage={this.state.selected}
-                                />
-                        </div>
+                                    <ReactPaginate
+                                        previousLabel={'previous'}
+                                        nextLabel={'next'}
+                                        breakLabel={'...'}
+                                        breakClassName={'break-me'}
+                                        pageCount={this.state.pageCount}
+                                        marginPagesDisplayed={2}
+                                        pageRangeDisplayed={5}
+                                        onPageChange={this.handlePageClick}
+                                        containerClassName={'pagination'}
+                                        activeClassName={'active'}
+                                        breakClassName={'page-item'}
+                                        breakLinkClassName={'page-link'}
+                                        containerClassName={'pagination'}
+                                        pageClassName={'page-item'}
+                                        pageLinkClassName={'page-link'}
+                                        previousClassName={'page-item'}
+                                        previousLinkClassName={'page-link'}
+                                        nextClassName={'page-item'}
+                                        nextLinkClassName={'page-link'}
+                                        forcePage={this.state.selected}
+                                    />
+                            </div>
+                        : '' }
                                
                         </tbody>
                     </table>
 
-                    <div class="col-12">
-                        <button class="btn btn-primary" onClick={this.validate} type="submit">Valider</button>
-                    </div>
+                    { elts.length ?
+                        <div class="col-12">
+                            <button class="btn btn-primary" onClick={this.validate} type="submit">Valider</button>
+                        </div>
+                    : '' }
                 </div>
                 
             </div>
