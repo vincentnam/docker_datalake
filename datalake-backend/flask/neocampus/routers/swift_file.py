@@ -73,5 +73,5 @@ def storage():
     mongo.insert_datalake(file_content, user, key, authurl, container_name,filename,processed_data_area_service,
                         data_process, application, content_type, mongodb_url, other_data)
 
-    return jsonify(meta)
+    return jsonify({"response": "Done !"})
 
