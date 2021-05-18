@@ -5,13 +5,14 @@ import axios from 'axios';
 import ReactPaginate from 'react-paginate';
 import $ from 'jquery';
 import { Filters } from "./Filters";
+import moment from "moment";
 //import useForceUpdate from 'use-force-update';
 
 export class Download extends React.Component {
     selectedElements = []
     elements = {}
     url = process.env.REACT_APP_ENDPOINT
-    perPage = 3
+    perPage = 6
 
     constructor(props) {
         super(props);
@@ -22,6 +23,7 @@ export class Download extends React.Component {
         this.setFiletype = this.setFiletype.bind(this);
         this.setBeginDate = this.setBeginDate.bind(this);
         this.setEndDate = this.setEndDate.bind(this);
+        this.validateFilters = this.validateFilters.bind(this)
 
         // Set some state
         this.state = {
@@ -29,8 +31,9 @@ export class Download extends React.Component {
             elements: {},
             offset: 0,
             filetype: '',
-            beginDate: '',
-            endDate: ''
+            dataType: '',
+            beginDate: moment().format('Y-m-d'),
+            endDate: moment().format('Y-m-d')
         };
     }
 
@@ -147,22 +150,30 @@ export class Download extends React.Component {
         let filetype = value;
 
         this.state.filetype = filetype;
-        this.loadObjectsFromServer()
         return this.setState({filetype: this.state.filetype})
+    }
+
+    setDataType(value) {
+        let dataType = value;
+
+        this.state.dataType = dataType;
+        return this.setState({dataType: this.state.dataType})
     }
 
     setBeginDate(value) {
         let beginDate = value;
         this.state.beginDate = beginDate;
-        this.loadObjectsFromServer()
         return this.setState({beginDate: this.state.beginDate})
     }
 
     setEndDate(value) {
         let endDate = value;
         this.state.endDate = endDate;
-        this.loadObjectsFromServer()
         return this.setState({endDate: this.state.endDate})
+    }
+
+    validateFilters() {
+        this.loadObjectsFromServer();
     }
 
     render() {
@@ -175,6 +186,8 @@ export class Download extends React.Component {
         let setFiletype = this.setFiletype
         let setBeginDate = this.setBeginDate
         let setEndDate = this.setEndDate
+        let setDataType = this.setDataType
+        let validateFilters = this.validateFilters
         let filterData = {
             'filetype': this.state.filetype,
             'beginDate': this.state.beginDate,
@@ -188,6 +201,8 @@ export class Download extends React.Component {
                     setFiletype={setFiletype} 
                     setBeginDate={setBeginDate}
                     setEndDate={setEndDate}
+                    setDataType={setDataType}
+                    validateFilters={validateFilters}
                     data={filterData}
                 />
                 <div class="p-4">
@@ -196,6 +211,8 @@ export class Download extends React.Component {
                         <thead>
                             <tr>
                                 <th scope="col">Id objet Swift</th>
+                                <th scope="col">Container Swift</th>
+                                <th scope="col">Type de fichier</th>
                                 <th scope="col">Utilisateur Swift</th>
                                 <th scope="col">Nom de l'objet</th>
                                 <th scope="col">Date de création</th>
@@ -206,7 +223,9 @@ export class Download extends React.Component {
                                 
                             { Object.keys(elts).map(function(key, index){ 
             
-                                return <RowItem key={index} item={elts[key]} handler={handler} selectedElements={selectedElements} />
+                                return <RowItem key={index} item={elts[key]} 
+                                handler={handler} 
+                                selectedElements={selectedElements} />
 
                             }) }
 
