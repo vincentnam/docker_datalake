@@ -8,6 +8,7 @@ export class Filters extends React.Component {
         this.validateFilters = this.validateFilters.bind(this);
 
         this.setFiletype = this.setFiletype.bind(this);
+        this.setDatatype = this.setDatatype.bind(this);
         this.setBeginDate = this.setBeginDate.bind(this);
         this.setEndDate = this.setEndDate.bind(this);
     }
@@ -58,7 +59,7 @@ export class Filters extends React.Component {
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="inputCity">Type de donnée</label>
-                                <Form.Control as="select" custom value={this.props.data.contentType} onChange={this.setContentType}>
+                                <Form.Control as="select" custom value={this.props.data.dataType} onChange={this.setDatatype}>
                                     <option selected value=''>Veuillez sélectionner un type</option>
                                     <option value="neOCampus">neOCampus</option>
                                 </Form.Control>
