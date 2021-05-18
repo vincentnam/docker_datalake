@@ -48,7 +48,7 @@ def storage():
     filename = request.get_json()["filename"]
     premieremeta = request.get_json()["premieremeta"]
     deuxiememeta = request.get_json()["deuxiememeta"]
-    typeFile = request.get_json()["typeFile"]
+    type_file = request.get_json()["typeFile"]
 
     data_file = file.split(",")
     data_file = data_file[1]
@@ -62,7 +62,7 @@ def storage():
     user = current_app.config['SWIFT_USER']
     key = current_app.config['SWIFT_KEY']
     authurl = current_app.config['SWIFT_AUTHURL']
-    content_type = typeFile
+    content_type = type_file
     application = None
     data_process = "custom"
     processed_data_area_service = ["MongoDB"]
