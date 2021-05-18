@@ -128,7 +128,7 @@ export class Upload extends React.Component {
                                             <p>Drag 'n' drop veuillez glisser un fichier ou cliquer pour ajouter un fichier.</p>
                                         </div>
                                         <aside class="pt-3">
-                                            <h5>Files</h5>
+                                            <h5>Fichiers</h5>
                                             <ul>{files}</ul>
                                         </aside>
                                     </section>
