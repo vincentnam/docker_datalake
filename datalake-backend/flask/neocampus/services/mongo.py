@@ -32,26 +32,37 @@ def get_metadata(db_name, params):
     end_date = params['endDate']
 
     metadata = collection.find({ 'creation_date': { '$exists': 'true', '$ne': [] } })
+    dict_query = {"$and": []}
 
     if(params['filetype'] != ""):
-        metadata = collection.find({"content_type": params['filetype']})
+        filetype_query = {"content_type": params['filetype']}
+        for item in [filetype_query]: 
+            dict_query['$and'].append(item) 
 
     if(params['beginDate'] != "" and params['endDate'] != ""):
-        metadata = collection.find({'creation_date': {'$gte': start_date, '$lt': end_date}})
+        dates_query = {'creation_date': {'$gte': start_date, '$lt': end_date}}
+        for item in [dates_query]: 
+            dict_query['$and'].append(item) 
 
-    if(params['filetype'] != "" and params['beginDate'] != "" and params['endDate'] != ""):
-        metadata = collection.find(
-            {"$and": [
-                {'creation_date': {'$gte': start_date, '$lt': end_date}},
-                {"content_type": params['filetype']}
-            ]}
-        )
+    if(params['datatype'] != ""):
+        datatype_query = {"swift_container": params['datatype']}
+        for item in [datatype_query]: 
+            dict_query['$and'].append(item)
+
+    metadata = collection.find(
+        {"$and": [
+            {'creation_date': {'$gte': start_date, '$lt': end_date}},
+            {"content_type": params['filetype']}
+        ]}
+    )
 
     if(params['offset']):
         metadata = metadata.skip(params['offset'])
 
     if(params['limit']):
         metadata = metadata.limit(params['limit'])
+
+    
 
     nb_objects = metadata.count()
 

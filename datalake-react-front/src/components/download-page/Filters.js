@@ -53,7 +53,7 @@ export class Filters extends React.Component {
                                 <Form.Control as="select" custom value={this.props.data.filetype} onChange={this.setFiletype}>
                                     <option selected value=''>Veuillez sélectionner un type</option>
                                     <option value="csv">CSV</option>
-                                    <option value="json">JSON</option>
+                                    <option value="application/json">JSON</option>
                                     <option value="text/plain">Texte</option>
                                 </Form.Control>
                             </div>

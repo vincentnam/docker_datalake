@@ -120,7 +120,7 @@ export class Download extends React.Component {
             limit: this.perPage, 
             offset: this.state.offset,
             filetype: this.state.filetype,
-            dataType: this.state.dataType,
+            datatype: this.state.dataType,
             beginDate: this.state.beginDate,
             endDate: this.state.endDate
           }),
