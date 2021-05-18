@@ -52,7 +52,7 @@ export class Filters extends React.Component {
                                 <label for="inputCity">Type de fichier</label>
                                 <Form.Control as="select" custom value={this.props.data.filetype} onChange={this.setFiletype}>
                                     <option selected value=''>Veuillez sélectionner un type</option>
-                                    <option value="csv">CSV</option>
+                                    <option value="application/vnd.ms-excel">CSV</option>
                                     <option value="application/json">JSON</option>
                                     <option value="text/plain">Texte</option>
                                 </Form.Control>
