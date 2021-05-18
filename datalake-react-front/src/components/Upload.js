@@ -72,7 +72,7 @@ export class Upload extends React.Component {
                 window.location.reload();
             })
             .catch(function (error) {
-                window.alert(error)
+                window.alert("L'upload n'a pas réussi ! : " + error)
             });
         }
     }
