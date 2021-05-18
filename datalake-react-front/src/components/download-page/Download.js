@@ -70,32 +70,37 @@ export class Download extends React.Component {
     validate() {
         console.log('validation data');
         let selectedElements = this.getSelectedElements()
-        console.log(selectedElements)
+        let body = []
+        selectedElements.map(element => {
+            console.log('swift id : ', element.swift_object_id)
+            body.push({
+                'object_id': element.swift_object_id,
+                'container_name': element.swift_container
+            })
+        })
 
-        /*$.ajax({
-            url: this.url + '/raw-file',
-            type: 'GET',
-      
-            success: (data) => {
-                let content = data
-                var blob = new Blob([data], {type: "octet/stream"});
-                console.log('blob')
-                console.log(blob)
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-
-                // TODO : get dynamically
-                link.download = 'sensors.csv'
-                
-                link.click();
-                window.URL.revokeObjectURL(url);
-            },
-      
-            error: (xhr, status, err) => {
-              console.error(this.url, status, err.toString()); // eslint-disable-line
-            },
-          });*/
+        if(selectedElements.length) {
+            $.ajax({
+                url: this.url + '/swift-files',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify(body),
+          
+                success: (data) => {
+                    let url = data.swift_zip
+                    const link = document.createElement('a');
+                    link.href = url;
+                    
+                    link.click();
+                    window.URL.revokeObjectURL(url);
+                },
+          
+                error: (xhr, status, err) => {
+                  console.error(this.url, status, err.toString()); // eslint-disable-line
+                },
+              });
+        }
     }
 
     componentDidMount() {
@@ -220,8 +225,10 @@ export class Download extends React.Component {
                             </tr>
                         </thead>
                         <tbody>
+
+                            { !elts ? <tr> <td colspan='7' class="text-center">No data found</td> </tr> : 
                                 
-                            { Object.keys(elts).map(function(key, index){ 
+                             Object.keys(elts).map(function(key, index){ 
             
                                 return <RowItem key={index} item={elts[key]} 
                                 handler={handler} 
