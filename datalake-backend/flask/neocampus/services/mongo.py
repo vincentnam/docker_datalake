@@ -1,8 +1,9 @@
+import datetime
 from flask import current_app
 from pymongo import MongoClient
 import swiftclient
 from swiftclient.service import SwiftService
-import datetime
+
 
 
 def get_swift_original_object_name(swift_container_name, swift_object_id):
@@ -36,9 +37,9 @@ def get_collections(db_name, offset, limit):
 def get_id():
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url)
-    return mongo_client.stats.swift.find_one_and_update({"type": "object_id_file"},   {"$inc": {"object_id": 1}})[
+    return mongo_client.stats.swift.find_one_and_update({"type": "object_id_file"}, {"$inc": {"object_id": 1}})[
             "object_id"]
-    
+
 def init_id():
     id_doc = {"type": "object_id_file", "object_id": 0}
     mongodb_url = current_app.config['MONGO_URL']
@@ -51,7 +52,7 @@ def init_id():
 def insert_datalake(file_content, user, key, authurl, container_name,
                     file_name, processed_data_area_service, data_process,
                     application, content_type,
-                    mongodb_url,other_data ):
+                    mongodb_url, other_data):
     conn = swiftclient.Connection(user=user, key=key,
                                 authurl=authurl)
     client = MongoClient(mongodb_url, connect=False)
@@ -65,7 +66,7 @@ def insert_datalake(file_content, user, key, authurl, container_name,
         meta_data["content_type"] = content_type
     else:
         meta_data["content_type"] = "None"
-    meta_data["data_processing"]= data_process
+    meta_data["data_processing"] = data_process
     meta_data["swift_user"] = user
     meta_data["swift_container"] = container_name
     meta_data["swift_object_id"] = str(get_id()+1)
@@ -79,10 +80,10 @@ def insert_datalake(file_content, user, key, authurl, container_name,
     meta_data["successful_operations"] = []
     meta_data["failed_operations"] = []
     meta_data["processed_data_area_service"] = processed_data_area_service
-    if meta_data is not None :
+    if meta_data is not None:
         meta_data["other_data"] = other_data
     else:
-        meta_data["other_data"] ={}
+        meta_data["other_data"] = {}
     _opts = {}
     stats_it = SwiftService(_opts).stat(container=container_name, objects=None, options=None)
     if stats_it["object"] is None:

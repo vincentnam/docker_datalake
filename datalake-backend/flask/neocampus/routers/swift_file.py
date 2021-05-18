@@ -1,10 +1,11 @@
 import os
 import uuid
 from zipfile import ZipFile
+import base64
 from flask import Blueprint, jsonify, current_app, request, send_from_directory
 from ..services import swift
 from ..services import mongo
-import base64
+
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
@@ -42,21 +43,20 @@ def download(filename):
 
 @swift_file_bp.route('/storage', methods=['POST'])
 def storage():
-    idType = request.get_json()["idType"]
-    file =  request.get_json()["file"]
-    filename =  request.get_json()["filename"]
-    premieremeta =  request.get_json()["premieremeta"]
-    deuxiememeta =  request.get_json()["deuxiememeta"]
-    typeFile =  request.get_json()["typeFile"]
-    meta = dict()
+    # id_type = request.get_json()["idType"]
+    file = request.get_json()["file"]
+    filename = request.get_json()["filename"]
+    premieremeta = request.get_json()["premieremeta"]
+    deuxiememeta = request.get_json()["deuxiememeta"]
+    typeFile = request.get_json()["typeFile"]
 
-    dataFile = file.split(",")
-    dataFile = dataFile[1]
-    dataFile = base64.b64decode(dataFile)
-    dataFile = str(dataFile)
-    dataFile = dataFile.split("'")
-    file_content = ''.join(map(str.capitalize, dataFile[1:]))
-    
+    data_file = file.split(",")
+    data_file = data_file[1]
+    data_file = base64.b64decode(data_file)
+    data_file = str(data_file)
+    data_file = data_file.split("'")
+    file_content = ''.join(map(str.capitalize, data_file[1:]))
+
     container_name = "neOCampus"
     mongodb_url = current_app.config['MONGO_URL']
     user = current_app.config['SWIFT_USER']
@@ -65,13 +65,13 @@ def storage():
     content_type = typeFile
     application = None
     data_process = "custom"
-    processed_data_area_service=["MongoDB"]
+    processed_data_area_service = ["MongoDB"]
     other_data = {
         "meta1": premieremeta,
         "meta2": deuxiememeta
     }
-    mongo.insert_datalake(file_content, user, key, authurl, container_name,filename,processed_data_area_service,
-                        data_process, application, content_type, mongodb_url, other_data)
+    mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
+                        processed_data_area_service, data_process, application,
+                        content_type, mongodb_url, other_data)
 
     return jsonify({"response": "Done !"})
-
