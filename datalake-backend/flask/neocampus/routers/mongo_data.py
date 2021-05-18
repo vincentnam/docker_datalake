@@ -13,6 +13,7 @@ def get_metadata():
         'limit': request.get_json()['limit'],
         'offset': request.get_json()['offset'],
         'filetype': request.get_json()['filetype'],
+        'datatype': request.get_json()['datatype'],
         'beginDate': request.get_json()['beginDate'],
         'endDate': request.get_json()['endDate']
     }
