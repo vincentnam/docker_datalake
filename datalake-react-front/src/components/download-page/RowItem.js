@@ -23,7 +23,8 @@ export class RowItem extends React.Component {
             swift_object_id: this.props.item.swift_object_id,
             swift_user: this.props.item.swift_user, 
             original_object_name: this.props.item.original_object_name,
-            creation_date: this.props.item.creation_date
+            creation_date: this.props.item.creation_date,
+            swift_container: this.props.item.swift_container
         }
         
 
