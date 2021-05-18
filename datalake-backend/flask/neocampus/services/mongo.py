@@ -28,20 +28,18 @@ def get_metadata(db_name, params):
     mongo_db = mongo_client.swift
     collection = mongo_db[db_name]
 
-    date_format = "%Y-%m-%d"
-    start_date = datetime.strptime(params['beginDate'], date_format)
-    end_date = datetime.strptime(params['endDate'], date_format)
+    start_date = params['beginDate']
+    end_date = params['endDate']
 
-    metadata = collection.find()
-    nb_objects = collection.find().count()
+    metadata = collection.find({ 'creation_date': { '$exists': 'true', '$ne': [] } })
 
-    if(params['filetype']):
+    if(params['filetype'] != ""):
         metadata = collection.find({"content_type": params['filetype']})
 
-    if(params['beginDate'] and params['endDate']):
+    if(params['beginDate'] != "" and params['endDate'] != ""):
         metadata = collection.find({'creation_date': {'$gte': start_date, '$lt': end_date}})
 
-    if(params['filetype'] and params['beginDate'] and params['endDate']):
+    if(params['filetype'] != "" and params['beginDate'] != "" and params['endDate'] != ""):
         metadata = collection.find(
             {"$and": [
                 {'creation_date': {'$gte': start_date, '$lt': end_date}},

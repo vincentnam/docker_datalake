@@ -35,6 +35,8 @@ export class RowItem extends React.Component {
         return(
             <tr>
                 <td scope="row">{ this.props.item.swift_object_id }</td>
+                <td>{ this.props.item.swift_container }</td>
+                <td>{ this.props.item.content_type }</td>
                 <td>{ this.props.item.swift_user }</td>
                 <td>{ this.props.item.original_object_name }</td>
                 <td>{ Moment(this.props.item.creation_date).format('YYYY-MM-DD hh:mm:ss') }</td>
