@@ -64,8 +64,7 @@ export class Upload extends React.Component {
                 typeFile: this.state.typeFile,
                 filename: this.state.filename,
                 file: this.state.file,
-                premieremeta: this.state.premieremeta,
-                deuxiememeta: this.state.deuxiememeta,
+                othermeta: this.state.othermeta
             })
             .then(function () {
                 window.alert("L'upload a bien été fait")

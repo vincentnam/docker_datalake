@@ -46,8 +46,7 @@ def storage():
     # id_type = request.get_json()["idType"]
     file = request.get_json()["file"]
     filename = request.get_json()["filename"]
-    premieremeta = request.get_json()["premieremeta"]
-    deuxiememeta = request.get_json()["deuxiememeta"]
+    other_meta = request.get_json()["othermeta"]
     type_file = request.get_json()["typeFile"]
 
     data_file = file.split(",")
@@ -66,10 +65,8 @@ def storage():
     application = None
     data_process = "custom"
     processed_data_area_service = ["MongoDB"]
-    other_data = {
-        "meta1": premieremeta,
-        "meta2": deuxiememeta
-    }
+    other_data = other_meta
+    
     mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
                         processed_data_area_service, data_process, application,
                         content_type, mongodb_url, other_data)
