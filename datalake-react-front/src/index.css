@@ -19,3 +19,7 @@ code {
   justify-content: center;
   height: 5em;
 }
+
+.commentBox {
+  width: 100%;
+}

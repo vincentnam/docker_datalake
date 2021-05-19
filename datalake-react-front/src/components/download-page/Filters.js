@@ -13,7 +13,8 @@ export class Filters extends React.Component {
         this.setEndDate = this.setEndDate.bind(this);
     }
 
-    validateFilters() {
+    validateFilters(event) {
+        event.preventDefault()
         this.props.validateFilters()
 
         /*this.props.setFiletype(this.props.data.filetype)   
@@ -46,42 +47,42 @@ export class Filters extends React.Component {
             <div class="p-4">
                 <div class="jumbotron">
                     <h2 class="display-4 text-center">Filtres d'affichage des métadonnées</h2>
-                    <form>
+                    <Form onSubmit={this.validateFilters}>
                         <div class="form-row">
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-6">
                                 <label for="inputCity">Type de fichier</label>
-                                <Form.Control as="select" custom value={this.props.data.filetype} onChange={this.setFiletype}>
+                                <Form.Control as="select" custom value={this.props.data.filetype} onChange={this.setFiletype} required>
                                     <option selected value=''>Veuillez sélectionner un type</option>
                                     <option value="application/vnd.ms-excel">CSV</option>
                                     <option value="application/json">JSON</option>
                                     <option value="text/plain">Texte</option>
                                 </Form.Control>
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-6">
                                 <label for="inputCity">Type de donnée</label>
                                 <Form.Control as="select" custom value={this.props.data.dataType} onChange={this.setDatatype}>
                                     <option selected value=''>Veuillez sélectionner un type</option>
                                     <option value="neOCampus">neOCampus</option>
                                 </Form.Control>
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-6">
                                 <FormGroup>
                                     <FormLabel>Date de début</FormLabel>
-                                    <Form.Control type="date" name='beginDate' value={this.props.data.beginDate} onChange={this.setBeginDate}/>
+                                    <Form.Control type="date" name='beginDate' value={this.props.data.beginDate} onChange={this.setBeginDate} required/>
                                 </FormGroup>
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-6">
                                 <FormGroup>
                                     <FormLabel>Date de fin</FormLabel>
-                                    <Form.Control type="date" name='endDate' value={this.props.data.endDate} onChange={this.setEndDate} />
+                                    <Form.Control type="date" name='endDate' value={this.props.data.endDate} onChange={this.setEndDate} required/>
                                 </FormGroup>
                             </div>
 
-                            <div class="form-group col-md-12">
-                            <Button variant="outline-primary" onClick={this.validateFilters}>Filtrer</Button>
+                            <div class="form-group col-md-12 text-center">
+                                <Button type="submit" variant="outline-primary">Filtrer</Button>
                             </div>
                         </div>
-                    </form>
+                    </Form>
                 </div>
             </div>
         );

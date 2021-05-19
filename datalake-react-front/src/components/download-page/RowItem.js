@@ -10,25 +10,20 @@ export class RowItem extends React.Component {
     }
 
     isSelected() {
+        let checked = null
         if(this.props.selectedElements) {
-            if(this.props.selectedElements.includes(this.props.item)){
-                return true
-            }
-        }
+            this.props.selectedElements.map(s => {
+                if(JSON.stringify(s) == JSON.stringify(this.props.item)) {
+                    checked = true
+                }
+            })
+        } 
+
+        return checked
     }
 
     handleChange = (event) => {
-
-        let selectedElement = { 
-            swift_object_id: this.props.item.swift_object_id,
-            swift_user: this.props.item.swift_user, 
-            original_object_name: this.props.item.original_object_name,
-            creation_date: this.props.item.creation_date,
-            swift_container: this.props.item.swift_container
-        }
-        
-
-        this.props.handler(selectedElement, event)
+        this.props.handler(this.props.item, event)
     }
 
     render() {
@@ -43,7 +38,7 @@ export class RowItem extends React.Component {
                 <td>{ Moment(this.props.item.creation_date).format('YYYY-MM-DD hh:mm:ss') }</td>
                 <td>
                     <div class="form-check">
-                        <input class="form-check-input" onChange={this.handleChange} type="checkbox" value="" id="flexCheckDefault" />
+                        <input class="form-check-input" onChange={this.handleChange} checked={this.isSelected()} type="checkbox" value="" id="flexCheckDefault" />
                     </div>
                 </td>
             </tr>

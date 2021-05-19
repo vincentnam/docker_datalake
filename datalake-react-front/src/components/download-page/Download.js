@@ -28,7 +28,7 @@ export class Download extends React.Component {
 
         // Set some state
         this.state = {
-            selectedElement: {},
+            selectedElement: [],
             elements: {},
             offset: 0,
             filetype: '',
@@ -52,7 +52,7 @@ export class Download extends React.Component {
     }
 
     getSelectedElements() {
-        return this.selectedElements
+        return this.state.selectedElement;
     }
 
     handler(selectedElement, event) {
@@ -63,13 +63,16 @@ export class Download extends React.Component {
         } else {
             this.selectedElements = this.selectedElements.filter( (element) => JSON.stringify(element) !== JSON.stringify(selectedElement) )
         }
+
+        this.setState({
+            selectedElement: this.selectedElements
+        })
     }
 
     validate() {
         let selectedElements = this.getSelectedElements()
         let body = []
         selectedElements.map(element => {
-            console.log('swift id : ', element.swift_object_id)
             body.push({
                 'object_id': element.swift_object_id,
                 'container_name': element.swift_container
@@ -97,7 +100,18 @@ export class Download extends React.Component {
                   console.error(this.url, status, err.toString()); // eslint-disable-line
                 },
               });
+
+              // empty selected elements
+            this.emptySelectedlements()
+        } else {
+            alert('Veuillez sélectionner une métadonnée !')
         }
+    }
+
+    emptySelectedlements() {
+        this.setState({
+            selectedElement: []
+        })
     }
 
     componentDidMount() {
@@ -180,7 +194,7 @@ export class Download extends React.Component {
         if(this.state.elements){
             elts = this.state.elements
         }
-        let selectedElements = this.state.selectedElements
+        let selectedElements = this.getSelectedElements()
         let handler = this.handler
         let setFiletype = this.setFiletype
         let setBeginDate = this.setBeginDate
@@ -220,7 +234,7 @@ export class Download extends React.Component {
                         </thead>
                         <tbody>
 
-                            { !elts.length ? <tr> <td colspan='7' class="text-center">No data found</td> </tr> : 
+                            { !elts.length ? <tr> <td colspan='7' class="text-center">Pas de données</td> </tr> : 
                                 
                              Object.keys(elts).map(function(key, index){ 
             
@@ -229,8 +243,11 @@ export class Download extends React.Component {
                                 selectedElements={selectedElements} />
 
                             }) }
+                               
+                        </tbody>
+                    </table>
 
-                        { elts.length ? 
+                    { elts.length ? 
                             <div class="commentBox">
 
                                     <ReactPaginate
@@ -242,11 +259,10 @@ export class Download extends React.Component {
                                         marginPagesDisplayed={2}
                                         pageRangeDisplayed={5}
                                         onPageChange={this.handlePageClick}
-                                        containerClassName={'pagination'}
                                         activeClassName={'active'}
                                         breakClassName={'page-item'}
                                         breakLinkClassName={'page-link'}
-                                        containerClassName={'pagination'}
+                                        containerClassName={'pagination row justify-content-md-center'}
                                         pageClassName={'page-item'}
                                         pageLinkClassName={'page-link'}
                                         previousClassName={'page-item'}
@@ -257,9 +273,6 @@ export class Download extends React.Component {
                                     />
                             </div>
                         : '' }
-                               
-                        </tbody>
-                    </table>
 
                     { elts.length ?
                         <div class="col-12">
