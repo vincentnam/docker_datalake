@@ -9,14 +9,22 @@ mongo_data_bp = Blueprint('mongo_data_bp', __name__)
 @mongo_data_bp.route('/raw-data', methods=['POST'])
 @cross_origin(supports_credentials=True)
 def get_metadata():
-    params = {
-        'limit': request.get_json()['limit'],
-        'offset': request.get_json()['offset'],
-        'filetype': request.get_json()['filetype'],
-        'datatype': request.get_json()['datatype'],
-        'beginDate': request.get_json()['beginDate'],
-        'endDate': request.get_json()['endDate']
-    }
+    try:
+        params = {
+            'filetype': request.get_json()['filetype'],
+            'datatype': request.get_json()['datatype'],
+            'beginDate': request.get_json()['beginDate'],
+            'endDate': request.get_json()['endDate']
+        }
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+    if(("limit" in request.get_json() and "offset" not in request.get_json()) or ("limit" not in request.get_json() and "offset" in request.get_json())):
+        return jsonify({'error': 'Limit and offset have to be sent together.'})
+
+    if("limit" in request.get_json() and "offset" in request.get_json()):
+        params['limit'] =  request.get_json()['limit']
+        params['offset'] =  request.get_json()['offset']
 
     date_format = "%Y-%m-%d"
 

@@ -249,7 +249,6 @@ export class Download extends React.Component {
 
                     { elts.length ? 
                             <div class="commentBox">
-
                                     <ReactPaginate
                                         previousLabel={'previous'}
                                         nextLabel={'next'}
@@ -275,7 +274,7 @@ export class Download extends React.Component {
                         : '' }
 
                     { elts.length ?
-                        <div class="col-12">
+                        <div class="col-12 text-center">
                             <button class="btn btn-primary" onClick={this.validate} type="submit">Valider</button>
                         </div>
                     : '' }

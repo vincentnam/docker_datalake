@@ -60,13 +60,9 @@ def get_metadata(db_name, params):
         ]}
     )
 
-    if(params['offset']):
+    if("offset" in params.keys() and "limit" in params.keys()):
         metadata = metadata.skip(params['offset'])
-
-    if(params['limit']):
         metadata = metadata.limit(params['limit'])
-
-    
 
     nb_objects = metadata.count()
 
