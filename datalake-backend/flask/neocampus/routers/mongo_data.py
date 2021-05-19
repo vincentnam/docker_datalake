@@ -28,8 +28,28 @@ def get_metadata():
 
     date_format = "%Y-%m-%d"
 
-    params['beginDate'] = datetime.strptime(params['beginDate'], date_format)
-    params['endDate'] = datetime.strptime(params['endDate'], date_format)
+    convertedBeginDate = datetime.strptime(params['beginDate'], date_format)
+    convertedEndDate = datetime.strptime(params['endDate'], date_format)
+
+    if(convertedBeginDate > convertedEndDate):
+        params['beginDate'] = params['beginDate'] + " 23:59:59"
+        params['endDate'] = params['endDate'] + " 00:00:00"
+        date_format = "%Y-%m-%d %H:%M:%S"
+
+        convertedBeginDateTemp = datetime.strptime(params['beginDate'], date_format)
+        convertedBeginDate = datetime.strptime(params['endDate'], date_format)
+        convertedEndDate = convertedBeginDateTemp
+
+    if(convertedBeginDate == convertedEndDate):
+        params['beginDate'] = params['beginDate'] + " 00:00:00"
+        params['endDate'] = params['endDate'] + " 23:59:59"
+        date_format = "%Y-%m-%d %H:%M:%S"
+
+        convertedBeginDate = datetime.strptime(params['beginDate'], date_format)
+        convertedEndDate = datetime.strptime(params['endDate'], date_format)
+
+    params['beginDate'] = convertedBeginDate
+    params['endDate'] = convertedEndDate
 
     nb_objects, mongo_collections = mongo.get_metadata("neOCampus", params)
     mongo_collections = list(mongo_collections)
