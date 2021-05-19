@@ -19,7 +19,6 @@ export class Upload extends React.Component {
                 const f = [file]
                 this.setState({files: f});
             });
-           
             
         };
         this.state = {
@@ -32,6 +31,7 @@ export class Upload extends React.Component {
             file: '',
             premieremeta: '',
             deuxiememeta: '',
+            othermeta: {}
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -96,13 +96,13 @@ export class Upload extends React.Component {
                                 if(meta.type === "number" || meta.type === "text")
                                     return  <div class="mb-3">
                                                 <label class="form-label">{meta.label}</label>
-                                                <input type={meta.type} value={this.state.meta} onChange={this.handleChange} name="meta" class="form-control" />
+                                                <input type={meta.type} name={meta.id} class="form-control" />
                                             </div>
                                 
                                 if(meta.type === "textarea")
                                     return  <div class="mb-3">
-                                                <label class="form-label">Métadonnée</label>
-                                                <textarea value={this.state.meta} onChange={this.handleChange} name="meta" class="form-control" rows="3" />
+                                                <label class="form-label">{meta.label}</label>
+                                                <textarea name={meta.id} class="form-control" rows="3" />
                                             </div>
                                 
                             })
