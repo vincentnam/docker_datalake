@@ -85,6 +85,39 @@ export class Upload extends React.Component {
             </li>
         ));
 
+        const Metadonnees = () => {
+            const types = [config.types];
+            let listMeta = null;
+            types.map((type) => (
+                type.map((t) => {
+                    if (t.id === parseInt(this.state.type)) {
+                        listMeta = (
+                            t.metadonnees.map((meta) => {
+                                if(meta.type === "number" || meta.type === "text")
+                                    return  <div class="mb-3">
+                                                <label class="form-label">{meta.label}</label>
+                                                <input type={meta.type} value={this.state.meta} onChange={this.handleChange} name="meta" class="form-control" />
+                                            </div>
+                                
+                                if(meta.type === "textarea")
+                                    return  <div class="mb-3">
+                                                <label class="form-label">Métadonnée</label>
+                                                <textarea value={this.state.meta} onChange={this.handleChange} name="meta" class="form-control" rows="3" />
+                                            </div>
+                                
+                            })
+                        );
+                    }
+                })
+            ));
+            return (
+                <div>
+                    {listMeta}
+                </div>
+                
+            );
+        }
+
         const SelectMetier = () => {
             const types = [config.types];
             const listTypes = types.map((type) => (
@@ -111,14 +144,15 @@ export class Upload extends React.Component {
                                 <label>Type de données</label>
                                 <SelectMetier />
                             </div>
-                            <div class="mb-3">
+                            {/* <div class="mb-3">
                                 <label class="form-label">Métadonnée générique 1</label>
                                 <input type="text" value={this.state.premieremeta} name="premieremeta" onChange={this.handleChange} class="form-control" />
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Métadonnée  générique 2</label>
                                 <textarea value={this.state.deuxiememeta} onChange={this.handleChange} name="deuxiememeta" class="form-control" rows="3" />
-                            </div>
+                            </div> */}
+                            <Metadonnees />
                             <div class="form-group">
                                 <Dropzone value={this.state.file} name="file" onDrop={this.onDrop}>
                                     {({getRootProps, getInputProps}) => (
