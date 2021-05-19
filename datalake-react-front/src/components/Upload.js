@@ -55,9 +55,9 @@ export class Upload extends React.Component {
         } else if ( this.state.filename === ''){
             window.alert("Veuillez ajouter un fichier !");
         } else if (this.state.premieremeta === '') {
-            window.alert("Veuillez renseigner la première metadonnées générique !");
+            window.alert("Veuillez renseigner la première metadonnée générique !");
         } else if (this.state.deuxiememeta === '') {
-            window.alert("Veuillez renseigner la deuxième metadonnées générique !");
+            window.alert("Veuillez renseigner la deuxième metadonnée générique !");
         } else {
             api.post('http://localhost/storage', {
                 idType: type,
@@ -125,7 +125,7 @@ export class Upload extends React.Component {
                                     <section>
                                         <div {...getRootProps({className: 'drop'})}>
                                             <input {...getInputProps()} />
-                                            <p>Drag 'n' drop veuillez glisser un fichier ou click pour ajouter un fichier.</p>
+                                            <p>Drag 'n' drop veuillez glisser un fichier ou cliquer pour ajouter un fichier.</p>
                                         </div>
                                         <aside class="pt-3">
                                             <h5>Files</h5>

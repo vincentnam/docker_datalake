@@ -28,7 +28,7 @@ export class Home extends React.Component {
                             <div class="card border-dark mb-3">
                                 <div class="card-body">
                                     <h5 class="card-title">Download</h5>
-                                    <p class="card-text">Partie téléchargement des donnée brutes et traitées du Data Lake.</p>
+                                    <p class="card-text">Partie téléchargement des données brutes et traitées du Data Lake.</p>
                                     <a href="/download" class="btn btn-outline-primary">Accéder</a>
                                 </div>
                             </div>
@@ -37,7 +37,7 @@ export class Home extends React.Component {
                             <div class="card border-dark mb-3">
                                 <div class="card-body">
                                     <h5 class="card-title">Upload</h5>
-                                    <p class="card-text">Partie envoie de donnée vers le Datalake.</p>
+                                    <p class="card-text">Partie envoie de données vers le Datalake.</p>
                                     <a href="/upload" class="btn btn-outline-primary">Accéder</a>
                                 </div>
                             </div>
