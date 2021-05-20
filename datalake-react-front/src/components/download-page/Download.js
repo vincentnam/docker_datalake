@@ -147,10 +147,12 @@ export class Download extends React.Component {
           type: 'POST',
     
           success: (data) => {
-            this.setState({
-              elements: data.result.objects,
-              pageCount: Math.ceil(data.result.length / this.perPage),
-            });
+              if(data.result) {
+                this.setState({
+                    elements: data.result.objects,
+                    pageCount: Math.ceil(data.result.length / this.perPage),
+                  });
+              }
           },
     
           error: (xhr, status, err) => {
