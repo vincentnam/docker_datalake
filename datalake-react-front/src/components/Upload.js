@@ -62,6 +62,13 @@ export class Upload extends React.Component {
     handleSubmit(event) {
         event.preventDefault();
         const type = parseInt(this.state.type);
+        const other = {};
+
+        this.state.othermeta.map((meta) => {
+            other[meta.id] = meta.value
+        
+        });
+
         if (this.state.type === 0) {
             window.alert("Veuillez renseigner le type de données !");
         } else if ( this.state.filename === ''){
@@ -76,7 +83,7 @@ export class Upload extends React.Component {
                 typeFile: this.state.typeFile,
                 filename: this.state.filename,
                 file: this.state.file,
-                othermeta: this.othermeta
+                othermeta: other
             })
             .then(function () {
                 window.alert("L'upload a bien été fait")
