@@ -28,8 +28,11 @@ def get_metadata():
 
     date_format = "%Y-%m-%d"
 
-    convertedBeginDate = datetime.strptime(params['beginDate'], date_format)
-    convertedEndDate = datetime.strptime(params['endDate'], date_format)
+    try:
+        convertedBeginDate = datetime.strptime(params['beginDate'], date_format)
+        convertedEndDate = datetime.strptime(params['endDate'], date_format)
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
     if(convertedBeginDate > convertedEndDate):
         params['beginDate'] = params['beginDate'] + " 23:59:59"
