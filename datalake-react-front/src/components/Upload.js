@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Header } from './Header';
 import Dropzone from 'react-dropzone';
 import { config } from '../configmeta/config';
@@ -31,7 +31,7 @@ export class Upload extends React.Component {
             file: '',
             premieremeta: '',
             deuxiememeta: '',
-            othermeta: {}
+            othermeta: [],
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -45,6 +45,18 @@ export class Upload extends React.Component {
         this.setState({
         [name]: value
         });
+        if (name === "type") {
+            const types = [config.types];
+            types.map((type) => (
+                type.map((t) => {
+                    if (t.id === parseInt(value)) {
+                        this.setState({
+                            othermeta: t.metadonnees
+                        });
+                    }
+                })
+            ));
+        }
     }
     
     handleSubmit(event) {
@@ -64,7 +76,7 @@ export class Upload extends React.Component {
                 typeFile: this.state.typeFile,
                 filename: this.state.filename,
                 file: this.state.file,
-                othermeta: this.state.othermeta
+                othermeta: this.othermeta
             })
             .then(function () {
                 window.alert("L'upload a bien été fait")
@@ -74,8 +86,25 @@ export class Upload extends React.Component {
                 window.alert("L'upload n'a pas réussi ! : " + error)
             });
         }
+
     }
 
+    editMeta(index) {
+        console.log(index);
+    }
+
+    componentWillMount() {
+        const types = [config.types];
+        types.map((type) => (
+            type.map((t) => {
+                if (t.id === parseInt(this.state.type)) {
+                    this.setState({
+                        othermeta: t.metadonnees
+                    });
+                }
+            })
+        ));
+    }
 
     render() {
         const files = this.state.files.map(file => (
@@ -85,30 +114,23 @@ export class Upload extends React.Component {
         ));
 
         const Metadonnees = () => {
-            const types = [config.types];
             let listMeta = null;
-            types.map((type) => (
-                type.map((t) => {
-                    if (t.id === parseInt(this.state.type)) {
-                        listMeta = (
-                            t.metadonnees.map((meta) => {
-                                if(meta.type === "number" || meta.type === "text")
-                                    return  <div class="mb-3">
-                                                <label class="form-label">{meta.label}</label>
-                                                <input type={meta.type} name={meta.id} class="form-control" />
-                                            </div>
-                                
-                                if(meta.type === "textarea")
-                                    return  <div class="mb-3">
-                                                <label class="form-label">{meta.label}</label>
-                                                <textarea name={meta.id} class="form-control" rows="3" />
-                                            </div>
-                                
-                            })
-                        );
-                    }
+            const othermeta = this.state.othermeta;
+            listMeta = (
+                othermeta.map((meta) => {
+                    if(meta.type === "number" || meta.type === "text") 
+                        return  <div class="mb-3">
+                                    <label class="form-label">{meta.label}</label>
+                                    <input value={meta.value} onChange={this.editMeta(othermeta.indexOf(meta))} type={meta.type} name={meta.id} class="form-control" />
+                                </div>
+    
+                    if(meta.type === "textarea") 
+                        return  <div class="mb-3">
+                                    <label class="form-label">{meta.label}</label>
+                                    <textarea value={meta.value} onChange={this.editMeta(othermeta.indexOf(meta))} name={meta.id} class="form-control" rows="3" />
+                                </div>
                 })
-            ));
+            );
             return (
                 <div>
                     {listMeta}
