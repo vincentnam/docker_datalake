@@ -1,6 +1,8 @@
 import React from "react";
 import { Header } from './Header';
 import Dropzone from 'react-dropzone';
+import { InputMeta } from './upload-child/InputMeta';
+import { TextAreaMeta } from './upload-child/TextAreaMeta';
 import { config } from '../configmeta/config';
 import api from '../api/api';
 
@@ -65,8 +67,7 @@ export class Upload extends React.Component {
         const other = {};
 
         this.state.othermeta.map((meta) => {
-            other[meta.id] = meta.value
-        
+            other[meta.name] = meta.value
         });
 
         if (this.state.type === 0) {
@@ -93,21 +94,10 @@ export class Upload extends React.Component {
                 window.alert("L'upload n'a pas réussi ! : " + error)
             });
         }
-
-    }
-
-    editMeta(index, event) {
-        if(event !== undefined) {
-            const other = this.state.othermeta;
-            other[index].value = event.target.value;
-            this.setState({
-                othermeta: other
-            });
-        }
-        
     }
 
     render() {
+
         const files = this.state.files.map(file => (
             <li key={file.name}>
                 {JSON.stringify(file.name)}
@@ -119,17 +109,12 @@ export class Upload extends React.Component {
             const othermeta = this.state.othermeta;
             listMeta = (
                 othermeta.map((meta) => {
+                    const index = othermeta.indexOf(meta)
                     if(meta.type === "number" || meta.type === "text") 
-                        return  <div key={meta.id} class="mb-3">
-                                    <label class="form-label">{meta.label}</label>
-                                    <input value={meta.value} onChange={this.editMeta(othermeta.indexOf(meta))} type={meta.type} name={meta.name} class="form-control" />
-                                </div>
+                        return  <InputMeta key={meta.name} meta={meta} othermeta={othermeta} index={index} />
     
                     if(meta.type === "textarea") 
-                        return  <div key={meta.id} class="mb-3">
-                                    <label class="form-label">{meta.label}</label>
-                                    <textarea value={meta.value} onChange={this.editMeta(othermeta.indexOf(meta))} name={meta.name} class="form-control" rows="3" />
-                                </div>
+                        return  <TextAreaMeta key={meta.name} meta={meta} othermeta={othermeta} index={index} />
                 })
             );
             return (
@@ -166,14 +151,6 @@ export class Upload extends React.Component {
                                 <label>Type de données</label>
                                 <SelectMetier />
                             </div>
-                            {/* <div class="mb-3">
-                                <label class="form-label">Métadonnée générique 1</label>
-                                <input type="text" value={this.state.premieremeta} name="premieremeta" onChange={this.handleChange} class="form-control" />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Métadonnée  générique 2</label>
-                                <textarea value={this.state.deuxiememeta} onChange={this.handleChange} name="deuxiememeta" class="form-control" rows="3" />
-                            </div> */}
                             <Metadonnees />
                             <div class="form-group">
                                 <Dropzone value={this.state.file} name="file" onDrop={this.onDrop}>
