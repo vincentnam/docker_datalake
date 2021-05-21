@@ -39,7 +39,7 @@ def get_metadata(db_name, params):
     dict_query = {"$and": []}
 
     if(params['filetype'] != ""):
-        filetype_query = {"content_type": params['filetype']}
+        filetype_query = {"content_type": {'$regex': params['filetype'], '$options': 'i'}}
         for item in [filetype_query]: 
             dict_query['$and'].append(item) 
 
@@ -53,12 +53,7 @@ def get_metadata(db_name, params):
         for item in [datatype_query]: 
             dict_query['$and'].append(item)
 
-    metadata = collection.find(
-        {"$and": [
-            {'creation_date': {'$gte': start_date, '$lt': end_date}},
-            {"content_type": params['filetype']}
-        ]}
-    )
+    metadata = collection.find(dict_query)
 
     if("offset" in params.keys() and "limit" in params.keys()):
         metadata = metadata.skip(params['offset'])

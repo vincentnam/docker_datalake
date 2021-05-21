@@ -46,16 +46,17 @@ export class Filters extends React.Component {
         return (
             <div class="p-4">
                 <div class="jumbotron">
-                    <h2 class="display-4 text-center">Filtres d'affichage des métadonnées</h2>
+                    <h2 class="display-4 text-center">Affichage des données brutes</h2>
                     <Form onSubmit={this.validateFilters}>
                         <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="inputCity">Type de fichier</label>
+                            <div class="form-group required col-md-6">
+                                <label for="inputCity control-label">Type de fichier</label>
                                 <Form.Control as="select" custom value={this.props.data.filetype} onChange={this.setFiletype} required>
                                     <option selected value=''>Veuillez sélectionner un type</option>
                                     <option value="application/vnd.ms-excel">CSV</option>
                                     <option value="application/json">JSON</option>
                                     <option value="text/plain">Texte</option>
+                                    <option value="image">Images</option>
                                 </Form.Control>
                             </div>
                             <div class="form-group col-md-6">

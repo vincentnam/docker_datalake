@@ -64,6 +64,7 @@ def get_metadata():
             "swift_container": obj['swift_container'],
             "content_type": obj['content_type'],
             'swift_object_id': obj['swift_object_id'],
+            'other_data': obj['other_data'],
             'swift_user': obj['swift_user'],
             'creation_date': obj['creation_date']
         })

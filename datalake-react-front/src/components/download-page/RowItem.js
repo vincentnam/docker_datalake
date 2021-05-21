@@ -11,8 +11,9 @@ export class RowItem extends React.Component {
 
     isSelected() {
         let checked = null
-        if(this.props.selectedElements) {
-            this.props.selectedElements.map(s => {
+        let selectedElements = this.props.selectedElements
+        if(selectedElements) {
+            selectedElements.map(s => {
                 if(JSON.stringify(s) == JSON.stringify(this.props.item)) {
                     checked = true
                 }
@@ -35,6 +36,8 @@ export class RowItem extends React.Component {
                 <td>{ this.props.item.content_type }</td>
                 <td>{ this.props.item.swift_user }</td>
                 <td>{ this.props.item.original_object_name }</td>
+                <td>{ (this.props.item.other_data ? this.props.item.other_data['meta1'] : '-') }</td>
+                <td>{ (this.props.item.other_data ? this.props.item.other_data['meta2'] : '-') }</td>
                 <td>{ Moment(this.props.item.creation_date).format('YYYY-MM-DD hh:mm:ss') }</td>
                 <td>
                     <div class="form-check">

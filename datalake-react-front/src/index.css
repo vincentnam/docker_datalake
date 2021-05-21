@@ -23,3 +23,8 @@ code {
 .commentBox {
   width: 100%;
 }
+
+.form-group.required .control-label:after {
+  content:"*";
+  color:red;
+}

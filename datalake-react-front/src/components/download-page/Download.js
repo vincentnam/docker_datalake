@@ -6,11 +6,10 @@ import ReactPaginate from 'react-paginate';
 import $ from 'jquery';
 import { Filters } from "./Filters";
 import moment from "moment";
+import ProgressBar from 'react-bootstrap/ProgressBar';
 //import useForceUpdate from 'use-force-update';
 
 export class Download extends React.Component {
-    selectedElements = []
-    elements = {}
     url = process.env.REACT_APP_ENDPOINT
     perPage = 6
 
@@ -28,7 +27,7 @@ export class Download extends React.Component {
 
         // Set some state
         this.state = {
-            selectedElement: [],
+            selectedElements: [],
             elements: {},
             offset: 0,
             filetype: '',
@@ -47,25 +46,23 @@ export class Download extends React.Component {
         })
     }
 
-    getElements() {
-        return this.elements;
-    }
-
     getSelectedElements() {
-        return this.state.selectedElement;
+        return this.state.selectedElements;
     }
 
-    handler(selectedElement, event) {
+    handler(selectedElements, event) {
+        let selectedElementsTemp = this.getSelectedElements()
+
          // if checked
          if(event.target.checked) {
-            this.selectedElements.push(selectedElement)
+            selectedElementsTemp.push(selectedElements)
 
         } else {
-            this.selectedElements = this.selectedElements.filter( (element) => JSON.stringify(element) !== JSON.stringify(selectedElement) )
+            selectedElementsTemp = selectedElementsTemp.filter( (element) => JSON.stringify(element) !== JSON.stringify(selectedElements) )
         }
 
         this.setState({
-            selectedElement: this.selectedElements
+            selectedElement: selectedElementsTemp
         })
     }
 
@@ -80,26 +77,26 @@ export class Download extends React.Component {
         })
 
         if(selectedElements.length) {
-            $.ajax({
-                url: this.url + '/swift-files',
-                type: 'POST',
-                dataType: 'json',
-                contentType: 'application/json',
-                data: JSON.stringify(body),
-          
-                success: (data) => {
-                    let url = data.swift_zip
+            const options = {
+                onDownloadProgress: (progressEvent) => {
+                    const {loaded, total} = progressEvent;
+                    let percent = Math.floor( (loaded * 100) / total )
+                    console.log( `${loaded}kb of ${total}kb | ${percent}%` )
+                }
+            }
+
+            axios.post(this.url + '/swift-files', body)
+                .then(function (result) {
+                    let url = result.data.swift_zip
                     const link = document.createElement('a');
                     link.href = url;
                     
                     link.click();
                     window.URL.revokeObjectURL(url);
-                },
-          
-                error: (xhr, status, err) => {
-                  console.error(this.url, status, err.toString()); // eslint-disable-line
-                },
-              });
+                })
+                .catch(function (error, status) {
+                    console.error(status, error.toString()); // eslint-disable-line
+                });
 
               // empty selected elements
             this.emptySelectedlements()
@@ -110,7 +107,7 @@ export class Download extends React.Component {
 
     emptySelectedlements() {
         this.setState({
-            selectedElement: []
+            selectedElements: []
         })
     }
 
@@ -188,7 +185,11 @@ export class Download extends React.Component {
     }
 
     validateFilters() {
-        this.loadObjectsFromServer();
+        this.setState({
+            offset: 0
+        }, () => {
+            this.loadObjectsFromServer();
+        })
     }
 
     render() {
@@ -230,6 +231,8 @@ export class Download extends React.Component {
                                 <th scope="col">Type de fichier</th>
                                 <th scope="col">Utilisateur Swift</th>
                                 <th scope="col">Nom de l'objet</th>
+                                <th scope="col">Meta 1</th>
+                                <th scope="col">Meta 2</th>
                                 <th scope="col">Date de création</th>
                                 <th scope="col"></th>
                             </tr>
@@ -277,10 +280,12 @@ export class Download extends React.Component {
 
                     { elts.length ?
                         <div class="col-12 text-center">
-                            <button class="btn btn-primary" onClick={this.validate} type="submit">Valider</button>
+                            <button class="btn btn-primary" onClick={this.validate} type="submit">Download</button>
                         </div>
                     : '' }
                 </div>
+
+                {/*<ProgressBar animated now={45} />*/}
                 
             </div>
         );
