@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Header } from './Header';
 import Dropzone from 'react-dropzone';
 import { config } from '../configmeta/config';
@@ -96,21 +96,15 @@ export class Upload extends React.Component {
 
     }
 
-    editMeta(index) {
-        console.log(index);
-    }
-
-    componentWillMount() {
-        const types = [config.types];
-        types.map((type) => (
-            type.map((t) => {
-                if (t.id === parseInt(this.state.type)) {
-                    this.setState({
-                        othermeta: t.metadonnees
-                    });
-                }
-            })
-        ));
+    editMeta(index, event) {
+        if(event !== undefined) {
+            const other = this.state.othermeta;
+            other[index].value = event.target.value;
+            this.setState({
+                othermeta: other
+            });
+        }
+        
     }
 
     render() {
@@ -126,15 +120,15 @@ export class Upload extends React.Component {
             listMeta = (
                 othermeta.map((meta) => {
                     if(meta.type === "number" || meta.type === "text") 
-                        return  <div class="mb-3">
+                        return  <div key={meta.id} class="mb-3">
                                     <label class="form-label">{meta.label}</label>
-                                    <input value={meta.value} onChange={this.editMeta(othermeta.indexOf(meta))} type={meta.type} name={meta.id} class="form-control" />
+                                    <input value={meta.value} onChange={this.editMeta(othermeta.indexOf(meta))} type={meta.type} name={meta.name} class="form-control" />
                                 </div>
     
                     if(meta.type === "textarea") 
-                        return  <div class="mb-3">
+                        return  <div key={meta.id} class="mb-3">
                                     <label class="form-label">{meta.label}</label>
-                                    <textarea value={meta.value} onChange={this.editMeta(othermeta.indexOf(meta))} name={meta.id} class="form-control" rows="3" />
+                                    <textarea value={meta.value} onChange={this.editMeta(othermeta.indexOf(meta))} name={meta.name} class="form-control" rows="3" />
                                 </div>
                 })
             );
