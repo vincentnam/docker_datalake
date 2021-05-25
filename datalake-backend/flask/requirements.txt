@@ -3,3 +3,4 @@ uwsgi>=2.0,<2.1
 flask_cors
 python-swiftclient>=3.11,<3.12
 pymongo>=3.11,<3.12
+flask-cors>=3.0.9

@@ -28,7 +28,7 @@ export class Home extends React.Component {
                             <div class="card border-dark mb-3">
                                 <div class="card-body">
                                     <h5 class="card-title">Download</h5>
-                                    <p class="card-text">Partie téléchargement des données brutes et traitées du Data Lake.</p>
+                                    <p class="card-text">Partie téléchargement des données brutes et traitées du Datalake.</p>
                                     <a href="/download" class="btn btn-outline-primary">Accéder</a>
                                 </div>
                             </div>

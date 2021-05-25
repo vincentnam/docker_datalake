@@ -3,6 +3,7 @@ import { Header } from './Header';
 import Dropzone from 'react-dropzone';
 import { config } from '../configmeta/config';
 import api from '../api/api';
+import { LoadingSpinner } from "./download-page/LoadingSpinner";
 
 export class Upload extends React.Component {
     constructor() {
@@ -32,9 +33,22 @@ export class Upload extends React.Component {
             file: '',
             premieremeta: '',
             deuxiememeta: '',
+            loading: false
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+    }
+
+    handleClose() {
+        this.setState({
+            loading: false
+        })
+    }
+
+    handleShow() {
+        this.setState({
+            loading: true
+        })
     }
 
     handleChange(event) {
@@ -56,9 +70,8 @@ export class Upload extends React.Component {
             window.alert("Veuillez ajouter un fichier !");
         } else if (this.state.premieremeta === '') {
             window.alert("Veuillez renseigner la première metadonnée générique !");
-        } else if (this.state.deuxiememeta === '') {
-            window.alert("Veuillez renseigner la deuxième metadonnée générique !");
         } else {
+            this.handleShow()
             api.post('http://localhost/storage', {
                 idType: type,
                 typeFile: this.state.typeFile,
@@ -73,7 +86,7 @@ export class Upload extends React.Component {
             })
             .catch(function (error) {
                 window.alert("L'upload n'a pas réussi ! : " + error)
-            });
+            }).finally(function(){this.handleClose()}.bind(this))
         }
     }
 
@@ -85,7 +98,7 @@ export class Upload extends React.Component {
             </li>
         ));
 
-        const SelectMetier = () => {
+        const SelectDatatype = () => {
             const types = [config.types];
             const listTypes = types.map((type) => (
                 type.map((t) => 
@@ -107,28 +120,28 @@ export class Upload extends React.Component {
                     <div class="jumbotron">
                         <h2 class="display-4 text-center">Upload de données</h2>
                         <form onSubmit={this.handleSubmit}>
-                            <div class="form-group">
-                                <label>Type de données</label>
-                                <SelectMetier />
+                            <div class="form-group required">
+                                <label class="control-label">Type de données</label>
+                                <SelectDatatype />
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Métadonnée générique 1</label>
-                                <input type="text" value={this.state.premieremeta} name="premieremeta" onChange={this.handleChange} class="form-control" />
+                            <div class="form-group required mb-3">
+                                <label class="form-label control-label">Métadonnée générique 1</label>
+                                <input type="text" value={this.state.premieremeta} name="premieremeta" onChange={this.handleChange} class="form-control" required />
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Métadonnée  générique 2</label>
                                 <textarea value={this.state.deuxiememeta} onChange={this.handleChange} name="deuxiememeta" class="form-control" rows="3" />
                             </div>
-                            <div class="form-group">
-                                <Dropzone value={this.state.file} name="file" onDrop={this.onDrop}>
+                            <div class="form-group required">
+                                <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} accept="image/*,application/JSON,.csv,text/plain">
                                     {({getRootProps, getInputProps}) => (
                                     <section>
                                         <div {...getRootProps({className: 'drop'})}>
                                             <input {...getInputProps()} />
-                                            <p>Drag 'n' drop veuillez glisser un fichier ou cliquer pour ajouter un fichier.</p>
+                                            <label class="control-label">Drag 'n' drop veuillez glisser un fichier ou cliquer pour ajouter un fichier.</label>
                                         </div>
                                         <aside class="pt-3">
-                                            <h5>Files</h5>
+                                            <h5>Fichiers</h5>
                                             <ul>{files}</ul>
                                         </aside>
                                     </section>
@@ -136,10 +149,12 @@ export class Upload extends React.Component {
                                 </Dropzone>
                             </div>
                             <br />
-                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="submit" class="btn btn-primary">Upload</button>
                         </form>
                     </div>
                 </div>
+
+                <LoadingSpinner loading={this.state.loading} />
             </div>
         );
     }

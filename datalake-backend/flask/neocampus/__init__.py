@@ -7,7 +7,10 @@ from . import routers
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
+
+    # TODO : remplacer la partie CORS par une conf interne Nginx
+    cors = CORS(app, support_credentials=True)
+    
     app.config.from_pyfile("config.py")
     routers.init_app(app)
 
