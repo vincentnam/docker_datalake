@@ -3,6 +3,7 @@ import { Header } from './Header';
 import Dropzone from 'react-dropzone';
 import { config } from '../configmeta/config';
 import api from '../api/api';
+import { LoadingSpinner } from "./download-page/LoadingSpinner";
 
 export class Upload extends React.Component {
     constructor() {
@@ -32,9 +33,22 @@ export class Upload extends React.Component {
             file: '',
             premieremeta: '',
             deuxiememeta: '',
+            loading: false
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+    }
+
+    handleClose() {
+        this.setState({
+            loading: false
+        })
+    }
+
+    handleShow() {
+        this.setState({
+            loading: true
+        })
     }
 
     handleChange(event) {
@@ -57,6 +71,7 @@ export class Upload extends React.Component {
         } else if (this.state.premieremeta === '') {
             window.alert("Veuillez renseigner la première metadonnée générique !");
         } else {
+            this.handleShow()
             api.post('http://localhost/storage', {
                 idType: type,
                 typeFile: this.state.typeFile,
@@ -71,7 +86,7 @@ export class Upload extends React.Component {
             })
             .catch(function (error) {
                 window.alert("L'upload n'a pas réussi ! : " + error)
-            });
+            }).finally(function(){this.handleClose()}.bind(this))
         }
     }
 
@@ -118,7 +133,7 @@ export class Upload extends React.Component {
                                 <textarea value={this.state.deuxiememeta} onChange={this.handleChange} name="deuxiememeta" class="form-control" rows="3" />
                             </div>
                             <div class="form-group required">
-                                <Dropzone value={this.state.file} name="file" onDrop={this.onDrop}>
+                                <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} accept="image/*,application/JSON,.csv,text/plain">
                                     {({getRootProps, getInputProps}) => (
                                     <section>
                                         <div {...getRootProps({className: 'drop'})}>
@@ -138,6 +153,8 @@ export class Upload extends React.Component {
                         </form>
                     </div>
                 </div>
+
+                <LoadingSpinner loading={this.state.loading} />
             </div>
         );
     }

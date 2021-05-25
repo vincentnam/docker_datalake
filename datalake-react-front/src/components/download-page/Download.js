@@ -2,12 +2,11 @@ import React from "react";
 import { Header } from '../Header';
 import { RowItem } from './RowItem';
 import axios from 'axios';
-import ReactPaginate from 'react-paginate';
 import $ from 'jquery';
 import { Filters } from "./Filters";
 import moment from "moment";
-import ProgressBar from 'react-bootstrap/ProgressBar';
-//import useForceUpdate from 'use-force-update';
+import { Paginate } from "./Paginate";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 export class Download extends React.Component {
     url = process.env.REACT_APP_ENDPOINT
@@ -24,6 +23,8 @@ export class Download extends React.Component {
         this.setBeginDate = this.setBeginDate.bind(this);
         this.setEndDate = this.setEndDate.bind(this);
         this.validateFilters = this.validateFilters.bind(this)
+        this.handleShow = this.handleShow.bind(this);
+        this.handleClose = this.handleClose.bind(this)
 
         // Set some state
         this.state = {
@@ -33,17 +34,9 @@ export class Download extends React.Component {
             filetype: '',
             dataType: '',
             beginDate: moment().format('Y-m-d'),
-            endDate: moment().format('Y-m-d')
+            endDate: moment().format('Y-m-d'),
+            loading: false
         };
-    }
-
-    componentDidMount(){
-        axios.get(this.url)
-            .then(res => {
-                this.setState(
-                    { elements: res.data }
-                );
-        })
     }
 
     getSelectedElements() {
@@ -67,6 +60,7 @@ export class Download extends React.Component {
     }
 
     validate() {
+        this.handleShow();
         let selectedElements = this.getSelectedElements()
         let body = []
         selectedElements.map(element => {
@@ -77,14 +71,6 @@ export class Download extends React.Component {
         })
 
         if(selectedElements.length) {
-            const options = {
-                onDownloadProgress: (progressEvent) => {
-                    const {loaded, total} = progressEvent;
-                    let percent = Math.floor( (loaded * 100) / total )
-                    console.log( `${loaded}kb of ${total}kb | ${percent}%` )
-                }
-            }
-
             axios.post(this.url + '/swift-files', body)
                 .then(function (result) {
                     let url = result.data.swift_zip
@@ -96,13 +82,25 @@ export class Download extends React.Component {
                 })
                 .catch(function (error, status) {
                     console.error(status, error.toString()); // eslint-disable-line
-                });
+                }).finally(function(){this.handleClose()}.bind(this))
 
               // empty selected elements
             this.emptySelectedlements()
         } else {
             alert('Veuillez sélectionner une métadonnée !')
         }
+    }
+
+    handleClose() {
+        this.setState({
+            loading: false
+        })
+    }
+
+    handleShow() {
+        this.setState({
+            loading: true
+        })
     }
 
     emptySelectedlements() {
@@ -113,7 +111,7 @@ export class Download extends React.Component {
 
     componentDidMount() {
         this.loadObjectsFromServer();
-      }
+    }
 
     handlePageClick = (data) => {
         let selected = data.selected;
@@ -160,28 +158,22 @@ export class Download extends React.Component {
 
     setFiletype(value) {
         let filetype = value;
-
-        this.state.filetype = filetype;
-        return this.setState({filetype: this.state.filetype})
+        return this.setState({filetype: filetype})
     }
 
     setDatatype(value) {
         let dataType = value;
-
-        this.state.dataType = dataType;
-        return this.setState({dataType: this.state.dataType})
+        return this.setState({dataType: dataType})
     }
 
     setBeginDate(value) {
         let beginDate = value;
-        this.state.beginDate = beginDate;
-        return this.setState({beginDate: this.state.beginDate})
+        return this.setState({beginDate: beginDate})
     }
 
     setEndDate(value) {
         let endDate = value;
-        this.state.endDate = endDate;
-        return this.setState({endDate: this.state.endDate})
+        return this.setState({endDate: endDate})
     }
 
     validateFilters() {
@@ -209,6 +201,7 @@ export class Download extends React.Component {
             'beginDate': this.state.beginDate,
             'endDate': this.state.endDate
         }
+        let loading = this.state.loading
 
         return(
             <div>
@@ -252,31 +245,12 @@ export class Download extends React.Component {
                         </tbody>
                     </table>
 
-                    { elts.length ? 
-                            <div class="commentBox">
-                                    <ReactPaginate
-                                        previousLabel={'previous'}
-                                        nextLabel={'next'}
-                                        breakLabel={'...'}
-                                        breakClassName={'break-me'}
-                                        pageCount={this.state.pageCount}
-                                        marginPagesDisplayed={2}
-                                        pageRangeDisplayed={5}
-                                        onPageChange={this.handlePageClick}
-                                        activeClassName={'active'}
-                                        breakClassName={'page-item'}
-                                        breakLinkClassName={'page-link'}
-                                        containerClassName={'pagination row justify-content-md-center'}
-                                        pageClassName={'page-item'}
-                                        pageLinkClassName={'page-link'}
-                                        previousClassName={'page-item'}
-                                        previousLinkClassName={'page-link'}
-                                        nextClassName={'page-item'}
-                                        nextLinkClassName={'page-link'}
-                                        forcePage={this.state.selected}
-                                    />
-                            </div>
-                        : '' }
+                    <Paginate
+                        elts={elts}
+                        handlePageClick={this.handlePageClick}
+                        selected={this.state.selected}
+                        pageCount={this.state.pageCount}
+                    />
 
                     { elts.length ?
                         <div class="col-12 text-center">
@@ -285,7 +259,7 @@ export class Download extends React.Component {
                     : '' }
                 </div>
 
-                {/*<ProgressBar animated now={45} />*/}
+                <LoadingSpinner loading={this.state.loading} />
                 
             </div>
         );
