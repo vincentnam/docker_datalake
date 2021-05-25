@@ -3,11 +3,7 @@ from flask import current_app
 from pymongo import MongoClient
 import swiftclient
 from swiftclient.service import SwiftService
-<<<<<<< HEAD
-from datetime import datetime
-=======
 import datetime
->>>>>>> 59f437a... fixed bugs with filter and backend side
 
 
 def get_swift_original_object_name(swift_container_name, swift_object_id):
