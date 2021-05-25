@@ -1,8 +1,11 @@
 import os
 import uuid
 from zipfile import ZipFile
+import base64
 from flask import Blueprint, jsonify, current_app, request, send_from_directory
 from ..services import swift
+from ..services import mongo
+
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
@@ -37,3 +40,38 @@ def swift_files():
 def download(filename):
     swift_files_directory = os.path.join(current_app.root_path, current_app.config['SWIFT_FILES_DIRECTORY'])
     return send_from_directory(directory=swift_files_directory, filename=filename)
+
+@swift_file_bp.route('/storage', methods=['POST'])
+def storage():
+    # id_type = request.get_json()["idType"]
+    file = request.get_json()["file"]
+    filename = request.get_json()["filename"]
+    premieremeta = request.get_json()["premieremeta"]
+    deuxiememeta = request.get_json()["deuxiememeta"]
+    type_file = request.get_json()["typeFile"]
+
+    data_file = file.split(",")
+    data_file = data_file[1]
+    data_file = base64.b64decode(data_file)
+    data_file = str(data_file)
+    data_file = data_file.split("'")
+    file_content = ''.join(map(str.capitalize, data_file[1:]))
+
+    container_name = "neOCampus"
+    mongodb_url = current_app.config['MONGO_URL']
+    user = current_app.config['SWIFT_USER']
+    key = current_app.config['SWIFT_KEY']
+    authurl = current_app.config['SWIFT_AUTHURL']
+    content_type = type_file
+    application = None
+    data_process = "custom"
+    processed_data_area_service = ["MongoDB"]
+    other_data = {
+        "meta1": premieremeta,
+        "meta2": deuxiememeta
+    }
+    mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
+                        processed_data_area_service, data_process, application,
+                        content_type, mongodb_url, other_data)
+
+    return jsonify({"response": "Done !"})
