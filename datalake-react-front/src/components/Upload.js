@@ -9,6 +9,9 @@ export class Upload extends React.Component {
     constructor() {
         super();
         this.onDrop = (files) => {
+            if(files.length < 1) {
+                alert('Format de fichier non accepté.')
+            } 
             files.map((file) => { 
                 const typeFile = file.type;
                 const filename = file.name;
@@ -90,7 +93,6 @@ export class Upload extends React.Component {
         }
     }
 
-
     render() {
         const files = this.state.files.map(file => (
             <li key={file.name}>
@@ -111,7 +113,6 @@ export class Upload extends React.Component {
                 </select>
             );
         }
-
 
         return(
             <div>

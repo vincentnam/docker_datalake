@@ -55,12 +55,11 @@ export class Download extends React.Component {
         }
 
         this.setState({
-            selectedElement: selectedElementsTemp
+            selectedElements: selectedElementsTemp
         })
     }
 
     validate() {
-        this.handleShow();
         let selectedElements = this.getSelectedElements()
         let body = []
         selectedElements.map(element => {
@@ -71,6 +70,7 @@ export class Download extends React.Component {
         })
 
         if(selectedElements.length) {
+            this.handleShow();
             axios.post(this.url + '/swift-files', body)
                 .then(function (result) {
                     let url = result.data.swift_zip
@@ -123,6 +123,7 @@ export class Download extends React.Component {
       };
 
     loadObjectsFromServer() {
+        this.handleShow()
         $.ajax({
           url: this.url + '/raw-data',
           data: JSON.stringify({ 
@@ -153,6 +154,10 @@ export class Download extends React.Component {
           error: (xhr, status, err) => {
             console.error(this.url, status, err.toString()); // eslint-disable-line
           },
+
+          complete: () => {
+            this.handleClose()
+          }
         });
       }
 
