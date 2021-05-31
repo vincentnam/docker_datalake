@@ -91,8 +91,6 @@ export class Upload extends React.Component {
             window.alert("Veuillez renseigner le type de données !");
         } else if ( this.state.filename === ''){
             window.alert("Veuillez ajouter un fichier !");
-        } else if (this.state.premieremeta === '') {
-            window.alert("Veuillez renseigner la première metadonnée générique !");
         } else {
             this.handleShow()
             api.post('http://localhost/storage', {

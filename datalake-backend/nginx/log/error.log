@@ -321,3 +321,15 @@
 2021/05/12 15:18:56 [notice] 1#1: signal 17 (SIGCHLD) received from 35
 2021/05/12 15:18:56 [notice] 1#1: worker process 35 exited with code 0
 2021/05/12 15:18:56 [notice] 1#1: exit
+2021/05/31 09:58:56 [notice] 1#1: using the "epoll" event method
+2021/05/31 09:58:56 [notice] 1#1: nginx/1.20.0
+2021/05/31 09:58:56 [notice] 1#1: built by gcc 10.2.1 20201203 (Alpine 10.2.1_pre1) 
+2021/05/31 09:58:56 [notice] 1#1: OS: Linux 5.10.25-linuxkit
+2021/05/31 09:58:56 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2021/05/31 09:58:56 [notice] 1#1: start worker processes
+2021/05/31 09:58:56 [notice] 1#1: start worker process 32
+2021/05/31 09:58:56 [notice] 1#1: start worker process 33
+2021/05/31 09:58:56 [notice] 1#1: start worker process 34
+2021/05/31 09:58:56 [notice] 1#1: start worker process 35
+2021/05/31 10:05:23 [warn] 32#32: *1 a client request body is buffered to a temporary file /var/cache/nginx/client_temp/0000000001, client: 172.18.0.1, server: dev.modiscloud.net, request: "POST /storage HTTP/1.1", host: "localhost", referrer: "http://localhost:3001/"
+2021/05/31 10:06:11 [warn] 32#32: *4 a client request body is buffered to a temporary file /var/cache/nginx/client_temp/0000000002, client: 172.18.0.1, server: dev.modiscloud.net, request: "POST /storage HTTP/1.1", host: "localhost", referrer: "http://localhost:3001/"
