@@ -3,14 +3,14 @@ import uuid
 from zipfile import ZipFile
 import base64
 from flask import Blueprint, jsonify, current_app, request, send_from_directory
-from ..services import swift
-from ..services import mongo
-
+from ..services import swift, mongo
+from flask_cors import cross_origin
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
 
 @swift_file_bp.route('/swift-files', methods=['POST'])
+@cross_origin(supports_credentials=True)
 def swift_files():
     swift_files = []
     zip_file_name = f'{str(uuid.uuid4().hex)}.zip'

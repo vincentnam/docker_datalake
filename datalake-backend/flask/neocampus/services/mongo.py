@@ -3,7 +3,7 @@ from flask import current_app
 from pymongo import MongoClient
 import swiftclient
 from swiftclient.service import SwiftService
-
+import datetime
 
 
 def get_swift_original_object_name(swift_container_name, swift_object_id):
@@ -22,16 +22,42 @@ def get_swift_original_object_name(swift_container_name, swift_object_id):
     return metadata_swift.get('original_object_name')
 
 
-def get_collections(db_name, offset, limit):
+def get_metadata(db_name, params):
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.swift
     collection = mongo_db[db_name]
 
-    nb_objects = collection.find().count()
-    collections = collection.find().skip(offset).limit(limit)
+    start_date = params['beginDate']
+    end_date = params['endDate']
 
-    return nb_objects, collections
+    metadata = collection.find({ 'creation_date': { '$exists': 'true', '$ne': [] } })
+    dict_query = {"$and": []}
+
+    if(params['filetype'] != ""):
+        filetype_query = {"content_type": {'$regex': params['filetype'], '$options': 'i'}}
+        for item in [filetype_query]: 
+            dict_query['$and'].append(item) 
+
+    if(params['beginDate'] != "" and params['endDate'] != ""):
+        dates_query = {'creation_date': {'$gte': start_date, '$lt': end_date}}
+        for item in [dates_query]: 
+            dict_query['$and'].append(item) 
+
+    if(params['datatype'] != ""):
+        datatype_query = {"swift_container": params['datatype']}
+        for item in [datatype_query]: 
+            dict_query['$and'].append(item)
+
+    metadata = collection.find(dict_query)
+
+    if("offset" in params.keys() and "limit" in params.keys()):
+        metadata = metadata.skip(params['offset'])
+        metadata = metadata.limit(params['limit'])
+
+    nb_objects = metadata.count()
+
+    return nb_objects, metadata
 
 
 def get_id():
