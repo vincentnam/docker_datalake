@@ -1,6 +1,8 @@
 import React from "react";
 import { Header } from './Header';
 import Dropzone from 'react-dropzone';
+import { InputMeta } from './upload-child/InputMeta';
+import { TextAreaMeta } from './upload-child/TextAreaMeta';
 import { config } from '../configmeta/config';
 import api from '../api/api';
 import { LoadingSpinner } from "./download-page/LoadingSpinner";
@@ -23,7 +25,6 @@ export class Upload extends React.Component {
                 const f = [file]
                 this.setState({files: f});
             });
-           
             
         };
         this.state = {
@@ -36,7 +37,8 @@ export class Upload extends React.Component {
             file: '',
             premieremeta: '',
             deuxiememeta: '',
-            loading: false
+            othermeta: [],
+            loading: false,
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -62,17 +64,33 @@ export class Upload extends React.Component {
         this.setState({
         [name]: value
         });
+        if (name === "type") {
+            const types = [config.types];
+            types.map((type) => (
+                type.map((t) => {
+                    if (t.id === parseInt(value)) {
+                        this.setState({
+                            othermeta: t.metadonnees
+                        });
+                    }
+                })
+            ));
+        }
     }
     
     handleSubmit(event) {
         event.preventDefault();
         const type = parseInt(this.state.type);
+        const other = {};
+
+        this.state.othermeta.map((meta) => {
+            other[meta.name] = meta.value
+        });
+
         if (this.state.type === 0) {
             window.alert("Veuillez renseigner le type de données !");
         } else if ( this.state.filename === ''){
             window.alert("Veuillez ajouter un fichier !");
-        } else if (this.state.premieremeta === '') {
-            window.alert("Veuillez renseigner la première metadonnée générique !");
         } else {
             this.handleShow()
             api.post('http://localhost/storage', {
@@ -80,8 +98,7 @@ export class Upload extends React.Component {
                 typeFile: this.state.typeFile,
                 filename: this.state.filename,
                 file: this.state.file,
-                premieremeta: this.state.premieremeta,
-                deuxiememeta: this.state.deuxiememeta,
+                othermeta: other
             })
             .then(function () {
                 window.alert("L'upload a bien été fait")
@@ -94,12 +111,33 @@ export class Upload extends React.Component {
     }
 
     render() {
+
         const files = this.state.files.map(file => (
             <li key={file.name}>
                 {JSON.stringify(file.name)}
             </li>
         ));
 
+        const Metadonnees = () => {
+            let listMeta = null;
+            const othermeta = this.state.othermeta;
+            listMeta = (
+                othermeta.map((meta) => {
+                    const index = othermeta.indexOf(meta)
+                    if(meta.type === "number" || meta.type === "text") 
+                        return  <InputMeta key={meta.name} meta={meta} othermeta={othermeta} index={index} />
+    
+                    if(meta.type === "textarea") 
+                        return  <TextAreaMeta key={meta.name} meta={meta} othermeta={othermeta} index={index} />
+                })
+            );
+            return (
+                <div>
+                    {listMeta}
+                </div>
+                
+            );
+        }
         const SelectDatatype = () => {
             const types = [config.types];
             const listTypes = types.map((type) => (
@@ -125,14 +163,7 @@ export class Upload extends React.Component {
                                 <label class="control-label">Type de données</label>
                                 <SelectDatatype />
                             </div>
-                            <div class="form-group required mb-3">
-                                <label class="form-label control-label">Métadonnée générique 1</label>
-                                <input type="text" value={this.state.premieremeta} name="premieremeta" onChange={this.handleChange} class="form-control" required />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Métadonnée  générique 2</label>
-                                <textarea value={this.state.deuxiememeta} onChange={this.handleChange} name="deuxiememeta" class="form-control" rows="3" />
-                            </div>
+                            <Metadonnees />
                             <div class="form-group required">
                                 <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} accept="image/*,application/JSON,.csv,text/plain">
                                     {({getRootProps, getInputProps}) => (

@@ -11,14 +11,18 @@ export const config = {
             "label": "Météo",
             "metadonnees": [
                 {
+                    "id": 1,
                     "label": "Métadonnée 1",
                     "type": "text",
-                    "id": "meta1",
+                    "name": "meta1",
+                    "value": "",
                 },
                 {
+                    "id": 2,
                     "label": "Métadonnée 2",
                     "type": "text",
-                    "id": "meta2",
+                    "name": "meta2",
+                    "value": "",
                 }
             ]
         },
@@ -27,19 +31,25 @@ export const config = {
             "label": "Capteur",
             "metadonnees": [
                 {
+                    "id": 1,
                     "label": "Métadonnée 1",
                     "type": "textarea",
-                    "id": "meta1",
+                    "name": "meta1",
+                    "value": "",
                 },
                 {
+                    "id": 2,
                     "label": "Métadonnée 2",
                     "type": "text",
-                    "id": "meta2",
+                    "name": "meta2",
+                    "value": "",
                 },
                 {
+                    "id": 3,
                     "label": "Métadonnée 3",
                     "type": "number",
-                    "id": "meta3",
+                    "name": "meta3",
+                    "value": "",
                 }
             ]
         },
@@ -48,9 +58,11 @@ export const config = {
             "label": "Autre métadonnée",
             "metadonnees": [
                 {
+                    "id": 1,
                     "label": "Métadonnée 1",
                     "type": "textarea",
-                    "id": "meta1",
+                    "name": "meta1",
+                    "value": "",
                 }
             ]
         }
