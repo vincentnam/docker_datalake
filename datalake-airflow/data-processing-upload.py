@@ -4,6 +4,7 @@ from pymongo import MongoClient
 import swiftclient.service
 from swiftclient.service import SwiftService
 import json
+from csv import DictReader
 
 # The DAG object; we'll need this to instantiate a DAG
 from airflow import DAG
@@ -39,15 +40,19 @@ default_args = {
 
 def get_swift_object(*args, **kwargs):
     swift_container = kwargs["params"]["swift_container"]
-    swift_id = kwargs["params"]["swift_id"]
+    swift_id = kwargs["params"]["swift_obj_id"]
 
     mongodb_url = "mongodb://10.200.156.254:27017"
-    container_name = "handle-data"
+    container_name = "resultat-traitement"
 
     # Mongo
     client = MongoClient(mongodb_url, connect=False)
-    db = client.airflow
+    db = client.data_conso
     coll = db[container_name]
+
+    # Stockage des données traitées
+    db_process = client.data_historique
+    col_process_data = db_process["historique"]
 
     # Openstack Swift
     ip_address = "10.200.156.252"
@@ -66,44 +71,82 @@ def get_swift_object(*args, **kwargs):
     print(swift_object)
 
     content_type = swift_object[0]['content-type']
-    swift_result = swift_object[1].decode("utf8").replace("'", '"')
+    swift_result = swift_object[1]
 
-    handle_type = "other"
+    process_type = "other"
+    processed_data = {}
 
     # TODO : 2 other functions to handle different filetype
     # Compare filetype
     if "image/" in content_type :
-        handle_type = "images"
+        process_type = "images"
+        processed_data = extract_transform_load_images(swift_result, swift_container, swift_id, coll, process_type)
 
     if "application/json" in content_type:
-        handle_type = "time_series_json"
+        process_type = "time_series_json"
         # Json parsing
-        json_parsed = json.loads(swift_result)
+        processed_data = extract_transform_load_time_series_json(swift_result, swift_container, swift_id, coll, process_type)
 
     if "application/vnd.ms-excel" in content_type:
-        handle_type = "time_series_csv"
+        process_type = "time_series_csv"
         # Json parsing
-        json_parsed = json.loads(swift_result)
+        processed_data = extract_transform_load_time_series_csv(swift_result, swift_container, swift_id, coll, process_type)
 
-    #print(json.dumps(json_parsed, indent=4, sort_keys=True))
-    #handled_data = extract_transform_load_time_series(json.dumps(json_parsed, indent=4, sort_keys=True))
+    # Handled data
+    col_process_data.insert_one(processed_data)
 
-    meta_data = {}  
+def history_data(
+    process_type, 
+    swift_container, 
+    swift_object_id, 
+    task_type,
+    mongo_column,
+    old_data,
+    new_data
+):
+    meta_data = {} 
 
-    # TODO : handled data to save in MongoDB also ?
     meta_data["creation_date"] = datetime.now()
-    meta_data["last_modified"] = datetime.now()
     meta_data['swift_container'] = swift_container
-    meta_data['swift_id'] = swift_id
-    meta_data['handle_type'] = handle_type
+    meta_data['swift_id'] = swift_object_id
+    meta_data['process_type'] = process_type
+    meta_data['task_type'] = task_type
+    meta_data['old_data'] = old_data
+    meta_data['new_data'] = new_data
 
-    coll.insert_one(meta_data)
+    # Metadata
+    mongo_column.insert_one(meta_data)
 
-'''def extract_transform_load_time_series_csv(json_object):
+def extract_transform_load_time_series_csv(json_object, swift_container, swift_id, coll, process_type):
+    result = []
+
+    print(json_object)
+    json_object = json_object.decode("utf8").replace("'", '"')
+    lines = json_object.split('\\r\\n') # "\r\n" if needed
+
+    for line in lines:
+        if line != "": # add other needed checks to skip titles
+            cols = line.split(",")
+
+            result_row = {"_id": cols[1], "measuretime" : cols[2], "topic" : cols[3]}
+
+            result.append(result_row)
+            history_data(process_type, swift_container, swift_id, "filter_columns", coll, cols, result_row)
+
+    return {"result": result}
+
+def extract_transform_load_time_series_json(json_object, swift_container, swift_id, coll, process_type):
+    # TODO : process related to JSON files
+    #history_data(process_type, swift_container, swift_id, "parsing_date", coll, row, result_row)
     result = json.loads(json_object)
     x = {"test": "New JSON object"}
     result.append(x)
-    return result'''
+    return result
+
+def extract_transform_load_images(json_object, swift_container, swift_id, coll, process_type):
+    # TODO : process related to images
+    #history_data(process_type, swift_container, swift_id, "parsing_date", coll, row, result_row)
+    return json_object
 
 # HANDLE CSV Time series
 dag = DAG(
