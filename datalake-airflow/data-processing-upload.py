@@ -42,7 +42,7 @@ def get_swift_object(*args, **kwargs):
     swift_container = kwargs["params"]["swift_container"]
     swift_id = kwargs["params"]["swift_obj_id"]
 
-    mongodb_url = "mongodb://10.200.156.254:27017"
+    mongodb_url = "mongodb://IP_ADDRESS:PORT"
     container_name = "resultat-traitement"
 
     # Mongo
@@ -55,8 +55,8 @@ def get_swift_object(*args, **kwargs):
     col_process_data = db_process["historique"]
 
     # Openstack Swift
-    ip_address = "10.200.156.252"
-    address_name = "neocampus-datalake-swift.dev.modiscloud.net"
+    ip_address = "IP_ADDRESS"
+    address_name = "ADDRESS_NAME"
     authurl = "http://"+ip_address+":8080/auth/v1.0"
     user = 'test:tester'
     key = 'testing'
