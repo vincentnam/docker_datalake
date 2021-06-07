@@ -300,10 +300,10 @@ This project is fully placed in the Big data world (see "4 V's of Big data", som
 - Stream data
 
 Batch data main goal is to be **stored**. Batch data are defined to stay on disk with a long lifespan. Those data will be processed, valuated and consumed on a different timescale than the production.
+
 Stream data main goal is to be **processed**. Stream data are defined to be generated and as quickly as possible processed for consumption. This data is eventually stored to be consumed again later or in another way.
+
 The architecture handle batch data as main goal but it will be enhanced to handle stream data and eventually near-real time data processing, depending on implementation and tools used.
-
-
 
 ### Main data life cycle : Batch data<a name="BatchData"></a>
 [Return to the table of content](#Tableofcontent)
@@ -313,6 +313,7 @@ The global data life in this architecture is described in this diagram :
 
 ![alt text](./git_image/v0.0.3-Sequence_zone.png)
 
+
 - First, data are inserted simultaneously in Openstack Swift and MongoDB meta database.
 - Then, a webhook is triggered by swift proxy to trigger the Airflow workflow for new data containing metadata over the data inserted.
 - Depending on the data type, the user and the user group / project, the data is processed, transformed and inserted in the corresponding database in the processed data area. 
@@ -320,9 +321,16 @@ The global data life in this architecture is described in this diagram :
 
 
 
+
 Batch data can also be split into 2 distinct groups : light process and heavy process. 
 The light processes include the reading, formatting processes and all the processed made to make the data available.
-Heavy processes are processes which aim to create data from master data such as data mining, data analysis or machine learning.  
+Heavy processes are processes which aim to create data from master data such as data mining, data analysis or machine learning.
+
+![alt text](./git_image/v0.0.3-Data_oriented_lifecycle.png)
+
+
+TODO: Explanation of diagram
+
 ### Light process <a name="Batchdata_lightprocess"></a>
 
 
@@ -374,6 +382,13 @@ The same pipeline is defined for near-real time but some customization may be ne
 
 ## Metadata management <a name="MetadataManagement"></a>
 [Return to the table of content](#Tableofcontent)
+
+
+
+![alt text](./git_image/v0.0.3-Metadata_model.png "Aimed metadata management system")
+
+
+TODO : Explanation - Aimed metadata management system - actul : only mongodb
 
 ### Metadata management system <a name="MetadataManagementSystem"></a>
 [Return to the table of content](#Tableofcontent)
@@ -538,6 +553,10 @@ Optional metadata is metadata that has been added and whose absence does not dis
 ### Automation, tests, builds : CI/CD Pipeline, builds servers <a name="AutomationTestBuildsCICD"></a>
 [Return to the table of content](#Tableofcontent)
 
+
+![alt text](git_image/v0.0.3-CI_CD.png)
+
+
 ### Automation : Apache Airflow and service lifecheck <a name="AutomationAirflowLifecheck"></a>
 [Return to the table of content](#Tableofcontent)
 
@@ -576,7 +595,7 @@ TODO : REWORK THE WHOLE PROCESS DEFINITION
 [Return to the table of content](#Tableofcontent)
 
 
-![alt text](git_image/network_diagram.png)
+![alt text](git_image/OSIRIMPOC.png)
 
 The project has been tested through a Proof of Concept hosted on Osirim and hosted on several VM on a VM Ware virtualization server.
 Each service has its own virtual machine. 
@@ -585,6 +604,13 @@ Data storage is made on a NFS bay. At this point (23/11/2020), the POC is not ad
 
 ## Network description <a name="NetworkDescription"></a>
 [Return to the table of content](#Tableofcontent)
+
+![alt text](./git_image/v0.0.3-Network_architecture.png)
+
+TODO : Explnanation - 6 differents networks : 1 for each need 
+
+
+![alt text](./git_image/v0.0.3-Networks_groups.png)
 
 ### TCP Ports used <a name="TCPPortsused"></a>
 [Return to the table of content](#Tableofcontent)
@@ -615,8 +641,20 @@ Airflow : Web server GUI and REST API (see documentation)
 [Return to the table of content](#Tableofcontent)
 
 Data exchanges at this point are described in the following schema.
-![alt text](./git_image/DataLakeArchiV0-24_11_2020%20-%20Current%20data%20exchanges.png)
+![alt text](./git_image/v0.0.3-Data_exchanges.png)
+TODO : Explanation
 
+
+#### Still undefined
+
+![alt text](./git_image/v0.0.3-Data_exchanges_usecase.png)
+TODO : Explanation 
+
+#### Still undefined
+
+![alt text](./git_image/v0.0.3-Data_exchanges_undefined.png)
+
+TODO : Explanation
 
 ## Data formats <a name="Dataformats"></a>
 [Return to the table of content](#Tableofcontent)
@@ -624,7 +662,6 @@ Data exchanges at this point are described in the following schema.
 
 ### Openstack Swift <a name="OpenstackSwift"></a>
 [Return to the table of content](#Tableofcontent)
-
 Object inserted in Openstack swift are renamed with a number id. 
 This id is incremented by 1 for every object insert. It allows to follow easily the number of object stored in Openstack Swift.
 
@@ -703,8 +740,9 @@ Before any insertion, you have to initialize the ID counter by using "init_id(mo
 ### Insert a new data <a name="Insertanewdata"></a>
 [Return to the table of content](#Tableofcontent)   
 
-![alt text](git_image/Sequence_Dataintegration.png)
 
+TODO : Batch and Stream data insertion
+###### Batch data
 To develop a tool to insert data in the datalake, you have to :
 - Get the Swift ID counter and increase it (use "find_one_and_update" to do it with the same operation and reduce chances of data incoherence between 2 instances)
 - Construct metadata to store in mongodb (JSON or Python dictionary)
@@ -753,7 +791,7 @@ Airflow : Web server GUI and REST API (see documentation)
 The "python_test_script.py" is a example script made to add a new data. It has been done to do test but it can be reused to make an insertion script or a REST API.
 If you want to insert data in the datalake (a file) : use the "insert_datalake()" function in  ["python_test_script.py"](./python_test_script.py) 
 
-
+###### Stream data
 
 ### Process a data already inserted <a name="Processadataalreadyinserted"></a>
 [Return to the table of content](#Tableofcontent)
