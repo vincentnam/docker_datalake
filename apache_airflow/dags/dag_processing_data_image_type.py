@@ -123,10 +123,10 @@ def from_mongodb_to_influx(token=None, nb_retry=10, **kwargs):
         print(json.dumps(influxdb_doc, indent=4, sort_keys=True))
         try:
             integrator.write(bucket=metadata_doc["swift_container"],
-                             time=influxdb_doc["time"],
-                             measurement=influxdb_doc["measurement"],
-                             field_list=influxdb_doc["fields"],
-                             tag_list=influxdb_doc["tags"])
+                            time=influxdb_doc["time"],
+                            measurement=influxdb_doc["measurement"],
+                            field_list=influxdb_doc["fields"],
+                            tag_list=influxdb_doc["tags"])
         except Exception as e:
             raise e
 
@@ -379,8 +379,6 @@ callable_dict = {"content_neo4j_node_creation": content_neo4j_node_creation,
                 "DummyOperator":DummyOperator,
                 "BranchPythonOperator":BranchPythonOperator
                 }
-# TODO : recursive funct to create the pipeline (for n sublevel in dict)
-
 pipeline = []
 for data_type in distros_dict:
 
