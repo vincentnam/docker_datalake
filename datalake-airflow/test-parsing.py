@@ -30,22 +30,23 @@ columns = lines[0].split(",")
 def get_position_timestamp(columns, timestamp_fields_list, value_fields_list):
     position_timestamp = -1
     position_value = -1
+    position_topic = -1
     for key, value in enumerate(columns):
         value = value.replace('"', '')
         if value in timestamp_fields_list :
             position_timestamp = key
         if value in value_fields_list :
             position_value = key
+        if value == "topic":
+            position_topic = key
 
-    return position_timestamp, position_value
+    return position_timestamp, position_value, position_topic
 
-position_timestamp, position_value = get_position_timestamp(
+position_timestamp, position_value, position_topic = get_position_timestamp(
     columns, 
     timestamp_fields_list, 
     value_fields_list
 )
-print(position_timestamp)
-print(position_value)
 
 from datetime import datetime
 
@@ -53,35 +54,60 @@ from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 # You can generate a Token from the "Tokens Tab" in the UI
-token = "TOKEN"
+token = "Token"
 org = "ORG"
 bucket = "BUCKET"
 
-client = InfluxDBClient(url="http://IP_ADDRESS:PORT", token=token, debug=True)
+client = InfluxDBClient(url="URL", token=token, debug=True)
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
 for line in lines[1:]:
-    if line != "": # add other needed checks to skip titles
-        cols = line.split(",")
+    if line != "":
+        # add other needed checks to skip titles
+        cols = line.replace("'", "")
+        cols = cols.replace('""', "'")
+        cols = line.split('","')
+        result = []
+        for col in cols:
+            
+            val = col.replace('"', '')
 
-        result_row = {
-            #"time" : cols[position_timestamp].replace('"', '') if position_timestamp != -1 else '', 
-            "time": 1465839830100400200,
-            "tags": { "user": "Nikhil" },  \
-            "measurement": "test",
-            "fields" : {
-                "value": cols[position_value].replace('"', '') if position_value != -1 else ''
-            }
-        }
-
-        point = Point("mem") \
-            .tag("host", "host1") \
-            .field("used_percent", 23.43234543) \
-            .time(datetime.utcnow(), WritePrecision.NS)
+            val = val.replace('(', "('")
+            val = val.replace(')', "')")
+            val = col
+            result.append(val)
+        print(result)
+        # result_row = {
+        #     #"time" : "", 
+        #     "time": 1465839830100400200,
+        #     "tags": { "user": "influxdb" },  \
+        #     "measurement": "test",
+        #     "fields" : {
+        #         "value": cols[position_value].replace('"', '') if position_value != -1 else ''
+        #     }
+        # }
+        # firstcaracter = result[position_value][0]
+        # # print(firstcaracter)
+        # if  firstcaracter == "[":
+        #     res = result[position_value].replace('[', '')
+        #     res = float(res)
+        # else:
+        #     
+        
+        if result[position_topic] != "energy":
+            res = float(result[position_value])
+            date = result[position_timestamp].replace('T', " ")
+            date = date.replace('Z', "")
+            print(datetime.utcnow())
+            point = Point(result[position_topic]) \
+                .tag("topic", result[position_topic]) \
+                .field(result[position_topic+1], res) \
+                .time(date, WritePrecision.NS)
+        
 
         write_api.write(bucket, org, point)
 
-        result.append(result_row)
+        result.append(result)
 
 '''ip_address = "IP_ADDRESS"
 
