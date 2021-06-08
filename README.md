@@ -21,6 +21,7 @@ The development of this architecture will integrate a semantic dimension in the 
 
 ## Table of content <a name="Tableofcontent"></a>
 
+
 - [Datalake concept](#DatalakeConcept)
     * [State of art](#Stateofart)
 - [The project : context](#TheProjectContext)
@@ -71,6 +72,7 @@ The development of this architecture will integrate a semantic dimension in the 
         + [API description - TODO](#APIdescrption)
         + [Data exchanges between services](#Dataexchangesbetweenservices)
     * [Data formats](#Dataformats)
+
         + [Openstack Swift](#OpenstackSwift)
         + [MongoDB metadata database - TO REFACTOR](#MongoDBmetadatadatabase)
 - [Getting started](#GettingStarted)
@@ -154,6 +156,7 @@ Beginning 2021 : The project has been joined with a patronage by Modis engineers
 # The project : design <a name="TheProjectDesign"></a>
 [Return to the table of content](#Tableofcontent)
 
+
 The design has been done through a service-oriented approach of a theoretical proposal for a zone-based architecture.
 Zone defines here a group of services that answer the same need. 
 
@@ -163,6 +166,7 @@ Zone defines here a group of services that answer the same need.
 
 
 ## Current architecture : Zone-based service-oriented datalake <a name="CurrentArchitecture"></a>
+
 [Return to the table of content](#Tableofcontent)
 
 The architecture is divided in 6 zones :
@@ -175,7 +179,9 @@ The architecture is divided in 6 zones :
 
 
 
+
 ### Raw data management zone (a.k.a. landing area) <a name="RawDataZone"></a>
+
 [Return to the table of content](#Tableofcontent)
 
 The purpose of this area is to handle, store and make available raw data. Each data is stored as is waiting to be processed and transformed into an information.
@@ -190,8 +196,10 @@ With a network-oriented vision, this zone is a buffer zone.
     
 
 
+
 ### Metadata management zone <a name="MetadataManagementZone"></a>
 [Return to the table of content](#Tableofcontent)
+
 
 
 -> TODO : redesign this area : 
@@ -209,7 +217,9 @@ With a network-oriented vision, this zone is a buffer zone.
     - Metadata format (class diagram ?)
 
 
+
 ### Process zone <a name="ProcessZone"></a>
+
 [Return to the table of content](#Tableofcontent)
 
 This area is headed by Apache Airflow that will handle and manage every workflow and jobs of data processing and sub services deployed and managed by Apache Airflow :
@@ -227,7 +237,9 @@ The deployment of a Hadoop cluster has been thought but the idea could be not im
 
 
 
+
 ### Processed data zone (a.k.a. consumption zone, access zone or gold zone) <a name="ProcessedDataZone"></a>  
+
 [Return to the table of content](#Tableofcontent)
 
 This area is there to create values over data. Its role is to provide information and allow external application to work on data.
@@ -249,6 +261,7 @@ But some use cases have been imagined :
 
 
 ### Services zone <a name="Serviceszone"></a>  
+
 [Return to the table of content](#Tableofcontent)
 
 This functional area includes every service to make this platform user-friendly. At this point (23/11/2020), 3 services have been designed :
@@ -276,8 +289,8 @@ This functional area includes every service to make this platform user-friendly.
 
 
 
-
 ### Security, authentication and monitoring zone  <a name="Securityandmonitoringzone"></a>  
+
 [Return to the table of content](#Tableofcontent)
 
 The purpose of this area is to make it possible to monitor the whole architecture for administrators and give 3 level monitoring.
@@ -302,11 +315,13 @@ This area has to be work more to better design it. Prometheus could be used to m
 ## Data lifecycle  <a name="DataLifecycle"></a>  
 [Return to the table of content](#Tableofcontent)
 
+
 This project is fully placed in the Big data world (see "4 V's of Big data", sometimes 5 or more V are described.). We split the data into 2 distinct groups with distinct goals, perspectives and requirements : 
 - Batch data 
 - Stream data
 
 Batch data main goal is to be **stored**. Batch data are defined to stay on disk with a long lifespan. Those data will be processed, valuated and consumed on a different timescale than the production.
+
 
 Stream data main goal is to be **processed**. Stream data are defined to be generated and as quickly as possible processed for consumption. This data is eventually stored to be consumed again later or in another way.
 
@@ -354,6 +369,7 @@ TODO: Explanation of diagram
 
 
 #### Heavy process <a name="Batchdata_heavyprocess"></a>
+
 [Return to the table of content](#Tableofcontent)
 
 ![alt text](./git_image/v0.0.3-Sequence_batch_heavy.png)
@@ -374,6 +390,7 @@ For heavy process, minor differences can be observed in the process area, otherw
 ![alt text](./git_image/v0.0.3-Sequence_zone_stream.png)
 
 ![alt text](./git_image/v0.0.3-Sequence_stream.png)
+
 
 ![alt text](./git_image/Stream_data_pipeline.png)
 Stream data pipeline is different as goals are differents. The first step is to define and instantiate the stream. As it is not a step of data input, it is the 0 step.
@@ -638,8 +655,8 @@ TODO
 
 
 
-
 # Technical description <a name="TechnicalDescription"></a>
+
 [Return to the table of content](#Tableofcontent)
 
 
