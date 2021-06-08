@@ -1,4 +1,8 @@
+import pandas as pd
+import sys
+
 f = open("sensors.csv", "r")
+
 from influxdb import InfluxDBClient
 
 result = []
@@ -23,30 +27,39 @@ def is_in_line(field_name):
     return res
 
 csv_file = f.read()
-lines = csv_file.split("\n") # "\r\n" if needed
+if sys.version_info[0] < 3: 
+    from StringIO import StringIO
+else:
+    from io import StringIO
 
-columns = lines[0].split(",")
+data = StringIO(csv_file)
+
+df = pd.read_csv(data, sep=",")
+columns = df.columns
 
 def get_position_timestamp(columns, timestamp_fields_list, value_fields_list):
-    position_timestamp = -1
-    position_value = -1
-    position_topic = -1
+    position_timestamp = ""
+    position_value = ""
+    position_topic = ""
+    position_payload_value_units = ""
     for key, value in enumerate(columns):
-        value = value.replace('"', '')
         if value in timestamp_fields_list :
-            position_timestamp = key
+            position_timestamp = value
         if value in value_fields_list :
-            position_value = key
+            position_value = value
         if value == "topic":
-            position_topic = key
+            position_topic = value
+        if value == "payload.value_units":
+            position_payload_value_units = value
 
-    return position_timestamp, position_value, position_topic
+    return position_timestamp, position_value, position_topic, position_payload_value_units
 
-position_timestamp, position_value, position_topic = get_position_timestamp(
+position_timestamp, position_value, position_topic, position_payload_value_units = get_position_timestamp(
     columns, 
     timestamp_fields_list, 
     value_fields_list
 )
+
 
 from datetime import datetime
 
@@ -54,64 +67,49 @@ from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 # You can generate a Token from the "Tokens Tab" in the UI
-token = "Token"
+token = "TOKEN"
 org = "ORG"
 bucket = "BUCKET"
 
 client = InfluxDBClient(url="URL", token=token, debug=True)
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
-for line in lines[1:]:
-    if line != "":
-        # add other needed checks to skip titles
-        cols = line.replace("'", "")
-        cols = cols.replace('""', "'")
-        cols = line.split('","')
-        result = []
-        for col in cols:
-            
-            val = col.replace('"', '')
-
-            val = val.replace('(', "('")
-            val = val.replace(')', "')")
-            val = col
-            result.append(val)
-        print(result)
-        # result_row = {
-        #     #"time" : "", 
-        #     "time": 1465839830100400200,
-        #     "tags": { "user": "influxdb" },  \
-        #     "measurement": "test",
-        #     "fields" : {
-        #         "value": cols[position_value].replace('"', '') if position_value != -1 else ''
-        #     }
-        # }
-        # firstcaracter = result[position_value][0]
-        # # print(firstcaracter)
-        # if  firstcaracter == "[":
-        #     res = result[position_value].replace('[', '')
-        #     res = float(res)
-        # else:
-        #     
+for index, line in df.iterrows():
+    date = line[position_timestamp].replace('T', " ")
+    date = date.replace('Z', "")
+    date = date.replace('.000', "")
+    date = date.replace('-', "/")
+    datetime_object = datetime.strptime(date, '%Y/%m/%d %H:%M:%S')
+    date_milliseconds = int(round(datetime_object.timestamp() * 1000000000))
+    data = []
+    values = {}
+    tags = {}
+    if "energy" not in line[position_topic]:
+        val = float(line[position_value])
+        values[line[position_payload_value_units]] = val
+    else:
+        list_of_tuples = list(zip(line[position_payload_value_units].strip('][').split(','), line[position_value].strip('][').split(',')))
+        for l in list_of_tuples:
+            unit, v = l
+            values[unit] = float(v)
+    for key, value in enumerate(columns):
+        if position_payload_value_units != value and position_value != value:
+            if line[value] == "":
+                tags[value] = ""
+            else:
+                tags[value] = str(line[value])
+    data.append(
+        {
+            "measurement": line[position_topic],
+            "tags": tags,
+            "fields": values,
+            "time": date_milliseconds
+        }
+    )
         
-        if result[position_topic] != "energy":
-            res = float(result[position_value])
-            date = result[position_timestamp].replace('T', " ")
-            date = date.replace('Z', "")
-            print(datetime.utcnow())
-            point = Point(result[position_topic]) \
-                .tag("topic", result[position_topic]) \
-                .field(result[position_topic+1], res) \
-                .time(date, WritePrecision.NS)
-        
-
-        write_api.write(bucket, org, point)
-
-        result.append(result)
-
-'''ip_address = "IP_ADDRESS"
-
-client = InfluxDBClient(ip_address, 8086, 'admin', 'admin')'''
-
+    write_api.write(bucket, org, data, protocol='json')            
+                
+                
+                
 def register_influxdb(data):
     return True
