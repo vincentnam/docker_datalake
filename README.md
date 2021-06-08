@@ -1233,7 +1233,13 @@ Patches : for a bug fix
 ## License <a name="License"></a>
 [Return to the table of content](#Tableofcontent)
 
-Todo : SSPL license
+
+The whole project is (C) 2020 March, DANG Vincent-Nam <dang.vincent-nam@gmail.com>
+for Université Toulouse 3 Paul-Sabatier (FRANCE), IRIT and SMAC Team, neOCampus (during an end of study internship)
+and for CNRS (as a 1-year fixed-term contract)
+as original designer and developer of the project / solution / architecture and
+is licensed under the SSPL, see `https://www.mongodb.com/licensing/server-side-public-license'.
+
 
 ## Contacts <a name="Contacts"></a>
 [Return to the table of content](#Tableofcontent)
