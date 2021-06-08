@@ -1,11 +1,11 @@
-# ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) DISCLAIMER :  (26/05/2021) This repository isn't the official project repository anymore ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
-# - ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+)  The project has been moved to the official IRIT Gitlab service that you can find at this address : ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
+# ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) DISCLAIMER : The project official repository has been removed for the moment. ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
+# ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+)  The project has been moved to the official IRIT Gitlab service that you can find at this address : ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
 
 ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) This project is **still alive** and **will be maintained by me (DANG Vincent-Nam)**.  ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
 
 ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) This Github repository could be reused as the main development repository if it's the only way for me to continue this project. ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
 
-![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) I aim to develop this project as a (at least) personal **long-term project**. ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
+![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) I aim to develop this project as a **long-term project**, even on my personnal time. ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
 
 # Data lake architecture POC hosted on OSIRIM (https://osirim.irit.fr/site/)
 
@@ -15,8 +15,9 @@ The goals are :
 - Handle any type of data 
 - Handle any volumetry of datas
 - Make it easy to deploy the architecture
-- Make an interoperable architecture through the usage of REST API whenever it is possible
+- Make an interoperable architecture through the usage of REST API whenever it is possible 
 
+The development of this architecture will integrate a semantic dimension in the development of services and features.
 
 ## Table of content <a name="Tableofcontent"></a>
 
@@ -42,8 +43,8 @@ The goals are :
         * [Needed metadata](#NeededMetadata)
         * [Optional metadata](#OptionalMetadata)
 - [The project : features](#TheProjectFeatures)
-    * [Kubernetes](#Kubernetes)
-        + [Sizing](#Sizing)
+    * [Virtualization](#Virtualisation)
+        + [Sizing : Kubernetes](#SizingKubernetes)
         + [Automatic deployment with Ansible](#AutomaticDeployment)
     * [Security management](#Security)
         + [Security : by design](#Securitybydesign)
@@ -97,6 +98,7 @@ The goals are :
         + [In process zone](#Inprocesszone)
         + [In processed data zone](#Inprocesseddatazone)
     * [More documentation](#Moredocumentation)
+    * [Versioning rules](#VersioningRules)
     * [Licence](#Licence)
 - [Contacts](#Contacts)
 
@@ -120,8 +122,10 @@ It reduces costs for **high volumetry** and a **high variety** of data project o
 This solution has been designed to integrate solutions that has already been deployed, as authentication systems, database solutions or data analysis solutions. 
 The initial resource investment is higher than simple database solution but it is reduced for new other solutions. 
 
-## State of art <a name="State of art"></a>
+## State of art <a name="Stateofart"></a>
 [Return to the table of content](#Tableofcontent)
+
+
 We base our approach on the expressed needs but also on this scientific paper : https://www.researchgate.net/publication/333653951_Big_data_stream_analysis_a_systematic_literature_review.
 
 ##### **COMING SOON**
@@ -147,7 +151,7 @@ Beginning 2021 : The project has been joined with a patronage by Modis engineers
 
 
 
-# The project : design 
+# The project : design <a name="TheProjectDesign"></a>
 [Return to the table of content](#Tableofcontent)
 
 The design has been done through a service-oriented approach of a theoretical proposal for a zone-based architecture.
@@ -159,7 +163,8 @@ Zone defines here a group of services that answer the same need.
 
 
 ## Current architecture : Zone-based service-oriented datalake <a name="CurrentArchitecture"></a>
-    
+[Return to the table of content](#Tableofcontent)
+
 The architecture is divided in 6 zones :
 - Raw data management zone (also known as the landing area)
 - Metadata management zone 
@@ -186,6 +191,8 @@ With a network-oriented vision, this zone is a buffer zone.
 
 
 ### Metadata management zone <a name="MetadataManagementZone"></a>
+[Return to the table of content](#Tableofcontent)
+
 
 -> TODO : redesign this area : 
     - Define which metadata to keep in which service (i.e. at the moment, it should be : models (i.e. links betweens metadata in neo4j) and metadata in mongodb)
@@ -332,7 +339,7 @@ Heavy processes are processes which aim to create data from master data such as 
 TODO: Explanation of diagram
 
 ### Light process <a name="Batchdata_lightprocess"></a>
-
+[Return to the table of content](#Tableofcontent)
 
 ![alt text](./git_image/v0.0.3-Sequence_batch.png)
  
@@ -347,7 +354,7 @@ TODO: Explanation of diagram
 
 
 #### Heavy process <a name="Batchdata_heavyprocess"></a>
-
+[Return to the table of content](#Tableofcontent)
 
 ![alt text](./git_image/v0.0.3-Sequence_batch_heavy.png)
 
@@ -361,6 +368,9 @@ For heavy process, minor differences can be observed in the process area, otherw
 
 
 ### Extended data life cycle : Stream data <a name="Streamdata"></a>
+[Return to the table of content](#Tableofcontent)
+
+
 ![alt text](./git_image/v0.0.3-Sequence_zone_stream.png)
 
 ![alt text](./git_image/v0.0.3-Sequence_stream.png)
@@ -475,7 +485,7 @@ The required metadata is the metadata that must be filled in to make the archite
 | creation_date| Date of creation of the object; corresponds to the date of insertion of the data | Automatic | No | 
 
  
-### Extended metadata model <a name="MetadataExtendedModel"></a>
+### Optional metadata <a name="OptionalMetadata"></a>
 [Return to the table of content](#Tableofcontent)
 
 Optional metadata is metadata that has been added and whose absence does not disrupt the proper functioning of the architecture in a basic utilsiation scenario.
@@ -496,62 +506,122 @@ Optional metadata is metadata that has been added and whose absence does not dis
 # The project : features <a name="TheProjectFeatures"></a>
 [Return to the table of content](#Tableofcontent)
 
-## Kubernetes <a name="Kubernetes"></a>
+TODO 
+
+
+## Virtualization <a name="Virtualisation"></a>
 [Return to the table of content](#Tableofcontent)
 
-### Sizing <a name="Sizing"></a>
+![alt text](git_image/v0.0.3-Kubernetes.png)
+
+TODO 
+
+
+### Sizing : Kubernetes <a name="SizingKubernetes"></a>
 [Return to the table of content](#Tableofcontent)
+
+TODO 
 
 ### Automatic deployment with Ansible <a name="AutomaticDeployment"></a>
 [Return to the table of content](#Tableofcontent)
 
+
+TODO 
+
+
+
 ## Security management <a name="Security"></a>
 [Return to the table of content](#Tableofcontent)
 
+TODO 
+
+
 ### Security : by design <a name="Securitybydesign"></a>
 [Return to the table of content](#Tableofcontent)
+
+TODO 
+
 
 #### Flow control and networks <a name="FlowControlAndNetworks"></a>
 [Return to the table of content](#Tableofcontent)
 
 
+TODO 
+
+
 ### Security : by tools <a name="Securitybytools"></a>
 [Return to the table of content](#Tableofcontent)
 
+TODO 
+
+
 #### Identification : Openstack Keystone <a name="Keystone"></a>
 [Return to the table of content](#Tableofcontent)
+
+TODO 
+
 
 #### Authentication : Server Kerberos <a name="Kerberos"></a>
 [Return to the table of content](#Tableofcontent)
 
 
+TODO 
+
+
 ## Monitoring <a name="Monitoring"></a>
 [Return to the table of content](#Tableofcontent)
+
+TODO 
+
 
 ### Monitoring : Kubernetes monitoring tools <a name="MonitoringKubernetes"></a>
 [Return to the table of content](#Tableofcontent)
 
+TODO 
+
+
 ### Monitoring : low level monitoring : SNMP  <a name="SNMP"></a>
 [Return to the table of content](#Tableofcontent)
+
+TODO 
+
 
 ### Monitoring : Openstack Ceilometer <a name="Ceilometer"></a>
 [Return to the table of content](#Tableofcontent)
 
+TODO 
+
+
 ## User spaces compartmentalization <a name="UserSpaceCompartmentalization"></a>
 [Return to the table of content](#Tableofcontent)
 
+TODO 
+
+
 ### User spaces compartmentalization : Virtualization, Docker and Kubernetes <a name="UserSpaceCompartmentalizationVirtualisation"></a>
 [Return to the table of content](#Tableofcontent)
+
+TODO 
+
 
 
 ### User spaces compartmentalization : Openstack Keystone <a name="UserSpaceCompartmentalizationKeystone"></a>
 [Return to the table of content](#Tableofcontent)
 
+TODO 
+
+
 ## Automation, tests, builds <a name="AutomationTestBuilds"></a>
 [Return to the table of content](#Tableofcontent)
 
+TODO 
+
+
 ### Automation, tests, builds : CI/CD Pipeline, builds servers <a name="AutomationTestBuildsCICD"></a>
 [Return to the table of content](#Tableofcontent)
+
+TODO 
+
 
 
 ![alt text](git_image/v0.0.3-CI_CD.png)
@@ -560,6 +630,9 @@ Optional metadata is metadata that has been added and whose absence does not dis
 ### Automation : Apache Airflow and service lifecheck <a name="AutomationAirflowLifecheck"></a>
 [Return to the table of content](#Tableofcontent)
 
+
+
+TODO 
 
 
 
@@ -581,7 +654,14 @@ Optional metadata is metadata that has been added and whose absence does not dis
 - Microsoft Server SQL 2017 (Processed data database) 
 
 ## Tool by tool <a name="ToolByTool"></a>
+[Return to the table of content](#Tableofcontent)
+
+
+TODO 
+
+
 ### Airflow <a name="Airflow"></a>
+[Return to the table of content](#Tableofcontent)
 
 Aiflow DAG tools in the apache_airflow/dag/lib folder has a special nomenclature : 
 - *tools : all the tools from a database or to process a specific data type 
@@ -595,11 +675,13 @@ TODO : REWORK THE WHOLE PROCESS DEFINITION
 [Return to the table of content](#Tableofcontent)
 
 
-![alt text](git_image/OSIRIMPOC.png)
+![alt text](git_image/v0.0.3-POC.png)
 
-The project has been tested through a Proof of Concept hosted on Osirim and hosted on several VM on a VM Ware virtualization server.
-Each service has its own virtual machine. 
-Data storage is made on a NFS bay. At this point (23/11/2020), the POC is not adapted for this platform and wont be deployed in a production state on OSIRIM.
+
+The project has been tested through a Proof of Concept hosted on Osirim and hosted on several VM on a VM Ware virtualization server. 
+Each service has its own virtual machine except for access zone databases that are all hosted on the same VM.
+Data storage is made on a NFS bay. Only 2 users are allowed to access this network with SSH. 
+At this point (23/11/2020), the POC is not adapted for this platform and wont be deployed in a production state on OSIRIM.
 
 
 ## Network description <a name="NetworkDescription"></a>
@@ -645,7 +727,7 @@ Data exchanges at this point are described in the following schema.
 TODO : Explanation
 
 
-#### Still undefined
+#### Defined
 
 ![alt text](./git_image/v0.0.3-Data_exchanges_usecase.png)
 TODO : Explanation 
@@ -1088,7 +1170,8 @@ Dont name your task the same name of the callable (python function) : it will le
 [Return to the table of content](#Tableofcontent)
 
 - <img src="https://upload.wikimedia.org/wikipedia/fr/2/2d/Hbase_logo_with_orca_large.png" height="42"> HBase : need for raw input data, HBase would have been used as a key / value database while it's a column store database + difficult to handle raw data reading
-- Apache Nifi : not usefull and doesn't fit in the architecture
+- Apache Nifi : not usefull and doesn't fit in the architecture and replaced with Apache Spark with Apache Spark Stream and MQTT
+- Apache Kafka : As MQTT and Apache Spark Stream are / will be used, Apache Kafka isn't needed anymore.
 
 ### In process zone <a name="Inprocesszone"></a>
 [Return to the table of content](#Tableofcontent)
@@ -1110,6 +1193,41 @@ It is mainly made of design thinking.
 Tools used in this architecture also have documentation :
 - Airflow https://airflow.apache.org/docs/ 
 - Openstack Swift  https://wiki.openstack.org/wiki/Swift
+
+
+## Versioning Rules <a name="VersioningRules"></a>
+[Return to the table of content](#Tableofcontent)
+
+Versions are defined like this : X.Y.Z-a
+X : Major (integer)
+Y : Minor (integer)
+Z : Build (integer)
+a : Patches (letter) 
+
+08/06/2021 : 
+Major : 1.0.0 will be released with a production-ready solution with tests : 
+- [ ] Security is enabled with Openstack Keystone 
+- [ ] Automatic deployment, Docker and Kubernetes 
+- [ ] First version of web GUI 
+- [ ] Minimum service with processes and Apache Spark are deployed
+- [ ] Stream data handled
+- [ ] Metadata management system with neo4J ready for a better metamodel 
+- [ ] Monitoring tools deployed for administration at least (optional)
+
+2.0.0 will be focused on metadata management. (TODO)
+
+
+Minor : each minor are released when a project is ended :
+- [ ] Minimum service in Apache Airflow for some data types (STARTED)
+- [ ] Apache Spark and Apache Spark Stream with integration with Apache Airflow
+- [ ] Web GUI first version with insertion, download and first data visualization tools (STARTED)
+- [ ] Openstack Keystone and integration in other services 
+- [ ] Metadata management system improvement (STARTED)
+- [ ] Monitoring tools (optional)
+
+Build : each build define a sprint or a (bunch of) feature(s) developped. 
+
+Patches : for a bug fix
 
 
 ## License <a name="License"></a>
