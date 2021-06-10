@@ -39,7 +39,7 @@ def get_swift_object(*args, **kwargs):
     swift_container = kwargs["params"]["swift_container"]
     swift_id = kwargs["params"]["swift_obj_id"]
 
-    mongodb_url = "mongodb://10.200.156.254:27017"
+    mongodb_url = "mongodb://IP:PORT"
     container_name = "traitement_historique"
 
     # Mongo
@@ -54,7 +54,7 @@ def get_swift_object(*args, **kwargs):
     # Openstack Swift
     ip_address = "IP_ADDRESS"
     address_name = "ADDRESS_NAME"
-    authurl = "http://10.200.156.252:8080/auth/v1.0"
+    authurl = "http://url/auth/v1.0"
     user = 'test:tester'
     key = 'testing'
     conn = swiftclient.Connection(
@@ -155,11 +155,11 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
     )
     
     # You can generate a Token from the "Tokens Tab" in the UI
-    token = "eevr5kWlgdgB1OuiKLKz9lIYD-2N9x1LG7nHDIHHa0cO0XvBJScwnunC3c6xrEvKXXCLbK1nXDsLtqWdXhDriw=="
-    org = "modis"
-    bucket = "test"
+    token = ""
+    org = ""
+    bucket = ""
 
-    client = InfluxDBClient(url="http://neocampus-datalake-mongodb.dev.modiscloud.net:8086", token=token, debug=True)
+    client = InfluxDBClient(url="url", token=token, debug=True)
     write_api = client.write_api(write_options=SYNCHRONOUS)
     
     for index, line in df.iterrows():
