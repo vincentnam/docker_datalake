@@ -1,16 +1,16 @@
 package service
 
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.types._
-import org.apache.spark.sql.functions._
 import com.google.gson.Gson
-import config.Configuration
+import com.typesafe.config.Config
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types._
 
-class MetadataWriter(conf: Configuration) {
+class MetadataWriter(config: Config) {
 
   @transient lazy val log = org.apache.log4j.LogManager.getLogger(getClass.getName)
 
-  val mongodbUri = "mongodb://" + conf.mongoHost + ":" + conf.mongoPort + "/"
+  val mongodbUri = s"mongodb://${config.getString("mongo.host")}:${config.getString("mongo.port")}/"
 
   val spark = SparkSession
     .builder()
