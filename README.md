@@ -1,11 +1,8 @@
-# ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) DISCLAIMER : The project official repository has been removed for the moment. ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
-# ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+)  The project has been moved to the official IRIT Gitlab service that you can find at this address : ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
+# ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) The project is now hold on 2 differents repository ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
+# ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+)  The official main repository is the IRIT Gitlab repository (https://gitlab.irit.fr/datalake/docker_datalake). ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
+# ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+)  The secondary repository is the Github initial repository (https://github.com/vincentnam/docker_datalake). ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
 
-![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) This project is **still alive** and **will be maintained by me (DANG Vincent-Nam)**.  ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
-
-![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) This Github repository could be reused as the main development repository if it's the only way for me to continue this project. ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
-
-![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) I aim to develop this project as a **long-term project**, even on my personnal time. ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
+The github repository is mirorred to follow the progress of the Gitlab repository and to be synchronized.
 
 # Data lake architecture POC hosted on OSIRIM (https://osirim.irit.fr/site/)
 
