@@ -77,7 +77,7 @@ def get_swift_object(*args, **kwargs):
     # Compare filetype
     if "image/" in content_type :
         process_type = "images"
-        processed_data = extract_transform_load_images(swift_result, swift_container, swift_id, coll, process_type)
+        processed_data = extract_transform_load_images(swift_result, swift_container, swift_id, coll, process_type, mongodb_url)
 
     if "application/json" in content_type:
         process_type = "time_series_json"
@@ -225,10 +225,52 @@ def extract_transform_load_time_series_json(json_object, swift_container, swift_
     result.append(x)
     return result
 
-def extract_transform_load_images(json_object, swift_container, swift_id, coll, process_type):
+def extract_transform_load_images(json_object, swift_container, swift_id, coll, process_type, mongodb_url):
     # TODO : process related to images
-    #history_data(process_type, swift_container, swift_id, "parsing_date", coll, row, result_row)
-    return json_object
+    
+    print(swift_id)
+    str_swift_id = str(swift_id)
+    print(str_swift_id)
+    
+    authurl = "http://url/auth/v1.0"
+    user = 'test:tester'
+    key = 'testing'
+    conn = swiftclient.Connection(
+        user=user, 
+        key=key,
+        authurl=authurl
+    )
+    
+    swift_object = conn.get_object("neOcampus", swift_id)
+    print('----------- OBJET SWIFT -------------')
+    print(swift_object)
+    
+    content_type = swift_object[0]['content-type']
+    swift_result = swift_object[1]
+    image = str(swift_result,'utf-8')
+    
+    nb_objects, mongo_collections = get_metadata("neOCampus", mongodb_url ,{"swift_id": str_swift_id})
+    mongo_collections = list(mongo_collections)
+    
+    other_metadata = []
+    for obj in mongo_collections:
+        other_metadata.append(obj['other_data'])
+    
+    container_name = "processed_data"
+    client = MongoClient(mongodb_url, connect=False)
+    db = client.data_conso
+    collection = db[container_name]
+    
+    data_conso_image = {}
+
+    data_conso_image["swift_id"] = str_swift_id
+    data_conso_image["content_image"] = image
+    data_conso_image["image_metadata"] = other_metadata
+    data_conso_image["creation_date"] = datetime.now()
+
+    coll.insert_one(data_conso_image)
+    
+    return data_conso_image
 
 
 def get_positions(columns, timestamp_fields_list, value_fields_list):
@@ -248,6 +290,25 @@ def get_positions(columns, timestamp_fields_list, value_fields_list):
             position_payload_value_units = value
 
     return position_timestamp, position_value, position_topic, position_payload_value_units
+
+def get_metadata(db_name, mongodb_url, params):
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.swift
+    collection = mongo_db[db_name]
+
+    metadata = collection.find({ 'creation_date': { '$exists': 'true', '$ne': [] } })
+    dict_query = {"$and": []}
+
+    if(params['swift_id'] != ""):
+        datatype_query = {"swift_object_id": params['swift_id']}
+        for item in [datatype_query]: 
+            dict_query['$and'].append(item)
+
+    metadata = collection.find(dict_query)
+
+    nb_objects = metadata.count()
+
+    return nb_objects, metadata
 
 # HANDLE CSV Time series
 dag = DAG(

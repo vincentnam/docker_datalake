@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 import swiftclient.service
 from swiftclient.service import SwiftService
+from datetime import timedelta, datetime
 
 # swift_id = "201"
 mongodb_url = "URL_MONGO"
@@ -67,5 +68,6 @@ data_conso_image = {}
 data_conso_image["swift_id"] = str_swift_id
 data_conso_image["content_image"] = image
 data_conso_image["image_metadata"] = other_metadata
+data_conso_image["creation_date"] = datetime.now()
 
 coll.insert_one(data_conso_image)
