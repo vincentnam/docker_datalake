@@ -1,7 +1,7 @@
 import React from "react";
 import { Header } from '../Header';
 import { RowItem } from './RowItem';
-import axios from 'axios';
+import api from '../api/api';
 import $ from 'jquery';
 import { Filters } from "./Filters";
 import moment from "moment";
@@ -9,7 +9,7 @@ import { Paginate } from "./Paginate";
 import { LoadingSpinner } from "./LoadingSpinner";
 
 export class Download extends React.Component {
-    url = process.env.REACT_APP_ENDPOINT
+    url = 'http://neocampus-datalake-mongodb.dev.modiscloud.net/'
     perPage = 6
 
     constructor(props) {
@@ -71,7 +71,7 @@ export class Download extends React.Component {
 
         if(selectedElements.length) {
             this.handleShow();
-            axios.post(this.url + '/swift-files', body)
+            api.post('swift-files', body)
                 .then(function (result) {
                     let url = result.data.swift_zip
                     const link = document.createElement('a');
