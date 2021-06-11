@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export default axios.create({
-    baseURL: `http://localhost/`,
+    baseURL: `http://neocampus-datalake-mongodb.dev.modiscloud.net/`,
     headers: {
         'Accept': "application/json",
     }
