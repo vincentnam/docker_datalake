@@ -1,7 +1,6 @@
 import React from "react";
 import { Header } from '../Header';
 import { RowItem } from './RowItem';
-import axios from 'axios';
 import api from '../../api/api';
 import $ from 'jquery';
 import { Filters } from "./Filters";
@@ -10,7 +9,7 @@ import { Paginate } from "./Paginate";
 import { LoadingSpinner } from "./LoadingSpinner";
 
 export class Download extends React.Component {
-    url = process.env.REACT_APP_ENDPOINT
+    url = 'http://neocampus-datalake-mongodb.dev.modiscloud.net/'
     perPage = 6
 
     constructor(props) {
