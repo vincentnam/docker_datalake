@@ -1,7 +1,7 @@
 import React from "react";
 import { Header } from '../Header';
 import { RowItem } from './RowItem';
-import api from '../api/api';
+import api from '../../api/api';
 import $ from 'jquery';
 import { Filters } from "./Filters";
 import moment from "moment";
