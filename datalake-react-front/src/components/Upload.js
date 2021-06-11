@@ -93,7 +93,7 @@ export class Upload extends React.Component {
             window.alert("Veuillez ajouter un fichier !");
         } else {
             this.handleShow()
-            api.post('http://localhost/storage', {
+            api.post('storage', {
                 idType: type,
                 typeFile: this.state.typeFile,
                 filename: this.state.filename,
@@ -105,6 +105,7 @@ export class Upload extends React.Component {
                 window.location.reload();
             })
             .catch(function (error) {
+                console.log(error);
                 window.alert("L'upload n'a pas réussi ! : " + error)
             }).finally(function(){this.handleClose()}.bind(this))
         }
