@@ -225,28 +225,13 @@ def extract_transform_load_time_series_json(json_object, swift_container, swift_
     result.append(x)
     return result
 
-def extract_transform_load_images(json_object, swift_container, swift_id, coll, process_type, mongodb_url):
+def extract_transform_load_images(swift_result, swift_container, swift_id, coll, process_type, mongodb_url):
     # TODO : process related to images
     
     print(swift_id)
     str_swift_id = str(swift_id)
     print(str_swift_id)
     
-    authurl = "http://url/auth/v1.0"
-    user = 'test:tester'
-    key = 'testing'
-    conn = swiftclient.Connection(
-        user=user, 
-        key=key,
-        authurl=authurl
-    )
-    
-    swift_object = conn.get_object("neOcampus", swift_id)
-    print('----------- OBJET SWIFT -------------')
-    print(swift_object)
-    
-    content_type = swift_object[0]['content-type']
-    swift_result = swift_object[1]
     image = str(swift_result,'utf-8')
     
     nb_objects, mongo_collections = get_metadata("neOCampus", mongodb_url ,{"swift_id": str_swift_id})
@@ -268,7 +253,7 @@ def extract_transform_load_images(json_object, swift_container, swift_id, coll, 
     data_conso_image["image_metadata"] = other_metadata
     data_conso_image["creation_date"] = datetime.now()
 
-    coll.insert_one(data_conso_image)
+    collection.insert_one(data_conso_image)
     
     return data_conso_image
 
