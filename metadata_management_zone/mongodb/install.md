@@ -1,3 +1,16 @@
+# Build a MongoDB enterprise container
+To build a MongoDB enterprise container, official documentation exists from MongoDB enterprise : https://docs.mongodb.com/manual/tutorial/install-mongodb-enterprise-with-docker/
+
+Steps (that will be included in an Ansible playbook): 
+
+    $ export MONGODB_VERSION=4.0
+    $ curl -O --remote-name-all https://raw.githubusercontent.com/docker-library/mongo/master/$MONGODB_VERSION/{Dockerfile,docker-entrypoint.sh}
+    $ export DOCKER_USERNAME=username
+    $ chmod 755 ./docker-entrypoint.sh
+    $ docker build --build-arg MONGO_PACKAGE=mongodb-enterprise --build-arg MONGO_REPO=repo.mongodb.com -t $DOCKER_USERNAME/mongo-enterprise:$MONGODB_VERSION .
+
+
+
 #Install MongoDB in GoldZone
     
     cat <<EOF | sudo tee /etc/yum.repos.d/mongodb-enterprise-4.2.repo
