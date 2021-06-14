@@ -39,12 +39,12 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY ./swift /etc/swift/
-COPY ./conf/rsyncd.conf /etc/
-COPY ./bin /swift/bin
-COPY ./conf/bashrc /swift/.bashrc
-COPY ./conf/supervisord.conf /etc/supervisord.conf
-COPY ./conf/10-swift.conf /etc/rsyslog.d/10-swift.conf
+COPY swift /etc/swift/
+COPY conf/rsyncd.conf /etc/
+COPY bin /swift/bin
+COPY conf/bashrc /swift/.bashrc
+COPY conf/supervisord.conf /etc/supervisord.conf
+COPY conf/10-swift.conf /etc/rsyslog.d/10-swift.conf
 RUN	easy_install supervisor; mkdir /var/log/supervisor/ && \
     # create swift user and group
     mkdir -p /var/cache/swift /var/cache/swift2 && \

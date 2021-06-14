@@ -1125,8 +1125,8 @@ TODO : Update TODO list
     - [ ] Deploy Apache Spark
     - [ ] Deploy Apache Spark Stream
     - [ ] Add stream creation in REST API
-
-- [ ] [AutomaticDeployment](#TODO:AutomaticDeployment) : Docker + Kubernetes + Ansible -> see merge_feature branch 
+    
+- [ ] [AutomaticDeployment](#TODO:AutomaticDeployment) : Docker + Kubernetes + Ansible
     - [ ] Docker
         - [ ] MongoDB enterprise container
         - [ ] Openstack Swift container

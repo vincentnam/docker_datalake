@@ -3,7 +3,7 @@ services:
   react:
     build:
       context: react-ui_datalake_nots
-      dockerfile: Dockerfile
+      dockerfile: react-ui_datalake_nots/Dockerfile
     # equivalent to -it in docker run command (needed for react app)
     stdin_open: true
     container_name: react_gui
@@ -20,7 +20,7 @@ services:
   expressjs:
     build:
       context: express_server
-      dockerfile: Dockerfile
+      dockerfile: express_server/Dockerfile
     stdin_open: true
     container_name: express_rest
     network_mode: host
@@ -28,12 +28,3 @@ services:
     - 5000:5000
 #    volumes:
 #      - ./express_server/:/app/
-  mongodb :
-    image: mongo
-    ports:
-      - 27017:27017
-    container_name: metadata_database
-  openstack-swift:
-    build:
-      context: Openstack/swift
-      dockerfile: Dockerfile
