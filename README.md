@@ -430,6 +430,7 @@ There are more than 3000 meta-data models for data description and catalog const
 
 #### Metadata management system : MongoDB <a name="MetadataMongodb"></a>
 [Return to the table of content](#Tableofcontent)
+
 MongoDB aims to keep the metadata documents of each data and the various histories. It allows to store via its maximum 16 MB of data a large amount of data. Moreover, the primary objective of the database ' 
 We can store a large volume of data while allowing efficient search in these data, especially via the query tool that MongoDB offers and an implementation of MapReduce.
 
@@ -758,6 +759,7 @@ TODO : Explanation
 
 ### Openstack Swift <a name="OpenstackSwift"></a>
 [Return to the table of content](#Tableofcontent)
+
 Object inserted in Openstack swift are renamed with a number id. 
 This id is incremented by 1 for every object insert. It allows to follow easily the number of object stored in Openstack Swift.
 
@@ -804,6 +806,7 @@ Each object is stored on a container that match to the project or the user group
 
 ## Deployment <a name="Deployment"></a>
 [Return to the table of content](#Tableofcontent)
+
 TODO : Finish ansible, make fully automatic deployment with ansible (see docker branch) 
 - docker-compose up 
 
@@ -1040,6 +1043,7 @@ It will be easy and fast to integrate the new pipeline.
 
 ## TODO : Implementation <a name="TODOImplementation"></a>
 [Return to the table of content](#Tableofcontent)
+
 TODO list for the project development (i.e. the datalake architecture)
 TODO : Update TODO list
 - [x]  Raw data mangement area : 
@@ -1122,10 +1126,22 @@ TODO : Update TODO list
     - [ ] Deploy Apache Spark Stream
     - [ ] Add stream creation in REST API
 
-- [ ] [AutomaticDeployment](#TODO:AutomaticDeployment) : Docker + Kubernetes + Ansible
+- [ ] [AutomaticDeployment](#TODO:AutomaticDeployment) : Docker + Kubernetes + Ansible -> see merge_feature branch 
+    - [ ] Docker
+        - [ ] MongoDB enterprise container
+        - [ ] Openstack Swift container
+        - [ ] Apache Airflow container
+        - [ ] Processed data zone container (InfluxDB, SQL database)
+        - [ ] (NEEDED : Security design and implementation) Openstack Keystone container
+        - [ ] (NEEDED : Process zone design and rework : add Apache Spark) Apache Spark container
+    - [ ] Kubernetes
+        - [ ] Apache Spark cluster on kubernetes design  
+        - [ ] ...
+    - [ ] Ansible
+        - [ ] ...
 
 ## TODO : Design <a name="TODOImplementation"></a>
-  [Return to the table of content](#Tableofcontent)
+[Return to the table of content](#Tableofcontent)
 
 - [ ] Add metadata over transformed data in the goldzone (and be able to find the list of process done to create this processed data)
 
@@ -1261,6 +1277,7 @@ is licensed under the SSPL, see `https://www.mongodb.com/licensing/server-side-p
 
 ## Contacts <a name="Contacts"></a>
 [Return to the table of content](#Tableofcontent)
+
 04/01/2021 : 
 
 DANG Vincent-Nam (Repository owner, intern and engineer working on the project)
