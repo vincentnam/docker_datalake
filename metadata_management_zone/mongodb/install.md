@@ -9,7 +9,11 @@ Steps (that will be included in an Ansible playbook):
     $ chmod 755 ./docker-entrypoint.sh
     $ docker build --build-arg MONGO_PACKAGE=mongodb-enterprise --build-arg MONGO_REPO=repo.mongodb.com -t $DOCKER_USERNAME/mongo-enterprise:$MONGODB_VERSION .
 
+# MongoDB version available (15/06/2021):
 
+MongoDB container creation tested : "4.0", "4.2", "4.4", "5.0-rc"
+
+(Cf release folder in https://github.com/docker-library/mongo)
 
 #Install MongoDB in GoldZone
     
