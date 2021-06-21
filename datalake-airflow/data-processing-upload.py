@@ -1,11 +1,14 @@
 import pandas as pd
 import sys
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
+import datetime
 from textwrap import dedent
 from pymongo import MongoClient
 import swiftclient.service
 from swiftclient.service import SwiftService
 import json
+from bson import ObjectId
+from json import JSONEncoder
 from csv import DictReader
 
 from influxdb_client import InfluxDBClient
@@ -251,12 +254,30 @@ def extract_transform_load_images(swift_result, swift_container, swift_id, coll,
     data_conso_image["swift_id"] = str_swift_id
     data_conso_image["content_image"] = image
     data_conso_image["image_metadata"] = other_metadata
-    data_conso_image["creation_date"] = datetime.now()
+    data_conso_image["creation_date"] = datetime.datetime.now()
+    
+    # Encode DateTime and ObjectId Object into JSON using custom JSONEncoder
+    data_conso_image = JSONEncoder().encode(data_conso_image)
+    print(type(data_conso_image))
+    data_conso_image = json.loads(data_conso_image)
 
     collection.insert_one(data_conso_image)
-    
+    data_conso_image = JSONEncoder().encode(data_conso_image)
     return data_conso_image
 
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, (ObjectId)):
+            return str(o)
+        if isinstance(o, (datetime.datetime)):
+            return o.isoformat()
+        return json.JSONEncoder.default(self, o)
+    
+    
+def json_serial(obj):
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat() 
+    raise TypeError ("Type %s not serializable" % type(obj))
 
 def get_positions(columns, timestamp_fields_list, value_fields_list):
     # Search position of filds timestamp, value, topic and value_units

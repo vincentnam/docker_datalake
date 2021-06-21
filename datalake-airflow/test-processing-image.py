@@ -2,6 +2,10 @@ from pymongo import MongoClient
 import swiftclient.service
 from swiftclient.service import SwiftService
 from datetime import timedelta, datetime
+import datetime
+import json
+from bson import ObjectId
+from json import JSONEncoder
 
 # swift_id = "201"
 mongodb_url = "URL_MONGO"
@@ -34,6 +38,15 @@ swift_id = get_id(mongodb_url)
 print(swift_id)
 str_swift_id = str(swift_id)
 print(str_swift_id)
+
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, (ObjectId)):
+            return str(o)
+        if isinstance(o, (datetime.datetime)):
+            return o.isoformat()
+        return json.JSONEncoder.default(self, o)
 
 authurl = "http://url/auth/v1.0"
 user = 'test:tester'
@@ -68,6 +81,13 @@ data_conso_image = {}
 data_conso_image["swift_id"] = str_swift_id
 data_conso_image["content_image"] = image
 data_conso_image["image_metadata"] = other_metadata
-data_conso_image["creation_date"] = datetime.now()
+data_conso_image["creation_date"] = datetime.datetime.now()
+    
+# Encode DateTime and ObjectId Object into JSON using custom JSONEncoder
+data_conso_image = JSONEncoder().encode(data_conso_image)
+data_conso_image = json.loads(data_conso_image)
 
 coll.insert_one(data_conso_image)
+data_conso_image = JSONEncoder().encode(data_conso_image)
+
+print(data_conso_image)
