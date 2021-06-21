@@ -272,12 +272,6 @@ class JSONEncoder(json.JSONEncoder):
         if isinstance(o, (datetime.datetime)):
             return o.isoformat()
         return json.JSONEncoder.default(self, o)
-    
-    
-def json_serial(obj):
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat() 
-    raise TypeError ("Type %s not serializable" % type(obj))
 
 def get_positions(columns, timestamp_fields_list, value_fields_list):
     # Search position of filds timestamp, value, topic and value_units
