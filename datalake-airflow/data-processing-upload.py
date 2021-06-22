@@ -179,45 +179,63 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
         tags = {}
         # Parsing and config values
         if "energy" not in line[position_topic]:
-            val = 0
-            val = float(line[position_value])
-            old_values = values
+            #Remplace le (.) par (_) car influxdb n'accepte pas les points dans les string
             unit = line[position_payload_value_units].replace(".", "_")
-            values[unit] = val
-            history_data(process_type, swift_container, swift_id, "config_values", coll, old_values, values)
+            values["value"] = float(line[position_value])
+            old_tags = tags
+            # Parsing and config tags
+            for key, value in enumerate(columns):
+                if position_payload_value_units != value and position_value != value:
+                    val = value.replace(".", "_")
+                    if line[value] == "":
+                        tags[val] = ""
+                    else:
+                        tags[val] = str(line[value])
+            history_data(process_type, swift_container, swift_id, "config_tags", coll, old_tags, tags)
+            # Create variable for upload in influxdb
+            data.append(
+                {
+                    "measurement": unit,
+                    "tags": tags,
+                    "fields": values,
+                    "time": date_milliseconds
+                }
+            )
+            result.append(data)
+            data = {"data", data}
+            line = {"line": line}
+            # Upload in influxdb
+            write_api.write(bucket, org, data, protocol='json') 
         else:
             list_of_tuples = list(zip(line[position_payload_value_units].strip('][').split(','), line[position_value].strip('][').split(',')))
-            old_values = values
             for l in list_of_tuples:
                 unit, v = l
                 unit = unit.replace(".", "_")
-                values[unit] = float(v)
-            history_data(process_type, swift_container, swift_id, "config_values", coll, old_values, values)
-        old_tags = tags
-        # Parsing and config tags
-        for key, value in enumerate(columns):
-            if position_payload_value_units != value and position_value != value:
-                val = value.replace(".", "_")
-                if line[value] == "":
-                    tags[val] = ""
-                else:
-                    tags[val] = str(line[value])
-        history_data(process_type, swift_container, swift_id, "config_tags", coll, old_tags, tags)
-        # Create variable for upload in influxdb
-        data.append(
-            {
-                "measurement": line[position_topic],
-                "tags": tags,
-                "fields": values,
-                "time": date_milliseconds
-            }
-        )
-        result.append(data)
-        data = {"data", data}
-        line = {"line": line}
-        #history_data(process_type, swift_container, swift_id, "data_proccessing_for_upload_in_influxdb", coll, line, data)
-        # Upload in influxdb
-        write_api.write(bucket, org, data, protocol='json') 
+                values["value"] = float(v)
+                old_tags = tags
+                # Parsing and config tags
+                for key, value in enumerate(columns):
+                    if position_payload_value_units != value and position_value != value:
+                        val = value.replace(".", "_")
+                        if line[value] == "":
+                            tags[val] = ""
+                        else:
+                            tags[val] = str(line[value])
+                history_data(process_type, swift_container, swift_id, "config_tags", coll, old_tags, tags)
+                # Create variable for upload in influxdb
+                data.append(
+                    {
+                        "measurement": unit,
+                        "tags": tags,
+                        "fields": values,
+                        "time": date_milliseconds
+                    }
+                )
+                result.append(data)
+                data = {"data", data}
+                line = {"line": line}
+                # Upload in influxdb
+                write_api.write(bucket, org, data, protocol='json') 
     return result
 
 def extract_transform_load_time_series_json(json_object, swift_container, swift_id, coll, process_type):
