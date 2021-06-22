@@ -36,8 +36,8 @@ class MetadataWriter(config: Config) {
    * @param otherData
    */
   def putIntoSwiftDB(contentType: String, swiftUser: String, containerName: String, id: String, processedDataAreaService: String,
-          dataProcess: String, application: String, originalObjectName: String,successfulOperations: Array[String],
-          failedOperations: Array[String], otherData: String)= {
+                     dataProcess: String, application: String, originalObjectName: String, successfulOperations: Array[String] = null,
+                     failedOperations: Array[String] = null, otherData: String = null) = {
 
     log.info("Writing metadata to Swift database")
 

@@ -13,3 +13,7 @@ mqtt.brokerUrl = ""
 mqtt.username = ""
 mqtt.password = ""
 mqtt.batchDuration =
+influxdb.token = ""
+influxdb.org = ""
+influxdb.bucket = ""
+influxdb.url = ""

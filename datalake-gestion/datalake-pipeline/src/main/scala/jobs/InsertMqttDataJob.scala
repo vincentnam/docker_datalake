@@ -7,15 +7,13 @@ import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.api.java.JavaStreamingContext
 import org.apache.spark.streaming.mqtt.MQTTUtils
 import org.eclipse.paho.client.mqttv3.MqttClient
-import service.{MetadataWriter, SwiftWriter}
+import service.{MetadataWriter, SwiftWriter, InfluxDBWriter}
 
 import scala.util.{Failure, Success}
 
 
 object InsertMqttDataJob {
   @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
-
-  val projectName = "neOCampus"
 
   def start(topic: String): Unit = {
     val config: Config = ConfigFactory.load()
@@ -31,30 +29,39 @@ object InsertMqttDataJob {
     val clientId = MqttClient.generateClientId()
     println("brokerUrl: " + brokerUrl)
     println("topic: " + topic)
-    val lines = MQTTUtils.createStream(jssc, brokerUrl, topic, clientId, username, password, cleanSession = true)
+    val lines = MQTTUtils.createPairedStream(jssc, brokerUrl, Array(topic), clientId, username, password, cleanSession = true)
 
     lines.foreachRDD((rdd, time) => {
-      val data = rdd.collect()
+      val data = rdd.map(r => r._2).collect
       if (data.size() > 0) {
         // println(data.toString)
         // Get the Swift ID counter and increase it
         val metadataWriter = new MetadataWriter(config)
         val id = metadataWriter.putIntoStatsAndGetSwiftId()
         val contentType = "application/json"
-        val inserted = swiftWriter.put(projectName, id.toString, data.toString, contentType)
+        val swiftContainer = config.getString("swift.container")
+        val inserted = swiftWriter.put(swiftContainer, id.toString, data.toString, contentType)
 
         // handle atomic insertion & failure
         inserted match {
-          case Success(df) =>
-            metadataWriter.putIntoSwiftDB(contentType, config.getString("swift.user"), projectName, id.toString,
+          case Success(_) =>
+            // insert metadata into mongoDB
+            metadataWriter.putIntoSwiftDB(contentType, config.getString("swift.user"), swiftContainer, id.toString,
               "Swift", "default",
               s"Insert MQTT into Swift, topic: ${topic}",
-              s"mqtt_${time.toString().replace(' ', '_')}.json", null, null, null)
-          // println(data.toString)
+              s"mqtt_${time.toString().replace(' ', '_')}.json")
+
+            // insert mqtt into influxDB
+            val influxDDWriter = new InfluxDBWriter(config)
+            influxDDWriter.writeMqtt(rdd, time)
+
+            println("swift object id: " + id.toString)
+            println(data.toString)
           case Failure(exception) =>
             log.error(s"Execption Occured while inserting data into data lake. Reseting swift Id : $exception")
             metadataWriter.resetLastSwiftId()
         }
+
       }
     })
 
