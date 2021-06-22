@@ -2,17 +2,24 @@ mongo.host = ""
 mongo.port = ""
 mongo.user = ""
 mongo.pass = ""
+mongo.historyDB= ""
+
 swift.host = ""
 swift.port = ""
 swift.authUrl = ""
 swift.user = ""
 swift.pass = ""
+swift.container = ""
+
 app.name = ""
 data.path = ""
+
 mqtt.brokerUrl = ""
 mqtt.username = ""
 mqtt.password = ""
 mqtt.batchDuration =
+mqtt.topic = "u4/#"
+
 influxdb.token = ""
 influxdb.org = ""
 influxdb.bucket = ""

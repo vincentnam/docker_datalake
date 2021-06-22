@@ -2,7 +2,7 @@ package jobs
 
 import com.typesafe.config.{Config, ConfigFactory}
 import config.Configuration
-import service.{DataWriter, HistoricalDataImporter, MetadataWriter}
+import service.{DataWriter, HistoricalDataImporter, MongoWriter}
 import util.Serialization
 
 import scala.util.{Failure, Success}
@@ -24,7 +24,7 @@ object InsertHistoricalDataJob {
     //var data = importer.importData(args(0))
     val data = importer.importData()
 
-    val metadataWriter = new MetadataWriter(configuration)
+    val metadataWriter = new MongoWriter(configuration)
     // Get the Swift ID counter and increase it
     val id = metadataWriter.putIntoStatsAndGetSwiftId()
 
