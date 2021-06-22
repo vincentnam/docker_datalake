@@ -1,11 +1,14 @@
 import pandas as pd
 import sys
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
+import datetime
 from textwrap import dedent
 from pymongo import MongoClient
 import swiftclient.service
 from swiftclient.service import SwiftService
 import json
+from bson import ObjectId
+from json import JSONEncoder
 from csv import DictReader
 
 from influxdb_client import InfluxDBClient
@@ -39,7 +42,7 @@ def get_swift_object(*args, **kwargs):
     swift_container = kwargs["params"]["swift_container"]
     swift_id = kwargs["params"]["swift_obj_id"]
 
-    mongodb_url = "mongodb://10.200.156.254:27017"
+    mongodb_url = "mongodb://IP:PORT"
     container_name = "traitement_historique"
 
     # Mongo
@@ -54,7 +57,7 @@ def get_swift_object(*args, **kwargs):
     # Openstack Swift
     ip_address = "IP_ADDRESS"
     address_name = "ADDRESS_NAME"
-    authurl = "http://10.200.156.252:8080/auth/v1.0"
+    authurl = "http://url/auth/v1.0"
     user = 'test:tester'
     key = 'testing'
     conn = swiftclient.Connection(
@@ -77,7 +80,7 @@ def get_swift_object(*args, **kwargs):
     # Compare filetype
     if "image/" in content_type :
         process_type = "images"
-        processed_data = extract_transform_load_images(swift_result, swift_container, swift_id, coll, process_type)
+        processed_data = extract_transform_load_images(swift_result, swift_container, swift_id, coll, process_type, mongodb_url)
 
     if "application/json" in content_type:
         process_type = "time_series_json"
@@ -155,11 +158,11 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
     )
     
     # You can generate a Token from the "Tokens Tab" in the UI
-    token = "eevr5kWlgdgB1OuiKLKz9lIYD-2N9x1LG7nHDIHHa0cO0XvBJScwnunC3c6xrEvKXXCLbK1nXDsLtqWdXhDriw=="
-    org = "modis"
-    bucket = "test"
+    token = ""
+    org = ""
+    bucket = ""
 
-    client = InfluxDBClient(url="http://neocampus-datalake-mongodb.dev.modiscloud.net:8086", token=token, debug=True)
+    client = InfluxDBClient(url="url", token=token, debug=True)
     write_api = client.write_api(write_options=SYNCHRONOUS)
     
     for index, line in df.iterrows():
@@ -225,11 +228,50 @@ def extract_transform_load_time_series_json(json_object, swift_container, swift_
     result.append(x)
     return result
 
-def extract_transform_load_images(json_object, swift_container, swift_id, coll, process_type):
+def extract_transform_load_images(swift_result, swift_container, swift_id, coll, process_type, mongodb_url):
     # TODO : process related to images
-    #history_data(process_type, swift_container, swift_id, "parsing_date", coll, row, result_row)
-    return json_object
+    
+    print(swift_id)
+    str_swift_id = str(swift_id)
+    print(str_swift_id)
+    
+    image = str(swift_result,'utf-8')
+    
+    nb_objects, mongo_collections = get_metadata("neOCampus", mongodb_url ,{"swift_id": str_swift_id})
+    mongo_collections = list(mongo_collections)
+    
+    other_metadata = []
+    for obj in mongo_collections:
+        other_metadata.append(obj['other_data'])
+    
+    container_name = "processed_data"
+    client = MongoClient(mongodb_url, connect=False)
+    db = client.data_conso
+    collection = db[container_name]
+    
+    data_conso_image = {}
 
+    data_conso_image["swift_id"] = str_swift_id
+    data_conso_image["content_image"] = image
+    data_conso_image["image_metadata"] = other_metadata
+    data_conso_image["creation_date"] = datetime.datetime.now()
+    
+    # Encode DateTime and ObjectId Object into JSON using custom JSONEncoder
+    data_conso_image = JSONEncoder().encode(data_conso_image)
+    print(type(data_conso_image))
+    data_conso_image = json.loads(data_conso_image)
+
+    collection.insert_one(data_conso_image)
+    data_conso_image = JSONEncoder().encode(data_conso_image)
+    return data_conso_image
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, (ObjectId)):
+            return str(o)
+        if isinstance(o, (datetime.datetime)):
+            return o.isoformat()
+        return json.JSONEncoder.default(self, o)
 
 def get_positions(columns, timestamp_fields_list, value_fields_list):
     # Search position of filds timestamp, value, topic and value_units
@@ -248,6 +290,25 @@ def get_positions(columns, timestamp_fields_list, value_fields_list):
             position_payload_value_units = value
 
     return position_timestamp, position_value, position_topic, position_payload_value_units
+
+def get_metadata(db_name, mongodb_url, params):
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.swift
+    collection = mongo_db[db_name]
+
+    metadata = collection.find({ 'creation_date': { '$exists': 'true', '$ne': [] } })
+    dict_query = {"$and": []}
+
+    if(params['swift_id'] != ""):
+        datatype_query = {"swift_object_id": params['swift_id']}
+        for item in [datatype_query]: 
+            dict_query['$and'].append(item)
+
+    metadata = collection.find(dict_query)
+
+    nb_objects = metadata.count()
+
+    return nb_objects, metadata
 
 # HANDLE CSV Time series
 dag = DAG(

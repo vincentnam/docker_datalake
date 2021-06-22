@@ -105,6 +105,7 @@ export class Upload extends React.Component {
                 window.location.reload();
             })
             .catch(function (error) {
+                console.log(error);
                 window.alert("L'upload n'a pas réussi ! : " + error)
             }).finally(function(){this.handleClose()}.bind(this))
         }
