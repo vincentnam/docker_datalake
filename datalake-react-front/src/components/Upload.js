@@ -17,13 +17,17 @@ export class Upload extends React.Component {
             files.map((file) => { 
                 const typeFile = file.type;
                 const filename = file.name;
-                var reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => this.setState({file: reader.result});
-                this.setState({typeFile: typeFile});
-                this.setState({filename: filename});
-                const f = [file]
-                this.setState({files: f});
+                if(this.state.type_file_accepted.includes(typeFile) === false) {
+                    alert("Format de fichier non accepté.")
+                } else {
+                    var reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => this.setState({file: reader.result});
+                    this.setState({typeFile: typeFile});
+                    this.setState({filename: filename});
+                    const f = [file]
+                    this.setState({files: f});
+                }
             });
             
         };
@@ -38,6 +42,7 @@ export class Upload extends React.Component {
             premieremeta: '',
             deuxiememeta: '',
             othermeta: [],
+            type_file_accepted: [],
             loading: false,
         };
         this.handleChange = this.handleChange.bind(this);
@@ -64,17 +69,29 @@ export class Upload extends React.Component {
         this.setState({
         [name]: value
         });
+        let type_file_accepted = [];
         if (name === "type") {
             const types = [config.types];
             types.map((type) => (
                 type.map((t) => {
                     if (t.id === parseInt(value)) {
                         this.setState({
-                            othermeta: t.metadonnees
+                            othermeta: t.metadonnees,
+                            type_file_accepted: t.type_file_accepted
                         });
+                        type_file_accepted = t.type_file_accepted
                     }
                 })
             ));
+        }
+        if(this.state.typeFile !== "") {
+            if(type_file_accepted.includes(this.state.typeFile) === false) {
+                alert("Format de fichier non accepté.")
+                this.setState({file: ''});
+                this.setState({typeFile: ''});
+                this.setState({filename: ''});
+                this.setState({files: []});
+            }
         }
     }
     
