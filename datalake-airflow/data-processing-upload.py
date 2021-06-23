@@ -171,10 +171,10 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
         date = date.replace('z', "")
         date = date.replace('.000', "")
         date = date.replace('-', "/")
-        datetime_object = datetime.strptime(date, '%Y/%m/%d %H:%M:%S')
+        datetime_object = datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S')
         date_milliseconds = int(round(datetime_object.timestamp() * 1000000000))
         history_data(process_type, swift_container, swift_id, "parsing_date_timestamp_to_date_milliseconds", coll, line[position_timestamp], date_milliseconds)
-        data = []
+        new_data = []
         values = {}
         tags = {}
         # Parsing and config values
@@ -193,7 +193,7 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
                         tags[val] = str(line[value])
             history_data(process_type, swift_container, swift_id, "config_tags", coll, old_tags, tags)
             # Create variable for upload in influxdb
-            data.append(
+            new_data.append(
                 {
                     "measurement": unit,
                     "tags": tags,
@@ -201,16 +201,18 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
                     "time": date_milliseconds
                 }
             )
-            result.append(data)
-            data = {"data", data}
+            result.append(new_data)
+            #new_data = {"data", new_data}
             line = {"line": line}
             # Upload in influxdb
-            write_api.write(bucket, org, data, protocol='json') 
+            write_api.write(bucket, org, new_data, protocol='json') 
         else:
             list_of_tuples = list(zip(line[position_payload_value_units].strip('][').split(','), line[position_value].strip('][').split(',')))
             for l in list_of_tuples:
+                dt = []
                 unit, v = l
                 unit = unit.replace(".", "_")
+                unit = unit.replace('"', '')
                 values["value"] = float(v)
                 old_tags = tags
                 # Parsing and config tags
@@ -223,7 +225,7 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
                             tags[val] = str(line[value])
                 history_data(process_type, swift_container, swift_id, "config_tags", coll, old_tags, tags)
                 # Create variable for upload in influxdb
-                data.append(
+                dt.append(
                     {
                         "measurement": unit,
                         "tags": tags,
@@ -231,11 +233,11 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
                         "time": date_milliseconds
                     }
                 )
-                result.append(data)
-                data = {"data", data}
-                line = {"line": line}
+                result.append(dt)
+                #dt = {"data", dt}
+                #line = {"line": line}
                 # Upload in influxdb
-                write_api.write(bucket, org, data, protocol='json') 
+                write_api.write(bucket, org, dt, protocol='json') 
     return result
 
 def extract_transform_load_time_series_json(json_object, swift_container, swift_id, coll, process_type):
