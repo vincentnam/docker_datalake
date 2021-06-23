@@ -36,13 +36,13 @@ class MongoWriter(config: Config) {
    * @param otherData
    */
   def putIntoSwiftDB(contentType: String, swiftUser: String, containerName: String, id: String, processedDataAreaService: String,
-                     dataProcess: String, application: String, originalObjectName: String, successfulOperations: Array[String] = null,
-                     failedOperations: Array[String] = null, otherData: String = null) = {
+                     dataProcess: String, application: String, originalObjectName: String, mqtt_topic: String = null,
+                     successfulOperations: Array[String] = null, failedOperations: Array[String] = null, otherData: String = null) = {
 
     log.info("Writing metadata to Swift database")
 
     val historicalMetaData = HistoricalMetaData(contentType, dataProcess, swiftUser, containerName, id, application, originalObjectName,
-      successfulOperations, failedOperations, processedDataAreaService, otherData)
+      mqtt_topic, successfulOperations, failedOperations, processedDataAreaService, otherData)
 
     val gson = new Gson
 
@@ -50,7 +50,9 @@ class MongoWriter(config: Config) {
 
     val dataSet = spark.createDataset(jsonString :: Nil)
 
-    spark.read.json(dataSet).toDF().write
+    spark.read.json(dataSet).toDF()
+      .withColumn("creation_date", current_timestamp())
+      .write
       .format("com.mongodb.spark.sql.DefaultSource")
       .options(Map("uri" -> mongodbUri, "database" -> "swift", "collection" -> containerName))
       .mode("append")
@@ -166,6 +168,6 @@ class MongoWriter(config: Config) {
 
   case class HistoricalMetaData(content_type: String, data_process: String, swift_user: String, swift_container: String,
                                 swift_object_id: String, application: String, original_object_name: String,
-                                successful_operations: Array[String], failed_operations: Array[String],
+                                mqtt_topic: String, successful_operations: Array[String], failed_operations: Array[String],
                                 processed_data_area_service: String, other_data: String)
 }

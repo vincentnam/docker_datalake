@@ -22,6 +22,7 @@ class InfluxDBWriter(config: Config) {
   val influxdbOrg: String = config.getString("influxdb.org")
   val influxdbBucket: String = config.getString("influxdb.bucket")
   val influxdbUrl: String = config.getString("influxdb.url")
+  val influxdbMeasurement: String = config.getString("influxdb.measurement")
 
   val influxClient: InfluxDBClient = InfluxDBClientFactory.create(influxdbUrl, influxdbToken.toCharArray, influxdbOrg)
 
@@ -50,28 +51,57 @@ class InfluxDBWriter(config: Config) {
     val linePoints = new ListBuffer[Point]()
     msgList.foreach {
       case m: MessageMultiValues =>
-        val point = Point.measurement(m.topic)
-          .addTag("subID", m.subID)
-          .addTag("unitID", m.unitID)
-          .time(time.milliseconds, WritePrecision.MS)
-        if (m.input != null) {
-          point.addTag("input", m.input)
-        }
-        for (i <- m.value.indices) {
-          point.addField(m.value_units(i), m.value(i))
-        }
-        linePoints += point
-      case m: MessageSingleValue =>
-        if (m.value_units != null) {
+        if (influxdbMeasurement == "topic") {
           val point = Point.measurement(m.topic)
             .addTag("subID", m.subID)
             .addTag("unitID", m.unitID)
-            .addField(m.value_units, m.value)
             .time(time.milliseconds, WritePrecision.MS)
           if (m.input != null) {
             point.addTag("input", m.input)
           }
+          for (i <- m.value.indices) {
+            point.addField(m.value_units(i), m.value(i))
+          }
           linePoints += point
+        } else {
+          for (i <- m.value.indices) {
+            val point = Point.measurement(m.value_units(i))
+              .addField("value", m.value(i))
+              .addTag("topic", m.topic)
+              .addTag("subID", m.subID)
+              .addTag("unitID", m.unitID)
+              .time(time.milliseconds, WritePrecision.MS)
+            if (m.input != null) {
+              point.addTag("input", m.input)
+            }
+            linePoints += point
+          }
+        }
+
+      case m: MessageSingleValue =>
+        if (m.value_units != null) {
+          if (influxdbMeasurement == "topic") {
+            val point = Point.measurement(m.topic)
+              .addTag("subID", m.subID)
+              .addTag("unitID", m.unitID)
+              .addField(m.value_units, m.value)
+              .time(time.milliseconds, WritePrecision.MS)
+            if (m.input != null) {
+              point.addTag("input", m.input)
+            }
+            linePoints += point
+          } else {
+            val point = Point.measurement(m.value_units)
+              .addTag("topic", m.topic)
+              .addTag("subID", m.subID)
+              .addTag("unitID", m.unitID)
+              .addField("value", m.value)
+              .time(time.milliseconds, WritePrecision.MS)
+            if (m.input != null) {
+              point.addTag("input", m.input)
+            }
+            linePoints += point
+          }
         }
       case _ => null
     }

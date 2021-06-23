@@ -13,7 +13,7 @@ object InsertHistoricalDataJob {
 
   val projectName = "neOCampus"
 
-  def start(): Unit ={
+  def start(): Unit = {
     log.info("Launching historical neOCampus data insertion into Data Lake")
 
     val configuration: Config = ConfigFactory.load()
@@ -38,7 +38,7 @@ object InsertHistoricalDataJob {
         metadataWriter.putIntoSwiftDB("csv", "test:tester", projectName, id.toString,
           "MongoDB", "default",
           "Historical Real time data coming from CSV file to be inserted in Swift and MongoDB",
-          "sensors.csv",null,null,null)
+          "sensors.csv")
       }
       case Failure(exception) => {
         log.error(s"Execption Occured while inserting data into data lake. Reseting swift Id : $exception")
