@@ -18,7 +18,7 @@ export class Upload extends React.Component {
                 const typeFile = file.type;
                 const filename = file.name;
                 if(this.state.type_file_accepted.includes(typeFile) === false) {
-                    alert("Format de fichier non accepté.\nVeuillez ajouter un fichier de ce ou ses types : \n" + this.state.type_file_accepted)
+                    alert("Format de fichier non accepté.\nVeuillez ajouter un fichier qui correspond à un de ses types : \n" + this.state.type_file_accepted)
                 } else {
                     var reader = new FileReader();
                     reader.readAsDataURL(file);
@@ -86,7 +86,7 @@ export class Upload extends React.Component {
         }
         if(this.state.typeFile !== "") {
             if(type_file_accepted.includes(this.state.typeFile) === false) {
-                alert("Format de fichier non accepté.\nVeuillez ajouter un fichier de ce ou ses types : \n" + type_file_accepted)
+                alert("Format de fichier non accepté.\nVeuillez ajouter un fichier qui correspond à un de ses types : \n" + type_file_accepted)
                 this.setState({file: ''});
                 this.setState({typeFile: ''});
                 this.setState({filename: ''});
