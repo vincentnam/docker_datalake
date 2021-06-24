@@ -16,14 +16,14 @@ export const config = {
                     "id": 1,
                     "label": "Métadonnée Texte 1",
                     "type": "text",
-                    "name": "metatest1",
+                    "name": "meta1",
                     "value": "",
                 },
                 {
                     "id": 2,
                     "label": "Métadonnée Texte 2",
                     "type": "text",
-                    "name": "metatest2",
+                    "name": "meta2",
                     "value": "",
                 }
             ]
@@ -37,14 +37,14 @@ export const config = {
                     "id": 1,
                     "label": "Métadonnée Image 1",
                     "type": "text",
-                    "name": "metaimage1",
+                    "name": "meta1",
                     "value": "",
                 },
                 {
                     "id": 2,
                     "label": "Métadonnée Image 2",
                     "type": "text",
-                    "name": "metaimage2",
+                    "name": "meta2",
                     "value": "",
                 }
             ]
@@ -58,14 +58,14 @@ export const config = {
                     "id": 1,
                     "label": "Métadonnée Son 1",
                     "type": "text",
-                    "name": "metason1",
+                    "name": "meta1",
                     "value": "",
                 },
                 {
                     "id": 2,
                     "label": "Métadonnée Son 2",
                     "type": "text",
-                    "name": "metason2",
+                    "name": "meta2",
                     "value": "",
                 }
             ]
@@ -79,14 +79,14 @@ export const config = {
                     "id": 1,
                     "label": "Métadonnée Vidéo 1",
                     "type": "text",
-                    "name": "metavidéo1",
+                    "name": "meta1",
                     "value": "",
                 },
                 {
                     "id": 2,
                     "label": "Métadonnée Vidéo 2",
                     "type": "text",
-                    "name": "metavidéo2",
+                    "name": "meta2",
                     "value": "",
                 }
             ]
@@ -100,14 +100,14 @@ export const config = {
                     "id": 1,
                     "label": "Métadonnée Tuple 1",
                     "type": "text",
-                    "name": "metatuple1",
+                    "name": "meta1",
                     "value": "",
                 },
                 {
                     "id": 2,
                     "label": "Métadonnée Tuple 2",
                     "type": "text",
-                    "name": "metatuple2",
+                    "name": "meta2",
                     "value": "",
                 }
             ]
@@ -121,14 +121,14 @@ export const config = {
                     "id": 1,
                     "label": "Métadonnée Arbre 1",
                     "type": "text",
-                    "name": "metaarbre1",
+                    "name": "meta1",
                     "value": "",
                 },
                 {
                     "id": 2,
                     "label": "Métadonnée Arbre 2",
                     "type": "text",
-                    "name": "metaarbre2",
+                    "name": "meta2",
                     "value": "",
                 }
             ]
@@ -142,14 +142,14 @@ export const config = {
                     "id": 1,
                     "label": "Métadonnée Binaire 1",
                     "type": "text",
-                    "name": "metabinaire1",
+                    "name": "meta1",
                     "value": "",
                 },
                 {
                     "id": 2,
                     "label": "Métadonnée Binaire 2",
                     "type": "text",
-                    "name": "metabinaire2",
+                    "name": "meta2",
                     "value": "",
                 }
             ]
