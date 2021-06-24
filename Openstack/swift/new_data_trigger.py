@@ -17,6 +17,8 @@ class NewUploadTriggerMiddleware(object):
 
     @wsgify
     def __call__(self, req):
+        if req.headers.get("x-object-meta-source") == "mqtt":
+            return req.get_response(self.app)
         try:
             version, account, container, obj = split_path(req.path_info, 4, 4, True)
 

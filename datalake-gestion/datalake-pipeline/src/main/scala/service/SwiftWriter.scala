@@ -8,6 +8,7 @@ import org.javaswift.joss.model.{Account, StoredObject}
 
 import java.io.ByteArrayInputStream
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.mapAsJavaMapConverter
 import scala.util.{Failure, Success, Try}
 
 class SwiftWriter(config: Config) {
@@ -38,10 +39,12 @@ class SwiftWriter(config: Config) {
       // upload object to swift
       obj.uploadObject(inputStream)
       obj.setContentType(contentType)
+      val metadata: Map[String, AnyRef] = Map("source" -> "mqtt")
+      obj.setMetadata(metadata.asJava)
       Success(obj)
     } catch {
       case e: Exception =>
-        log.error("Error Occurred while inserting object to Openstack Swift")
+        log.error("Error Occurred while inserting object to Openstack Swift: " + e)
         Failure(e)
     }
   }
