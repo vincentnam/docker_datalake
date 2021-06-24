@@ -31,3 +31,6 @@ libraryDependencies += "org.apache.spark" %% "spark-streaming" % "3.1.1" // % "p
 
 // https://mvnrepository.com/artifact/org.apache.bahir/spark-streaming-mqtt
 libraryDependencies += "org.apache.bahir" %% "spark-streaming-mqtt" % "2.4.0"
+
+// https://mvnrepository.com/artifact/com.influxdb/influxdb-client-scala
+libraryDependencies += "com.influxdb" %% "influxdb-client-scala" % "2.3.0"

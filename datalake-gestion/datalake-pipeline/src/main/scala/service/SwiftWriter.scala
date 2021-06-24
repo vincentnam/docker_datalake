@@ -2,20 +2,23 @@ package service
 
 import com.typesafe.config.Config
 import org.apache.log4j.Logger
+import org.apache.spark.streaming.Time
 import org.javaswift.joss.client.factory.{AccountFactory, AuthenticationMethod}
 import org.javaswift.joss.model.{Account, StoredObject}
 
 import java.io.ByteArrayInputStream
+import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.mapAsJavaMapConverter
 import scala.util.{Failure, Success, Try}
 
-class SwiftWriter(conf: Config) {
+class SwiftWriter(config: Config) {
   @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
 
   val swiftAccount: Account = new AccountFactory()
     .setAuthenticationMethod(AuthenticationMethod.BASIC)
-    .setUsername(conf.getString("swift.user"))
-    .setPassword(conf.getString("swift.pass"))
-    .setAuthUrl(conf.getString("swift.authUrl"))
+    .setUsername(config.getString("swift.user"))
+    .setPassword(config.getString("swift.pass"))
+    .setAuthUrl(config.getString("swift.authUrl"))
     .createAccount()
 
 
@@ -36,10 +39,12 @@ class SwiftWriter(conf: Config) {
       // upload object to swift
       obj.uploadObject(inputStream)
       obj.setContentType(contentType)
+      val metadata: Map[String, AnyRef] = Map("source" -> "mqtt")
+      obj.setMetadata(metadata.asJava)
       Success(obj)
     } catch {
       case e: Exception =>
-        log.error("Error Occurred while inserting object to Openstack Swift")
+        log.error("Error Occurred while inserting object to Openstack Swift: " + e)
         Failure(e)
     }
   }
@@ -56,5 +61,33 @@ class SwiftWriter(conf: Config) {
     val obj = container.getObject(id)
 
     obj
+  }
+
+  def writeMqtt(data: List[(String, String)], time: Time, mongoWriter: MongoWriter): ListBuffer[String] = {
+    val swift_object_ids = new ListBuffer[String]()
+    data.foreach(r => {
+      val topic = r._1
+      val message = r._2
+      val id = mongoWriter.putIntoStatsAndGetSwiftId()
+      val contentType = "application/json"
+      val swiftContainer = config.getString("swift.container")
+      val inserted = put(swiftContainer, id.toString, message, contentType)
+      // handle atomic insertion & failure
+      inserted match {
+        case Success(_) =>
+          // insert metadata into mongoDB
+          mongoWriter.putIntoSwiftDB(contentType, config.getString("swift.user"), swiftContainer, id.toString,
+            "Swift", "default",
+            s"Insert MQTT into Swift, topic: ${topic}",
+            s"mqtt_${topic.replace('/', '_')}_${time.milliseconds}.json",
+            topic
+          )
+          swift_object_ids += id.toString
+        case Failure(exception) =>
+          log.error(s"Execption Occured while inserting data into data lake. Reseting swift Id : $exception")
+          mongoWriter.resetLastSwiftId()
+      }
+    })
+    swift_object_ids
   }
 }

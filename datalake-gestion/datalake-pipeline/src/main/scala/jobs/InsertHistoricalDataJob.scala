@@ -2,7 +2,7 @@ package jobs
 
 import com.typesafe.config.{Config, ConfigFactory}
 import config.Configuration
-import service.{DataWriter, HistoricalDataImporter, MetadataWriter}
+import service.{DataWriter, HistoricalDataImporter, MongoWriter}
 import util.Serialization
 
 import scala.util.{Failure, Success}
@@ -13,7 +13,7 @@ object InsertHistoricalDataJob {
 
   val projectName = "neOCampus"
 
-  def start(): Unit ={
+  def start(): Unit = {
     log.info("Launching historical neOCampus data insertion into Data Lake")
 
     val configuration: Config = ConfigFactory.load()
@@ -24,7 +24,7 @@ object InsertHistoricalDataJob {
     //var data = importer.importData(args(0))
     val data = importer.importData()
 
-    val metadataWriter = new MetadataWriter(configuration)
+    val metadataWriter = new MongoWriter(configuration)
     // Get the Swift ID counter and increase it
     val id = metadataWriter.putIntoStatsAndGetSwiftId()
 
@@ -38,7 +38,7 @@ object InsertHistoricalDataJob {
         metadataWriter.putIntoSwiftDB("csv", "test:tester", projectName, id.toString,
           "MongoDB", "default",
           "Historical Real time data coming from CSV file to be inserted in Swift and MongoDB",
-          "sensors.csv",null,null,null)
+          "sensors.csv")
       }
       case Failure(exception) => {
         log.error(s"Execption Occured while inserting data into data lake. Reseting swift Id : $exception")
