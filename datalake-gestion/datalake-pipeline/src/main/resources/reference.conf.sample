@@ -18,9 +18,10 @@ mqtt.brokerUrl = ""
 mqtt.username = ""
 mqtt.password = ""
 mqtt.batchDuration =
-mqtt.topic = "u4/#"
+mqtt.topic = ""
 
 influxdb.token = ""
 influxdb.org = ""
 influxdb.bucket = ""
 influxdb.url = ""
+influxdb.measurement = ""
