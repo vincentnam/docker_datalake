@@ -34,14 +34,6 @@ def get_swift_object(*args, **kwargs):
     swift_container = kwargs["params"]["swift_container"]
     swift_id = kwargs["params"]["swift_obj_id"]
 
-    mongodb_url = config.mongodb_url
-    container_name = config.container_name
-
-    # Mongo
-    client = MongoClient(mongodb_url, connect=False)
-    db = client.data_historique
-    coll = db[container_name]
-
     # Stockage des données traitées
     # db_process = client.data_historique
     # col_process_data = db_process["historique"]
@@ -52,42 +44,41 @@ def get_swift_object(*args, **kwargs):
     authurl = "http://" + config.url_swift + "/auth/v1.0"
     user = config.user_swift
     key = config.key_swift
+    # Connction à Swift
     conn = swiftclient.Connection(
         user=user, 
         key=key,
         authurl=authurl
     )
-
+    # Récupération de l'object Swift
     swift_object = conn.get_object(swift_container, swift_id)
     print('----------- OBJET SWIFT -------------')
     print(swift_object)
-
+    # Content type récupéré de l'object swift
     content_type = swift_object[0]['content-type']
+    # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
 
     process_type = "other"
     processed_data = {}
 
-    # TODO : 2 other functions to handle different filetype
     # Compare filetype
     if "image/" in content_type :
         process_type = "images"
-        processed_data = extract_transform_load_images(swift_result, swift_container, swift_id, coll, process_type, mongodb_url)
-
+        processed_data = extract_transform_load_images(swift_result, swift_container, swift_id, process_type)
     if "application/json" in content_type:
         process_type = "time_series_json"
         # Json parsing
-        processed_data = extract_transform_load_time_series_json(swift_result, swift_container, swift_id, coll, process_type)
+        processed_data = extract_transform_load_time_series_json(swift_result, swift_container, swift_id, process_type)
 
     if "application/vnd.ms-excel" in content_type:
         process_type = "time_series_csv"
         # Json parsing
-        processed_data = extract_transform_load_time_series_csv(swift_result, swift_container, swift_id, coll, process_type)
+        processed_data = extract_transform_load_time_series_csv(swift_result, swift_container, swift_id, process_type)
 
     # Handled data
     return processed_data
 
-# HANDLE CSV Time series
 dag = DAG(
     'data-processing-upload',
     default_args=default_args,

@@ -1,7 +1,8 @@
 import sys
 import json
 
-def extract_transform_load_time_series_json(json_object, swift_container, swift_id, coll, process_type):
+# Fonction de traitement d'un fichier Json Time Series
+def extract_transform_load_time_series_json(json_object, swift_container, swift_id, process_type):
     # TODO : process related to JSON files
     #history_data(process_type, swift_container, swift_id, "parsing_date", coll, row, result_row)
     result = json.loads(json_object)

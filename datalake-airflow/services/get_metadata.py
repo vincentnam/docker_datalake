@@ -1,6 +1,7 @@
 import sys
 from pymongo import MongoClient
 
+#Fonction de recherche dans la collection avec comme paramètre l'id swift
 def get_metadata(db_name, mongodb_url, params):
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.swift

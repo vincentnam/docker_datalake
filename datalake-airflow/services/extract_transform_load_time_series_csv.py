@@ -11,8 +11,8 @@ import history_data
 import get_positions
 import config
 
-
-def extract_transform_load_time_series_csv(swift_result, swift_container, swift_id, coll, process_type):
+# Fonction de traitement d'un fichier CSV Time Series
+def extract_transform_load_time_series_csv(swift_result, swift_container, swift_id, process_type):
     result = []
     # List fields timestamp
     timestamp_fields_list = [
@@ -35,22 +35,21 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
     data.seek(0)
     df = pd.read_csv(data, sep=",")
     columns = df.columns
-    # swift_data = {"swift_result": swift_result}
-    # history_df = {"df": df}
-    # history_data(process_type, swift_container, swift_id, "data_processing_swift_result_bytes_to_dataframe", coll, swift_data, history_df)
     
+    #Recherche des positions des valeurs 
     position_timestamp, position_value, position_topic, position_payload_value_units = get_positions(
         columns, 
         timestamp_fields_list, 
         value_fields_list
     )
     
-    # You can generate a Token from the "Tokens Tab" in the UI
+    # Récupération du token, organisation, bucket et url pour Influxdb
     token = config.token_influxdb
     org = config.org_influxdb
     bucket = config.bucket_influxdb
     url = config.url_influxdb
 
+    #Connection Influxdb
     client = InfluxDBClient(url=url, token=token, debug=True)
     write_api = client.write_api(write_options=SYNCHRONOUS)
     
@@ -62,7 +61,7 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
         date = date.replace('-', "/")
         datetime_object = datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S')
         date_milliseconds = int(round(datetime_object.timestamp() * 1000000000))
-        history_data(process_type, swift_container, swift_id, "parsing_date_timestamp_to_date_milliseconds", coll, line[position_timestamp], date_milliseconds)
+        history_data(process_type, swift_container, swift_id, "parsing_date_timestamp_to_date_milliseconds", line[position_timestamp], date_milliseconds)
         new_data = []
         values = {}
         tags = {}
@@ -80,7 +79,7 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
                         tags[val] = ""
                     else:
                         tags[val] = str(line[value])
-            history_data(process_type, swift_container, swift_id, "config_tags", coll, old_tags, tags)
+            history_data(process_type, swift_container, swift_id, "config_tags", old_tags, tags)
             # Create variable for upload in influxdb
             new_data.append(
                 {
@@ -91,15 +90,16 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
                 }
             )
             result.append(new_data)
-            #new_data = {"data", new_data}
             line = {"line": line}
             # Upload in influxdb
             write_api.write(bucket, org, new_data, protocol='json') 
         else:
+            # Création d'un tuple pour pourvoir relier les values avec leur unit_values
             list_of_tuples = list(zip(line[position_payload_value_units].strip('][').split(','), line[position_value].strip('][').split(',')))
             for l in list_of_tuples:
                 dt = []
                 unit, v = l
+                #Remplacer . par _ car influxdb not . in string
                 unit = unit.replace(".", "_")
                 unit = unit.replace('"', '')
                 values["value"] = float(v)
@@ -107,12 +107,13 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
                 # Parsing and config tags
                 for key, value in enumerate(columns):
                     if position_payload_value_units != value and position_value != value:
+                        #Remplacer . par _ car influxdb not . in string
                         val = value.replace(".", "_")
                         if line[value] == "":
                             tags[val] = ""
                         else:
                             tags[val] = str(line[value])
-                history_data(process_type, swift_container, swift_id, "config_tags", coll, old_tags, tags)
+                history_data(process_type, swift_container, swift_id, "config_tags", old_tags, tags)
                 # Create variable for upload in influxdb
                 dt.append(
                     {
@@ -123,8 +124,6 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
                     }
                 )
                 result.append(dt)
-                #dt = {"data", dt}
-                #line = {"line": line}
                 # Upload in influxdb
                 write_api.write(bucket, org, dt, protocol='json') 
     return result
