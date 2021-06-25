@@ -5,10 +5,11 @@ from textwrap import dedent
 from pymongo import MongoClient
 import swiftclient.service
 from swiftclient.service import SwiftService
+import config
 from services import extract_transform_load_time_series_csv
 from services import extract_transform_load_time_series_json
 from services import extract_transform_load_images
-import config
+
 
 # The DAG object; we'll need this to instantiate a DAG
 from airflow import DAG

@@ -13,7 +13,7 @@ def history_data(
     new_data
 ):
     mongodb_url = config.mongodb_url
-    container_name = config.container_name
+    container_name = config.container_name_history
 
     # Configuration de mongo for Historique
     client = MongoClient(mongodb_url, connect=False)

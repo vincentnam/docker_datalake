@@ -6,7 +6,7 @@ from pymongo import MongoClient
 import json
 from bson import ObjectId
 from json import JSONEncoder
-import get_metadata
+from services import get_metadata
 import config
 
 # Fonction de traitement d'une image

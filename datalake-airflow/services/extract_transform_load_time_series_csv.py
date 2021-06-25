@@ -7,8 +7,8 @@ from io import StringIO
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 from pymongo import MongoClient
-import history_data
-import get_positions
+from services import history_data
+from services import get_positions
 import config
 
 # Fonction de traitement d'un fichier CSV Time Series
