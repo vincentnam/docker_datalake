@@ -1,3 +1,18 @@
+# Documentation not up-to-date, see master documentation for updated documentation. 
+### See [paper_experiment.md](#) for more info on step to reproduce the experiment.
+
+For the experiment, 16 vCPU (Intel(R) Xeon(R) Gold 6240 CPU @ 2.60GHz) have been used (~ 3Ghz each, 1 thread per core), 32 GB RAM hosted on OSIRIM virtualisation server : 
+- Openstack swift VM : 4 vCPU 8 GB RAM
+- MongoDB metadata VM : 4 vCPU 8 GB RAM
+- Apache Airflow VM : 8 vCPU 8 GB RAM
+- InfluxDB processed data zone VM : 4 vCPU 8 GB RAM
+
+All VM are on the same private network
+
+-------------------------
+-------------------------
+-------------------------
+
 # Data lake architecture POC hosted on OSIRIM (https://osirim.irit.fr/site/)
 
 This repository is the main working repository for the data lake architecture.
