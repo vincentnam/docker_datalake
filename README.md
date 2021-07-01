@@ -9,6 +9,8 @@ For the experiment, 16 vCPU (Intel(R) Xeon(R) Gold 6240 CPU @ 2.60GHz) have been
 
 All VM are on the same private network
 
+Disclaimer : Météo-France data in dataset folder are juste a small sample of the whole dataset you can download (to reduce data size on repository).  
+
 -------------------------
 -------------------------
 -------------------------
