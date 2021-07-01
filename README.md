@@ -2,7 +2,7 @@
 # ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+)  The official main repository is the IRIT Gitlab repository (https://gitlab.irit.fr/datalake/docker_datalake). ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
 # ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+)  The secondary repository is the Github initial repository (https://github.com/vincentnam/docker_datalake). ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
 
-The github repository is mirorred to follow the progress of the Gitlab repository and to be synchronized.
+The github repository is mirrored to follow the progress of the Gitlab repository and to be synchronized.
 
 # Data lake architecture POC hosted on OSIRIM (https://osirim.irit.fr/site/)
 
@@ -200,6 +200,7 @@ With a network-oriented vision, this zone is a buffer zone.
 
 
 -> TODO : redesign this area : 
+    - Add metamodel in implementation 
     - Define which metadata to keep in which service (i.e. at the moment, it should be : models (i.e. links betweens metadata in neo4j) and metadata in mongodb)
     - Seems to be more collections in Mongodb for each type of document 
 
@@ -209,11 +210,17 @@ With a network-oriented vision, this zone is a buffer zone.
     - Document oriented NoSQL database. It has been built as a NoSQL database made for high volumetry input. 
     - Its role is to store meta data over the data inserted in Openstack Swift and to make it possible to follow and store data over data and be able to know what is stored in Openstack Swift.
     - Operations logs ?
+    
+    
+As the Neo4J seems to not be the solution due to legal problem with the neo4j license (only commercial license allow deployment + authentication ), other solution may be evaluated : 
+
 - Neo4J (https://neo4j.com)
     - Pipelines / workflows definition
     - Metadata format (class diagram ?)
-
-
+- DGraph (https://dgraph.io/) : 
+  - License Apache V2
+- JanusGraph (https://janusgraph.org/):
+  - License Apache V2
 
 ### Process zone <a name="ProcessZone"></a>
 
