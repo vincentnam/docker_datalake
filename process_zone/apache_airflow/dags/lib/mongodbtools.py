@@ -7,7 +7,6 @@ from pymongo import MongoClient
 import datetime
 import logging
 import json
-import time
 from dateformating import format_date
 import jsontools
 

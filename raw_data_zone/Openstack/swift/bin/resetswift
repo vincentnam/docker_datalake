@@ -1,0 +1,14 @@
+#!/bin/bash
+
+swift-init all stop
+find /var/log/swift -type f -exec rm -f {} \;
+umount /mnt/sdb1
+mkfs.xfs -f /dev/sdb1
+mount /mnt/sdb1
+mkdir /mnt/sdb1/1 /mnt/sdb1/2 /mnt/sdb1/3 /mnt/sdb1/4
+chown swift:swift /mnt/sdb1/*
+mkdir -p /srv/1/node/sdb1 /srv/2/node/sdb2 /srv/3/node/sdb3 /srv/4/node/sdb4
+rm -f /var/log/debug /var/log/messages /var/log/rsyncd.log /var/log/syslog
+find /var/cache/swift* -type f -name *.recon -exec rm -f {} \;
+service rsyslog restart
+service memcached restart

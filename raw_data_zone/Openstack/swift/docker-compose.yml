@@ -1,0 +1,26 @@
+version: '3'
+services:
+  swift:
+    build:
+      context: ""
+      dockerfile: Ubuntu1604.Dockerfile
+    # equivalent to -it in docker run command (needed for react app)
+    privileged: true
+    devices:
+      # Needed for loopback devices
+      - "/dev/loop0:/dev/loop0"
+      - "/dev/loop-control:/dev/loop-control"
+
+    stdin_open: true
+    container_name: swift
+#    network_mode: host
+    #        networks:
+    #            rest-network:
+    #               aliases:
+    #                  - reverse-proxy
+    ports:
+      # 5000 / 3000 ports are the only ports open on the OSIRIM VM
+      - 8080:8080
+    volumes:
+      - ./dev/1:/data_dev/1
+      - ./dev/2:/data_dev/2
