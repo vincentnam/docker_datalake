@@ -5,7 +5,8 @@ import { InputMeta } from './upload-child/InputMeta';
 import { TextAreaMeta } from './upload-child/TextAreaMeta';
 import { config } from '../configmeta/config';
 import api from '../api/api';
-import { LoadingSpinner } from "./download-page/LoadingSpinner";
+import { ProgressBarComponent } from "./upload-child/ProgressBarComponent";
+import { ProgressBar } from "react-bootstrap"
 
 export class Upload extends React.Component {
     constructor() {
@@ -44,6 +45,8 @@ export class Upload extends React.Component {
             othermeta: [],
             type_file_accepted: [],
             loading: false,
+            percentProgressBar: 0,
+            textProgressBar: ''
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -100,6 +103,20 @@ export class Upload extends React.Component {
         const type = parseInt(this.state.type);
         const other = {};
 
+        // options about upload progressBar
+        const options = {
+            onUploadProgress: (progressEvent) => {
+                this.setState({textProgressBar: "Envoi en cours..."})
+                const {loaded, total} = progressEvent;
+                let percent = Math.floor( (loaded * 100) / total )
+                this.setState({percentProgressBar: percent})
+
+                if(percent > 99) {
+                    this.setState({textProgressBar: "Finalisation du traitement..."})
+                }
+            }
+        }
+
         this.state.othermeta.map((meta) => {
             other[meta.name] = meta.value
         });
@@ -116,7 +133,7 @@ export class Upload extends React.Component {
                 filename: this.state.filename,
                 file: this.state.file,
                 othermeta: other
-            })
+            }, options)
             .then(function () {
                 window.alert("L'upload a bien été fait")
                 window.location.reload();
@@ -204,7 +221,12 @@ export class Upload extends React.Component {
                     </div>
                 </div>
 
-                <LoadingSpinner loading={this.state.loading} />
+                {/* ProgressBar shown when upload form submitted with percent updated in onUploadProgress above */}
+               <ProgressBarComponent 
+               loading={this.state.loading} 
+               percentProgressBar={this.state.percentProgressBar} 
+               text={this.state.textProgressBar}
+               />
             </div>
         );
     }
