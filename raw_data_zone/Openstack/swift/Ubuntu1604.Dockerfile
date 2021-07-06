@@ -26,7 +26,7 @@ RUN apt-get update && \
         xfsprogs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
-    pip install --upgrade pip setuptools pytz
+    pip install --upgrade pip setuptools pytz setuptools-rust==0.9.0 cryptography==3.3.2
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git-core && \

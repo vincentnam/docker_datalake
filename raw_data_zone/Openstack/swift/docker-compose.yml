@@ -24,3 +24,6 @@ services:
     volumes:
       - ./dev/1:/data_dev/1
       - ./dev/2:/data_dev/2
+      - ./swift/proxy-server.conf:/etc/swift/proxy-server.conf
+      - ./config.py:/usr/local/src/swift/swift/common/middleware/config.py
+      - ./new_data_trigger.py:/usr/local/src/swift/swift/common/middleware/new_data_trigger.py

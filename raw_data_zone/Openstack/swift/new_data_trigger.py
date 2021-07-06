@@ -1,17 +1,5 @@
-from swift.common.http import is_success
 from swift.common.swob import wsgify
 from swift.common.utils import split_path, get_logger
-from swift.common.request_helpers import get_sys_meta_prefix
-from swift.proxy.controllers.base import get_container_info
-from eventlet import Timeout
-from swift.common.utils import register_swift_info
-
-URL = "http://141.115.103.32:8081"
-ENDPOINT_PATH = "/api/experimental"
-DAG_NAME="test"
-#
-# import ConfigParser
-# config = ConfigParser.ConfigParser().read(CONFIG_PATH).sections()
 import six
 
 if six.PY3:
@@ -19,48 +7,48 @@ if six.PY3:
 else:
     from eventlet.green import urllib2
 import requests
-
-# x-container-sysmeta-webhook
-SYSMETA_WEBHOOK = get_sys_meta_prefix('container') + 'webhook'
-import json
+from swift.common.http import is_success
+from config import AIRFLOW_API_URL
 
 
 class NewDataTriggerMiddleware(object):
     def __init__(self, app, conf):
         self.app = app
-        self.logger = get_logger(conf, log_route='newdatatrigger')
+        self.logger = get_logger(conf, log_route='new_data_trigger')
+        self.airflow_api_url = AIRFLOW_API_URL
+        self.airflow_new_upload_dag_id = "data-processing-upload"
 
     @wsgify
     def __call__(self, req):
-        print(req)
-        print(req.headers)
-        print(req.path_info)
-        obj = None
-        try:
-            (version, account, container, obj) = \
-                split_path(req.path_info, 4, 4, True)
-            if req.method == 'PUT':
-                print(obj)
-                payload = {
-                    "conf": {"swift_id": obj, "swift_container": container,
-                             "swift_user": account, "swift_version": version}}
-                rep = requests.post(
-                    URL + ENDPOINT_PATH + "/dags/"+DAG_NAME+"/dag_runs",
-                    data=json.dumps(payload))
-                print(rep.text)
-                self.logger.info(rep.headers)
-                self.logger.info(rep.text)
-                # No response return = bug
-                resp = req.get_response(self.app)
-                return resp
-
-        except ValueError:
-            # not an object request
-            resp = req.get_response(self.app)
-
-            return resp
-
         resp = req.get_response(self.app)
+        if req.method == 'PUT':
+            obj = None
+            airflow_post_body = {}
+            try:
+                version, account, container, obj = split_path(req.path_info, 4, 4, True)
+                airflow_post_body = {"conf": {"swift_version": version,
+                                              "swift_user": account,
+                                              "swift_container": container,
+                                              "swift_obj_id": obj
+                                              }
+                                     }
+                self.logger.info('Airflow post request body: %s' % airflow_post_body)
+            except ValueError:
+                # not an object request
+                pass
+
+            if obj and is_success(resp.status_int):
+                # ignore mqtt flux
+                if req.headers.get("x-object-meta-source") == "mqtt":
+                    return resp
+                try:
+                    requests.post(
+                        url=self.airflow_api_url + '/dags/' + self.airflow_new_upload_dag_id + '/dagRuns',
+                        json=airflow_post_body,
+                        auth=('airflow', 'airflow')
+                    )
+                except Exception as e:
+                    self.logger.exception('Failed POST to Airflow: %s' % e)
 
         return resp
 
