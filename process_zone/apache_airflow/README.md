@@ -10,6 +10,12 @@
 
 # Airflow in Docker
 
+Set up in the file config:
+
+```
+cp dags/config.py.sample dags/config.py
+```
+
 Initialize:
 
 ```
