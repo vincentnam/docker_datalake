@@ -50,6 +50,7 @@ export class Upload extends React.Component {
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.removeSelectedFile = this.removeSelectedFile.bind(this);
     }
 
     handleClose() {
@@ -90,10 +91,7 @@ export class Upload extends React.Component {
         if(this.state.typeFile !== "") {
             if(type_file_accepted.includes(this.state.typeFile) === false) {
                 alert("Format de fichier non accepté.\nVeuillez ajouter un fichier qui correspond à un de ses types : \n" + type_file_accepted)
-                this.setState({file: ''});
-                this.setState({typeFile: ''});
-                this.setState({filename: ''});
-                this.setState({files: []});
+                this.removeSelectedFile()
             }
         }
     }
@@ -145,11 +143,23 @@ export class Upload extends React.Component {
         }
     }
 
+    // remove selected file on upload page
+    removeSelectedFile() {
+        this.setState({file: ''});
+        this.setState({typeFile: ''});
+        this.setState({filename: ''});
+        this.setState({files: []});
+    }
+
     render() {
 
         const files = this.state.files.map(file => (
             <li key={file.name}>
                 {JSON.stringify(file.name)}
+                
+                <button type="button" onClick={this.removeSelectedFile} class="close text-danger" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </li>
         ));
 
@@ -208,8 +218,14 @@ export class Upload extends React.Component {
                                             <label class="control-label">Drag 'n' drop veuillez glisser un fichier ou cliquer pour ajouter un fichier.</label>
                                         </div>
                                         <aside class="pt-3">
-                                            <h5>Fichiers</h5>
-                                            <ul>{files}</ul>
+                                            { files.length !== 0 ? 
+                                                <aside class="pt-3">
+                                                    <h5>Fichiers</h5>
+                                                    <ul>
+                                                        {files}
+                                                    </ul>
+                                                </aside>
+                                            : '' }
                                         </aside>
                                     </section>
                                     )}
