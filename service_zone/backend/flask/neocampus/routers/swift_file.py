@@ -42,6 +42,7 @@ def download(filename):
     return send_from_directory(directory=swift_files_directory, filename=filename)
 
 @swift_file_bp.route('/storage', methods=['POST'])
+@cross_origin(supports_credentials=True)
 def storage():
     # id_type = request.get_json()["idType"]
     file = request.get_json()["file"]
