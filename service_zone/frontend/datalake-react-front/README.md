@@ -2,6 +2,22 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+# Environment variables
+
+You can also create temporary environment variables using the terminal or by creating necessary file.
+
+The 1st method consists of launching these commands below, depending of your Operating System.
+
+For Windows:
+
+Command : set "REACT_APP_SERVER_NAME=server_name" (replace server_name by the real server name).
+
+For Linux:
+
+Command : set "REACT_APP_SERVER_NAME=server_name" (replace server_name by the real server name).
+
+The 2nd method consists of creating .env at the root of React project on the same model as .env.sample . You will have to reboot React project if its container is launched yet.
+
 ## Available Scripts
 
 In the project directory, you can run:
