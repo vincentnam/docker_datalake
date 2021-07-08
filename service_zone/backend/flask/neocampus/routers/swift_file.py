@@ -4,13 +4,11 @@ from zipfile import ZipFile
 import base64
 from flask import Blueprint, jsonify, current_app, request, send_from_directory
 from ..services import swift, mongo
-from flask_cors import cross_origin
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
 
 @swift_file_bp.route('/swift-files', methods=['POST'])
-@cross_origin(supports_credentials=True)
 def swift_files():
     swift_files = []
     zip_file_name = f'{str(uuid.uuid4().hex)}.zip'
@@ -42,7 +40,6 @@ def download(filename):
     return send_from_directory(directory=swift_files_directory, filename=filename)
 
 @swift_file_bp.route('/storage', methods=['POST'])
-@cross_origin(supports_credentials=True)
 def storage():
     # id_type = request.get_json()["idType"]
     file = request.get_json()["file"]
