@@ -50,9 +50,14 @@ def storage():
     data_file = file.split(",")
     data_file = data_file[1]
     data_file = base64.b64decode(data_file)
-    data_file = str(data_file)
-    data_file = data_file.split("'")
-    file_content = ''.join(map(str.capitalize, data_file[1:]))
+
+    # TODO : see why it was necessary 
+
+    #data_file = str(data_file)
+    #data_file = data_file.split("'")
+    #file_content = ''.join(map(str.capitalize, data_file[1:]))
+    
+    file_content = data_file
 
     container_name = "neOCampus"
     mongodb_url = current_app.config['MONGO_URL']
