@@ -1,7 +1,9 @@
 import React from "react";
 import { FormGroup, FormLabel, Form, Button } from "react-bootstrap";
+import { config } from '../../configmeta/config';
 
 export class Filters extends React.Component {
+
     constructor(props) {
         super(props);
         this.props = props
@@ -11,6 +13,11 @@ export class Filters extends React.Component {
         this.setDatatype = this.setDatatype.bind(this);
         this.setBeginDate = this.setBeginDate.bind(this);
         this.setEndDate = this.setEndDate.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+
+        this.state = {
+            type: 0
+        }
     }
 
     validateFilters(event) {
@@ -42,46 +49,78 @@ export class Filters extends React.Component {
         this.props.setEndDate(endDate)
     }
 
+    // retrieve filetype by id in conf file
+    getFiletypeById(datatypeConf, id) {
+        let filetypesResult = ""
+
+        datatypeConf.map((type) => (
+            // loop in config file
+            type.map((t) => {
+                // if selected data type corresponds with current data type
+                if (t.id === parseInt(id)) {
+                    filetypesResult = t.type_file_accepted
+                }
+            })
+        ));
+
+        return filetypesResult
+    }
+
+    // when data type has changed
+    handleChange(event) {
+        const target = event.target;
+        const value = target.type === 'checkbox' ? target.checked : target.value;
+        const name = target.name;
+
+        let filetypesResult = this.getFiletypeById( [config.types], value)
+        this.props.setFiletype(filetypesResult) 
+
+        this.setState({
+            [name]: value
+        });
+    }
+
     render() {
+        // data type field
+        const SelectDatatype = () => {
+            const types = [config.types];
+            // loop into conf to get all data types
+            const listTypes = types.map((type) => (
+                type.map((t) => 
+                    <option value={t.id}>{t.label}</option>
+                )
+            ));
+            return (
+                <select value={this.state.type} onChange={this.handleChange} name="type" class="form-control">
+                    {listTypes}
+                </select>
+            );
+        }
+
+
         return (
             <div class="p-4">
                 <div class="jumbotron">
                     <h2 class="display-4 text-center">Affichage des données brutes</h2>
                     <Form onSubmit={this.validateFilters}>
                         <div class="form-row">
-                            <div class="form-group required col-md-6">
-                                <label for="inputCity control-label">Type de fichier</label>
-                                <Form.Control as="select" custom value={this.props.data.filetype} onChange={this.setFiletype} required>
-                                    <option selected value=''>Veuillez sélectionner un type</option>
-                                    <option value="application/vnd.ms-excel">CSV</option>
-                                    <option value="application/json">JSON</option>
-                                    <option value="text/plain">Texte</option>
-                                    <option value="image">Images</option>
-                                </Form.Control>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="inputCity">Type de donnée</label>
-                                <Form.Control as="select" custom value={this.props.data.dataType} onChange={this.setDatatype}>
-                                    <option selected value=''>Veuillez sélectionner un type</option>
-                                    <option value="neOCampus">neOCampus</option>
-                                </Form.Control>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <FormGroup>
-                                    <FormLabel>Date de début</FormLabel>
-                                    <Form.Control type="date" name='beginDate' value={this.props.data.beginDate} onChange={this.setBeginDate} required/>
-                                </FormGroup>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <FormGroup>
-                                    <FormLabel>Date de fin</FormLabel>
-                                    <Form.Control type="date" name='endDate' value={this.props.data.endDate} onChange={this.setEndDate} required/>
-                                </FormGroup>
-                            </div>
+                        <SelectDatatype />
+                        <div class="form-group col-md-6">
+                            <FormGroup>
+                                <FormLabel>Date de début</FormLabel>
+                                <Form.Control type="date" name='beginDate' value={this.props.data.beginDate} onChange={this.setBeginDate} required/>
+                            </FormGroup>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <FormGroup>
+                                <FormLabel>Date de fin</FormLabel>
+                                <Form.Control type="date" name='endDate' value={this.props.data.endDate} onChange={this.setEndDate} required/>
+                            </FormGroup>
+                        </div>
 
-                            <div class="form-group col-md-12 text-center">
-                                <Button type="submit" variant="outline-primary">Filtrer</Button>
-                            </div>
+                        <div class="form-group col-md-12 text-center">
+                            <Button type="submit" variant="outline-primary">Filtrer</Button>
+                        </div>
                         </div>
                     </Form>
                 </div>

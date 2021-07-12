@@ -9,7 +9,7 @@ import { Paginate } from "./Paginate";
 import { LoadingSpinner } from "./LoadingSpinner";
 
 export class Download extends React.Component {
-    url = 'http://neocampus-datalake-mongodb.dev.modiscloud.net/'
+    url = process.env.REACT_APP_SERVER_NAME
     perPage = 6
 
     constructor(props) {
@@ -190,6 +190,7 @@ export class Download extends React.Component {
     }
 
     render() {
+
         let elts = []
         if(this.state.elements){
             elts = this.state.elements
