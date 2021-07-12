@@ -4,6 +4,7 @@ from zipfile import ZipFile
 import base64
 from flask import Blueprint, jsonify, current_app, request, send_from_directory
 from ..services import swift, mongo
+from zipfile import ZipFile
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
@@ -57,21 +58,44 @@ def storage():
     #data_file = data_file.split("'")
     #file_content = ''.join(map(str.capitalize, data_file[1:]))
     
-    file_content = data_file
-
+    
+    
+    
     container_name = "neOCampus"
     mongodb_url = current_app.config['MONGO_URL']
     user = current_app.config['SWIFT_USER']
     key = current_app.config['SWIFT_KEY']
     authurl = current_app.config['SWIFT_AUTHURL']
-    content_type = type_file
+    
     application = None
     data_process = "custom"
     processed_data_area_service = ["MongoDB"]
     other_data = other_meta
     
-    mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
-                        processed_data_area_service, data_process, application,
-                        content_type, mongodb_url, other_data)
+    
+    if type_file == "application/x-zip-compressed" or type_file == "application/x-gzip" :
+        
+        with ZipFile(data_file, 'r') as zip:
+            
+            files = zip.extractall()
+            
+            for file in files:
+                
+                data = open(file, "r")
+                dt = data.read()
+                print(dt) 
+                content_type = type_file
+                file_content = data_file
+                
+                #mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
+                #                    processed_data_area_service, data_process, application,
+                #                    content_type, mongodb_url, other_data)
+    else:
+        content_type = type_file
+        file_content = data_file
+        
+        mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
+                            processed_data_area_service, data_process, application,
+                            content_type, mongodb_url, other_data)
 
     return jsonify({"response": "Done !"})
