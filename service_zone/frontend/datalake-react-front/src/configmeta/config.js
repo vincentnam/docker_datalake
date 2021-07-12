@@ -153,6 +153,27 @@ export const config = {
                     "value": "",
                 }
             ]
+        },
+        {
+            "id": 8,
+            "label": "Zip",
+            "type_file_accepted": ["application/x-zip-compressed", "application/x-gzip"],
+            "metadonnees": [
+                {
+                    "id": 1,
+                    "label": "Métadonnée Binaire 1",
+                    "type": "text",
+                    "name": "meta1",
+                    "value": "",
+                },
+                {
+                    "id": 2,
+                    "label": "Métadonnée Binaire 2",
+                    "type": "text",
+                    "name": "meta2",
+                    "value": "",
+                }
+            ]
         }
     ]
 }

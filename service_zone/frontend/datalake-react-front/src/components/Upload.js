@@ -12,6 +12,7 @@ export class Upload extends React.Component {
         super();
         this.onDrop = (files) => {
             if(files.length < 1) {
+                console.log(files)
                 alert('Format de fichier non accepté.')
             } 
             files.map((file) => { 
@@ -25,11 +26,10 @@ export class Upload extends React.Component {
                     reader.onload = () => this.setState({file: reader.result});
                     this.setState({typeFile: typeFile});
                     this.setState({filename: filename});
-                    const f = [file]
+                    const f = [file];
                     this.setState({files: f});
                 }
             });
-            
         };
         this.state = {
             files: [],
@@ -44,6 +44,7 @@ export class Upload extends React.Component {
             othermeta: [],
             type_file_accepted: [],
             loading: false,
+            testfile: [],
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -94,6 +95,10 @@ export class Upload extends React.Component {
             }
         }
     }
+    
+    fileSubmit(event){
+        console.log(event.target.files);
+    }   
     
     handleSubmit(event) {
         event.preventDefault();
@@ -183,7 +188,7 @@ export class Upload extends React.Component {
                             </div>
                             <Metadonnees />
                             <div class="form-group required">
-                                <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} accept="image/*,application/JSON,.csv,text/plain">
+                                <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} accept="image/*,application/JSON,.csv,text/plain,application/x-gzip,application/x-zip-compressed">
                                     {({getRootProps, getInputProps}) => (
                                     <section>
                                         <div {...getRootProps({className: 'drop'})}>
@@ -203,7 +208,6 @@ export class Upload extends React.Component {
                         </form>
                     </div>
                 </div>
-
                 <LoadingSpinner loading={this.state.loading} />
             </div>
         );
