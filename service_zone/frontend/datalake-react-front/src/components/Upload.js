@@ -12,23 +12,23 @@ export class Upload extends React.Component {
     constructor() {
         super();
         this.onDrop = (files) => {
-            if(files.length < 1) {
+            if (files.length < 1) {
                 console.log(files)
                 alert('Format de fichier non accepté.')
-            } 
-            files.map((file) => { 
+            }
+            files.map((file) => {
                 const typeFile = file.type;
                 const filename = file.name;
-                if(this.state.type_file_accepted.includes(typeFile) === false) {
+                if (this.state.type_file_accepted.includes(typeFile) === false) {
                     alert("Format de fichier non accepté.\nVeuillez ajouter un fichier qui correspond à un de ses types : \n" + this.state.type_file_accepted)
                 } else {
                     var reader = new FileReader();
                     reader.readAsDataURL(file);
-                    reader.onload = () => this.setState({file: reader.result});
-                    this.setState({typeFile: typeFile});
-                    this.setState({filename: filename});
+                    reader.onload = () => this.setState({ file: reader.result });
+                    this.setState({ typeFile: typeFile });
+                    this.setState({ filename: filename });
                     const f = [file];
-                    this.setState({files: f});
+                    this.setState({ files: f });
                 }
             });
         };
@@ -71,7 +71,7 @@ export class Upload extends React.Component {
         const name = target.name;
 
         this.setState({
-        [name]: value
+            [name]: value
         });
         let type_file_accepted = [];
         if (name === "type") {
@@ -88,19 +88,20 @@ export class Upload extends React.Component {
                 })
             ));
         }
-        if(this.state.typeFile !== "") {
-            if(type_file_accepted.includes(this.state.typeFile) === false) {
+        if (this.state.typeFile !== "") {
+            if (type_file_accepted.includes(this.state.typeFile) === false) {
                 alert("Format de fichier non accepté.\nVeuillez ajouter un fichier qui correspond à un de ses types : \n" + type_file_accepted)
                 this.removeSelectedFile()
             }
         }
     }
-    
-    fileSubmit(event){
+
+    fileSubmit(event) {
         console.log(event.target.files);
-    }   
-    
+    }
+
     handleSubmit(event) {
+        console.log(this.state.file);
         event.preventDefault();
         const type = parseInt(this.state.type);
         const other = {};
@@ -108,13 +109,13 @@ export class Upload extends React.Component {
         // options about upload progressBar
         const options = {
             onUploadProgress: (progressEvent) => {
-                this.setState({textProgressBar: "Envoi en cours..."})
-                const {loaded, total} = progressEvent;
-                let percent = Math.floor( (loaded * 100) / total )
-                this.setState({percentProgressBar: percent})
+                this.setState({ textProgressBar: "Envoi en cours..." })
+                const { loaded, total } = progressEvent;
+                let percent = Math.floor((loaded * 100) / total)
+                this.setState({ percentProgressBar: percent })
 
-                if(percent > 99) {
-                    this.setState({textProgressBar: "Finalisation du traitement..."})
+                if (percent > 99) {
+                    this.setState({ textProgressBar: "Finalisation du traitement..." })
                 }
             }
         }
@@ -125,7 +126,7 @@ export class Upload extends React.Component {
 
         if (this.state.type === 0) {
             window.alert("Veuillez renseigner le type de données !");
-        } else if ( this.state.filename === ''){
+        } else if (this.state.filename === '') {
             window.alert("Veuillez ajouter un fichier !");
         } else {
             this.handleShow()
@@ -136,23 +137,23 @@ export class Upload extends React.Component {
                 file: this.state.file,
                 othermeta: other
             }, options)
-            .then(function () {
-                window.alert("L'upload a bien été fait")
-                window.location.reload();
-            })
-            .catch(function (error) {
-                console.log(error);
-                window.alert("L'upload n'a pas réussi ! : " + error)
-            }).finally(function(){this.handleClose()}.bind(this))
+                .then(function () {
+                    window.alert("L'upload a bien été fait")
+                    window.location.reload();
+                })
+                .catch(function (error) {
+                    console.log(error);
+                    window.alert("L'upload n'a pas réussi ! : " + error)
+                }).finally(function () { this.handleClose() }.bind(this))
         }
     }
 
     // remove selected file on upload page
     removeSelectedFile() {
-        this.setState({file: ''});
-        this.setState({typeFile: ''});
-        this.setState({filename: ''});
-        this.setState({files: []});
+        this.setState({ file: '' });
+        this.setState({ typeFile: '' });
+        this.setState({ filename: '' });
+        this.setState({ files: [] });
     }
 
     render() {
@@ -160,7 +161,7 @@ export class Upload extends React.Component {
         const files = this.state.files.map(file => (
             <li key={file.name}>
                 {JSON.stringify(file.name)}
-                
+
                 <button type="button" onClick={this.removeSelectedFile} class="close text-danger" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -173,24 +174,24 @@ export class Upload extends React.Component {
             listMeta = (
                 othermeta.map((meta) => {
                     const index = othermeta.indexOf(meta)
-                    if(meta.type === "number" || meta.type === "text") 
-                        return  <InputMeta key={meta.name} meta={meta} othermeta={othermeta} index={index} />
-    
-                    if(meta.type === "textarea") 
-                        return  <TextAreaMeta key={meta.name} meta={meta} othermeta={othermeta} index={index} />
+                    if (meta.type === "number" || meta.type === "text")
+                        return <InputMeta key={meta.name} meta={meta} othermeta={othermeta} index={index} />
+
+                    if (meta.type === "textarea")
+                        return <TextAreaMeta key={meta.name} meta={meta} othermeta={othermeta} index={index} />
                 })
             );
             return (
                 <div>
                     {listMeta}
                 </div>
-                
+
             );
         }
         const SelectDatatype = () => {
             const types = [config.types];
             const listTypes = types.map((type) => (
-                type.map((t) => 
+                type.map((t) =>
                     <option value={t.id}>{t.label}</option>
                 )
             ));
@@ -201,7 +202,7 @@ export class Upload extends React.Component {
             );
         }
 
-        return(
+        return (
             <div>
                 <Header />
                 <div class="p-4">
@@ -215,23 +216,23 @@ export class Upload extends React.Component {
                             <Metadonnees />
                             <div class="form-group required">
                                 <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} accept="image/*,application/JSON,.csv,text/plain,application/x-gzip,application/x-zip-compressed">
-                                    {({getRootProps, getInputProps}) => (
-                                    <section>
-                                        <div {...getRootProps({className: 'drop'})}>
-                                            <input {...getInputProps()} />
-                                            <label class="control-label">Drag 'n' drop veuillez glisser un fichier ou cliquer pour ajouter un fichier.</label>
-                                        </div>
-                                        <aside class="pt-3">
-                                            { files.length !== 0 ? 
-                                                <aside class="pt-3">
-                                                    <h5>Fichiers</h5>
-                                                    <ul>
-                                                        {files}
-                                                    </ul>
-                                                </aside>
-                                            : '' }
-                                        </aside>
-                                    </section>
+                                    {({ getRootProps, getInputProps }) => (
+                                        <section>
+                                            <div {...getRootProps({ className: 'drop' })}>
+                                                <input {...getInputProps()} />
+                                                <label class="control-label">Drag 'n' drop veuillez glisser un fichier ou cliquer pour ajouter un fichier.</label>
+                                            </div>
+                                            <aside class="pt-3">
+                                                {files.length !== 0 ?
+                                                    <aside class="pt-3">
+                                                        <h5>Fichiers</h5>
+                                                        <ul>
+                                                            {files}
+                                                        </ul>
+                                                    </aside>
+                                                    : ''}
+                                            </aside>
+                                        </section>
                                     )}
                                 </Dropzone>
                             </div>
@@ -242,11 +243,11 @@ export class Upload extends React.Component {
                 </div>
 
                 {/* ProgressBar shown when upload form submitted with percent updated in onUploadProgress above */}
-               <ProgressBarComponent 
-               loading={this.state.loading} 
-               percentProgressBar={this.state.percentProgressBar} 
-               text={this.state.textProgressBar}
-               />
+                <ProgressBarComponent
+                    loading={this.state.loading}
+                    percentProgressBar={this.state.percentProgressBar}
+                    text={this.state.textProgressBar}
+                />
             </div>
         );
     }

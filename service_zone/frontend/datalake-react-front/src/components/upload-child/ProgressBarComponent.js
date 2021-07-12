@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Modal, Spinner, ProgressBar } from "react-bootstrap";
+import { Button, Modal, ProgressBar } from "react-bootstrap";
 
 export class ProgressBarComponent extends React.Component {
     constructor(props){
