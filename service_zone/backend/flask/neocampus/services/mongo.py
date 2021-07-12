@@ -35,9 +35,8 @@ def get_metadata(db_name, params):
     dict_query = {"$and": []}
 
     if(params['filetype'] != ""):
-        filetype_query = {"content_type": {'$regex': params['filetype'], '$options': 'i'}}
-        for item in [filetype_query]: 
-            dict_query['$and'].append(item) 
+        filetype_query = {"content_type": {'$in': params['filetype']}} 
+        dict_query['$and'].append(filetype_query)
 
     if(params['beginDate'] != "" and params['endDate'] != ""):
         dates_query = {'creation_date': {'$gte': start_date, '$lt': end_date}}

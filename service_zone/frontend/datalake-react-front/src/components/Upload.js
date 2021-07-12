@@ -5,7 +5,8 @@ import { InputMeta } from './upload-child/InputMeta';
 import { TextAreaMeta } from './upload-child/TextAreaMeta';
 import { config } from '../configmeta/config';
 import api from '../api/api';
-import { LoadingSpinner } from "./download-page/LoadingSpinner";
+import { ProgressBarComponent } from "./upload-child/ProgressBarComponent";
+import { ProgressBar } from "react-bootstrap"
 
 export class Upload extends React.Component {
     constructor() {
@@ -44,10 +45,12 @@ export class Upload extends React.Component {
             othermeta: [],
             type_file_accepted: [],
             loading: false,
-            testfile: [],
+            percentProgressBar: 0,
+            textProgressBar: ''
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.removeSelectedFile = this.removeSelectedFile.bind(this);
     }
 
     handleClose() {
@@ -88,10 +91,7 @@ export class Upload extends React.Component {
         if(this.state.typeFile !== "") {
             if(type_file_accepted.includes(this.state.typeFile) === false) {
                 alert("Format de fichier non accepté.\nVeuillez ajouter un fichier qui correspond à un de ses types : \n" + type_file_accepted)
-                this.setState({file: ''});
-                this.setState({typeFile: ''});
-                this.setState({filename: ''});
-                this.setState({files: []});
+                this.removeSelectedFile()
             }
         }
     }
@@ -104,6 +104,20 @@ export class Upload extends React.Component {
         event.preventDefault();
         const type = parseInt(this.state.type);
         const other = {};
+
+        // options about upload progressBar
+        const options = {
+            onUploadProgress: (progressEvent) => {
+                this.setState({textProgressBar: "Envoi en cours..."})
+                const {loaded, total} = progressEvent;
+                let percent = Math.floor( (loaded * 100) / total )
+                this.setState({percentProgressBar: percent})
+
+                if(percent > 99) {
+                    this.setState({textProgressBar: "Finalisation du traitement..."})
+                }
+            }
+        }
 
         this.state.othermeta.map((meta) => {
             other[meta.name] = meta.value
@@ -121,7 +135,7 @@ export class Upload extends React.Component {
                 filename: this.state.filename,
                 file: this.state.file,
                 othermeta: other
-            })
+            }, options)
             .then(function () {
                 window.alert("L'upload a bien été fait")
                 window.location.reload();
@@ -133,11 +147,23 @@ export class Upload extends React.Component {
         }
     }
 
+    // remove selected file on upload page
+    removeSelectedFile() {
+        this.setState({file: ''});
+        this.setState({typeFile: ''});
+        this.setState({filename: ''});
+        this.setState({files: []});
+    }
+
     render() {
 
         const files = this.state.files.map(file => (
             <li key={file.name}>
                 {JSON.stringify(file.name)}
+                
+                <button type="button" onClick={this.removeSelectedFile} class="close text-danger" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </li>
         ));
 
@@ -196,8 +222,14 @@ export class Upload extends React.Component {
                                             <label class="control-label">Drag 'n' drop veuillez glisser un fichier ou cliquer pour ajouter un fichier.</label>
                                         </div>
                                         <aside class="pt-3">
-                                            <h5>Fichiers</h5>
-                                            <ul>{files}</ul>
+                                            { files.length !== 0 ? 
+                                                <aside class="pt-3">
+                                                    <h5>Fichiers</h5>
+                                                    <ul>
+                                                        {files}
+                                                    </ul>
+                                                </aside>
+                                            : '' }
                                         </aside>
                                     </section>
                                     )}
@@ -208,7 +240,13 @@ export class Upload extends React.Component {
                         </form>
                     </div>
                 </div>
-                <LoadingSpinner loading={this.state.loading} />
+
+                {/* ProgressBar shown when upload form submitted with percent updated in onUploadProgress above */}
+               <ProgressBarComponent 
+               loading={this.state.loading} 
+               percentProgressBar={this.state.percentProgressBar} 
+               text={this.state.textProgressBar}
+               />
             </div>
         );
     }
