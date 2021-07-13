@@ -11,7 +11,8 @@ import {
   Switch,
   Route
 } from 'react-router-dom';
-import { Download } from './components/download-page/Download';
+import { Download } from './components/download-raw-data/Download';
+import { DownloadHandleData } from './components/download-handled-data/DownloadHandleData';
 
 ReactDOM.render(
   <React.StrictMode>
@@ -26,6 +27,9 @@ ReactDOM.render(
           </Route>
           <Route path="/upload">
             <Upload />
+          </Route>
+          <Route path="/download-handled-data">
+            <DownloadHandleData />
           </Route>
           <Route path="/">
             <Home />
