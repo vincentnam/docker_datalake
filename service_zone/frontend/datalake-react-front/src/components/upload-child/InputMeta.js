@@ -8,16 +8,11 @@ export class InputMeta extends React.Component {
         this.editMeta = this.editMeta.bind(this)
     }
 
-    editMeta(event) {
-        console.log("test");
-        
+    editMeta(event) {        
         if(event !== undefined && event.target !== undefined) {
-            console.log(event)
             const other = this.props.othermeta;
-            console.log(other)
             const value = event.target.value
             other[this.props.index].value = value;
-            console.log(other)
             this.setState({
                 othermeta: other
             });

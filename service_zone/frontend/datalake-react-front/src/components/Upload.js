@@ -13,7 +13,6 @@ export class Upload extends React.Component {
         super();
         this.onDrop = (files) => {
             if (files.length < 1) {
-                console.log(files)
                 alert('Format de fichier non accepté.')
             }
             files.map((file) => {
@@ -96,12 +95,7 @@ export class Upload extends React.Component {
         }
     }
 
-    fileSubmit(event) {
-        console.log(event.target.files);
-    }
-
     handleSubmit(event) {
-        console.log(this.state.file);
         event.preventDefault();
         const type = parseInt(this.state.type);
         const other = {};
