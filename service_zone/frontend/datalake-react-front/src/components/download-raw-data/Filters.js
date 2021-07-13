@@ -10,7 +10,6 @@ export class Filters extends React.Component {
         this.validateFilters = this.validateFilters.bind(this);
 
         this.setFiletype = this.setFiletype.bind(this);
-        this.setDatatype = this.setDatatype.bind(this);
         this.setBeginDate = this.setBeginDate.bind(this);
         this.setEndDate = this.setEndDate.bind(this);
         this.handleChange = this.handleChange.bind(this);
@@ -32,11 +31,6 @@ export class Filters extends React.Component {
     setFiletype(event) {
         let filetype = event.target.value;
         this.props.setFiletype(filetype)      
-    }
-
-    setDatatype(event) {
-        let datatype = event.target.value;
-        this.props.setDatatype(datatype)      
     }
         
     setBeginDate(event) {
@@ -101,7 +95,7 @@ export class Filters extends React.Component {
         return (
             <div className="p-4">
                 <div className="jumbotron">
-                    <h2 className="display-4 text-center">Affichage des données brutes</h2>
+                    <h2 className="display-4 text-center">{this.props.title}</h2>
                     <Form onSubmit={this.validateFilters}>
                         <div className="form-row">
                         <SelectDatatype />

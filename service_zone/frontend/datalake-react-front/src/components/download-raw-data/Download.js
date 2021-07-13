@@ -6,11 +6,12 @@ import $ from 'jquery';
 import { Filters } from "./Filters";
 import moment from "moment";
 import { Paginate } from "./Paginate";
-import { LoadingSpinner } from "./LoadingSpinner";
+import { LoadingSpinner } from "../utils/LoadingSpinner";
 
 export class Download extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
     perPage = 6
+    title = 'Affichage des données brutes'
 
     constructor(props) {
         super(props);
@@ -19,7 +20,6 @@ export class Download extends React.Component {
         this.handler = this.handler.bind(this);
         this.validate = this.validate.bind(this)
         this.setFiletype = this.setFiletype.bind(this);
-        this.setDatatype = this.setDatatype.bind(this);
         this.setBeginDate = this.setBeginDate.bind(this);
         this.setEndDate = this.setEndDate.bind(this);
         this.validateFilters = this.validateFilters.bind(this)
@@ -32,9 +32,8 @@ export class Download extends React.Component {
             elements: {},
             offset: 0,
             filetype: '',
-            dataType: '',
-            beginDate: moment().format('Y-m-d'),
-            endDate: moment().format('Y-m-d'),
+            beginDate: moment().format('Y-MM-DD'),
+            endDate: moment().format('Y-MM-DD'),
             loading: false
         };
     }
@@ -98,9 +97,9 @@ export class Download extends React.Component {
     }
 
     handleShow() {
-        /*this.setState({
+        this.setState({
             loading: true
-        })*/
+        })
     }
 
     emptySelectedlements() {
@@ -130,7 +129,6 @@ export class Download extends React.Component {
             limit: this.perPage, 
             offset: this.state.offset,
             filetype: this.state.filetype,
-            datatype: this.state.dataType,
             beginDate: this.state.beginDate,
             endDate: this.state.endDate
           }),
@@ -166,11 +164,6 @@ export class Download extends React.Component {
         return this.setState({filetype: filetype})
     }
 
-    setDatatype(value) {
-        let dataType = value;
-        return this.setState({dataType: dataType})
-    }
-
     setBeginDate(value) {
         let beginDate = value;
         return this.setState({beginDate: beginDate})
@@ -200,7 +193,6 @@ export class Download extends React.Component {
         let setFiletype = this.setFiletype
         let setBeginDate = this.setBeginDate
         let setEndDate = this.setEndDate
-        let setDatatype = this.setDatatype
         let validateFilters = this.validateFilters
         let filterData = {
             'filetype': this.state.filetype,
@@ -216,9 +208,9 @@ export class Download extends React.Component {
                     setFiletype={setFiletype} 
                     setBeginDate={setBeginDate}
                     setEndDate={setEndDate}
-                    setDatatype={setDatatype}
                     validateFilters={validateFilters}
                     data={filterData}
+                    title={this.title}
                 />
                 <div class="p-4">
                     <p>Download page</p>
