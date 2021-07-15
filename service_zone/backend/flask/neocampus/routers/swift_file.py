@@ -3,8 +3,8 @@ import uuid
 from zipfile import ZipFile
 import base64
 from flask import Blueprint, jsonify, current_app, request, send_from_directory
-from ..services import swift, mongo
-from tempfile import SpooledTemporaryFile
+from ..services import swift, mongo, typefile
+import tempfile
 
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
@@ -65,23 +65,26 @@ def storage():
     data_process = "custom"
     processed_data_area_service = ["MongoDB"]
     other_data = other_meta
+    #Search if the file is a zip or tar.gz
     if type_file == "application/x-zip-compressed" or type_file == "application/x-gzip" :
         df = file.split(",")
         df = df[1]
         df = base64.b64decode(df)
-        with SpooledTemporaryFile() as tmp:
-            tmp.write(df)
-            zip = ZipFile(tmp, 'r')
-            for file in zip.filelist:
-                with zip.open(file.filename) as f:
-                    print(f)
-                    
-                    
-                    #content_type = type_file
-                    #file_content = data_file
-                    #mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
-                    #        processed_data_area_service, data_process, application,
-                    #        content_type, mongodb_url, other_data)
+        fp = tempfile.TemporaryFile()
+        fp.write(df)
+        fp.seek(0)
+        zip = ZipFile(fp, 'r')
+        for file in zip.filelist:
+            data_file = zip.read(file.filename)
+            filename = file.filename
+            typef = file.filename.split('.')
+            typef = typef[1]
+            type_file = typefile.typefile(typef)
+            content_type = type_file
+            file_content = data_file
+            mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
+                    processed_data_area_service, data_process, application,
+                    content_type, mongodb_url, other_data)
     else:
         data_file = file.split(",")
         data_file = data_file[1]
