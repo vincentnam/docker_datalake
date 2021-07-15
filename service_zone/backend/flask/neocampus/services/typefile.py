@@ -1,6 +1,6 @@
 def typefile(typef):
     type_file = ""
-
+    #Research the type file in function of the extension file
     if(typef == "txt"):
         type_file = "text/plain"
     if(typef == "xls" or typef == "xlsx" or typef == "csv"):

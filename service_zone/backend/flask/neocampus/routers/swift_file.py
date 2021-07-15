@@ -67,27 +67,39 @@ def storage():
     other_data = other_meta
     #Search if the file is a zip or tar.gz
     if type_file == "application/x-zip-compressed" or type_file == "application/x-gzip" :
+        #Split the file to retrieve the data
         df = file.split(",")
         df = df[1]
+        #Decode the data
         df = base64.b64decode(df)
+        #Creation of a temp file for stock the data
         fp = tempfile.TemporaryFile()
         fp.write(df)
         fp.seek(0)
+        #Using ZipFile package to unzip zip file data
         zip = ZipFile(fp, 'r')
+        #Using a for to read each file in the zip file
         for file in zip.filelist:
+            #Read file to retrieve the data
             data_file = zip.read(file.filename)
+            #Filename
             filename = file.filename
+            #Split the filename to retrieve the extension file for the type file
             typef = file.filename.split('.')
             typef = typef[1]
+            #Function return the type file
             type_file = typefile.typefile(typef)
             content_type = type_file
             file_content = data_file
             mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
                     processed_data_area_service, data_process, application,
                     content_type, mongodb_url, other_data)
+    #Other type file   
     else:
+        #Split the file to retrieve the data
         data_file = file.split(",")
         data_file = data_file[1]
+        #Decode the data
         data_file = base64.b64decode(data_file)
         
         content_type = type_file
