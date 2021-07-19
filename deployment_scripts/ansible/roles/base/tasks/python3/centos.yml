@@ -1,0 +1,65 @@
+- name: Install requirements for package install
+  when: python3_pyenv == None
+  block:
+    - name: Install system packages
+      become: true
+      package:
+        name:
+          - python-setuptools
+          - python3
+          - python3-devel
+          - python3-pip
+        state: present
+
+    - name: Install Python utilities
+      become: true
+      pip:
+        name:
+          - virtualenv
+        state: present
+        executable: pip3
+
+    - name: Set system facts
+      set_fact:
+        python3_command: python3.6
+        python3_path: "/usr/bin/{{ python3_command }}"
+
+    - name: Get executable path
+      block:
+        - name: Search for installed executable
+          find:
+            paths: /usr/bin
+            patterns: "{{ python3_command }}"
+          register: python3_find
+          changed_when: false
+
+        - name: Set python3_path
+          set_fact:
+            # The length of python3_find.files will always be 1.
+            python3_path: "{{ python3_find.files | map(attribute='path') | join('') }}"
+
+    - name: Link executable to generic name
+      become: true
+      file:
+        src: "{{ python3_path }}"
+        dest: "{{ python3_path | dirname }}/python3"
+        state: link
+
+
+- name: Install requirements for pyenv install
+  become: true
+  when: python3_pyenv != None
+  package:
+    name:
+      - bzip2-devel
+      - bzip2-libs
+      - gcc
+      - git
+      - make
+      - openssl-devel
+      - openssl-static
+      - readline-devel
+      - readline-static
+      - sqlite-devel
+      - zlib-devel
+    state: present

@@ -9,3 +9,4 @@ Talend
 venv
 __pycache__/
 reference.conf
+datalake-airflow/config.py

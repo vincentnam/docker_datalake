@@ -1,0 +1,52 @@
+---
+
+- import_playbook: ../../base/tasks/docker_install.yml
+  vars:
+    host: metadata_management_zone_mongodb
+
+
+
+
+- name : Download files
+  vars_files: ../vars/main.yml
+  hosts: metadata_management_zone_mongodb
+  tasks:
+  - name: Print all available facts
+    ansible.builtin.debug:
+      var: hostvars.metadata_management_zone_mongodb.BUILD_DIR
+
+  - name: get Dockerfile for container building
+    get_url:
+      url : 'https://raw.githubusercontent.com/docker-library/mongo/master/{{ MONGODB_VERSION }}/Dockerfile'
+      dest : '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}'
+
+  - name: get docker-entrypoint.sh for container building
+    get_url:
+      url : 'https://raw.githubusercontent.com/docker-library/mongo/master/{{ MONGODB_VERSION }}/docker-entrypoint.sh'
+      dest : '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}'
+
+  - name: change script mode
+    ansible.builtin.file:
+      path: '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}/docker-entrypoint.sh'
+      mode: '755'
+
+  - name: Create Mysql container
+    vars:
+      ansible_python_interpreter:
+    docker_container:
+      name: mysql
+      image: mysql
+      state: started
+      recreate: yes
+#      env:
+#        MYSQL_ROOT_PASSWORD: "{{ mysql_root_pass }}"
+#      exposed_ports:
+#        - "{{ mysql_port }}"
+      volumes:
+        - db_data:/var/lib/mysql/data
+#export MONGODB_VERSION=5.0-rc
+#export DOCKER_USERNAME=vincentnam
+#curl -O --remote-name-all
+#export DOCKER_USERNAME=username
+#chmod 755 ./docker-entrypoint.sh
+#docker build --build-arg MONGO_PACKAGE=mongodb-enterprise --build-arg MONGO_REPO=repo.mongodb.com -t $DOCKER_USERNAME/mongo-enterprise:$MONGODB_VERSION .
