@@ -21,6 +21,7 @@ The development of this architecture will integrate a semantic dimension in the 
 
 - [Datalake concept](#DatalakeConcept)
     * [State of art](#Stateofart)
+    * [Scientific contribution](#ScientificContribution)
 - [The project : context](#TheProjectContext)
 - [The project : design](#TheProjectDesign)
     * [Architecture : Zone-based service-oriented datalake](#CurrentArchitecture)
@@ -125,10 +126,21 @@ The initial resource investment is higher than simple database solution but it i
 [Return to the table of content](#Tableofcontent)
 
 
-We base our approach on the expressed needs but also on this scientific paper : https://www.researchgate.net/publication/333653951_Big_data_stream_analysis_a_systematic_literature_review.
+A theoritical approach of datalake is based on a zone based architecture. This approach is the approach used in this datalake architecture.
+See : Franck Ravat and Yan Zhao. 2019.   Data Lakes: Trends and Perspectives. InDatabase and Expert Systems Applications (Lecture Notes in Computer Science),
+Sven Hartmann, Josef Küng, Sharma Chakravarthy, Gabriele Anderst-Kotsis,A Min Tjoa, and Ismail Khalil (Eds.). Springer International Publishing, Cham,304–313.   
+https://doi.org/10.1007/978-3-030-27615-7_23
 
 ##### **COMING SOON**
 
+
+## Scientific contribution <a name="ScientificContribution"></a>
+[Return to the table of content](#Tableofcontent)
+
+This architecture has been presented in a scientific paper for IDEAS 2021 conference (IDEAS 2021: the 25th anniversary).
+See : 
+DANG, ZHAO, MEGDICHE, RAVAT (2021), A Zone-Based Data Lake Architecture for IoT, Small and Big Data. IDEAS 2021, **to appear**. 
+(DOI: 10.1145/3472163.3472185 / ISBN : 978-1-4503-8991-4/21/07)
 
 # The project : context <a name="TheProjectContext"></a>
 [Return to the table of content](#Tableofcontent)
@@ -154,8 +166,12 @@ Beginning 2021 : The project has been joined with a patronage by Modis engineers
 [Return to the table of content](#Tableofcontent)
 
 
-The design has been done through a service-oriented approach of a theoretical proposal for a zone-based architecture.
-Zone defines here a group of services that answer the same need. 
+
+Zones are as in this theoritical solution (see State of art : "Datalake : trends and perspective" paper).
+
+![alt text](./git_image/functionnal_architecture.png)
+
+The architecture design is described in the next diagram : 
 
 ![alt text](./git_image/v0.0.2-Architecture.png)
 
@@ -1068,19 +1084,22 @@ TODO : Update TODO list
                     - Unexpected Success: 0
                     - Failed: 0
                     - Sum of execute time for each test: 502.9311 sec.
-        - [x] MongoDb database for metadata
-            - [ ] Replication for single point of failure problem (REALLY IMPORTANT ! -> if MongoDB datas are corrupted, all data in the datalake are useless)  
-        - [x] Trigger for new input to launch a new Airflow job
+            - [x] Trigger for new input to launch a new Airflow job
             - [x] Create middleware for swift proxy (Webhook trigger to launch Airflow jobs)
             - [ ] Use X-Webhook in Swift (secure way)
             - [ ] Optimizations
-- [x]  The process area
-    - [ ] Upgrade to version 2.0 (stable) if possible
+- [ ] Metadata management zone
+     - [x] MongoDb database for metadata
+            - [ ] Replication for single point of failure problem (REALLY IMPORTANT ! -> if MongoDB datas are corrupted, all data in the datalake are useless)
+     - [ ] Test other database as metadata management system
+     - [ ] Implement metadata metamodel 
+- [x] Process area
+    - [x] Upgrade to version 2.0 (stable) if possible
     - [x] Airflow deployment (docker image) 
         - [x] Docker image 
         - [x] Installation on VM
         - [x] Resources allocation 
-            - [x] Parallel executor
+            - [x] Parallel executor (Celery)
             - [ ] Kubernetes executor
     - [x] Airflow job creation / configuration 
         - [x] Handle hook from Swift middleware (Webhook)
@@ -1104,7 +1123,7 @@ TODO : Update TODO list
         - [x] Python api with Flask 
             - [x] Insertion
             - [x] Download data from database in processed data area
-            - [ ] Download data from raw data management area
+            - [x] Download data from raw data management area
         - [ ] Rework with platform update (see [Modis](#) branch, projects and issues)
     - [ ] Web GUI for data insertion and data visualization
         - [x] Dashboard creation
@@ -1134,17 +1153,18 @@ TODO : Update TODO list
     - [ ] Add stream creation in REST API
 - [ ] [AutomaticDeployment](#TODO:AutomaticDeployment) : Docker + Kubernetes + Ansible
     - [ ] Docker
-        - [ ] MongoDB enterprise container
+        - [x] MongoDB enterprise container
         - [ ] Openstack Swift container
-        - [ ] Apache Airflow container
-        - [ ] Processed data zone container (InfluxDB, SQL database)
+        - [x] Apache Airflow container (Official container)
+        - [ ] Apache Spark
+        - [x] Processed data zone container (InfluxDB, SQL database)
         - [ ] (NEEDED : Security design and implementation) Openstack Keystone container
         - [ ] (NEEDED : Process zone design and rework : add Apache Spark) Apache Spark container
     - [ ] Kubernetes
         - [ ] Apache Spark cluster on kubernetes design  
         - [ ] ...
     - [ ] Ansible
-        - [ ] ...
+        - [ ] Create first playbook for ansible 
 
 ## TODO : Design <a name="TODOImplementation"></a>
 [Return to the table of content](#Tableofcontent)
@@ -1209,7 +1229,7 @@ Dont name your task the same name of the callable (python function) : it will le
 - Apache Nifi : not usefull and doesn't fit in the architecture and replaced with Apache Spark with Apache Spark Stream and MQTT
 - Apache Kafka : As MQTT and Apache Spark Stream are / will be used, Apache Kafka isn't needed anymore.
 
-### In process zone <a name="Inprocesszone"></a>
+### In process zone <a name="Inprocesszone"></a>https://upload.wikimedia.org/wikipedia/commons/7/70/TalendLogoCoral.png
 [Return to the table of content](#Tableofcontent)
 
 - <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/TalendLogoCoral.png" height="42"> Talend : difficulties to install on Linux + difficulties to find version that can be integrated in the POC
@@ -1272,14 +1292,18 @@ Patches : for a bug fix
 
 The whole project is (C) 2020 March, DANG Vincent-Nam <dang.vincent-nam@gmail.com>
 
-for Université Toulouse 3 Paul-Sabatier (FRANCE), IRIT and SMAC Team, neOCampus (during an end of study internship)
+for Université Toulouse 3 Paul-Sabatier (FRANCE), IRIT and SMAC Team, neOCampus (during an end of study internship) as original designer of the project / solution / architecture and code owner
 
-and for CNRS (as a 1-year fixed-term contract)
-
-as original designer and developer of the project / solution / architecture and
+and for CNRS (as a 1-year fixed-term contract) as developer of the project / solution / architecture and
 
 is licensed under the SSPL, see `https://www.mongodb.com/licensing/server-side-public-license'.
 
+-------------------
+Engineers from Modis France
+
+![alt text](./git_image/Modis-logo.png) 
+
+(https://www.modisfrance.fr/) worked on this project in a patronage project with Université Toulouse 3 Paul-Sabatier and neOCampus.
 
 ## Contacts <a name="Contacts"></a>
 [Return to the table of content](#Tableofcontent)
