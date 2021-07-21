@@ -767,7 +767,7 @@ TODO : Explanation
 
 #### Defined
 
-![alt text](./git_image/v0.0.3-Data_exchanges_usecase.png)
+![alt text](./git_image/v0.0.5-Data_exchanges_usecase.png)
 TODO : Explanation 
 
 #### Still undefined
