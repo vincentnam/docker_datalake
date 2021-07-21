@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  flask:
+    build: ./flask
+    image: flask_uwsgi:py3.9-fl1.1-uw2
+    container_name: flask
+    volumes:
+      - ./flask:/app
+      - ./flask/uwsgi/log:/var/uwsgi/log
+    command: ./entrypoint.sh
+    environment:
+      - FLASK_APP=neocampus
+      - FLASK_ENV=production
+    expose:
+      - "5000"
+    restart: always
+
+  nginx:
+    image: nginx:1.20-alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/uwsgi_params:/etc/nginx/uwsgi_params
+      - ./nginx/log:/var/log/nginx
+    depends_on:
+      - flask
+    restart: always

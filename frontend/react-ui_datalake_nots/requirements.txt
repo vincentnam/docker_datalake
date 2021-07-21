@@ -1,5 +1,0 @@
-axios
-react
-react-bootstrap
-material-ui/core
-openstack-swift-client

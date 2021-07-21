@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  flask:
+    build: ./flask
+    image: flask_uwsgi:py3.9-fl1.1-uw2
+    container_name: flask
+    volumes:
+      - ./flask:/app
+    environment:
+      - FLASK_APP=neocampus
+      - FLASK_ENV=development
+    command: flask run --host=0.0.0.0
+    ports:
+      - "80:5000"
+    restart: always

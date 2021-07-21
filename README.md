@@ -2,7 +2,7 @@
 # ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+)  The official main repository is the IRIT Gitlab repository (https://gitlab.irit.fr/datalake/docker_datalake). ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
 # ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+)  The secondary repository is the Github initial repository (https://github.com/vincentnam/docker_datalake). ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) 
 
-The github repository is mirorred to follow the progress of the Gitlab repository and to be synchronized.
+The github repository is mirrored to follow the progress of the Gitlab repository and to be synchronized.
 
 # Data lake architecture POC hosted on OSIRIM (https://osirim.irit.fr/site/)
 
@@ -21,6 +21,7 @@ The development of this architecture will integrate a semantic dimension in the 
 
 - [Datalake concept](#DatalakeConcept)
     * [State of art](#Stateofart)
+    * [Scientific contribution](#ScientificContribution)
 - [The project : context](#TheProjectContext)
 - [The project : design](#TheProjectDesign)
     * [Architecture : Zone-based service-oriented datalake](#CurrentArchitecture)
@@ -125,10 +126,21 @@ The initial resource investment is higher than simple database solution but it i
 [Return to the table of content](#Tableofcontent)
 
 
-We base our approach on the expressed needs but also on this scientific paper : https://www.researchgate.net/publication/333653951_Big_data_stream_analysis_a_systematic_literature_review.
+A theoritical approach of datalake is based on a zone based architecture. This approach is the approach used in this datalake architecture.
+See : Franck Ravat and Yan Zhao. 2019.   Data Lakes: Trends and Perspectives. InDatabase and Expert Systems Applications (Lecture Notes in Computer Science),
+Sven Hartmann, Josef Küng, Sharma Chakravarthy, Gabriele Anderst-Kotsis,A Min Tjoa, and Ismail Khalil (Eds.). Springer International Publishing, Cham,304–313.   
+https://doi.org/10.1007/978-3-030-27615-7_23
 
 ##### **COMING SOON**
 
+
+## Scientific contribution <a name="ScientificContribution"></a>
+[Return to the table of content](#Tableofcontent)
+
+This architecture has been presented in a scientific paper for IDEAS 2021 conference (IDEAS 2021: the 25th anniversary).
+See : 
+DANG, ZHAO, MEGDICHE, RAVAT (2021), A Zone-Based Data Lake Architecture for IoT, Small and Big Data. IDEAS 2021, **to appear**. 
+(DOI: 10.1145/3472163.3472185 / ISBN : 978-1-4503-8991-4/21/07)
 
 # The project : context <a name="TheProjectContext"></a>
 [Return to the table of content](#Tableofcontent)
@@ -154,8 +166,12 @@ Beginning 2021 : The project has been joined with a patronage by Modis engineers
 [Return to the table of content](#Tableofcontent)
 
 
-The design has been done through a service-oriented approach of a theoretical proposal for a zone-based architecture.
-Zone defines here a group of services that answer the same need. 
+
+Zones are as in this theoritical solution (see State of art : "Datalake : trends and perspective" paper).
+
+![alt text](./git_image/functionnal_architecture.png)
+
+The architecture design is described in the next diagram : 
 
 ![alt text](./git_image/v0.0.2-Architecture.png)
 
@@ -200,6 +216,7 @@ With a network-oriented vision, this zone is a buffer zone.
 
 
 -> TODO : redesign this area : 
+    - Add metamodel in implementation 
     - Define which metadata to keep in which service (i.e. at the moment, it should be : models (i.e. links betweens metadata in neo4j) and metadata in mongodb)
     - Seems to be more collections in Mongodb for each type of document 
 
@@ -209,11 +226,17 @@ With a network-oriented vision, this zone is a buffer zone.
     - Document oriented NoSQL database. It has been built as a NoSQL database made for high volumetry input. 
     - Its role is to store meta data over the data inserted in Openstack Swift and to make it possible to follow and store data over data and be able to know what is stored in Openstack Swift.
     - Operations logs ?
+    
+    
+As the Neo4J seems to not be the solution due to legal problem with the neo4j license (only commercial license allow deployment + authentication ), other solution may be evaluated : 
+
 - Neo4J (https://neo4j.com)
     - Pipelines / workflows definition
     - Metadata format (class diagram ?)
-
-
+- DGraph (https://dgraph.io/) : 
+  - License Apache V2
+- JanusGraph (https://janusgraph.org/):
+  - License Apache V2
 
 ### Process zone <a name="ProcessZone"></a>
 
@@ -430,6 +453,7 @@ There are more than 3000 meta-data models for data description and catalog const
 
 #### Metadata management system : MongoDB <a name="MetadataMongodb"></a>
 [Return to the table of content](#Tableofcontent)
+
 MongoDB aims to keep the metadata documents of each data and the various histories. It allows to store via its maximum 16 MB of data a large amount of data. Moreover, the primary objective of the database ' 
 We can store a large volume of data while allowing efficient search in these data, especially via the query tool that MongoDB offers and an implementation of MapReduce.
 
@@ -743,7 +767,7 @@ TODO : Explanation
 
 #### Defined
 
-![alt text](./git_image/v0.0.3-Data_exchanges_usecase.png)
+![alt text](./git_image/v0.0.5-Data_exchanges_usecase.png)
 TODO : Explanation 
 
 #### Still undefined
@@ -758,6 +782,7 @@ TODO : Explanation
 
 ### Openstack Swift <a name="OpenstackSwift"></a>
 [Return to the table of content](#Tableofcontent)
+
 Object inserted in Openstack swift are renamed with a number id. 
 This id is incremented by 1 for every object insert. It allows to follow easily the number of object stored in Openstack Swift.
 
@@ -804,6 +829,7 @@ Each object is stored on a container that match to the project or the user group
 
 ## Deployment <a name="Deployment"></a>
 [Return to the table of content](#Tableofcontent)
+
 TODO : Finish ansible, make fully automatic deployment with ansible (see docker branch) 
 - docker-compose up 
 
@@ -1040,6 +1066,7 @@ It will be easy and fast to integrate the new pipeline.
 
 ## TODO : Implementation <a name="TODOImplementation"></a>
 [Return to the table of content](#Tableofcontent)
+
 TODO list for the project development (i.e. the datalake architecture)
 TODO : Update TODO list
 - [x]  Raw data mangement area : 
@@ -1057,19 +1084,22 @@ TODO : Update TODO list
                     - Unexpected Success: 0
                     - Failed: 0
                     - Sum of execute time for each test: 502.9311 sec.
-        - [x] MongoDb database for metadata
-            - [ ] Replication for single point of failure problem (REALLY IMPORTANT ! -> if MongoDB datas are corrupted, all data in the datalake are useless)  
-        - [x] Trigger for new input to launch a new Airflow job
+            - [x] Trigger for new input to launch a new Airflow job
             - [x] Create middleware for swift proxy (Webhook trigger to launch Airflow jobs)
             - [ ] Use X-Webhook in Swift (secure way)
             - [ ] Optimizations
-- [x]  The process area
-    - [ ] Upgrade to version 2.0 (stable) if possible
+- [ ] Metadata management zone
+     - [x] MongoDb database for metadata
+            - [ ] Replication for single point of failure problem (REALLY IMPORTANT ! -> if MongoDB datas are corrupted, all data in the datalake are useless)
+     - [ ] Test other database as metadata management system
+     - [ ] Implement metadata metamodel 
+- [x] Process area
+    - [x] Upgrade to version 2.0 (stable) if possible
     - [x] Airflow deployment (docker image) 
         - [x] Docker image 
         - [x] Installation on VM
         - [x] Resources allocation 
-            - [x] Parallel executor
+            - [x] Parallel executor (Celery)
             - [ ] Kubernetes executor
     - [x] Airflow job creation / configuration 
         - [x] Handle hook from Swift middleware (Webhook)
@@ -1093,7 +1123,7 @@ TODO : Update TODO list
         - [x] Python api with Flask 
             - [x] Insertion
             - [x] Download data from database in processed data area
-            - [ ] Download data from raw data management area
+            - [x] Download data from raw data management area
         - [ ] Rework with platform update (see [Modis](#) branch, projects and issues)
     - [ ] Web GUI for data insertion and data visualization
         - [x] Dashboard creation
@@ -1121,11 +1151,23 @@ TODO : Update TODO list
     - [ ] Deploy Apache Spark
     - [ ] Deploy Apache Spark Stream
     - [ ] Add stream creation in REST API
-
 - [ ] [AutomaticDeployment](#TODO:AutomaticDeployment) : Docker + Kubernetes + Ansible
+    - [ ] Docker
+        - [x] MongoDB enterprise container
+        - [ ] Openstack Swift container
+        - [x] Apache Airflow container (Official container)
+        - [ ] Apache Spark
+        - [x] Processed data zone container (InfluxDB, SQL database)
+        - [ ] (NEEDED : Security design and implementation) Openstack Keystone container
+        - [ ] (NEEDED : Process zone design and rework : add Apache Spark) Apache Spark container
+    - [ ] Kubernetes
+        - [ ] Apache Spark cluster on kubernetes design  
+        - [ ] ...
+    - [ ] Ansible
+        - [ ] Create first playbook for ansible 
 
 ## TODO : Design <a name="TODOImplementation"></a>
-  [Return to the table of content](#Tableofcontent)
+[Return to the table of content](#Tableofcontent)
 
 - [ ] Add metadata over transformed data in the goldzone (and be able to find the list of process done to create this processed data)
 
@@ -1187,7 +1229,7 @@ Dont name your task the same name of the callable (python function) : it will le
 - Apache Nifi : not usefull and doesn't fit in the architecture and replaced with Apache Spark with Apache Spark Stream and MQTT
 - Apache Kafka : As MQTT and Apache Spark Stream are / will be used, Apache Kafka isn't needed anymore.
 
-### In process zone <a name="Inprocesszone"></a>
+### In process zone <a name="Inprocesszone"></a>https://upload.wikimedia.org/wikipedia/commons/7/70/TalendLogoCoral.png
 [Return to the table of content](#Tableofcontent)
 
 - <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/TalendLogoCoral.png" height="42"> Talend : difficulties to install on Linux + difficulties to find version that can be integrated in the POC
@@ -1250,17 +1292,22 @@ Patches : for a bug fix
 
 The whole project is (C) 2020 March, DANG Vincent-Nam <dang.vincent-nam@gmail.com>
 
-for Université Toulouse 3 Paul-Sabatier (FRANCE), IRIT and SMAC Team, neOCampus (during an end of study internship)
+for Université Toulouse 3 Paul-Sabatier (FRANCE), IRIT and SMAC Team, neOCampus (during an end of study internship) as original designer of the project / solution / architecture and code owner
 
-and for CNRS (as a 1-year fixed-term contract)
-
-as original designer and developer of the project / solution / architecture and
+and for CNRS (as a 1-year fixed-term contract) as developer of the project / solution / architecture and
 
 is licensed under the SSPL, see `https://www.mongodb.com/licensing/server-side-public-license'.
 
+-------------------
+Engineers from Modis France
+
+![alt text](./git_image/Modis-logo.png) 
+
+(https://www.modisfrance.fr/) worked on this project in a patronage project with Université Toulouse 3 Paul-Sabatier and neOCampus.
 
 ## Contacts <a name="Contacts"></a>
 [Return to the table of content](#Tableofcontent)
+
 04/01/2021 : 
 
 DANG Vincent-Nam (Repository owner, intern and engineer working on the project)
