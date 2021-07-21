@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# From : https://airflow.apache.org/docs/apache-airflow/stable/start/docker.html
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
