@@ -1290,27 +1290,72 @@ Patches : for a bug fix
 [Return to the table of content](#Tableofcontent)
 
 
-The whole project is (C) 2020 March, DANG Vincent-Nam <dang.vincent-nam@gmail.com>
+The whole project is (C) 2020 March, **DANG Vincent-Nam** <dang.vincent-nam@gmail.com>
 
-for Université Toulouse 3 Paul-Sabatier (FRANCE), IRIT and SMAC Team, neOCampus (during an end of study internship) as original designer of the project / solution / architecture and code owner
+during an end of study internship for Université Toulouse 3 Paul-Sabatier (FRANCE), 
+IRIT and SMAC Team, neOCampus as original designer of the project / solution / architecture and basis code owner 
 
 and for CNRS (as a 1-year fixed-term contract) as developer of the project / solution / architecture and
 
 is licensed under the SSPL, see `https://www.mongodb.com/licensing/server-side-public-license'.
 
+#### Institutions involved
+
 -------------------
-Engineers from Modis France
+
+(Future) scientific interest group neOCampus (funder of the internship at the initiative of the project): 
+
+A group of laboratories, organizations and industrialists to build the campus of the future 
+
+https://www.irit.fr/neocampus/fr/
+
+![alt text](./git_image/neOCampus_logo.png) 
+
+
+-------------------
+Toulouse University : Université Toulouse 3 - Paul Sabatier
+
+https://www.univ-tlse3.fr/
+
+![alt text](./git_image/Logo_UT3.jpg) 
+
+
+-------------------
+
+Toulouse computer science research laboratory : 
+
+IRIT - Insitut de Recherche en Informatique de Toulouse
+
+https://www.irit.fr/
+
+![alt text](./git_image/iritlogo.png) 
+
+
+-------------------
+
+French National Center for Scientific Research - Centre national de la recherche scientifique
+
+http://www.cnrs.fr/en
+
+![alt text](./git_image/cnrs_logo.png) 
+
+
+-------------------
+
+Engineers from Modis France (https://www.modisfrance.fr/) 
+
 
 ![alt text](./git_image/Modis-logo.png) 
 
-(https://www.modisfrance.fr/) worked on this project in a patronage project with Université Toulouse 3 Paul-Sabatier and neOCampus.
+
+worked on this project in a patronage project with Université Toulouse 3 Paul-Sabatier and neOCampus.
 
 ## Contacts <a name="Contacts"></a>
 [Return to the table of content](#Tableofcontent)
 
 04/01/2021 : 
 
-DANG Vincent-Nam (Repository owner, intern and engineer working on the project)
+**DANG Vincent-Nam* (Repository basis code owner, intern and engineer working on the project)
 
 Vincent-Nam.Dang@irit.fr / dang.vincentnam@gmail.com 
 
