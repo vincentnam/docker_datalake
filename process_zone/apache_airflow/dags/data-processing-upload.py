@@ -82,7 +82,7 @@ def get_swift_object(*args, **kwargs):
             typef = file.filename.split('.')
             typef = typef[1]
             #Function return the type file
-            type_file = typefile.typefile(typef)
+            type_file = typefile(typef)
             # Compare filetype
             if "image/" in type_file :
                 process_type = "images"

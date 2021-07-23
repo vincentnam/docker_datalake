@@ -1,3 +1,5 @@
+import sys
+
 def typefile(typef):
     type_file = ""
     #Research the type file in function of the extension file
@@ -21,4 +23,5 @@ def typefile(typef):
         type_file = "application/x-gzip"
     
     return type_file
-    
+
+sys.modules[__name__] = typefile
