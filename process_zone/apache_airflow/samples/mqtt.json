@@ -1,0 +1,9 @@
+[{"topic":"u4/301/energy","value": [1230563.0, 1230560.0, 236.49, 0.0, 0.0, 0.0, 0.0, 0.0], "value_units": ["Wh", "Ea+", "V", "A", "W", "VAR", "VA", "cosPhi"], "input": 78, "subID": "lighting", "unitID": "modbus_rs485", "time": "2021-07-22T11:01:22.000Z"}
+,{"topic":"u4/302/humidity","value": 35, "value_units": "%r.H.", "input": 104, "subID": "ilot1", "unitID": "inside", "time": "2021-07-22T11:11:22.000Z"}
+,{"topic":"u4/302/humidity","value": 37, "value_units": "%r.H.", "input": 109, "subID": "ilot2", "unitID": "inside", "time": "2021-07-22T11:12:22.000Z"}
+,{"topic":"u4/302/humidity","value": 36, "value_units": "%r.H.", "input": 114, "subID": "ilot3", "unitID": "inside", "time": "2021-07-22T11:13:22.000Z"}
+,{"topic":"u4/301/luminosity","value": 667, "value_units": "lux", "input": 100, "subID": "ilot1", "unitID": "inside", "time": "2021-07-22T11:14:22.000Z"}
+,{"topic":"u4/301/luminosity","value": 251, "value_units": "lux", "input": 105, "subID": "ilot2", "unitID": "inside", "time": "2021-07-22T11:15:22.000Z"}
+,{"topic":"u4/301/luminosity","value": 789, "value_units": "lux", "input": 110, "subID": "ilot3", "unitID": "inside", "time": "2021-07-22T11:15:23.000Z"}
+,{"topic":"u4/300/energy","value": [0.0, 0.0, 33860.33, 26.88, 26.23, 0.66], "value_units": ["m3/hr", "kW", "kWh", "hot_degresC", "cold_degresC", "diff_degresC"], "input": 1, "subID": "heaters", "unitID": "modbus_rs485", "time": "2021-07-22T11:15:24.000Z"}
+,{"topic":"u4/300/energy","value": [2731738.0, 2731730.0, 235.23, 0.0, 0.0, 0.0, 0.0, 0.0], "value_units": ["Wh", "Ea+", "V", "A", "W", "VAR", "VA", "cosPhi"], "input": 79, "subID": "lighting", "unitID": "modbus_rs485", "time": "2021-07-22T11:15:25.000Z"}]
