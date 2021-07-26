@@ -5,3 +5,5 @@ SWIFT_USER = 'xx:xx'
 SWIFT_KEY = 'xxxx'
 
 SWIFT_FILES_DIRECTORY = "xxx"
+
+INFLUX_URL = "xxxx"
