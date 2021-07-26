@@ -19,7 +19,7 @@ export class Home extends React.Component {
                             <div class="card border-dark mb-3">
                                 <div class="card-body">
                                     <h5 class="card-title">Data Visualization</h5>
-                                    <p class="card-text">Partie data visualization des données brutes et traitées du Datalake.</p>
+                                    <p class="card-text">Partie data visualization des données traitées du Datalake.</p>
                                     <a href="/data-visualization" class="btn btn-outline-primary">Accéder</a>
                                 </div>
                             </div>
@@ -27,8 +27,8 @@ export class Home extends React.Component {
                         <div class="col-sm-4">
                             <div class="card border-dark mb-3">
                                 <div class="card-body">
-                                    <h5 class="card-title">Download</h5>
-                                    <p class="card-text">Partie téléchargement des données brutes et traitées du Datalake.</p>
+                                    <h5 class="card-title">Download Raw Data</h5>
+                                    <p class="card-text">Téléchargement des données brutes du Datalake.</p>
                                     <a href="/download" class="btn btn-outline-primary">Accéder</a>
                                 </div>
                             </div>
@@ -37,8 +37,17 @@ export class Home extends React.Component {
                             <div class="card border-dark mb-3">
                                 <div class="card-body">
                                     <h5 class="card-title">Upload</h5>
-                                    <p class="card-text">Partie envoie de données vers le Datalake.</p>
+                                    <p class="card-text">Envoi des données vers le Datalake.</p>
                                     <a href="/upload" class="btn btn-outline-primary">Accéder</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="card border-dark mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Download Handled Data</h5>
+                                    <p class="card-text">Téléchargement des données traitées du Datalake.</p>
+                                    <a href="/download-handled-data" class="btn btn-outline-primary">Accéder</a>
                                 </div>
                             </div>
                         </div>
