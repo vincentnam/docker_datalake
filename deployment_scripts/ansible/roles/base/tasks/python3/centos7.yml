@@ -1,5 +1,5 @@
 - name: Install requirements for package install
-  when: python3_pyenv == None
+  when: python3_pyenv is not defined
   block:
     - name: Install system packages
       become: true
@@ -22,7 +22,7 @@
     - name: Set system facts
       set_fact:
         python3_command: python3.6
-        python3_path: "/usr/bin/{{ python3_command }}"
+        python3_path: "/usr/bin/python3.6"
 
     - name: Get executable path
       block:
@@ -45,21 +45,6 @@
         dest: "{{ python3_path | dirname }}/python3"
         state: link
 
-
-- name: Install requirements for pyenv install
-  become: true
-  when: python3_pyenv != None
-  package:
-    name:
-      - bzip2-devel
-      - bzip2-libs
-      - gcc
-      - git
-      - make
-      - openssl-devel
-      - openssl-static
-      - readline-devel
-      - readline-static
-      - sqlite-devel
-      - zlib-devel
-    state: present
+    - name: Install python docker lib
+      pip : 
+        name: docker

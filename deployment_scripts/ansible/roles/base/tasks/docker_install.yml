@@ -1,23 +1,102 @@
 ---
-
-
-- name : Install docker
-  vars_files: ../vars/main.yml
-  hosts: '{{ host }}'
+- hosts: "{{ host }}"
+  name: "Install docker and start it depending on OS"
   tasks:
-  - name: Install docker with package installer
-    ansible.builtin.package:
-      name: docker
-      state: present
-# TODO : Do install on OS
-#  - name: Install python3
+    - name : Check if docker/{{ansible_distribution|lower}}{{ ansible_distribution_major_version}}.yml exists
+      ansible.builtin.stat:
+        path: "{{playbook_dir}}/docker/{{ ansible_distribution|lower }}{{ ansible_distribution_major_version }}.yml"
+      register: playbook_name_with_version 
+    - name : Check if docker/{{ansible_distribution|lower}}.yml exists
+      ansible.builtin.stat:
+        path: "{{playbook_dir}}/docker/{{ ansible_distribution|lower}}.yml"
+      register: playbook_name
+      when : not playbook_name_with_version.stat.exists and playbook_name_with_version.stat.exists is defined
+    - name : "Try include playbook {{ansible_distribution|lower}}{{ansible_distribution_major_version}}.yml"
+      include_tasks:
+        file : "{{playbook_name_with_version.stat.path}}"
+      when : playbook_name.skipped is defined and (playbook_name_with_version.stat.exists is defined and playbook_name_with_version.stat.exists)
+    - name : "Try include playbook {{ansible_distribution|lower}}.yml ({{ansible_distribution|lower}}{{ansible_distribution_major_version}}.yml not found)"
+      include_tasks:
+        file : "{{playbook_name.stat.path}}"
+      when : playbook_name_with_version.stat.exists is defined and not playbook_name_with_version.stat.exists and (playbook_name.stat.exists is defined and playbook_name.stat.exists) 
+      register : result_default
+    - name: "{{ansible_distribution|lower}}{{ansible_distribution_major_version}}.yml"
+      ansible.builtin.debug:
+        msg : "{{playbook_name_with_version}}"
+ #     when: playbook_name_with_version is not skipped and not playbook_name_with_version.stat.exists 
+ #   - name: First playbook is skipped (not possible)
+  #    ansible.builtin.debug:
+   #     msg : "{{playbook_name}}"
+    #  when: playbook_name_with_version is skipped
+    - name: "{{ansible_distribution|lower}}.yml"
+      ansible.builtin.debug:
+        msg : "{{playbook_name}}"
+    #  when: not (playbook_name.stat.exists is defined and playbook_name.stat.exists)
+    - name: "{{ansible_distribution|lower}}.yml skipped"
+      ansible.builtin.debug:
+        msg : "{{ansible_distribution|lower}}.yml has been skipped. See logs to see what playbook has been executed."
+      when: playbook_name is skipped
+   
+
+#     - name: File exist
+ #      ansible.builtin.debug:
+  #        msg: "{{playbook_name}} exist"
+   #    when: playbook_name.stat.exists is defined
+        #  gather_facts: yes
+#- name: OS dependant docker installation
+#- import_playbook:  "{{ lookup('first_found', ['docker/{{ facts.ansible_distribution|lower}}{{ facts.ansible_distribution_major_version }}.yml','docker/{{ factsansible_distribution|lower}}.yml']) }}"  
+ 
+
+
+#name : Include 
+ #      include : "{{docker/{{ ansible_distribution|lower}}{{ ansible_distribution_major_version }}.yml"
+         
+#include_tasks:
+ #         file: "{{ lookup('first_found',params) }}"
+  #     vars: 
+   #       params:
+    #         files:
+     #           - "docker/{{ ansible_distribution|lower}}{{ ansible_distribution_major_version }}.yml"
+      #          - "docker/{{ ansible_distribution|lower}}.yml"
+       #   host: "{{ host }}"  
+#tasks:
+   # - include: "{{item}}"
+    #  with_first_found:
+     #     - files:
+      #        - "docker/{{ ansible_distribution|lower }}{{ ansible_distribution_major_version}}.yml"
+       #       - "docker/{{ ansible_distribution|lower }}.yml"
+      #vars:
+       # host: "{{host}}"
+
+
+#- name: install 
+#  gather_facts: yes 
+#  include_tasks: "{{ query('first_found', files) }}"
+  #gather_facts: yes
+
+#  vars:
+ #       files:
+  #          - "{{ ansible_distribution|lower }}{{ ansible_distribution_major_version}}.yml"
+   #         - "{{ ansible_distribution|lower }}.yml"
+
+
+#- name : Install docker
+#  vars_files: ../vars/main.yml
+#  hosts: '{{ host }}'
+#  tasks:
+#  - name: Install docker with package installer
 #    ansible.builtin.package:
-#      name: python3
+#      name: docker
 #      state: present
-  - name: Create pyenv
-    pip:
-      name: docker
-      virtualenv: '{{ VIRTUALENV_PATH }}'
+## TODO : Do install on OS
+##  - name: Install python3
+##    ansible.builtin.package:
+##      name: python3
+##      state: present
+#  - name: Create pyenv
+#    pip:
+#      name: docker
+#      virtualenv: '{{ VIRTUALENV_PATH }}'
 #- name : check docker version
 #  hosts : test
 #  remote_user: vdang

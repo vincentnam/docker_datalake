@@ -1,4 +1,4 @@
-- name: "OS distribution : Arch-linux"
+- name: "OS distribution : template"
   block:
     - name: Install system packages
       ansible.builting.debug:

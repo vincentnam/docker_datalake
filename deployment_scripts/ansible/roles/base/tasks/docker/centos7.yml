@@ -1,0 +1,85 @@
+---
+- block :  
+    - name: Install yum utils
+      yum:
+        name: yum-utils
+        state: latest
+    - name: Remove docker if installed from CentOS repo
+      yum:
+        state: removed
+        name:
+          - docker
+          - docker-client
+          - docker-client-latest
+          - docker-common
+          - docker-latest
+          - docker-latest-logrotate
+          - docker-logrotate
+          - docker-engine
+    - name: Install device-mapper-persistent-data
+      yum:
+        name: device-mapper-persistent-data
+        state: latest
+      become: true
+    - name: Install lvm2
+      yum:
+        name: lvm2
+        state: latest
+      become: yes
+    - name: Add Docker repo
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docer-ce.repo
+      become: yes
+
+    - name: Enable Docker Edge repo
+      ini_file:
+        dest: /etc/yum.repos.d/docer-ce.repo
+        section: 'docker-ce-edge'
+        option: enabled
+        value: '0'
+      become: yes
+
+    - name: Enable Docker Test repo
+      ini_file:
+        dest: /etc/yum.repos.d/docer-ce.repo
+        section: 'docker-ce-test'
+        option: enabled
+        value: '0'
+      become: yes
+
+    - name: Install Docker
+      yum:
+        name: 
+          - docker-ce
+          - containerd.io
+          - docker-ce-cli
+        state: latest 
+    - name: Ensure docker service is stopped
+      service:
+        name: docker
+        state: stopped
+        enabled: no
+      become: yes
+    - name : Ensure docker.pid doesn't exist
+      ansible.builtin.file:
+        path: /var/run/docker.pid
+        state: absent
+      become: yes
+    - name: Ensure dockerd is stopped.
+      shell: "ps axf | grep docker | grep -v grep | awk '{print \"kill -9 \" $1}' | sudo sh "
+      become: yes
+    - name: Start docker daemon in background
+      shell: "dockerd &"
+      become: yes
+    - name: Add user datalake to docker group
+      user:
+        name: datalake
+        groups: docker
+        append: yes
+      become: yes
+    - name: Install docker-compose
+      yum:
+        name: docker-compose
+        state: latest
+      become: yes
