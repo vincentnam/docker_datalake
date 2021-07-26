@@ -5,6 +5,7 @@ import swiftclient
 from swiftclient.service import SwiftService
 import datetime
 from bson.json_util import dumps
+from datetime import datetime as dt
 
 
 def get_swift_original_object_name(swift_container_name, swift_object_id):
@@ -128,18 +129,50 @@ def insert_datalake(file_content, user, key, authurl, container_name,
             if retry > 3:
                 return None
 
-def get_handled_data():
+def get_handled_data(params):
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url)
-    
-    # Database "data_historique"
-    db_data_historique = mongo_client.data_historique
 
-    # Collection "traitement_historique"
-    collection_traitement_historique = db_data_historique["traitement_historique"]
+    mongo_database = ""
+    collection_name = ""
 
-    # Query result (Cursor object)
-    result_query = collection_traitement_historique.find().limit(5)
+    start = dt.strptime(params.get('beginDate'), '%Y-%m-%d')
+    end =  dt.strptime(params.get('endDate'), '%Y-%m-%d')
+
+       # if certain filetype is selected, query will be ran on different MongoDB database
+    # Example : Image -> data_conso database
+    if("image" in params.get('filetype')):
+         # Database "data_historique"
+        mongo_database = mongo_client.data_conso
+
+        # Collection "traitement_historique"
+        collection_name = "processed_data"
+
+        start = start.isoformat()
+        end = end.isoformat()
+
+         # Collection "traitement_historique"
+        collection_traitement_historique = mongo_database[collection_name]
+
+        # Query result (Cursor object)
+        result_query = collection_traitement_historique.find({'creation_date': {'$gte': start, '$lt': end}},{"content_image":False})
+
+    # Time series CSV -> data_historique database
+    if("csv" in params.get('filetype')):
+         # Database "data_historique"
+        mongo_database = mongo_client.data_historique
+
+        # Collection "traitement_historique"
+        collection_name = "traitement_historique" 
+
+         # Collection "traitement_historique"
+        collection_traitement_historique = mongo_database[collection_name]
+
+        # Query result (Cursor object)
+        result_query = collection_traitement_historique.find({'creation_date': {'$gte': start, '$lt': end}})
+
+    if(collection_name == ""):
+        return {}
 
     # Conversion to a list of dictionaries
     list_cursor = list(result_query)

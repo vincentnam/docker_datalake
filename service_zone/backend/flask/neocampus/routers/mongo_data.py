@@ -3,6 +3,7 @@ from ..services import mongo, influxdb
 from datetime import datetime
 import json, io, zipfile, time
 import pandas as pd
+from ..utils.size_conversion import convert_unit, SIZE_UNIT
 
 mongo_data_bp = Blueprint('mongo_data_bp', __name__)
 
@@ -77,34 +78,34 @@ def get_metadata():
 def get_handled_data_list():
     result = {}
 
-    '''try:
+    try:
         params = {
-            'datatype': request.get_json()['datatype'],
+            'filetype': request.get_json()['filetype'],
             'beginDate': request.get_json()['beginDate'],
             'endDate': request.get_json()['endDate']
         }
     except:
-        return jsonify({'error': 'Missing required fields.'})'''
+        return jsonify({'error': 'Missing required fields.'})
 
-
-
+    # InfluxDB data
     result = {}
 
-    influxDB = influxdb.get_handled_data()
-    mongoDB = mongo.get_handled_data()
+    influxDB = influxdb.get_handled_data(params)
+    mongoDB = mongo.get_handled_data(params)
 
     import sys
+    influxdb_result = influxdb.create_csv_file(influxDB)
 
-    # If there is Influx data
-    if influxDB:
+    # If there is Influx data and filter "Time series" is selected
+    if influxDB and "csv" in params.get('filetype'):
         metadata_influx_file = {
             'filename': 'InfluxDB.csv',
-            'filesize': sys.getsizeof(influxDB)
+            'filesize': sys.getsizeof(influxdb_result)
         }
         result['influxDB'] = metadata_influx_file
 
-    # If there is Mongo data
-    if mongoDB :
+    # If there is Mongo data and filter "Images" or "Time series" are selected
+    if mongoDB and ("csv" in params.get('filetype') or "image" in params.get('filetype')):
         metadata_mongo_file = {
             'filename': 'MongoDB.json',
             'filesize': sys.getsizeof(mongoDB)
@@ -115,14 +116,16 @@ def get_handled_data_list():
 
 @mongo_data_bp.route('/handled-data-file', methods=['POST'])
 def get_handled_data_zipped_file():
-    '''try:
+    data_request = request.get_json(force=True)[0]
+
+    try:
         params = {
-            'datatype': request.get_json()['datatype'],
-            'beginDate': request.get_json()['beginDate'],
-            'endDate': request.get_json()['endDate']
+            'filetype': data_request['filetype'],
+            'beginDate': data_request['beginDate'],
+            'endDate': data_request['endDate']
         }
     except:
-        return jsonify({'error': 'Missing required fields.'})'''
+        return jsonify({'error': 'Missing required fields.'})
 
     # Result
     result = {
@@ -131,16 +134,16 @@ def get_handled_data_zipped_file():
     }
 
     # If MongoDB file has been selected
-    if 'mongodb_file' in request.get_json():
-        if request.get_json()["mongodb_file"]:
+    if 'mongodb_file' in data_request:
+        if data_request["mongodb_file"]:
             # MongoDB data
-            result['MongoDB'] = mongo.get_handled_data()
+            result['MongoDB'] = mongo.get_handled_data(params)
 
     # If InfluxDB file has been selected
-    if 'influxdb_file' in request.get_json():
-        if request.get_json()["influxdb_file"]:
+    if 'influxdb_file' in data_request:
+        if data_request["influxdb_file"]:
             # InfluxDB data
-            result['InfluxDB'] = influxdb.get_handled_data()
+            result['InfluxDB'] = influxdb.get_handled_data(params)
 
     memory_file = io.BytesIO()
     with zipfile.ZipFile(memory_file, 'w') as zip_file:
@@ -175,7 +178,6 @@ def get_handled_data_zipped_file():
     # Position cursor - Necessary to change cursor at the beginning of the file
     memory_file.seek(0)
 
-    # Tests if zip_file in memory is not empty - ZipFile class puts 22 kilobytes by default in zipped memory file
     if memory_file.getbuffer().nbytes > 22:
         return send_file(
             memory_file, 
