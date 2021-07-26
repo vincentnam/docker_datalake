@@ -5,6 +5,7 @@ import base64
 from flask import Blueprint, jsonify, current_app, request, send_from_directory
 from ..services import swift, mongo
 
+
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
 
@@ -47,29 +48,32 @@ def storage():
     other_meta = request.get_json()["othermeta"]
     type_file = request.get_json()["typeFile"]
 
-    data_file = file.split(",")
-    data_file = data_file[1]
-    data_file = base64.b64decode(data_file)
-
     # TODO : see why it was necessary 
 
     #data_file = str(data_file)
     #data_file = data_file.split("'")
     #file_content = ''.join(map(str.capitalize, data_file[1:]))
     
-    file_content = data_file
-
     container_name = "neOCampus"
     mongodb_url = current_app.config['MONGO_URL']
     user = current_app.config['SWIFT_USER']
     key = current_app.config['SWIFT_KEY']
     authurl = current_app.config['SWIFT_AUTHURL']
-    content_type = type_file
+    
     application = None
     data_process = "custom"
     processed_data_area_service = ["MongoDB"]
     other_data = other_meta
     
+    #Split the file to retrieve the data
+    data_file = file.split(",")
+    data_file = data_file[1]
+    #Decode the data
+    data_file = base64.b64decode(data_file)
+        
+    content_type = type_file
+    file_content = data_file
+        
     mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
                         processed_data_area_service, data_process, application,
                         content_type, mongodb_url, other_data)
