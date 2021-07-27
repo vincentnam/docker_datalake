@@ -56,4 +56,8 @@ def create_csv_file(influxdb_result):
     # Export to CSV 
     csv_bytes = df.to_csv().encode('utf-8')
 
-    return csv_bytes
+    # Get nb rows of csv
+    index = df.index
+    number_of_rows = len(index)
+
+    return csv_bytes, number_of_rows

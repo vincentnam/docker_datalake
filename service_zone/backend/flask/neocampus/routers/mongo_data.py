@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, send_file
+from flask import Blueprint, jsonify, request, send_file, escape
 from ..services import mongo, influxdb
 from datetime import datetime
 import json, io, zipfile, time
@@ -13,7 +13,6 @@ def get_metadata():
     try:
         params = {
             'filetype': request.get_json()['filetype'],
-            'datatype': request.get_json()['datatype'],
             'beginDate': request.get_json()['beginDate'],
             'endDate': request.get_json()['endDate']
         }
@@ -80,9 +79,9 @@ def get_handled_data_list():
 
     try:
         params = {
-            'filetype': request.get_json()['filetype'],
-            'beginDate': request.get_json()['beginDate'],
-            'endDate': request.get_json()['endDate']
+            'filetype': request.get_json(force=True)['filetype'],
+            'beginDate': request.get_json(force=True)['beginDate'],
+            'endDate': request.get_json(force=True)['endDate']
         }
     except:
         return jsonify({'error': 'Missing required fields.'})
@@ -90,14 +89,17 @@ def get_handled_data_list():
     # InfluxDB data
     result = {}
 
+    # Get data from different databases (InfluxDB and MongoDB)
     influxDB = influxdb.get_handled_data(params)
-    mongoDB = mongo.get_handled_data(params)
+    mongoDB, mongo_nb_results = mongo.get_handled_data(params)
 
     import sys
-    influxdb_result = influxdb.create_csv_file(influxDB)
+    # Parse InfluxDB response to Pandas DataFrame
+    influxdb_result, number_of_rows_influxdb = influxdb.create_csv_file(influxDB)
+    nb_lines_influxDB = len(list(influxDB))
 
-    # If there is Influx data and filter "Time series" is selected
-    if influxDB and "csv" in params.get('filetype'):
+    # If there is Influx data (> 1 because Header is present at minimum in csv file) and filter "Time series" is selected
+    if number_of_rows_influxdb > 1 and "csv" in params.get('filetype'):
         metadata_influx_file = {
             'filename': 'InfluxDB.csv',
             'filesize': sys.getsizeof(influxdb_result)
@@ -105,7 +107,7 @@ def get_handled_data_list():
         result['influxDB'] = metadata_influx_file
 
     # If there is Mongo data and filter "Images" or "Time series" are selected
-    if mongoDB and ("csv" in params.get('filetype') or "image" in params.get('filetype')):
+    if mongo_nb_results > 0 and ("csv" in params.get('filetype') or "image" in params.get('filetype')):
         metadata_mongo_file = {
             'filename': 'MongoDB.json',
             'filesize': sys.getsizeof(mongoDB)
@@ -133,11 +135,15 @@ def get_handled_data_zipped_file():
         'InfluxDB': {}
     }
 
+    mongo_nb_results = 0
+    number_of_rows_influxdb = 0
+
     # If MongoDB file has been selected
     if 'mongodb_file' in data_request:
         if data_request["mongodb_file"]:
             # MongoDB data
-            result['MongoDB'] = mongo.get_handled_data(params)
+            mongodb_result, mongo_nb_results = mongo.get_handled_data(params)
+            result['MongoDB'] = mongodb_result
 
     # If InfluxDB file has been selected
     if 'influxdb_file' in data_request:
@@ -145,12 +151,15 @@ def get_handled_data_zipped_file():
             # InfluxDB data
             result['InfluxDB'] = influxdb.get_handled_data(params)
 
+            # Parse InfluxDB response to Pandas DataFrame
+            influxdb_result, number_of_rows_influxdb = influxdb.create_csv_file(result['InfluxDB'])
+
     memory_file = io.BytesIO()
     with zipfile.ZipFile(memory_file, 'w') as zip_file:
         files = result
 
         # JSON FILE - MONGODB
-        if(result['MongoDB']):
+        if(mongo_nb_results > 0):
             data = zipfile.ZipInfo("MongoDB.json")
             # Datetime
             data.date_time = time.localtime(time.time())[:6]
@@ -162,18 +171,13 @@ def get_handled_data_zipped_file():
             zip_file.writestr(data, result["MongoDB"])
 
         # CSV FILE - INFLUXDB
-        if(result['InfluxDB']):
+        if(number_of_rows_influxdb > 1):
             data = zipfile.ZipInfo("InfluxDB.csv")
             data.date_time = time.localtime(time.time())[:6]
             data.compress_type = zipfile.ZIP_DEFLATED 
 
-            # Parsing CSV Reader from InfluxDB to Pandas DataFrame 
-            # To make possible CSV Data zipped
-            df = pd.DataFrame(result['InfluxDB'])
-            csv_bytes = df.to_csv().encode('utf-8')
-
             # Writing CSV file into zipped result
-            zip_file.writestr(data, csv_bytes)
+            zip_file.writestr(data, influxdb_result)
 
     # Position cursor - Necessary to change cursor at the beginning of the file
     memory_file.seek(0)

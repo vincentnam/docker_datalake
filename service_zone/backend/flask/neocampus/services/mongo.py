@@ -45,11 +45,6 @@ def get_metadata(db_name, params):
         for item in [dates_query]: 
             dict_query['$and'].append(item) 
 
-    if(params['datatype'] != ""):
-        datatype_query = {"swift_container": params['datatype']}
-        for item in [datatype_query]: 
-            dict_query['$and'].append(item)
-
     metadata = collection.find(dict_query)
 
     if("offset" in params.keys() and "limit" in params.keys()):
@@ -172,12 +167,13 @@ def get_handled_data(params):
         result_query = collection_traitement_historique.find({'creation_date': {'$gte': start, '$lt': end}})
 
     if(collection_name == ""):
-        return {}
+        return {}, 0
 
     # Conversion to a list of dictionaries
     list_cursor = list(result_query)
 
     # JSON Conversion
     json_result = dumps(list_cursor)
+    count = result_query.count()
 
-    return json_result
+    return json_result, count
