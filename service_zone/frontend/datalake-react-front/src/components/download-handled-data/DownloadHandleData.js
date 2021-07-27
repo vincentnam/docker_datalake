@@ -50,7 +50,7 @@ export class DownloadHandleData extends React.Component {
           data: JSON.stringify({
             beginDate: this.state.beginDate,
             endDate: this.state.endDate,
-            filetype: this.state.filetype
+            filetype: this.state.filetype.toString()
           }),
           xhrFields: {
             withCredentials: true
@@ -61,7 +61,6 @@ export class DownloadHandleData extends React.Component {
           type: 'POST',
     
           success: (data) => {
-              console.log(data)
               if(!data.error) {
                 this.setState({
                     elements: data,
@@ -143,22 +142,17 @@ export class DownloadHandleData extends React.Component {
             }
         })
 
-        json_object.filetype = this.state.filetype
+        json_object.filetype = this.state.filetype.toString()
         json_object.beginDate = this.state.beginDate
         json_object.endDate = this.state.endDate
 
         body1.push(json_object)
         var body = JSON.stringify(body1)
 
-        console.log(body)
-
         if(selectedElements.length) {
             this.handleShow();
             api.post('handled-data-file', body, {
-                'responseType': 'blob',
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                }
+                'responseType': 'arraybuffer'
             })
                 .then(function (result) {
                     const url = window.URL.createObjectURL(new Blob([result.data], {type: 'application/zip'}));
@@ -216,7 +210,7 @@ export class DownloadHandleData extends React.Component {
                         </thead>
                         <tbody>
 
-                            { !elts ? <tr> <td colspan='7' class="text-center">Pas de données</td> </tr> : 
+                            { elts == [] || Object.keys(elts).length == 0 ? <tr> <td colspan='7' class="text-center">Pas de données</td> </tr> : 
                                 
                              Object.keys(elts).map(function(key, index){ 
                                 return <RowItem key={index} item={elts[key]} 
