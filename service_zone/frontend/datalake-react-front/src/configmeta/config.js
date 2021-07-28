@@ -10,7 +10,7 @@ export const config = {
         {
             "id": 1,
             "label": "Texte",
-            "type_file_accepted": ["text/plain", "application/csv", "application/vnd.ms-excel"],
+            "type_file_accepted": ["text/plain", "application/csv", "application/vnd.ms-excel", "application/sql"],
             "metadonnees": [
                 {
                     "id": 1,
