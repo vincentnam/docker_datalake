@@ -15,8 +15,11 @@ export class Upload extends React.Component {
                 alert('Format de fichier non accepté.')
             } 
             files.map((file) => { 
-                const typeFile = file.type;
+                let typeFile = file.type;
                 const filename = file.name;
+                if (!typeFile && filename.split('.').pop().toLowerCase() ==="sql") {
+                    typeFile = "application/sql"
+                }
                 if(this.state.type_file_accepted.includes(typeFile) === false) {
                     alert("Format de fichier non accepté.\nVeuillez ajouter un fichier qui correspond à un de ses types : \n" + this.state.type_file_accepted)
                 } else {
@@ -209,7 +212,7 @@ export class Upload extends React.Component {
                             </div>
                             <Metadonnees />
                             <div class="form-group required">
-                                <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} accept="image/*,application/JSON,.csv,text/plain">
+                                <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} accept="image/*,application/JSON,.csv,text/plain,.sql">
                                     {({getRootProps, getInputProps}) => (
                                     <section>
                                         <div {...getRootProps({className: 'drop'})}>
