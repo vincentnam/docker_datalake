@@ -9,6 +9,7 @@ import config
 from services import extract_transform_load_time_series_csv
 from services import extract_transform_load_time_series_json
 from services import extract_transform_load_images
+from services import extract_transform_load_dump_sql
 from services import typefile
 import tempfile
 import base64
@@ -95,6 +96,7 @@ def get_swift_object(*args, **kwargs):
                 process_type = "time_series_csv"
                 # Json parsing
                 processed_data = extract_transform_load_time_series_csv(data_file, swift_container, swift_id, process_type)
+
                 
     # Compare filetype
     if "image/" in content_type :
@@ -109,6 +111,11 @@ def get_swift_object(*args, **kwargs):
         process_type = "time_series_csv"
         # Json parsing
         processed_data = extract_transform_load_time_series_csv(swift_result, swift_container, swift_id, process_type)
+
+    if "application/sql" in content_type:
+        process_type = "sql_dump"
+        # Json parsing
+        processed_data = extract_transform_load_dump_sql(swift_result, swift_container, swift_id, process_type)
 
     # Handled data
     return processed_data
