@@ -9,7 +9,7 @@ export const config = {
         },
         {
             "id": 1,
-            "label": "Texte",
+            "label": "Texte / CSV / Dump SQL",
             "type_file_accepted": ["text/plain", "application/csv", "application/vnd.ms-excel", "application/sql"],
             "metadonnees": [
                 {
@@ -156,7 +156,7 @@ export const config = {
         },
         {
             "id": 8,
-            "label": "Zip",
+            "label": "Archive",
             "type_file_accepted": ["application/x-zip-compressed", "application/x-gzip"],
             "metadonnees": [
                 {

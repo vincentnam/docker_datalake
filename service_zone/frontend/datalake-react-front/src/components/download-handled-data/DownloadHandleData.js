@@ -133,11 +133,11 @@ export class DownloadHandleData extends React.Component {
         let body1 = []
         let json_object = {}
         selectedElements.map(element => {
-            if(element.filename == "MongoDB.json"){
+            if(element.filename == "metadonnees-images-mongodb.json"){
                 json_object.mongodb_file = true
             }
 
-            if(element.filename == "InfluxDB.csv"){
+            if(element.filename == "donnees-serie-temporelle-influxdb.csv"){
                 json_object.influxdb_file = true
             }
         })
@@ -152,7 +152,7 @@ export class DownloadHandleData extends React.Component {
         if(selectedElements.length) {
             this.handleShow();
             api.post('handled-data-file', body, {
-                'responseType': 'arraybuffer'
+                responseType: 'arraybuffer'
             })
                 .then(function (result) {
                     const url = window.URL.createObjectURL(new Blob([result.data], {type: 'application/zip'}));
@@ -186,6 +186,8 @@ export class DownloadHandleData extends React.Component {
             'beginDate': this.state.beginDate,
             'endDate': this.state.endDate
         }
+        let beginDate = this.state.beginDate
+        let endDate = this.state.endDate
         
         return (
             <div>
@@ -206,6 +208,8 @@ export class DownloadHandleData extends React.Component {
                             <tr>
                                 <th scope="col">Nom du fichier</th>
                                 <th scope="col">Taille (en bytes)</th>
+                                <th scope="col">Date de début</th>
+                                <th scope="col">Date de fin</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -215,7 +219,10 @@ export class DownloadHandleData extends React.Component {
                              Object.keys(elts).map(function(key, index){ 
                                 return <RowItem key={index} item={elts[key]} 
                                 handler={handler} 
-                                selectedElements={selectedElements} />
+                                selectedElements={selectedElements}
+                                beginDate={beginDate} 
+                                endDate={endDate}
+                                />
 
                             }) }
                                

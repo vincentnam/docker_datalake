@@ -212,7 +212,7 @@ export class Upload extends React.Component {
                             </div>
                             <Metadonnees />
                             <div class="form-group required">
-                                <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} accept="image/*,application/JSON,.csv,text/plain,.sql">
+                                <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} accept="image/*,application/JSON,.csv,text/plain,.sql,application/x-gzip,application/x-zip-compressed">
                                     {({getRootProps, getInputProps}) => (
                                     <section>
                                         <div {...getRootProps({className: 'drop'})}>
