@@ -27,11 +27,14 @@ export class RowItem extends React.Component {
     }
 
     render() {
-
+        let beginDate = this.props.beginDate
+        let endDate = this.props.endDate
         return(
             <tr>
                 <td scope="row">{ this.props.item.filename }</td>
                 <td>{ this.props.item.filesize }</td>
+                <td>{ beginDate }</td>
+                <td>{ endDate }</td>
                 <td>
                     <div class="form-check">
                         <input class="form-check-input" onChange={this.handleChange} checked={this.isSelected()} type="checkbox" value="" id="flexCheckDefault" />

@@ -152,20 +152,6 @@ def get_handled_data(params):
         # Query result (Cursor object)
         result_query = collection_traitement_historique.find({'creation_date': {'$gte': start, '$lt': end}},{"content_image":False})
 
-    # Time series CSV -> data_historique database
-    if("csv" in params.get('filetype')):
-         # Database "data_historique"
-        mongo_database = mongo_client.data_historique
-
-        # Collection "traitement_historique"
-        collection_name = "traitement_historique" 
-
-         # Collection "traitement_historique"
-        collection_traitement_historique = mongo_database[collection_name]
-
-        # Query result (Cursor object)
-        result_query = collection_traitement_historique.find({'creation_date': {'$gte': start, '$lt': end}})
-
     if(collection_name == ""):
         return {}, 0
 

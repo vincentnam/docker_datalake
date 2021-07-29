@@ -101,15 +101,15 @@ def get_handled_data_list():
     # If there is Influx data (> 1 because Header is present at minimum in csv file) and filter "Time series" is selected
     if number_of_rows_influxdb > 1 and "csv" in params.get('filetype'):
         metadata_influx_file = {
-            'filename': 'InfluxDB.csv',
+            'filename': 'donnees-serie-temporelle-influxdb.csv',
             'filesize': sys.getsizeof(influxdb_result)
         }
         result['influxDB'] = metadata_influx_file
 
     # If there is Mongo data and filter "Images" or "Time series" are selected
-    if mongo_nb_results > 0 and ("csv" in params.get('filetype') or "image" in params.get('filetype')):
+    if mongo_nb_results > 0 and "image" in params.get('filetype'):
         metadata_mongo_file = {
-            'filename': 'MongoDB.json',
+            'filename': 'metadonnees-images-mongodb.json',
             'filesize': sys.getsizeof(mongoDB)
         }
         result['MongoDB'] = metadata_mongo_file
@@ -160,7 +160,7 @@ def get_handled_data_zipped_file():
 
         # JSON FILE - MONGODB
         if(mongo_nb_results > 0):
-            data = zipfile.ZipInfo("MongoDB.json")
+            data = zipfile.ZipInfo("metadonnees-images-mongodb.json")
             # Datetime
             data.date_time = time.localtime(time.time())[:6]
 
@@ -172,7 +172,7 @@ def get_handled_data_zipped_file():
 
         # CSV FILE - INFLUXDB
         if(number_of_rows_influxdb > 1):
-            data = zipfile.ZipInfo("InfluxDB.csv")
+            data = zipfile.ZipInfo("donnees-serie-temporelle-influxdb.csv")
             data.date_time = time.localtime(time.time())[:6]
             data.compress_type = zipfile.ZIP_DEFLATED 
 
