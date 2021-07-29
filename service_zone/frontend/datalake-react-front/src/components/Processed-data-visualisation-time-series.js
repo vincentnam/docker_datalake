@@ -3,7 +3,7 @@ import { Header } from './Header';
 import { Filters } from './processed-data/Filters';
 import { DataVisiualisation } from './processed-data/data-visualisation';
 
-export class ProcessedDataVisualisation extends React.Component {
+export class ProcessedDataVisualisationTimeSeries extends React.Component {
     constructor(props) {
         super(props);
         this.state = {

@@ -18,15 +18,6 @@ export class Home extends React.Component {
                         <div class="col-sm-4">
                             <div class="card border-dark mb-3">
                                 <div class="card-body">
-                                    <h5 class="card-title">Data Visualization</h5>
-                                    <p class="card-text">Partie data visualization des données traitées du Datalake.</p>
-                                    <a href="/data-visualization" class="btn btn-outline-primary">Accéder</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-4">
-                            <div class="card border-dark mb-3">
-                                <div class="card-body">
                                     <h5 class="card-title">Download Raw Data</h5>
                                     <p class="card-text">Téléchargement des données brutes du Datalake.</p>
                                     <a href="/download" class="btn btn-outline-primary">Accéder</a>
@@ -47,7 +38,7 @@ export class Home extends React.Component {
                                 <div class="card-body">
                                     <h5 class="card-title">Datavisualisation data processed Time Series</h5>
                                     <p class="card-text">Partie visualisation des données traitées time series.</p>
-                                    <a href="/data-processed-visualisation" class="btn btn-outline-primary">Accéder</a>
+                                    <a href="/data-processed-visualisation-time-series" class="btn btn-outline-primary">Accéder</a>
                                 </div>
                             </div>
                         </div>
