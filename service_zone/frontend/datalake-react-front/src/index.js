@@ -4,7 +4,7 @@ import './index.css';
 import reportWebVitals from './reportWebVitals';
 import 'bootstrap/dist/css/bootstrap.css';
 import { Home } from './components/Home';
-import { ProcessedDataVisualisation } from './components/Processed-data-visualisation';
+import { ProcessedDataVisualisationTimeSeries } from './components/Processed-data-visualisation-time-series';
 import { Upload } from './components/Upload';
 import {
   BrowserRouter as Router,
@@ -19,8 +19,8 @@ ReactDOM.render(
     <Router>
       <div>
         <Switch>
-          <Route path="/data-processed-visualisation">
-            <ProcessedDataVisualisation />
+          <Route path="/data-processed-visualisation-time-series">
+            <ProcessedDataVisualisationTimeSeries />
           </Route>
           <Route path="/download">
             <Download />

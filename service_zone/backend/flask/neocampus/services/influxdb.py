@@ -9,7 +9,7 @@ def get_handled_data(params):
     org = current_app.config['INFLUXDB_ORG']
 
     # Connection to InfluxDB database
-    client = InfluxDBClient(url=current_app.config['INFLUX_URL'], token=token, debug=True)
+    client = InfluxDBClient(url=current_app.config['INFLUXDB_URL'], token=token, debug=True)
 
     # Query
     query_api = client.query_api()
