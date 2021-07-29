@@ -103,7 +103,7 @@ def get_swift_object(*args, **kwargs):
     if "application/json" in content_type:
         process_type = "time_series_json"
         # Json parsing
-        processed_data = extract_transform_load_time_series_json(swift_result)
+        processed_data = extract_transform_load_time_series_json(swift_result, swift_container, swift_id, process_type)
 
     if "application/vnd.ms-excel" in content_type:
         process_type = "time_series_csv"
