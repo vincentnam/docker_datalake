@@ -1,3 +1,4 @@
+import sys
 import MySQLdb
 import config
 
