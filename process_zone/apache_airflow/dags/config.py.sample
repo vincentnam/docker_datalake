@@ -18,3 +18,9 @@ org_influxdb = ""
 bucket_influxdb = ""
 url_influxdb = "http://127.0.0.1:8086"
 influxdb_measurement = "value_units"
+
+# MariaDB
+mariadb_host=""
+mariadb_user=""
+mariadb_passwd=""
+mariadb_database=""
