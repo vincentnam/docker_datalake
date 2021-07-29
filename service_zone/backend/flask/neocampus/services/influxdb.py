@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 
 def get_handled_data(params):
     #Connection Influxdb
-    token = "zQZd3Q-5sV0jKKFCXKMoSYd1AqK0HjMX8UFEueLa5lIa76uNch4hsISB0mvL_USZMuhp-rtg9HDOBYv3OpNpuQ=="
-    org = "modis"
+    token = current_app.config['INFLUXDB_TOKEN']
+    org = current_app.config['INFLUXDB_ORG']
 
     # Connection to InfluxDB database
     client = InfluxDBClient(url=current_app.config['INFLUX_URL'], token=token, debug=True)
@@ -61,3 +61,11 @@ def create_csv_file(influxdb_result):
     number_of_rows = len(index)
 
     return csv_bytes, number_of_rows
+
+#Function for connection to influxdb
+def connection_inflxdb():
+    token = current_app.config['INFLUXDB_TOKEN']
+    url = current_app.config['INFLUXDB_URL']
+    org = current_app.config['INFLUXDB_ORG']
+    client = InfluxDBClient(url=url, token=token, debug=True)
+    return client, org;
