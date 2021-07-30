@@ -17,7 +17,7 @@ def extract_transform_load_images(swift_result, swift_container, swift_id, proce
     
     # Décodage de l'image
     #image = str(swift_result,'utf-8')
-    image = str(image)
+    image = str(swift_result)
     image = image.split("'")
     image = ''.join(map(str.capitalize, image[1:]))
     #URL Mongo
