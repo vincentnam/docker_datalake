@@ -74,6 +74,9 @@ export class Graph extends React.Component {
             x: "_time",
             y: "_value",
             fill: ["_measurement", "topic"],
+            lineWidth: 2,
+            colors: ['cyan'],
+            
         };
 
         const table = newTable(this.numberData())
@@ -84,7 +87,7 @@ export class Graph extends React.Component {
 
         const config = {
             table,
-            layers: [lineLayer]
+            layers: [lineLayer],
         };
         return (
             <div style={style}>
