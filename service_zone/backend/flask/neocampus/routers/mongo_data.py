@@ -19,6 +19,9 @@ def get_metadata():
     except:
         return jsonify({'error': 'Missing required fields.'})
 
+    if(params.get('filetype') == ""):
+            return jsonify({'error': 'Missing required fields.'})
+
     if(("limit" in request.get_json() and "offset" not in request.get_json()) or ("limit" not in request.get_json() and "offset" in request.get_json())):
         return jsonify({'error': 'Limit and offset have to be sent together.'})
 
