@@ -81,36 +81,22 @@ def get_data_time_series():
     topic = request.get_json()["topic"]
     startDate = request.get_json()["startDate"]
     endDate = request.get_json()["endDate"]
-    status = request.get_json()["status"]
     # Execute the query
-    all_topics = {
-        "dataTimeSeries": [],
-        "dataTimeSeriesGraph": []
-    }
     query_api = client.query_api()
-    if status == "table":
-        limit = request.get_json()["limit"]
-        offset = request.get_json()["offset"]
-        print(limit, offset)
-        resultTable = query_api.query_data_frame(f'''
-        from(bucket: \"{bucket}\") 
-            |> range(start: {startDate}, stop: {endDate})
-            |> filter(fn: (r) => r["_measurement"] == \"{measurement}\" and r["topic"] == \"{topic}\")
-            |> limit(n: {limit},offset: {offset})
-            |> group(columns: ["_time"])
-        ''', org=org)
-        #Dataframe to json format
-        data = resultTable.to_json(orient="index")
-        data = json.loads(data)
-        all_topics["dataTimeSeries"] = [data]
-    else:
-        result = query_api.query_data_frame(f'''
-        from(bucket: \"{bucket}\") 
-            |> range(start: {startDate}, stop: {endDate})
-            |> filter(fn: (r) => r["_measurement"] == \"{measurement}\" and r["topic"] == \"{topic}\")
-            |> group(columns: ["_time"])
-        ''', org=org)
-        dataGraph = result.to_json()
-        dataGraph = json.loads(dataGraph)
-        all_topics["dataTimeSeriesGraph"] = [dataGraph]
+    result = query_api.query_data_frame(f'''
+    from(bucket: \"{bucket}\")
+        |> range(start: {startDate}, stop: {endDate})
+        |> filter(fn: (r) => r["_measurement"] == \"{measurement}\" and r["topic"] == \"{topic}\")
+        |> group(columns: ["_time"])
+    ''', org=org)
+    
+    #Dataframe to json format
+    data = result.to_json(orient="index")
+    data = json.loads(data)
+    dataGraph = result.to_json()
+    dataGraph = json.loads(dataGraph)
+    all_topics = {
+        "dataTimeSeries": [data],
+        "dataTimeSeriesGraph": [dataGraph]
+    }
     return jsonify(all_topics)

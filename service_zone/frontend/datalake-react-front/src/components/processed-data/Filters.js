@@ -127,37 +127,28 @@ export class Filters extends React.Component {
                 topic: this.state.topic,
                 startDate: moment(start).format('X'),
                 endDate: moment(end).format('X'),
-                status: "graph",
             })
                 .then((response) => {
+                    let result = [];
+                    for (const [key, value] of Object.entries(response.data.dataTimeSeries[0])) {
+                        result.push(value);
+                    }
+                    let data = []
+                    result.map((dt) => {
+                        data.push({
+                            _time: moment.unix(dt._time / 1000).format("DD/MM/YYYY HH:mm:ss"),
+                            _value: dt._value,
+                            _measurement: dt._measurement,
+                            topic: dt.topic,
+                        })
+                    });
+                    this.props.data(data);
                     this.props.dataGraph(response.data.dataTimeSeriesGraph[0]);
 
                 })
                 .catch(function (error) {
                     console.log(error);
                 });
-            api.post('dataTimeSeries', {
-                bucket: this.state.bucket,
-                measurement: this.state.measurement,
-                topic: this.state.topic,
-                startDate: moment(start).format('X'),
-                endDate: moment(end).format('X'),
-                offset: 0,
-                limit: 100,
-                status: "table",
-            })
-                .then((response) => {
-                    const result = [];
-                    for (const [key, value] of Object.entries(response.data.dataTimeSeries[0])) {
-                        result.push(value);
-                    }
-                    console.log(result);
-                    this.props.data(result);
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
-
         }
     }
     render() {
@@ -167,7 +158,7 @@ export class Filters extends React.Component {
             ));
             return (
                 <select value={this.state.bucket} onChange={this.handleChange} multiple={false} name="bucket" class="form-control">
-                    <option key="" value="">Veuillez sélecter un bucket</option>
+                    <option key="" value="">Veuillez sélectionner un bucket</option>
                     {listBuckets}
                 </select>
             );
@@ -179,7 +170,7 @@ export class Filters extends React.Component {
             ));
             return (
                 <select value={this.state.measurement} onChange={this.handleChange} multiple={false} name="measurement" class="form-control">
-                    <option key="" value="">Veuillez sélecter un measurement</option>
+                    <option key="" value="">Veuillez sélectionner un measurement</option>
                     {listMeasurements}
                 </select>
             );
@@ -190,7 +181,7 @@ export class Filters extends React.Component {
             ));
             return (
                 <select value={this.state.topic} onChange={this.handleChange} multiple={false} name="topic" class="form-control">
-                    <option key="" value="">Veuillez sélecter un topic</option>
+                    <option key="" value="">Veuillez sélectionner un topic</option>
                     {listTopics}
                 </select>
             );
