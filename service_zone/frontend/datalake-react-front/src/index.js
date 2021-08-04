@@ -19,7 +19,7 @@ ReactDOM.render(
     <Router>
       <div>
         <Switch>
-          <Route path="/data-processed-visualisation-time-series">
+          <Route path="/data-processed-visualization">
             <ProcessedDataVisualisationTimeSeries />
           </Route>
           <Route path="/download">
