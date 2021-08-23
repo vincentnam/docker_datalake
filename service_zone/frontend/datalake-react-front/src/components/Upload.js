@@ -202,7 +202,7 @@ export class Upload extends React.Component {
         return(
             <div>
                 <Header />
-                <div class="p-4">
+                <div class="container">
                     <div class="jumbotron">
                         <h2 class="display-4 text-center">Upload de données</h2>
                         <form onSubmit={this.handleSubmit}>

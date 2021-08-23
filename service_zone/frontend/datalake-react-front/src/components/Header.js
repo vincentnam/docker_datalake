@@ -4,29 +4,28 @@ import logo from '../logo_datalake.png'
 export class Header extends React.Component {
     render() {
         return (
-            <div class="header">
-                <div class="header_nav" />
-                <div class="header_links">
-                    <span class="datalake_link">
-                        <a href="/">Datalake</a>
-                    </span>
-                    <span class="upload_link">
-                        <a href="/upload">Upload</a>
-                    </span>
-                    <span class="homepage_link">
-                        <a href="/">Home</a>
-                    </span>
-                    <span class="download_link">
-                        <a href="/download">Download</a>
-                    </span>
-                    <span class="datavisualization_link">
-                        <a href="/data-processed-visualization">Data Visualization</a>
-                    </span>
+            <nav className="navbar navbar-expand-lg navbar-dark">
+                <div className="container">
+                    <a className="navbar-brand" href="/"><img src={logo}></img></a>
+                    <a href="/" className="navbar-brand-text">Datalake</a>
+                    <button className="navbar-toggler" type="button" data-toggle="collapse"
+                            data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup"
+                            aria-expanded="false"
+                            aria-label="Toggle navigation">
+                        <span className="navbar-toggler-icon"></span>
+                    </button>
+                    <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
+                        <div className="navbar-nav">
+                            <a className="nav-item nav-link " href="/">Home</a>
+                            <a className="nav-item nav-link active" href="/upload">Upload</a>
+                            <a className="nav-item nav-link" href="/download">Download</a>
+                            <a className="nav-item nav-link" href="/data-processed-visualization">
+                                Data Visualization
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <div class="datalake_logo">
-                    <img src={logo}></img>
-                </div>
-            </div>
+            </nav>
         );
     }
 }
