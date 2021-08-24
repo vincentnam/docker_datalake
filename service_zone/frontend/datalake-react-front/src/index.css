@@ -24,13 +24,7 @@ code {
     monospace;
 }
 
-.drop {
-  border: 2px dashed;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 5em;
-}
+
 
 .commentBox {
   width: 100%;

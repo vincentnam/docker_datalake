@@ -1,5 +1,78 @@
+body {
+    background-color: #E5E5E5;
+}
+
 @media (min-width: 1300px) {
     .container {
         max-width: 1246px;
     }
+}
+
+.main-upload .title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 55px auto;
+}
+
+.jumbotron {
+    background-color: #ffffff;
+    padding: 39px 22px;
+}
+
+.main-upload label {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.main-upload .meta-label {
+    color: #9b9c9b;
+}
+
+.main-upload ul {
+    list-style: none;
+    padding: 0;
+}
+
+.main-upload .supprimer {
+    font-size: 16px;
+    font-weight: 400;
+    color: #EB5757;
+    text-decoration: underline;
+}
+
+.main-upload .supprimer span {
+    margin-right: 12px;
+}
+
+.main-upload .filesize {
+    color: #A2A2A3;
+    margin-left: 30px;
+    font-size: 16px;
+}
+
+.drop {
+    border: 1px dashed #DCDEDF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 58px;
+    color: #898989;
+}
+
+.drop u {
+    color: #14213D;
+
+}
+
+.btn-oran {
+    background-color: #ea973b;
+    color: #ffffff;
+    border-radius: 50rem;
+    padding: 10px 40px;
+}
+
+.btn-oran:hover {
+    background-color: #e58419;
+    color: #ffffff;
 }

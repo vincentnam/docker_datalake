@@ -2,7 +2,7 @@ export const config_processed_data = {
     "types": [
         {
             "id": 0,
-            "label": "Veuillez choisir votre type de métadonnée ...",
+            "label": "Sélectionnez un type de fichier",
             "type_file_accepted": [],
             "metadonnees": [
             ]
