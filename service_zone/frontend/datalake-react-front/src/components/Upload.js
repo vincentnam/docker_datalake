@@ -161,11 +161,9 @@ export class Upload extends React.Component {
         const files = this.state.files.map(file => (
             <li key={file.name}>
                 {file.name} <span className="filesize">{filesize(file.size)}</span>
-
-                <button type="button" onClick={this.removeSelectedFile} class="close text-danger" aria-label="Close">
-                    <div className="supprimer"><span aria-hidden="true">Supprimer</span><img src="/images/trash.svg"/>
-                    </div>
-                </button>
+                <div className="supprimer" onClick={this.removeSelectedFile}>
+                    <span aria-hidden="true">Supprimer</span><img src="/images/trash.svg"/>
+                </div>
             </li>
         ));
 
@@ -197,7 +195,7 @@ export class Upload extends React.Component {
                 )
             ));
             return (
-                <select value={this.state.type} onChange={this.handleChange} name="type" class="form-control">
+                <select value={this.state.type} onChange={this.handleChange} name="type" class="form-select">
                     {listTypes}
                 </select>
             );
@@ -246,7 +244,7 @@ export class Upload extends React.Component {
                                     )}
                                 </Dropzone>
                             </div>
-                            <div className="row justify-content-center">
+                            <div className="d-md-flex justify-content-center">
                                 <button type="submit" className="btn btn-oran">Upload le fichier</button>
                             </div>
                         </form>

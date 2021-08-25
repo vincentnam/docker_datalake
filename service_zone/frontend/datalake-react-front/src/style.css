@@ -38,6 +38,9 @@ body {
     font-weight: 400;
     color: #EB5757;
     text-decoration: underline;
+    border: none;
+    cursor: pointer;
+    float: right;
 }
 
 .main-upload .supprimer span {
