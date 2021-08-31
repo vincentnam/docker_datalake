@@ -34,8 +34,8 @@ export class Header extends React.Component {
                 <div className="container">
                     <a className="navbar-brand" href="/"><img src="images/logo-datalake.svg" alt="neOCampus"/></a>
                     <a href="/" className="navbar-brand-text">Datalake</a>
-                    <button className="navbar-toggler" type="button" data-toggle="collapse"
-                            data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup"
+                    <button className="navbar-toggler" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup"
                             aria-expanded="false"
                             aria-label="Toggle navigation">
                         <span className="navbar-toggler-icon"/>
