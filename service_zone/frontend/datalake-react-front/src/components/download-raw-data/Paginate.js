@@ -16,22 +16,22 @@ export class Paginate extends React.Component {
                 { this.props.elts.length ? 
                     <div class="commentBox">
                             <ReactPaginate
-                                previousLabel={'previous'}
-                                nextLabel={'next'}
+                                previousLabel={'<'}
+                                nextLabel={'>'}
                                 breakLabel={'...'}
                                 pageCount={this.props.pageCount}
                                 marginPagesDisplayed={2}
                                 pageRangeDisplayed={5}
                                 onPageChange={this.props.handlePageClick}
                                 activeClassName={'active'}
-                                breakClassName={'page-item break-me'}
+                                breakClassName={'page-item break-me d-md-flex'}
                                 breakLinkClassName={'page-link'}
-                                containerClassName={'pagination row justify-content-md-center'}
-                                pageClassName={'page-item'}
+                                containerClassName={'pagination'}
+                                pageClassName={'page-item d-md-flex'}
                                 pageLinkClassName={'page-link'}
-                                previousClassName={'page-item'}
+                                previousClassName={'page-item d-md-flex'}
                                 previousLinkClassName={'page-link'}
-                                nextClassName={'page-item'}
+                                nextClassName={'page-item d-md-flex'}
                                 nextLinkClassName={'page-link'}
                                 forcePage={this.props.selected}
                             />

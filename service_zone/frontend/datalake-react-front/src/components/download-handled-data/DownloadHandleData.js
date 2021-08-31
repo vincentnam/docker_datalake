@@ -191,8 +191,7 @@ export class DownloadHandleData extends React.Component {
         
         return (
             <div>
-                <Header />
-                <Filters 
+                <Filters
                     setFiletype={this.setFiletype} 
                     setBeginDate={this.setBeginDate}
                     setEndDate={this.setEndDate}

@@ -1,11 +1,11 @@
 /* Header links */
 
-a {
+.navbar a {
     color: rgba(255, 255, 255, 1) !important;
     text-decoration: none !important;
 }
 
-a:hover {
+.navbar a:hover {
     color: #EA973B !important;
 }
 
