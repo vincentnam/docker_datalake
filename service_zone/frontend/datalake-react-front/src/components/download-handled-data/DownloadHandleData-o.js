@@ -15,31 +15,78 @@ export class DownloadHandleData extends React.Component {
     constructor(props) {
         super(props);
 
-        // Bind the this context to the handler function
         this.handler = this.handler.bind(this);
-        this.validate = this.validate.bind(this)
         this.setFiletype = this.setFiletype.bind(this);
         this.setBeginDate = this.setBeginDate.bind(this);
         this.setEndDate = this.setEndDate.bind(this);
         this.validateFilters = this.validateFilters.bind(this)
-        this.handleShow = this.handleShow.bind(this);
-        this.handleClose = this.handleClose.bind(this)
+        this.validate = this.validate.bind(this)
 
-        // Set some state
         this.state = {
             selectedElements: [],
             elements: {},
-            offset: 0,
             filetype: '',
             beginDate: moment().format('Y-MM-DD'),
             endDate: moment().format('Y-MM-DD'),
-            loading: false,
-            perPage: 10
-        };
+        }
+    }
+
+    handleClose() {
+        this.setState({
+            loading: false
+        })
+    }
+
+    handleShow() {
+        this.setState({
+            loading: true
+        })
+    }
+
+    loadHandledDataFromServer() {
+        this.handleShow()
+        $.ajax({
+            url: this.url + '/handled-data-list',
+            data: JSON.stringify({
+                beginDate: this.state.beginDate,
+                endDate: this.state.endDate,
+                filetype: this.state.filetype.toString()
+            }),
+            xhrFields: {
+                withCredentials: true
+            },
+            crossDomain: true,
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            type: 'POST',
+
+            success: (data) => {
+                if (!data.error) {
+                    this.setState({
+                        elements: data,
+                        pageCount: Math.ceil(data.length / this.perPage),
+                    });
+                }
+            },
+
+            error: (xhr, status, err) => {
+                console.error(this.url, status, err.toString()); // eslint-disable-line
+            },
+
+            complete: () => {
+                this.handleClose()
+            }
+        });
     }
 
     getSelectedElements() {
         return this.state.selectedElements;
+    }
+
+    emptySelectedlements() {
+        this.setState({
+            selectedElements: []
+        })
     }
 
     handler(selectedElements, event) {
@@ -55,6 +102,29 @@ export class DownloadHandleData extends React.Component {
 
         this.setState({
             selectedElements: selectedElementsTemp
+        })
+    }
+
+    setFiletype(value) {
+        let filetype = value;
+        return this.setState({filetype: filetype})
+    }
+
+    setBeginDate(value) {
+        let beginDate = value;
+        return this.setState({beginDate: beginDate})
+    }
+
+    setEndDate(value) {
+        let endDate = value;
+        return this.setState({endDate: endDate})
+    }
+
+    validateFilters() {
+        this.setState({
+            offset: 0
+        }, () => {
+            this.loadHandledDataFromServer();
         })
     }
 
@@ -105,106 +175,6 @@ export class DownloadHandleData extends React.Component {
         }
     }
 
-    handleClose() {
-        this.setState({
-            loading: false
-        })
-    }
-
-    handleShow() {
-        this.setState({
-            loading: true
-        })
-    }
-
-    emptySelectedlements() {
-        this.setState({
-            selectedElements: []
-        })
-    }
-
-    componentDidMount() {
-        this.loadObjectsFromServer();
-    }
-
-    handlePageClick = (data) => {
-        let selected = data.selected;
-        let offset = Math.ceil(selected * this.state.perPage);
-
-        this.setState({offset: offset}, () => {
-            this.loadObjectsFromServer();
-        });
-    };
-
-    handleChangePerPage = (event) => {
-        let selectedPerPage = parseInt(event.target.value);
-        this.setState({perPage: selectedPerPage}, () => {
-            this.loadObjectsFromServer();
-        });
-    };
-
-    loadObjectsFromServer() {
-        this.handleShow()
-        $.ajax({
-            url: this.url + '/handled-data-list',
-            data: JSON.stringify({
-                limit: this.state.perPage,
-                offset: this.state.offset,
-                filetype: this.state.filetype.toString(),
-                beginDate: this.state.beginDate,
-                endDate: this.state.endDate
-            }),
-            xhrFields: {
-                withCredentials: true
-            },
-            crossDomain: true,
-            contentType: 'application/json; charset=utf-8',
-            dataType: 'json',
-            type: 'POST',
-
-            success: (data) => {
-                if (!data.error) {
-                    this.setState({
-                        elements: data,
-                        totalLength: Object.keys(data).length,
-                        pageCount: Math.ceil(Object.keys(data).length / this.state.perPage),
-                    });
-                }
-            },
-
-            error: (xhr, status, err) => {
-                console.error(this.url, status, err.toString()); // eslint-disable-line
-            },
-
-            complete: () => {
-                this.handleClose()
-            }
-        });
-    }
-
-    setFiletype(value) {
-        let filetype = value;
-        return this.setState({filetype: filetype})
-    }
-
-    setBeginDate(value) {
-        let beginDate = value;
-        return this.setState({beginDate: beginDate})
-    }
-
-    setEndDate(value) {
-        let endDate = value;
-        return this.setState({endDate: endDate})
-    }
-
-    validateFilters() {
-        this.setState({
-            offset: 0
-        }, () => {
-            this.loadObjectsFromServer();
-        })
-    }
-
     render() {
 
         let elts = []
@@ -213,10 +183,6 @@ export class DownloadHandleData extends React.Component {
         }
         let selectedElements = this.getSelectedElements()
         let handler = this.handler
-        let setFiletype = this.setFiletype
-        let setBeginDate = this.setBeginDate
-        let setEndDate = this.setEndDate
-        let validateFilters = this.validateFilters
         let filterData = {
             'filetype': this.state.filetype,
             'beginDate': this.state.beginDate,
@@ -224,18 +190,18 @@ export class DownloadHandleData extends React.Component {
         }
         let beginDate = this.state.beginDate
         let endDate = this.state.endDate
-        let loading = this.state.loading
 
         return (
             <div>
                 <Filters
-                    setFiletype={setFiletype}
-                    setBeginDate={setBeginDate}
-                    setEndDate={setEndDate}
-                    validateFilters={validateFilters}
+                    setFiletype={this.setFiletype}
+                    setBeginDate={this.setBeginDate}
+                    setEndDate={this.setEndDate}
+                    validateFilters={this.validateFilters}
                     data={filterData}
                     title={this.title}
                 />
+
                 <div className="download-detail">
                     <div className="row">
                         <div className="col text-left">Résultats trouvés <span>{this.state.totalLength}</span></div>
@@ -252,7 +218,6 @@ export class DownloadHandleData extends React.Component {
                         <table className="table">
                             <thead>
                             <tr>
-                                <th scope="col"></th>
                                 <th scope="col">Nom du fichier</th>
                                 <th scope="col">Taille (en bytes)</th>
                                 <th scope="col">Date de début</th>
@@ -261,10 +226,10 @@ export class DownloadHandleData extends React.Component {
                             </thead>
                             <tbody>
 
-                            {elts == [] || Object.keys(elts).length == 0 ?
-                                <tr>
-                                    <td colSpan='7' className="text-center">Pas de données</td>
+                            {elts == [] || Object.keys(elts).length == 0 ? <tr>
+                                    <td colspan='7' className="text-center">Pas de données</td>
                                 </tr> :
+
                                 Object.keys(elts).map(function (key, index) {
                                     return <RowItem key={index} item={elts[key]}
                                                     handler={handler}
@@ -272,18 +237,16 @@ export class DownloadHandleData extends React.Component {
                                                     beginDate={beginDate}
                                                     endDate={endDate}
                                     />
+
                                 })}
+
                             </tbody>
                         </table>
-                        <div className="p-4">
-                            {Object.keys(elts).length ?
-                                <div className="col-12 text-center">
-                                    <button className="btn btn-darkblue" onClick={this.validate} type="submit">
-                                        Télécharger
-                                    </button>
-                                </div>
-                                : ''}
-                        </div>
+                        {Object.keys(elts).length ?
+                            <div className="col-12 text-center">
+                                <button className="btn btn-primary" onClick={this.validate} type="submit">Download</button>
+                            </div>
+                            : ''}
                         <Paginate
                             elts={elts}
                             handlePageClick={this.handlePageClick}
@@ -295,7 +258,8 @@ export class DownloadHandleData extends React.Component {
 
                 <LoadingSpinner loading={this.state.loading}/>
 
+
             </div>
-        );
+        )
     }
 }

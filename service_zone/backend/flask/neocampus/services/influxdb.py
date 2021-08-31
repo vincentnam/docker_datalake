@@ -33,7 +33,7 @@ def get_handled_data(params):
     All informations above have been copied from InfluxDB UI : Telegraf 
     """
     csv_result = query_api.query_csv(
-        '''from(bucket:"test2")  
+        f'''from(bucket:"{current_app.config['INFLUXDB_BUCKET']}")  
         |> range(start: begin_date, stop: end_date)''',
         dialect=Dialect(
             header=True, 

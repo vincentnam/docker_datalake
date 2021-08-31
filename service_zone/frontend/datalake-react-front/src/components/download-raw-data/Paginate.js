@@ -14,7 +14,7 @@ export class Paginate extends React.Component {
         return (
             <div>
                 { this.props.elts.length ? 
-                    <div class="commentBox">
+                    <div className="commentBox">
                             <ReactPaginate
                                 previousLabel={'<'}
                                 nextLabel={'>'}
