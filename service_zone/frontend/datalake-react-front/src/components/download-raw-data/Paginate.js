@@ -25,14 +25,14 @@ export class Paginate extends React.Component {
                                 onPageChange={this.props.handlePageClick}
                                 activeClassName={'active'}
                                 breakClassName={'page-item break-me d-md-flex'}
-                                breakLinkClassName={'page-link'}
+                                breakLinkClassName={'page-link btn'}
                                 containerClassName={'pagination'}
                                 pageClassName={'page-item d-md-flex'}
-                                pageLinkClassName={'page-link'}
+                                pageLinkClassName={'page-link btn'}
                                 previousClassName={'page-item d-md-flex'}
-                                previousLinkClassName={'page-link'}
+                                previousLinkClassName={'page-link btn'}
                                 nextClassName={'page-item d-md-flex'}
-                                nextLinkClassName={'page-link'}
+                                nextLinkClassName={'page-link btn'}
                                 forcePage={this.props.selected}
                             />
                     </div>

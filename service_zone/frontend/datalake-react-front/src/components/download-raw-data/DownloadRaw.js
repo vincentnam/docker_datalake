@@ -10,7 +10,6 @@ import {LoadingSpinner} from "../utils/LoadingSpinner";
 
 export class DownloadRaw extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
-    perPage = 6
     title = 'Affichage des données brutes'
 
     constructor(props) {
@@ -34,7 +33,8 @@ export class DownloadRaw extends React.Component {
             filetype: '',
             beginDate: moment().format('Y-MM-DD'),
             endDate: moment().format('Y-MM-DD'),
-            loading: false
+            loading: false,
+            perPage: 10
         };
     }
 
@@ -116,9 +116,16 @@ export class DownloadRaw extends React.Component {
 
     handlePageClick = (data) => {
         let selected = data.selected;
-        let offset = Math.ceil(selected * this.perPage);
+        let offset = Math.ceil(selected * this.state.perPage);
 
         this.setState({offset: offset}, () => {
+            this.loadObjectsFromServer();
+        });
+    };
+
+    handleChangePerPage = (event) => {
+        let selectedPerPage = parseInt(event.target.value);
+        this.setState({perPage: selectedPerPage}, () => {
             this.loadObjectsFromServer();
         });
     };
@@ -128,7 +135,7 @@ export class DownloadRaw extends React.Component {
         $.ajax({
             url: this.url + '/raw-data',
             data: JSON.stringify({
-                limit: this.perPage,
+                limit: this.state.perPage,
                 offset: this.state.offset,
                 filetype: this.state.filetype,
                 beginDate: this.state.beginDate,
@@ -146,7 +153,8 @@ export class DownloadRaw extends React.Component {
                 if (data.result) {
                     this.setState({
                         elements: data.result.objects,
-                        pageCount: Math.ceil(data.result.length / this.perPage),
+                        totalLength: data.result.length,
+                        pageCount: Math.ceil(data.result.length / this.state.perPage),
                     });
                 }
             },
@@ -215,13 +223,21 @@ export class DownloadRaw extends React.Component {
                 />
                 <div className="download-detail">
                     <div className="row">
-                        <div className="col text-left">Résultats trouvés <span>xx</span></div>
-                        <div className="col text-end">Items par page</div>
+                        <div className="col text-left">Résultats trouvés <span>{this.state.totalLength}</span></div>
+                        <div className="col text-end per-page">
+                            <label>Items par page</label>
+                            <select id="per-page-sel" onChange={this.handleChangePerPage}>
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                            </select>
+                        </div>
                     </div>
                     <div className="grid mt5 shadow-sm">
                         <table className="table">
                             <thead>
                             <tr>
+                                <th scope="col"></th>
                                 <th scope="col">Id objet Swift</th>
                                 <th scope="col">Container Swift</th>
                                 <th scope="col">Type de fichier</th>
@@ -230,7 +246,6 @@ export class DownloadRaw extends React.Component {
                                 <th scope="col">Meta 1</th>
                                 <th scope="col">Meta 2</th>
                                 <th scope="col">Date de création</th>
-                                <th scope="col"></th>
                             </tr>
                             </thead>
                             <tbody>
@@ -249,6 +264,15 @@ export class DownloadRaw extends React.Component {
 
                             </tbody>
                         </table>
+                        <div className="p-4">
+                            {elts.length ?
+                                <div className="col-12 text-center">
+                                    <button className="btn btn-darkblue" onClick={this.validate}
+                                            type="submit">Télécharger
+                                    </button>
+                                </div>
+                                : ''}
+                        </div>
                         <Paginate
                             elts={elts}
                             handlePageClick={this.handlePageClick}
@@ -256,13 +280,6 @@ export class DownloadRaw extends React.Component {
                             pageCount={this.state.pageCount}
                         />
                     </div>
-                </div>
-                <div class="p-4">
-                    {elts.length ?
-                        <div class="col-12 text-center">
-                            <button class="btn btn-darkblue" onClick={this.validate} type="submit">Télécharger</button>
-                        </div>
-                        : ''}
                 </div>
 
                 <LoadingSpinner loading={this.state.loading}/>

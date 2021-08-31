@@ -12,13 +12,13 @@ export class RowItem extends React.Component {
     isSelected() {
         let checked = null
         let selectedElements = this.props.selectedElements
-        if(selectedElements) {
+        if (selectedElements) {
             selectedElements.map(s => {
-                if(JSON.stringify(s) == JSON.stringify(this.props.item)) {
+                if (JSON.stringify(s) == JSON.stringify(this.props.item)) {
                     checked = true
                 }
             })
-        } 
+        }
 
         return checked
     }
@@ -29,21 +29,23 @@ export class RowItem extends React.Component {
 
     render() {
 
-        return(
+        return (
             <tr>
-                <td scope="row">{ this.props.item.swift_object_id }</td>
-                <td>{ this.props.item.swift_container }</td>
-                <td>{ this.props.item.content_type }</td>
-                <td>{ this.props.item.swift_user }</td>
-                <td>{ this.props.item.original_object_name }</td>
-                <td>{ (this.props.item.other_data ? this.props.item.other_data['meta1'] : '-') }</td>
-                <td>{ (this.props.item.other_data ? this.props.item.other_data['meta2'] : '-') }</td>
-                <td>{ Moment(this.props.item.creation_date).format('YYYY-MM-DD hh:mm:ss') }</td>
                 <td>
-                    <div class="form-check">
-                        <input class="form-check-input" onChange={this.handleChange} checked={this.isSelected()} type="checkbox" value="" id="flexCheckDefault" />
+                    <div className="form-check">
+                        <input className="form-check-input" onChange={this.handleChange} checked={this.isSelected()}
+                               type="checkbox" value="" id="flexCheckDefault"/>
                     </div>
                 </td>
+                <td scope="row">{this.props.item.swift_object_id}</td>
+                <td>{this.props.item.swift_container}</td>
+                <td>{this.props.item.content_type}</td>
+                <td>{this.props.item.swift_user}</td>
+                <td>{this.props.item.original_object_name}</td>
+                <td>{(this.props.item.other_data ? this.props.item.other_data['meta1'] : '-')}</td>
+                <td>{(this.props.item.other_data ? this.props.item.other_data['meta2'] : '-')}</td>
+                <td>{Moment(this.props.item.creation_date).format('YYYY-MM-DD hh:mm:ss')}</td>
+
             </tr>
         );
     }

@@ -127,6 +127,29 @@ body {
     margin-top: 40px;
 }
 
+.main-download .download-detail .grid {
+    margin: 10px auto;
+    padding: 10px 20px;
+
+}
+
+.main-download .download-detail th {
+    color: #ea973b;
+}
+
+.main-download .download-detail tr {
+    height: 56px;
+    vertical-align: middle;
+}
+
+.main-download .download-detail .per-page #per-page-sel {
+    margin-left: 20px;
+    width: 70px;
+    border: solid #E9E9EA 1px;
+    border-radius: 1rem;
+    text-align-last: center
+}
+
 .btn-darkblue {
     background-color: #14213D;
     color: #ffffff;
@@ -138,4 +161,15 @@ body {
 .btn-darkblue:hover {
     background-color: #274077;
     color: #ffffff;
+}
+
+
+.page-item .page-link {
+    color: #14213D;
+}
+
+.page-item.active .page-link {
+    background-color: #14213D;
+    border: none;
+    margin: 0 5px;
 }
