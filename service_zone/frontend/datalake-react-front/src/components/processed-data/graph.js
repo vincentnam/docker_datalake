@@ -65,7 +65,7 @@ export class Graph extends React.Component {
 
         const style = {
             width: "100%",
-            height: "600px",
+            height: "calc(45vh - 0px)",
             margin: "",
         };
 
