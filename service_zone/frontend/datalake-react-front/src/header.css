@@ -1,0 +1,103 @@
+/* Header links */
+
+.navbar a {
+    color: rgba(255, 255, 255, 1) !important;
+    text-decoration: none !important;
+}
+
+.navbar a:hover {
+    color: #EA973B !important;
+}
+
+.entire_page {
+    width: 100%;
+    height: 1387px;
+    background: rgba(247, 248, 250, 1);
+    opacity: 1;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    overflow: hidden;
+}
+
+.upload_link {
+    width: 64px;
+    color: rgba(255, 255, 255, 1);
+    position: absolute;
+    top: 9px;
+    left: 445px;
+    font-family: Lato;
+    font-weight: Bold;
+    font-size: 20px;
+    opacity: 1;
+    text-align: left;
+}
+
+.homepage_link {
+    width: 55px;
+    color: rgba(234, 151, 59, 1);
+    position: absolute;
+    top: 9px;
+    left: 340px;
+    font-family: Lato;
+    font-weight: Bold;
+    font-size: 20px;
+    opacity: 1;
+    text-align: left;
+}
+
+.download_link {
+    width: 92px;
+    color: rgba(255, 255, 255, 1);
+    position: absolute;
+    top: 9px;
+    left: 560px;
+    font-family: Lato;
+    font-weight: Bold;
+    font-size: 20px;
+    opacity: 1;
+    text-align: left;
+}
+
+.datavisualization_link {
+    width: 161px;
+    color: rgba(255, 255, 255, 1);
+    position: absolute;
+    top: 9px;
+    left: 703px;
+    font-family: Lato;
+    font-weight: Bold;
+    font-size: 20px;
+    opacity: 1;
+    text-align: left;
+}
+
+.datalake_logo {
+    width: 62px;
+    height: 31px;
+    background: rgba(255, 255, 255, 1);
+    opacity: 1;
+    position: absolute;
+    top: 50px;
+    left: 60px;
+    overflow: hidden;
+}
+
+.navbar {
+    min-height: 130px;
+    background: rgba(20, 33, 61, 1);
+}
+
+.navbar-brand-text {
+    font-size: 36px;
+    margin-right: 180px;
+}
+
+.navbar-nav a {
+    font-size: 20px;
+    margin-right: 50px;
+}
+
+.navbar-nav a.active {
+    color: #EA973B !important;
+}

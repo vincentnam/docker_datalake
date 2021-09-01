@@ -1,16 +1,16 @@
 import React from "react";
-import {Filters} from "../download-raw-data/Filters";
-import {Header} from "../Header";
-import moment from "moment";
+import {Header} from '../Header';
+import {RowItem} from './RowItem';
 import api from '../../api/api';
 import $ from 'jquery';
-import {RowItem} from "./RowItem";
+import {Filters} from "./Filters";
+import moment from "moment";
+import {Paginate} from "./Paginate";
 import {LoadingSpinner} from "../utils/LoadingSpinner";
-import {Paginate} from "../download-raw-data/Paginate";
 
-export class DownloadHandleData extends React.Component {
+export class DownloadRaw extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
-    title = 'Affichage des données traitées'
+    title = 'Affichage des données brutes'
 
     constructor(props) {
         super(props);
@@ -60,37 +60,24 @@ export class DownloadHandleData extends React.Component {
 
     validate() {
         let selectedElements = this.getSelectedElements()
-        let body1 = []
-        let json_object = {}
+        let body = []
         selectedElements.map(element => {
-            if (element.filename == "metadonnees-images-mongodb.json") {
-                json_object.mongodb_file = true
-            }
-
-            if (element.filename == "donnees-serie-temporelle-influxdb.csv") {
-                json_object.influxdb_file = true
-            }
+            body.push({
+                'object_id': element.swift_object_id,
+                'container_name': element.swift_container
+            })
         })
-
-        json_object.filetype = this.state.filetype.toString()
-        json_object.beginDate = this.state.beginDate
-        json_object.endDate = this.state.endDate
-
-        body1.push(json_object)
-        var body = JSON.stringify(body1)
 
         if (selectedElements.length) {
             this.handleShow();
-            api.post('handled-data-file', body, {
-                responseType: 'arraybuffer'
-            })
+            api.post('swift-files', body)
                 .then(function (result) {
-                    const url = window.URL.createObjectURL(new Blob([result.data], {type: 'application/zip'}));
+                    let url = result.data.swift_zip
                     const link = document.createElement('a');
                     link.href = url;
-                    link.setAttribute('download', 'file.zip'); //or any other extension
-                    document.body.appendChild(link);
+
                     link.click();
+                    window.URL.revokeObjectURL(url);
                 })
                 .catch(function (error, status) {
                     console.error(status, error.toString()); // eslint-disable-line
@@ -146,11 +133,11 @@ export class DownloadHandleData extends React.Component {
     loadObjectsFromServer() {
         this.handleShow()
         $.ajax({
-            url: this.url + '/handled-data-list',
+            url: this.url + '/raw-data',
             data: JSON.stringify({
                 limit: this.state.perPage,
                 offset: this.state.offset,
-                filetype: this.state.filetype.toString(),
+                filetype: this.state.filetype,
                 beginDate: this.state.beginDate,
                 endDate: this.state.endDate
             }),
@@ -163,11 +150,11 @@ export class DownloadHandleData extends React.Component {
             type: 'POST',
 
             success: (data) => {
-                if (!data.error) {
+                if (data.result) {
                     this.setState({
-                        elements: data,
-                        totalLength: Object.keys(data).length,
-                        pageCount: Math.ceil(Object.keys(data).length / this.state.perPage),
+                        elements: data.result.objects,
+                        totalLength: data.result.length,
+                        pageCount: Math.ceil(data.result.length / this.state.perPage),
                     });
                 }
             },
@@ -222,8 +209,6 @@ export class DownloadHandleData extends React.Component {
             'beginDate': this.state.beginDate,
             'endDate': this.state.endDate
         }
-        let beginDate = this.state.beginDate
-        let endDate = this.state.endDate
         let loading = this.state.loading
 
         return (
@@ -253,33 +238,37 @@ export class DownloadHandleData extends React.Component {
                             <thead>
                             <tr>
                                 <th scope="col"></th>
-                                <th scope="col">Nom du fichier</th>
-                                <th scope="col">Taille (en bytes)</th>
-                                <th scope="col">Date de début</th>
-                                <th scope="col">Date de fin</th>
+                                <th scope="col">Id objet Swift</th>
+                                <th scope="col">Container Swift</th>
+                                <th scope="col">Type de fichier</th>
+                                <th scope="col">Utilisateur Swift</th>
+                                <th scope="col">Nom de l'objet</th>
+                                <th scope="col">Meta 1</th>
+                                <th scope="col">Meta 2</th>
+                                <th scope="col">Date de création</th>
                             </tr>
                             </thead>
                             <tbody>
 
-                            {elts == [] || Object.keys(elts).length == 0 ?
-                                <tr>
+                            {!elts.length ? <tr>
                                     <td colSpan='7' className="text-center">Pas de données</td>
                                 </tr> :
+
                                 Object.keys(elts).map(function (key, index) {
+
                                     return <RowItem key={index} item={elts[key]}
                                                     handler={handler}
-                                                    selectedElements={selectedElements}
-                                                    beginDate={beginDate}
-                                                    endDate={endDate}
-                                    />
+                                                    selectedElements={selectedElements}/>
+
                                 })}
+
                             </tbody>
                         </table>
                         <div className="p-4">
-                            {Object.keys(elts).length ?
+                            {elts.length ?
                                 <div className="col-12 text-center">
-                                    <button className="btn btn-darkblue" onClick={this.validate} type="submit">
-                                        Télécharger
+                                    <button className="btn btn-darkblue" onClick={this.validate}
+                                            type="submit">Télécharger
                                     </button>
                                 </div>
                                 : ''}

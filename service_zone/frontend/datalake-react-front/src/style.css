@@ -1,0 +1,175 @@
+body {
+    background-color: #F7F8FA;
+}
+
+@media (min-width: 1300px) {
+    .container {
+        max-width: 1246px;
+    }
+}
+
+.main-upload .title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 55px auto;
+}
+
+.jumbotron {
+    background-color: #ffffff;
+    padding: 39px 22px;
+}
+
+.main-upload label {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.main-upload .meta-label {
+    color: #9b9c9b;
+}
+
+.main-upload ul {
+    list-style: none;
+    padding: 0;
+}
+
+.main-upload .supprimer {
+    font-size: 16px;
+    font-weight: 400;
+    color: #EB5757;
+    text-decoration: underline;
+    border: none;
+    cursor: pointer;
+    float: right;
+}
+
+.main-upload .supprimer span {
+    margin-right: 12px;
+}
+
+.main-upload .filesize {
+    color: #A2A2A3;
+    margin-left: 30px;
+    font-size: 16px;
+}
+
+.drop {
+    border: 1px dashed #DCDEDF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 58px;
+    color: #898989;
+}
+
+.drop u {
+    color: #14213D;
+
+}
+
+.btn-oran {
+    background-color: #ea973b;
+    color: #ffffff;
+    border-radius: 50rem;
+    padding: 10px 40px;
+    border: none;
+}
+
+.btn-oran:hover {
+    background-color: #e58419;
+    color: #ffffff;
+}
+
+.main-download .tab-download .nav-link,
+.main-download .tab-download .nav-link.active {
+    background-color: transparent;
+    color: #000000;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.main-download .tab-download .nav-link.active {
+    border-bottom: solid 3px #E9973B !important;
+    border-radius: 0;
+}
+
+.main-download .tab-download {
+    margin: 55px auto 30px;
+}
+
+.main-download .btn-search {
+    padding: 20px 23px !important;
+}
+
+
+.main-download .jumbotron {
+    border-radius: 50rem;
+    padding: 25px 28px;
+}
+
+.main-download .jumbotron label {
+    font-weight: 700;
+    font-size: 16px;
+    padding-left: 12px;
+}
+
+.main-download .jumbotron select,
+.main-download .jumbotron input {
+    border: none;
+}
+
+.main-download .jumbotron .border-right {
+    border-right: 1px solid #B4B4B4 !important;
+}
+
+.main-download .download-detail {
+    margin-top: 40px;
+}
+
+.main-download .download-detail .grid {
+    margin: 10px auto;
+    padding: 10px 20px;
+
+}
+
+.main-download .download-detail th {
+    color: #ea973b;
+}
+
+.main-download .download-detail tr {
+    height: 56px;
+    vertical-align: middle;
+}
+
+.main-download .download-detail .per-page #per-page-sel {
+    margin-left: 20px;
+    width: 70px;
+    border: solid #E9E9EA 1px;
+    border-radius: 1rem;
+    text-align-last: center
+}
+
+.btn-darkblue {
+    background-color: #14213D;
+    color: #ffffff;
+    border-radius: 50rem;
+    padding: 10px 40px;
+    border: none;
+}
+
+.btn-darkblue:hover {
+    background-color: #274077;
+    color: #ffffff;
+}
+
+
+.page-item .page-link {
+    color: #14213D;
+}
+
+.page-item.active .page-link {
+    background-color: #14213D;
+    border: none;
+    margin: 0 5px;
+}
