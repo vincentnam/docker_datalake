@@ -4,6 +4,12 @@
 
 The github repository is mirrored to follow the progress of the Gitlab repository and to be synchronized.
 
+Issues and merge requests are manually mirrored. As in github and Gitlab, ID for issues and merge requests are handled in differents way, linked issues / merge requests in message commit can't be mirrored from Gitlab. To follow commit history, it wont be possible to get linked from gitlab in github.
+
+Moreover, merge requests from gitlab are on github linked in corresponding issues or in a new issue (see closed issues.).
+
+
+
 # Data lake architecture POC hosted on OSIRIM (https://osirim.irit.fr/site/)
 
 This repository is the main working repository for the data lake architecture.
