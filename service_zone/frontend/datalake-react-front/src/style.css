@@ -89,6 +89,12 @@ body {
     font-weight: 700;
 }
 
+.main-download .title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 55px auto;
+}
+
 .main-download .tab-download .nav-link.active {
     border-bottom: solid 3px #E9973B !important;
     border-radius: 0;
