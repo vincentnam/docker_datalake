@@ -173,3 +173,11 @@ body {
     border: none;
     margin: 0 5px;
 }
+
+.th-color {
+    color: #ea973b;
+}
+
+.border-color {
+    border-color: #ea973b;
+}

@@ -98,67 +98,71 @@ export class DataVisiualisation extends React.Component {
             // Render the UI for your table
             return (
                 <>
-                    <table {...getTableProps()} class="table table-bordered table-responsive-sm">
-                        <thead class="thead-dark">
-                            {headerGroups.map((headerGroup) => (
-                                <tr {...headerGroup.getHeaderGroupProps()}>
-                                    {headerGroup.headers.map((column) => (
-                                        <th class="text-center" scope="col" {...column.getHeaderProps()}>{column.render("Header")}</th>
-                                    ))}
-                                </tr>
-                            ))}
-                        </thead>
-                        <tbody {...getTableBodyProps()}>
-                            {page.map((row, i) => {
-                                prepareRow(row);
-                                return (
-                                    <tr {...row.getRowProps()}>
-                                        {row.cells.map((cell) => {
-                                            return (
-                                                <td {...cell.getCellProps()}>{cell.render("Cell")}</td>
-                                            );
-                                        })}
+                    <div class="grid mt5 shadow-sm p-3 mb-4">
+                        <table {...getTableProps()} class="table table-bordered table-responsive-sm">
+                            <thead>
+                                {headerGroups.map((headerGroup) => (
+                                    <tr {...headerGroup.getHeaderGroupProps()}>
+                                        {headerGroup.headers.map((column) => (
+                                            <th class="text-center th-color" scope="col" {...column.getHeaderProps()}>{column.render("Header")}</th>
+                                        ))}
                                     </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                    {/* Pagination can be built however you'd like. 
-                        This is just a very basic UI implementation:
-                    */}
-                    <div class="pagination d-flex align-content-center justify-content-between">
-                        <div>
-                            <button class="btn btn-primary" onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
-                                {"<<"}
-                            </button>{" "}
-                            <button class="btn btn-primary" onClick={() => previousPage()} disabled={!canPreviousPage}>
-                                {"<"}
-                            </button>{" "}
-                            <button class="btn btn-primary" onClick={() => nextPage()} disabled={!canNextPage}>
-                                {">"}
-                            </button>{" "}
-                            <button class="btn btn-primary" onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
-                                {">>"}
-                            </button>{" "}
+                                ))}
+                            </thead>
+                            <tbody {...getTableBodyProps()}>
+                                {page.map((row, i) => {
+                                    prepareRow(row);
+                                    return (
+                                        <tr {...row.getRowProps()}>
+                                            {row.cells.map((cell) => {
+                                                return (
+                                                    <td {...cell.getCellProps()}>{cell.render("Cell")}</td>
+                                                );
+                                            })}
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                        {/* Pagination can be built however you'd like. 
+                            This is just a very basic UI implementation:
+                        */}
+                        <div class="pagination d-flex align-content-center justify-content-between">
+                            <div class="col-sm-6">
+                                <button class="btn btn-primary" onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+                                    {"<<"}
+                                </button>{" "}
+                                <button class="btn btn-primary" onClick={() => previousPage()} disabled={!canPreviousPage}>
+                                    {"<"}
+                                </button>{" "}
+                                <span class="mr-2 ml-4">
+                                    Page{" "}
+                                    <strong>
+                                        {pageIndex + 1} sur {pageOptions.length}
+                                    </strong>{" "}
+                                </span>
+                                <button class="btn btn-primary" onClick={() => nextPage()} disabled={!canNextPage}>
+                                    {">"}
+                                </button>{" "}
+                                <button class="btn btn-primary" onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
+                                    {">>"}
+                                </button>{" "}
+                            </div>
+                            <div class="col-sm-2">
+                                <select class="form-control"
+                                    value={pageSize}
+                                    onChange={(e) => {
+                                        setPageSize(Number(e.target.value));
+                                    }}
+                                >
+                                    {[10, 20, 30, 40, 50].map((pageSize) => (
+                                        <option key={pageSize} value={pageSize}>
+                                            Montrer {pageSize}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
-                        <span class="mr-2 ml-4">
-                            Page{" "}
-                            <strong>
-                                {pageIndex + 1} sur {pageOptions.length}
-                            </strong>{" "}
-                        </span>
-                        <select class="form-control col-sm-2"
-                            value={pageSize}
-                            onChange={(e) => {
-                                setPageSize(Number(e.target.value));
-                            }}
-                        >
-                            {[10, 20, 30, 40, 50].map((pageSize) => (
-                                <option key={pageSize} value={pageSize}>
-                                    Montrer {pageSize}
-                                </option>
-                            ))}
-                        </select>
                     </div>
                 </>
             );
@@ -166,23 +170,39 @@ export class DataVisiualisation extends React.Component {
         const TitleGraph = () => {
             if (this.props.topic === "") {
                 return (
-                    <h4>Graphique: </h4>
+                    <h5></h5>
                 );
             } else {
                 return (
-                    <h4>Graphique: Bucket: {this.props.bucket} avec le Measurement: {this.props.measurement} et le Topic: {this.props.topic}</h4>
+                    <h5 className="mb-4">Bucket: {this.props.bucket} avec le Measurement: {this.props.measurement} et le Topic: {this.props.topic}</h5>
                 );
             }
         }
+        
+        const Show = () => {
+            if (this.props.topic === "") {
+                return (
+                    <div></div>
+                );
+            } else {
+                return (
+                    <div className="card p-3">
+                        <TitleGraph />
+                        <Graph 
+                            dataGraph={this.props.dataGraph}
+                        />
+                    </div>
+                );
+            }
+        }
+
+
+
         return (
-            <div>
-                <h2>Data visualisation</h2>
-                <TitleGraph />
-                <Graph
-                    dataGraph={this.props.dataGraph}
-                />
+            <div className="mt-5">
+                <Show />
                 <br/>
-                <div  class="mt-4">
+                <div  class="download-detail mt-4">
                     <Table data={this.props.data} />
                 </div>
             </div>

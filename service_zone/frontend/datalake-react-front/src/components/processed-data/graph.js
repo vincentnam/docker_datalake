@@ -64,9 +64,9 @@ export class Graph extends React.Component {
     render() {
 
         const style = {
-            width: "calc(95vw - 10px)",
-            height: "calc(60vh - 10px)",
-            margin: "10px",
+            width: "100%",
+            height: "600px",
+            margin: "",
         };
 
         const lineLayer = {

@@ -1,6 +1,6 @@
 import React from "react";
 import api from '../../api/api';
-import { Button } from "react-bootstrap";
+import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
 import moment from 'moment';
 
 
@@ -157,7 +157,7 @@ export class Filters extends React.Component {
                 <option key={bucket} value={bucket}>{bucket}</option>
             ));
             return (
-                <select value={this.state.bucket} onChange={this.handleChange} multiple={false} name="bucket" class="form-control">
+                <select value={this.state.bucket} onChange={this.handleChange} multiple={false} name="bucket" className="form-select">
                     <option key="" value="">Veuillez sélectionner un bucket</option>
                     {listBuckets}
                 </select>
@@ -169,7 +169,7 @@ export class Filters extends React.Component {
                 <option key={measurement} value={measurement}>{measurement}</option>
             ));
             return (
-                <select value={this.state.measurement} onChange={this.handleChange} multiple={false} name="measurement" class="form-control">
+                <select value={this.state.measurement} onChange={this.handleChange} multiple={false} name="measurement" className="form-select">
                     <option key="" value="">Veuillez sélectionner un measurement</option>
                     {listMeasurements}
                 </select>
@@ -180,44 +180,56 @@ export class Filters extends React.Component {
                 <option key={topic} value={topic}>{topic}</option>
             ));
             return (
-                <select value={this.state.topic} onChange={this.handleChange} multiple={false} name="topic" class="form-control">
+                <select value={this.state.topic} onChange={this.handleChange} multiple={false} name="topic" className="form-select">
                     <option key="" value="">Veuillez sélectionner un topic</option>
                     {listTopics}
                 </select>
             );
         }
         return (
-            <div class="jumbotron">
-                <h2 class="display-4 text-center">Data visualisation - data processed Time Series</h2>
-                <form onSubmit={this.handleSubmit}>
-                    <div class="row justify-content-center">
-                        <div class="form-group col-sm-4">
-                            <label class="control-label">Bucket :</label>
-                            <SelectBucket />
+            <div>
+                <h4 class="mb-4">Data visualization</h4>
+                <div className="jumbotron shadow-sm">
+                    <Form onSubmit={this.handleSubmit}>
+                        <div className="row align-items-center">
+                            <div className="form-group col-md-2 border-right">
+                                <FormGroup>
+                                    <FormLabel>Bucket</FormLabel>
+                                    <SelectBucket />
+                                </FormGroup>
+                            </div>
+                            <div className="form-group col-md-2">
+                                <FormGroup>
+                                    <FormLabel>Measurement</FormLabel>
+                                    <SelectMesurements />
+                                </FormGroup>
+                            </div>
+                            <div className="form-group col-md-3">
+                                <FormGroup>
+                                    <FormLabel>Topic</FormLabel>
+                                    <SelectTopics />
+                                </FormGroup>
+                            </div>
+                            <div className="form-group col-md-2">                                
+                                <FormGroup>
+                                    <FormLabel>Date début</FormLabel>
+                                    <Form.Control type="date" onChange={this.handleChange} value={this.state.startDate} name="startDate" required />
+                                </FormGroup>
+                            </div>
+                            <div className="form-group col-md-2">                                
+                                <FormGroup>
+                                    <FormLabel>Date fin</FormLabel>
+                                    <Form.Control type="date" onChange={this.handleChange} value={this.state.endDate} name="endDate" required />
+                                </FormGroup>
+                            </div>
+                            <div className="form-group col-md-1">
+                                <Button type="submit" className="btn-oran btn-search float-end">
+                                    <img src="/images/icon-search.svg"/>
+                                </Button>
+                            </div>
                         </div>
-                        <div class="form-group col-sm-4">
-                            <label class="control-label">Measurement :</label>
-                            <SelectMesurements />
-                        </div>
-                        <div class="form-group col-sm-4">
-                            <label class="control-label">Topic :</label>
-                            <SelectTopics />
-                        </div>
-                    </div>
-                    <div class="row justify-content-center">
-                        <div class="form-group col-sm-4">
-                            <label class="control-label">Date début :</label>
-                            <input type="date" onChange={this.handleChange} value={this.state.startDate} name="startDate" class="form-control" />
-                        </div>
-                        <div class="form-group col-sm-4">
-                            <label class="control-label">Date fin :</label>
-                            <input type="date" onChange={this.handleChange} value={this.state.endDate} name="endDate" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group col-md-12 text-center">
-                        <Button type="submit" variant="outline-primary">Filtrer</Button>
-                    </div>
-                </form>
+                    </Form>
+                </div>
             </div>
         );
     }
