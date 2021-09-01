@@ -1,3 +1,7 @@
+# Ansible node install
+
+      ansible-galaxy collection install community.docker
+
 # Directory structure
 The latest version of Ansible is the 2.11.1 at the point  
 The Ansible directory structure is based on common directory structure defined in Ansible documentation (https://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_roles.html#role-directory-structure) : 
@@ -131,3 +135,5 @@ In playbook, docker has been launched through a shell command in background laun
 ### TODO : 
 
 - Add user in docker group (to allow to use docker without privileged) only accessible with SSH key and without password.
+- Remove all "become: yes" -> a specific configuration on different hosts has to be done, "become:yes" is the easiest way to deploy it for a first step.
+- Change user owner for Airflow files (.env)

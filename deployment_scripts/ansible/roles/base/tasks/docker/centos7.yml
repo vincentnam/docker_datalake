@@ -69,8 +69,14 @@
     - name: Ensure dockerd is stopped.
       shell: "ps axf | grep docker | grep -v grep | awk '{print \"kill -9 \" $1}' | sudo sh "
       become: yes
-    - name: Start docker daemon in background
-      shell: "dockerd &"
+    - name: Ensure docker service is stopped.
+      ansible.builtin.service:
+        name: docker
+        state: stopped
+    - name: Start docker service
+      ansible.builtin.service:
+        name: docker
+        state: started
       become: yes
     - name: Add user datalake to docker group
       user:
