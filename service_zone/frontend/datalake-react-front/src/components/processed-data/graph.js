@@ -1,5 +1,6 @@
 import React from "react";
 import { Plot, newTable } from '@influxdata/giraffe';
+import moment from 'moment';
 
 export class Graph extends React.Component {
     constructor(props) {
@@ -65,7 +66,7 @@ export class Graph extends React.Component {
 
         const style = {
             width: "100%",
-            height: "calc(45vh - 0px)",
+            height: "calc(40vh - 0px)",
             margin: "",
         };
 
@@ -88,6 +89,9 @@ export class Graph extends React.Component {
         const config = {
             table,
             layers: [lineLayer],
+            valueFormatters: {
+                _time: (t) => moment(new Date(t)).format('DD/MM/YYYY HH:mm'),
+            }
         };
         return (
             <div style={style}>

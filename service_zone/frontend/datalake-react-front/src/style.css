@@ -181,3 +181,24 @@ body {
 .border-color {
     border-color: #ea973b;
 }
+
+.btn-table {
+    background-color: #14213D;
+    color: #ffffff;
+    border-radius: 5px;
+    padding: 5px 10px;
+
+}
+
+.btn-table:hover {
+    background-color: #ea973b;
+    color: white;
+}
+
+.btn-table:disabled {
+    background-color: #DCDEDF;
+    color: black;
+    border: solid 1px;
+    border-color: #B4B4B4;
+}
+

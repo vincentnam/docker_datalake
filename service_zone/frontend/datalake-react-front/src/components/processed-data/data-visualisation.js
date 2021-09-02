@@ -98,13 +98,13 @@ export class DataVisiualisation extends React.Component {
             // Render the UI for your table
             return (
                 <>
-                    <div class="grid mt5 shadow-sm p-3 mb-4">
-                        <table {...getTableProps()} class="table table-bordered table-responsive-sm">
+                    <div className="grid mt-2 shadow-sm p-3 mb-4">
+                        <table {...getTableProps()} className="table table-bordered table-responsive-sm">
                             <thead>
                                 {headerGroups.map((headerGroup) => (
                                     <tr {...headerGroup.getHeaderGroupProps()}>
                                         {headerGroup.headers.map((column) => (
-                                            <th class="text-center th-color" scope="col" {...column.getHeaderProps()}>{column.render("Header")}</th>
+                                            <th className="text-center th-color" scope="col" {...column.getHeaderProps()}>{column.render("Header")}</th>
                                         ))}
                                     </tr>
                                 ))}
@@ -127,29 +127,29 @@ export class DataVisiualisation extends React.Component {
                         {/* Pagination can be built however you'd like. 
                             This is just a very basic UI implementation:
                         */}
-                        <div class="pagination d-flex align-content-center justify-content-between">
-                            <div class="col-sm-6">
-                                <button class="btn btn-primary" onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+                        <div className="pagination d-flex align-content-center justify-content-between">
+                            <div className="col-sm-6">
+                                <button className="btn btn-table" onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
                                     {"<<"}
                                 </button>{" "}
-                                <button class="btn btn-primary" onClick={() => previousPage()} disabled={!canPreviousPage}>
+                                <button className="btn btn-table" onClick={() => previousPage()} disabled={!canPreviousPage}>
                                     {"<"}
                                 </button>{" "}
-                                <span class="mr-2 ml-4">
+                                <span className="mr-2 ml-4">
                                     Page{" "}
                                     <strong>
                                         {pageIndex + 1} sur {pageOptions.length}
                                     </strong>{" "}
                                 </span>
-                                <button class="btn btn-primary" onClick={() => nextPage()} disabled={!canNextPage}>
+                                <button className="btn btn-table" onClick={() => nextPage()} disabled={!canNextPage}>
                                     {">"}
                                 </button>{" "}
-                                <button class="btn btn-primary" onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
+                                <button className="btn btn-table" onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
                                     {">>"}
                                 </button>{" "}
                             </div>
-                            <div class="col-sm-2">
-                                <select class="form-control"
+                            <div className="col-sm-2">
+                                <select className="form-control"
                                     value={pageSize}
                                     onChange={(e) => {
                                         setPageSize(Number(e.target.value));
@@ -199,10 +199,10 @@ export class DataVisiualisation extends React.Component {
 
 
         return (
-            <div className="mt-5">
+            <div className="mt-4">
                 <Show />
                 <br/>
-                <div  class="download-detail mt-4">
+                <div  className="download-detail mt-4">
                     <Table data={this.props.data} />
                 </div>
             </div>

@@ -43,7 +43,7 @@ export class ProcessedDataVisualisationTimeSeries extends React.Component {
         return (
             <div>
                 <Header />
-                <div class="container main-download mt-4">
+                <div className="container main-download mt-4">
                     <Filters
                         data={this.handleCallbackData} 
                         dataGraph={this.handleCallbackDataGraph}

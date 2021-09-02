@@ -23,6 +23,10 @@ export class Filters extends React.Component {
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
+    updateData(){
+        this.props.dataGraph({});
+        this.props.data([]);
+    }
     handleChange(event) {
         const target = event.target;
         const value = target.type === 'checkbox' ? target.checked : target.value;
@@ -34,6 +38,7 @@ export class Filters extends React.Component {
                 this.setState({
                     [name]: value,
                 });
+                this.updateData();
             }
         } else if (name === "endDate") {
             if (moment(this.state.startDate).format('X') > moment(value).format('X')) {
@@ -42,6 +47,7 @@ export class Filters extends React.Component {
                 this.setState({
                     [name]: value,
                 });
+                this.updateData();
             }
         } else {
             this.setState({
@@ -54,15 +60,18 @@ export class Filters extends React.Component {
             this.loadMeasurements(value);
             this.props.selectMeasurement("");
             this.props.selectTopic("");
+            this.updateData();
         }
         if (name === "measurement") {
             this.props.selectMeasurement(value);
             this.loadTopics(this.state.bucket, value);
 
             this.props.selectTopic("");
+            this.updateData();
         }
         if (name === "topic") {
             this.props.selectTopic(value);
+            this.updateData();
         }
     }
     loadBuckets() {
@@ -188,7 +197,7 @@ export class Filters extends React.Component {
         }
         return (
             <div>
-                <h4 class="mb-4">Data visualization</h4>
+                <h4 className="mb-4">Data visualization</h4>
                 <div className="jumbotron shadow-sm">
                     <Form onSubmit={this.handleSubmit}>
                         <div className="row align-items-center">
