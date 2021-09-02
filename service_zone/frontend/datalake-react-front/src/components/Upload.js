@@ -7,22 +7,41 @@ import {config} from '../configmeta/config';
 import api from '../api/api';
 import {ProgressBarComponent} from "./upload-child/ProgressBarComponent";
 import filesize from "filesize";
+import { ToastContainer, toast } from 'react-toastify';
 
 export class Upload extends React.Component {
     constructor() {
         super();
         this.onDrop = (files) => {
             if (files.length < 1) {
-                alert('Format de fichier non accepté.')
+                toast.error('Format de fichier non accepté.', {
+                    theme: "colored",
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
             }
-            files.map((file) => {
+            files.forEach((file) => {
                 let typeFile = file.type;
                 const filename = file.name;
                 if (!typeFile && filename.split('.').pop().toLowerCase() === "sql") {
                     typeFile = "application/sql"
                 }
                 if (this.state.type_file_accepted.includes(typeFile) === false) {
-                    alert("Format de fichier non accepté.\nVeuillez ajouter un fichier qui correspond à un de ses types : \n" + this.state.type_file_accepted)
+                    toast.error("Format de fichier non accepté.Veuillez ajouter un fichier qui correspond à un de ses types : " + this.state.type_file_accepted, {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
                 } else {
                     var reader = new FileReader();
                     reader.readAsDataURL(file);
@@ -79,8 +98,8 @@ export class Upload extends React.Component {
         let type_file_accepted = [];
         if (name === "type") {
             const types = [config.types];
-            types.map((type) => (
-                type.map((t) => {
+            types.forEach((type) => (
+                type.forEach((t) => {
                     if (t.id === parseInt(value)) {
                         this.setState({
                             othermeta: t.metadonnees,
@@ -93,7 +112,16 @@ export class Upload extends React.Component {
         }
         if (this.state.typeFile !== "") {
             if (type_file_accepted.includes(this.state.typeFile) === false) {
-                alert("Format de fichier non accepté.\nVeuillez ajouter un fichier qui correspond à un de ses types : \n" + type_file_accepted)
+                toast.error("Format de fichier non accepté.Veuillez ajouter un fichier qui correspond à un de ses types : " + type_file_accepted, {
+                    theme: "colored",
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
                 this.removeSelectedFile()
             }
         }
@@ -118,14 +146,32 @@ export class Upload extends React.Component {
             }
         }
 
-        this.state.othermeta.map((meta) => {
+        this.state.othermeta.forEach((meta) => {
             other[meta.name] = meta.value
         });
 
         if (this.state.type === 0) {
-            window.alert("Veuillez renseigner le type de données !");
+            toast.error("Veuillez renseigner le type de données !", {
+                theme: "colored",
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         } else if (this.state.filename === '') {
-            window.alert("Veuillez ajouter un fichier !");
+            toast.error("Veuillez ajouter un fichier !", {
+                theme: "colored",
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         } else {
             this.handleShow()
             api.post('storage', {
@@ -136,12 +182,30 @@ export class Upload extends React.Component {
                 othermeta: other
             }, options)
                 .then(function () {
-                    window.alert("L'upload a bien été fait")
+                    toast.success("L'upload a bien été fait", {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
+
                     window.location.reload();
                 })
                 .catch(function (error) {
-                    console.log(error);
-                    window.alert("L'upload n'a pas réussi ! : " + error)
+                    toast.success("L'upload n'a pas réussi ! : " + error, {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
                 }).finally(function () {
                 this.handleClose()
             }.bind(this))
@@ -162,7 +226,7 @@ export class Upload extends React.Component {
             <li key={file.name}>
                 {file.name} <span className="filesize">{filesize(file.size)}</span>
                 <div className="supprimer" onClick={this.removeSelectedFile}>
-                    <span aria-hidden="true">Supprimer</span><img src="/images/trash.svg"/>
+                    <span aria-hidden="true">Supprimer</span><img alt="Icon Trash" src="/images/trash.svg"/>
                 </div>
             </li>
         ));
@@ -171,7 +235,7 @@ export class Upload extends React.Component {
             let listMeta = null;
             const othermeta = this.state.othermeta;
             listMeta = (
-                othermeta.map((meta) => {
+                othermeta.forEach((meta) => {
                     const index = othermeta.indexOf(meta)
                     if (meta.type === "number" || meta.type === "text")
                         return <InputMeta key={meta.name} meta={meta} othermeta={othermeta} index={index}/>
@@ -218,7 +282,7 @@ export class Upload extends React.Component {
                             <div class="form-group required">
                                 <label>Fichiers</label>
                                 <Dropzone value={this.state.file} name="file" onDrop={this.onDrop}
-                                          accept="image/*,application/JSON,.csv,text/plain,.sql,application/x-gzip,application/x-zip-compressed">
+                                        accept="image/*,application/JSON,.csv,text/plain,.sql,application/x-gzip,application/x-zip-compressed">
                                     {({getRootProps, getInputProps}) => (
                                         <section>
                                             <div {...getRootProps({className: 'drop'})}>
@@ -257,6 +321,7 @@ export class Upload extends React.Component {
                     percentProgressBar={this.state.percentProgressBar}
                     text={this.state.textProgressBar}
                 />
+                <ToastContainer />
             </div>
         );
     }
