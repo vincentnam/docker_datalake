@@ -105,7 +105,7 @@ body {
 
 .main-download .jumbotron {
     border-radius: 50rem;
-    padding: 25px 28px;
+    padding: 10px 28px;
 }
 
 .main-download .jumbotron label {
@@ -227,5 +227,9 @@ body {
 .main-download .data-table tr {
     height: 56px;
     vertical-align: middle;
+}
+
+.title-graph span {
+    color: #E9973B;
 }
 

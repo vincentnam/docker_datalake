@@ -174,7 +174,7 @@ export class DataVisiualisation extends React.Component {
                 );
             } else {
                 return (
-                    <h5 className="mb-4">Bucket: {this.props.bucket} avec le Measurement: {this.props.measurement} et le Topic: {this.props.topic}</h5>
+                    <h5 className="title-graph mb-4">Bucket: <span><b>{this.props.bucket}</b></span> - Measurement: <span><b>{this.props.measurement}</b></span> - Topic: <span><b>{this.props.topic}</b></span></h5>
                 );
             }
         }
@@ -197,9 +197,9 @@ export class DataVisiualisation extends React.Component {
         }
 
         return (
-            <div className="mt-4 row d-flex">
-                <nav className="tab-show col-sm-3 col-md-3">
-                    <div className="nav nav-pills d-block" id="pills-tab" role="tablist">
+            <div className="mt-1 row d-flex">
+                <nav className="tab-show">
+                    <div className="nav nav-pills" id="pills-tab" role="tablist">
                         <button className="nav-link active" id="nav-raw-tab" data-bs-toggle="pill"
                                 data-bs-target="#nav-raw" type="button" role="tab" aria-controls="nav-raw"
                                 aria-selected="true">Graphique
@@ -210,7 +210,7 @@ export class DataVisiualisation extends React.Component {
                         </button>
                     </div>
                 </nav>
-                <div className="tab-content col-sm-9 col-md-9" id="pills-tabContent">
+                <div className="tab-content mt-2" id="pills-tabContent">
                     <div className="tab-pane fade show active" id="nav-raw" role="tabpanel"
                         aria-labelledby="nav-raw-tab">
                         <Show />
