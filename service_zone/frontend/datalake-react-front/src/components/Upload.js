@@ -32,7 +32,7 @@ export class Upload extends React.Component {
                     typeFile = "application/sql"
                 }
                 if (this.state.type_file_accepted.includes(typeFile) === false) {
-                    toast.error("Format de fichier non accepté.Veuillez ajouter un fichier qui correspond à un de ses types : " + this.state.type_file_accepted, {
+                    toast.error("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + this.state.type_file_accepted.join(' '), {
                         theme: "colored",
                         position: "top-right",
                         autoClose: 5000,
@@ -112,7 +112,7 @@ export class Upload extends React.Component {
         }
         if (this.state.typeFile !== "") {
             if (type_file_accepted.includes(this.state.typeFile) === false) {
-                toast.error("Format de fichier non accepté.Veuillez ajouter un fichier qui correspond à un de ses types : " + type_file_accepted, {
+                toast.error("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + type_file_accepted.join(' '), {
                     theme: "colored",
                     position: "top-right",
                     autoClose: 5000,
@@ -235,7 +235,7 @@ export class Upload extends React.Component {
             let listMeta = null;
             const othermeta = this.state.othermeta;
             listMeta = (
-                othermeta.forEach((meta) => {
+                othermeta.map((meta) => {
                     const index = othermeta.indexOf(meta)
                     if (meta.type === "number" || meta.type === "text")
                         return <InputMeta key={meta.name} meta={meta} othermeta={othermeta} index={index}/>
