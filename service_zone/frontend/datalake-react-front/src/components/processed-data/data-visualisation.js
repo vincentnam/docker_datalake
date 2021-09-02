@@ -1,7 +1,7 @@
 import React from "react";
 import { Graph } from './graph';
 import { useTable, usePagination } from "react-table";
-
+import { ToastContainer, toast } from 'react-toastify';
 
 export class DataVisiualisation extends React.Component {
     constructor(props) {

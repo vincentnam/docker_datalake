@@ -2,7 +2,7 @@ import React from "react";
 import api from '../../api/api';
 import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
 import moment from 'moment';
-
+import { ToastContainer, toast } from 'react-toastify';
 
 export class Filters extends React.Component {
     constructor(props) {
@@ -116,19 +116,33 @@ export class Filters extends React.Component {
             });
     }
 
+    toastError(message){
+        toast.error(`${message}`, {
+            theme: "colored",
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+        });
+    }
+
     handleSubmit(event) {
         event.preventDefault();
         const start = this.state.startDate;
         const end = this.state.endDate;
 
         if (moment(start).format('X') === moment(end).format('X')) {
-            alert("Veuillez modifier l'espacement entre la date de début et la date de fin !");
-        } else if (this.state.bucket === null) {
-            alert("Veuillez selectionner un bucket !")
-        } else if (this.state.measurement === null) {
-            alert("Veuillez selectionner un measurement !")
+            this.toastError("Veuillez modifier l'espacement entre la date de début et la date de fin !");
+        } else if (this.state.bucket === null  || this.state.bucket === "") {
+            console.log("bucket");
+            this.toastError("Veuillez selectionner un bucket !")
+        } else if (this.state.measurement === null || this.state.measurement === "") {
+            this.toastError("Veuillez selectionner un measurement !")
         } else if (this.state.topic === null || this.state.topic === "") {
-            alert("Veuillez selectionner un topic !")
+            this.toastError("Veuillez selectionner un topic !")
         } else {
             api.post('dataTimeSeries', {
                 bucket: this.state.bucket,
@@ -153,7 +167,6 @@ export class Filters extends React.Component {
                     });
                     this.props.data(data);
                     this.props.dataGraph(response.data.dataTimeSeriesGraph[0]);
-
                 })
                 .catch(function (error) {
                     console.log(error);
@@ -239,6 +252,7 @@ export class Filters extends React.Component {
                         </div>
                     </Form>
                 </div>
+                <ToastContainer />
             </div>
         );
     }

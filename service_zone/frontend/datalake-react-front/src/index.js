@@ -5,6 +5,7 @@ import reportWebVitals from './reportWebVitals';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/js/bootstrap.min.js'
 import './style.css';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 import {Home} from './components/Home';
