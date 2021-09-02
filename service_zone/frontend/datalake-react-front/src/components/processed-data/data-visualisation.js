@@ -98,7 +98,7 @@ export class DataVisiualisation extends React.Component {
             // Render the UI for your table
             return (
                 <>
-                    <div className="grid mt-2 shadow-sm p-3 mb-4">
+                    <div className="grid shadow-sm p-2 mb-4">
                         <table {...getTableProps()} className="table table-bordered table-responsive-sm">
                             <thead>
                                 {headerGroups.map((headerGroup) => (
@@ -196,15 +196,32 @@ export class DataVisiualisation extends React.Component {
             }
         }
 
-
-
         return (
-            <div className="mt-4">
-                <Show />
-                <br/>
-                <div  className="download-detail mt-4">
-                    <Table data={this.props.data} />
-                </div>
+            <div className="mt-4 row col-sm-12">
+                <nav className="tab-show col-sm-3">
+                    <div className="nav nav-pills d-block" id="pills-tab" role="tablist">
+                        <button className="nav-link active" id="nav-raw-tab" data-bs-toggle="pill"
+                                data-bs-target="#nav-raw" type="button" role="tab" aria-controls="nav-raw"
+                                aria-selected="true">Graphique
+                        </button>
+                        <button className="nav-link" id="nav-handled-tab" data-bs-toggle="pill"
+                                data-bs-target="#nav-handled" type="button" role="tab" aria-controls="nav-handled"
+                                aria-selected="false">Tableau de données
+                        </button>
+                    </div>
+                </nav>
+                <div className="tab-content col-sm-9" id="pills-tabContent">
+                    <div className="tab-pane fade show active" id="nav-raw" role="tabpanel"
+                        aria-labelledby="nav-raw-tab">
+                        <Show />
+                    </div>
+                    <div className="tab-pane fade" id="nav-handled" role="tabpanel"
+                        aria-labelledby="nav-handled-tab">
+                        <div  className="data-table">
+                            <Table data={this.props.data} />
+                        </div>
+                    </div>
+                </div>  
             </div>
         );
     }

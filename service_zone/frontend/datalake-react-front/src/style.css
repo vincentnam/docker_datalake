@@ -202,3 +202,30 @@ body {
     border-color: #B4B4B4;
 }
 
+.main-download .tab-show .nav-link,
+.main-download .tab-show .nav-link.active {
+    background-color: transparent;
+    color: #000000;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.main-download .tab-show .nav-link.active {
+    border-bottom: solid 3px #E9973B !important;
+    border-radius: 0;
+}
+
+.main-download .data-table .grid {
+    padding: 10px 20px;
+
+}
+
+.main-download .data-table th {
+    color: #ea973b;
+}
+
+.main-download .data-table tr {
+    height: 56px;
+    vertical-align: middle;
+}
+

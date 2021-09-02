@@ -23,11 +23,11 @@ export class Download extends React.Component {
                     </nav>
                     <div className="tab-content" id="pills-tabContent">
                         <div className="tab-pane fade show active" id="nav-raw" role="tabpanel"
-                             aria-labelledby="nav-raw-tab">
+                            aria-labelledby="nav-raw-tab">
                             <DownloadRaw/>
                         </div>
                         <div className="tab-pane fade" id="nav-handled" role="tabpanel"
-                             aria-labelledby="nav-handled-tab">
+                            aria-labelledby="nav-handled-tab">
                             <DownloadHandleData/>
                         </div>
                     </div>
