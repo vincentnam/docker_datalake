@@ -197,8 +197,8 @@ export class DataVisiualisation extends React.Component {
         }
 
         return (
-            <div className="mt-4 row col-sm-12">
-                <nav className="tab-show col-sm-3">
+            <div className="mt-4 row d-flex">
+                <nav className="tab-show col-sm-3 col-md-3">
                     <div className="nav nav-pills d-block" id="pills-tab" role="tablist">
                         <button className="nav-link active" id="nav-raw-tab" data-bs-toggle="pill"
                                 data-bs-target="#nav-raw" type="button" role="tab" aria-controls="nav-raw"
@@ -210,7 +210,7 @@ export class DataVisiualisation extends React.Component {
                         </button>
                     </div>
                 </nav>
-                <div className="tab-content col-sm-9" id="pills-tabContent">
+                <div className="tab-content col-sm-9 col-md-9" id="pills-tabContent">
                     <div className="tab-pane fade show active" id="nav-raw" role="tabpanel"
                         aria-labelledby="nav-raw-tab">
                         <Show />

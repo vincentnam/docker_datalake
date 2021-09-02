@@ -91,7 +91,7 @@ export class Graph extends React.Component {
             layers: [lineLayer],
             valueFormatters: {
                 _time: (t) => moment(new Date(t)).format('DD/MM/YYYY HH:mm'),
-            }
+            },
         };
         return (
             <div style={style}>
