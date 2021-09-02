@@ -98,7 +98,7 @@ export class DataVisiualisation extends React.Component {
             // Render the UI for your table
             return (
                 <>
-                    <div className="grid shadow-sm p-2 mb-4">
+                    <div className="grid shadow-sm p-2 mb-2">
                         <table {...getTableProps()} className="table table-bordered table-responsive-sm">
                             <thead>
                                 {headerGroups.map((headerGroup) => (
