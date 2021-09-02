@@ -137,7 +137,6 @@ export class Filters extends React.Component {
         if (moment(start).format('X') === moment(end).format('X')) {
             this.toastError("Veuillez modifier l'espacement entre la date de début et la date de fin !");
         } else if (this.state.bucket === null  || this.state.bucket === "") {
-            console.log("bucket");
             this.toastError("Veuillez selectionner un bucket !")
         } else if (this.state.measurement === null || this.state.measurement === "") {
             this.toastError("Veuillez selectionner un measurement !")
