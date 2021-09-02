@@ -152,11 +152,11 @@ export class Filters extends React.Component {
             })
                 .then((response) => {
                     let result = [];
-                    for (const [key, value] of Object.entries(response.data.dataTimeSeries[0])) {
-                        result.push(value);
+                    for (const value of Object.entries(response.data.dataTimeSeries[0])) {
+                        result.push(value[1]);
                     }
                     let data = []
-                    result.map((dt) => {
+                    result.forEach((dt) => {
                         data.push({
                             _time: moment.unix(dt._time / 1000).format("DD/MM/YYYY HH:mm:ss"),
                             _value: dt._value,
@@ -245,7 +245,7 @@ export class Filters extends React.Component {
                             </div>
                             <div className="form-group col-md-1">
                                 <Button type="submit" className="btn-oran btn-search float-end">
-                                    <img src="/images/icon-search.svg"/>
+                                    <img alt="Icon Search" src="/images/icon-search.svg"/>
                                 </Button>
                             </div>
                         </div>

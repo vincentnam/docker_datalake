@@ -1,7 +1,7 @@
 import React from "react";
 import { Graph } from './graph';
 import { useTable, usePagination } from "react-table";
-import { ToastContainer, toast } from 'react-toastify';
+
 
 export class DataVisiualisation extends React.Component {
     constructor(props) {
@@ -12,8 +12,8 @@ export class DataVisiualisation extends React.Component {
         const times = this.props.dataGraph._time;
         const result = [];
         if (times !== undefined) {
-            for (const [key, value] of Object.entries(times)) {
-                result.push(value);
+            for (const value of Object.entries(times)) {
+                result.push(value[1]);
             }
         }
         return result;
@@ -23,8 +23,8 @@ export class DataVisiualisation extends React.Component {
         const values = this.props.dataGraph._value;
         const result = [];
         if (values !== undefined) {
-            for (const [key, value] of Object.entries(values)) {
-                result.push(value);
+            for (const value of Object.entries(values)) {
+                result.push(value[1]);
             }
         }
         return result;
@@ -170,7 +170,7 @@ export class DataVisiualisation extends React.Component {
         const TitleGraph = () => {
             if (this.props.topic === "") {
                 return (
-                    <h5></h5>
+                    <></>
                 );
             } else {
                 return (

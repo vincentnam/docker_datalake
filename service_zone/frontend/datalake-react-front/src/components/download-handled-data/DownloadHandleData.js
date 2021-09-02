@@ -1,6 +1,5 @@
 import React from "react";
 import {Filters} from "../download-raw-data/Filters";
-import {Header} from "../Header";
 import moment from "moment";
 import api from '../../api/api';
 import $ from 'jquery';
@@ -62,12 +61,12 @@ export class DownloadHandleData extends React.Component {
         let selectedElements = this.getSelectedElements()
         let body1 = []
         let json_object = {}
-        selectedElements.map(element => {
-            if (element.filename == "metadonnees-images-mongodb.json") {
+        selectedElements.forEach(element => {
+            if (element.filename === "metadonnees-images-mongodb.json") {
                 json_object.mongodb_file = true
             }
 
-            if (element.filename == "donnees-serie-temporelle-influxdb.csv") {
+            if (element.filename === "donnees-serie-temporelle-influxdb.csv") {
                 json_object.influxdb_file = true
             }
         })
@@ -224,7 +223,7 @@ export class DownloadHandleData extends React.Component {
         }
         let beginDate = this.state.beginDate
         let endDate = this.state.endDate
-        let loading = this.state.loading
+        //let loading = this.state.loading
 
         return (
             <div>
@@ -261,7 +260,7 @@ export class DownloadHandleData extends React.Component {
                             </thead>
                             <tbody>
 
-                            {elts == [] || Object.keys(elts).length == 0 ?
+                            {elts === [] || Object.keys(elts).length === 0 ?
                                 <tr>
                                     <td colSpan='7' className="text-center">Pas de données</td>
                                 </tr> :

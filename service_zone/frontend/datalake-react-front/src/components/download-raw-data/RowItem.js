@@ -13,8 +13,8 @@ export class RowItem extends React.Component {
         let checked = null
         let selectedElements = this.props.selectedElements
         if (selectedElements) {
-            selectedElements.map(s => {
-                if (JSON.stringify(s) == JSON.stringify(this.props.item)) {
+            selectedElements.forEach(s => {
+                if (JSON.stringify(s) === JSON.stringify(this.props.item)) {
                     checked = true
                 }
             })
@@ -34,10 +34,10 @@ export class RowItem extends React.Component {
                 <td>
                     <div className="form-check">
                         <input className="form-check-input" onChange={this.handleChange} checked={this.isSelected()}
-                               type="checkbox" value="" id="flexCheckDefault"/>
+                            type="checkbox" value="" id="flexCheckDefault"/>
                     </div>
                 </td>
-                <td scope="row">{this.props.item.swift_object_id}</td>
+                <td>{this.props.item.swift_object_id}</td>
                 <td>{this.props.item.swift_container}</td>
                 <td>{this.props.item.content_type}</td>
                 <td>{this.props.item.swift_user}</td>

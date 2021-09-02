@@ -1,5 +1,4 @@
 import React from "react";
-import {Header} from '../Header';
 import {RowItem} from './RowItem';
 import api from '../../api/api';
 import $ from 'jquery';
@@ -61,7 +60,7 @@ export class DownloadRaw extends React.Component {
     validate() {
         let selectedElements = this.getSelectedElements()
         let body = []
-        selectedElements.map(element => {
+        selectedElements.forEach(element => {
             body.push({
                 'object_id': element.swift_object_id,
                 'container_name': element.swift_container
@@ -209,7 +208,7 @@ export class DownloadRaw extends React.Component {
             'beginDate': this.state.beginDate,
             'endDate': this.state.endDate
         }
-        let loading = this.state.loading
+        //let loading = this.state.loading
 
         return (
             <div>
