@@ -25,6 +25,11 @@ def get_metadata():
     if(("limit" in request.get_json() and "offset" not in request.get_json()) or ("limit" not in request.get_json() and "offset" in request.get_json())):
         return jsonify({'error': 'Limit and offset have to be sent together.'})
 
+    if("sort_field" in request.get_json() and "sort_value" in request.get_json()):
+        params['sort_field'] =  request.get_json()['sort_field']
+        params['sort_value'] =  request.get_json()['sort_value']
+
+    # Sort columns
     if("limit" in request.get_json() and "offset" in request.get_json()):
         params['limit'] =  request.get_json()['limit']
         params['offset'] =  request.get_json()['offset']
