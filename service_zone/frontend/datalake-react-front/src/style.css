@@ -11,12 +11,12 @@ body {
 .main-upload .title {
     font-size: 24px;
     font-weight: 700;
-    margin: 55px auto;
+    margin: 20px auto;
 }
 
 .jumbotron {
     background-color: #ffffff;
-    padding: 39px 22px;
+    padding: 18px 22px;
 }
 
 .main-upload label {
