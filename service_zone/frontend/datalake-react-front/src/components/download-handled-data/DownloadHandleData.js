@@ -6,6 +6,7 @@ import $ from 'jquery';
 import {RowItem} from "./RowItem";
 import {LoadingSpinner} from "../utils/LoadingSpinner";
 import {Paginate} from "../download-raw-data/Paginate";
+import { ToastContainer, toast } from 'react-toastify';
 
 export class DownloadHandleData extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
@@ -90,6 +91,16 @@ export class DownloadHandleData extends React.Component {
                     link.setAttribute('download', 'file.zip'); //or any other extension
                     document.body.appendChild(link);
                     link.click();
+                    toast.success("Le téléchargement a été effectué avec succès !", {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
                 })
                 .catch(function (error, status) {
                     console.error(status, error.toString()); // eslint-disable-line
@@ -293,7 +304,7 @@ export class DownloadHandleData extends React.Component {
                 </div>
 
                 <LoadingSpinner loading={this.state.loading}/>
-
+                <ToastContainer />
             </div>
         );
     }

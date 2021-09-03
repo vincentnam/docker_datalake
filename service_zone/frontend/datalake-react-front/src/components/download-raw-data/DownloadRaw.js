@@ -6,6 +6,7 @@ import {Filters} from "./Filters";
 import moment from "moment";
 import {Paginate} from "./Paginate";
 import {LoadingSpinner} from "../utils/LoadingSpinner";
+import { ToastContainer, toast } from 'react-toastify';
 
 export class DownloadRaw extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
@@ -74,9 +75,18 @@ export class DownloadRaw extends React.Component {
                     let url = result.data.swift_zip
                     const link = document.createElement('a');
                     link.href = url;
-
                     link.click();
                     window.URL.revokeObjectURL(url);
+                    toast.success("Le téléchargement a été effectué avec succès !", {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
                 })
                 .catch(function (error, status) {
                     console.error(status, error.toString()); // eslint-disable-line
@@ -282,7 +292,7 @@ export class DownloadRaw extends React.Component {
                 </div>
 
                 <LoadingSpinner loading={this.state.loading}/>
-
+                <ToastContainer />
             </div>
         );
     }
