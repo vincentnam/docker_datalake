@@ -1,5 +1,6 @@
 import React from "react";
 import { Plot, newTable } from '@influxdata/giraffe';
+import moment from 'moment';
 
 export class Graph extends React.Component {
     constructor(props) {
@@ -10,8 +11,8 @@ export class Graph extends React.Component {
         const times = this.props.dataGraph._time;
         const result = [];
         if (times !== undefined) {
-            for (const [key, value] of Object.entries(times)) {
-                result.push(value);
+            for (const value of Object.entries(times)) {
+                result.push(value[1]);
             }
         }
         return result;
@@ -21,8 +22,8 @@ export class Graph extends React.Component {
         const values = this.props.dataGraph._value;
         const result = [];
         if (values !== undefined) {
-            for (const [key, value] of Object.entries(values)) {
-                result.push(value);
+            for (const value of Object.entries(values)) {
+                result.push(value[1]);
             }
         }
         return result;
@@ -32,8 +33,9 @@ export class Graph extends React.Component {
         const measurements = this.props.dataGraph._measurement;
         const result = [];
         if (measurements !== undefined) {
-            for (const [key, value] of Object.entries(measurements)) {
-                result.push(value);
+            for (const value of Object.entries(measurements)) {
+                
+                result.push(value[1]);
             }
         }
         return result;
@@ -42,8 +44,8 @@ export class Graph extends React.Component {
         const topics = this.props.dataGraph.topic;
         const result = [];
         if (topics !== undefined) {
-            for (const [key, value] of Object.entries(topics)) {
-                result.push(value);
+            for (const value of Object.entries(topics)) {
+                result.push(value[1]);
             }
         }
         return result;
@@ -64,9 +66,9 @@ export class Graph extends React.Component {
     render() {
 
         const style = {
-            width: "calc(95vw - 10px)",
-            height: "calc(60vh - 10px)",
-            margin: "10px",
+            width: "100%",
+            height: "calc(40vh - 0px)",
+            margin: "",
         };
 
         const lineLayer = {
@@ -88,6 +90,9 @@ export class Graph extends React.Component {
         const config = {
             table,
             layers: [lineLayer],
+            valueFormatters: {
+                _time: (t) => moment(new Date(t)).format('DD/MM/YYYY HH:mm'),
+            },
         };
         return (
             <div style={style}>

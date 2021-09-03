@@ -1,7 +1,7 @@
 import React from "react";
-import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
-import {config} from '../../configmeta/config';
-import {config_processed_data} from '../../configmeta/config_processed_data';
+import { FormGroup, FormLabel, Form, Button } from "react-bootstrap";
+import { config } from '../../configmeta/config';
+import { config_processed_data } from '../../configmeta/config_processed_data';
 
 export class Filters extends React.Component {
 
@@ -50,7 +50,7 @@ export class Filters extends React.Component {
 
         datatypeConf.map((type) => (
             // loop in config file
-            type.map((t) => {
+            type.forEach((t) => {
                 // if selected data type corresponds with current data type
                 if (t.id === parseInt(id)) {
                     filetypesResult = t.type_file_accepted
@@ -79,7 +79,7 @@ export class Filters extends React.Component {
         // data type field
         const SelectDatatype = () => {
             let types = [config.types];
-            if (this.props.title == "Affichage des données traitées") {
+            if (this.props.title === "Affichage des données traitées") {
                 types = [config_processed_data.types];
             }
             // loop into conf to get all data types
@@ -103,25 +103,25 @@ export class Filters extends React.Component {
             <div className="jumbotron shadow-sm">
                 <Form onSubmit={this.validateFilters}>
                     <div className="row align-items-center">
-                        <SelectDatatype/>
+                        <SelectDatatype />
                         <div className="form-group col-md-3 border-right">
                             <FormGroup>
                                 <FormLabel>Date de début</FormLabel>
                                 <Form.Control type="date" name='beginDate' value={this.props.data.beginDate}
-                                              onChange={this.setBeginDate} required/>
+                                    onChange={this.setBeginDate} required />
                             </FormGroup>
                         </div>
                         <div className="form-group col-md-3">
                             <FormGroup>
                                 <FormLabel>Date de fin</FormLabel>
                                 <Form.Control type="date" name='endDate' value={this.props.data.endDate}
-                                              onChange={this.setEndDate} required/>
+                                    onChange={this.setEndDate} required />
                             </FormGroup>
                         </div>
 
                         <div className="form-group col-md-3">
                             <Button type="submit" className="btn-oran btn-search float-end">
-                                <img src="/images/icon-search.svg"/>
+                                <img alt="Icon Search" src="/images/icon-search.svg" />
                             </Button>
                         </div>
                     </div>

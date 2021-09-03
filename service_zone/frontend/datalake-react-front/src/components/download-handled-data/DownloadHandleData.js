@@ -1,12 +1,12 @@
 import React from "react";
 import {Filters} from "../download-raw-data/Filters";
-import {Header} from "../Header";
 import moment from "moment";
 import api from '../../api/api';
 import $ from 'jquery';
 import {RowItem} from "./RowItem";
 import {LoadingSpinner} from "../utils/LoadingSpinner";
 import {Paginate} from "../download-raw-data/Paginate";
+import { ToastContainer, toast } from 'react-toastify';
 
 export class DownloadHandleData extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
@@ -62,12 +62,12 @@ export class DownloadHandleData extends React.Component {
         let selectedElements = this.getSelectedElements()
         let body1 = []
         let json_object = {}
-        selectedElements.map(element => {
-            if (element.filename == "metadonnees-images-mongodb.json") {
+        selectedElements.forEach(element => {
+            if (element.filename === "metadonnees-images-mongodb.json") {
                 json_object.mongodb_file = true
             }
 
-            if (element.filename == "donnees-serie-temporelle-influxdb.csv") {
+            if (element.filename === "donnees-serie-temporelle-influxdb.csv") {
                 json_object.influxdb_file = true
             }
         })
@@ -91,6 +91,16 @@ export class DownloadHandleData extends React.Component {
                     link.setAttribute('download', 'file.zip'); //or any other extension
                     document.body.appendChild(link);
                     link.click();
+                    toast.success("Le téléchargement a été effectué avec succès !", {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
                 })
                 .catch(function (error, status) {
                     console.error(status, error.toString()); // eslint-disable-line
@@ -224,7 +234,7 @@ export class DownloadHandleData extends React.Component {
         }
         let beginDate = this.state.beginDate
         let endDate = this.state.endDate
-        let loading = this.state.loading
+        //let loading = this.state.loading
 
         return (
             <div>
@@ -261,7 +271,7 @@ export class DownloadHandleData extends React.Component {
                             </thead>
                             <tbody>
 
-                            {elts == [] || Object.keys(elts).length == 0 ?
+                            {elts === [] || Object.keys(elts).length === 0 ?
                                 <tr>
                                     <td colSpan='7' className="text-center">Pas de données</td>
                                 </tr> :
@@ -294,7 +304,7 @@ export class DownloadHandleData extends React.Component {
                 </div>
 
                 <LoadingSpinner loading={this.state.loading}/>
-
+                <ToastContainer />
             </div>
         );
     }

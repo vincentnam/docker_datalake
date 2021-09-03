@@ -11,12 +11,12 @@ body {
 .main-upload .title {
     font-size: 24px;
     font-weight: 700;
-    margin: 55px auto;
+    margin: 20px auto;
 }
 
 .jumbotron {
     background-color: #ffffff;
-    padding: 39px 22px;
+    padding: 18px 22px;
 }
 
 .main-upload label {
@@ -89,6 +89,12 @@ body {
     font-weight: 700;
 }
 
+.main-download .title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 55px auto;
+}
+
 .main-download .tab-download .nav-link.active {
     border-bottom: solid 3px #E9973B !important;
     border-radius: 0;
@@ -105,7 +111,7 @@ body {
 
 .main-download .jumbotron {
     border-radius: 50rem;
-    padding: 25px 28px;
+    padding: 10px 28px;
 }
 
 .main-download .jumbotron label {
@@ -173,3 +179,63 @@ body {
     border: none;
     margin: 0 5px;
 }
+
+.th-color {
+    color: #ea973b;
+}
+
+.border-color {
+    border-color: #ea973b;
+}
+
+.btn-table {
+    background-color: #14213D;
+    color: #ffffff;
+    border-radius: 5px;
+    padding: 5px 10px;
+
+}
+
+.btn-table:hover {
+    background-color: #ea973b;
+    color: white;
+}
+
+.btn-table:disabled {
+    background-color: #DCDEDF;
+    color: black;
+    border: solid 1px;
+    border-color: #B4B4B4;
+}
+
+.main-download .tab-show .nav-link,
+.main-download .tab-show .nav-link.active {
+    background-color: transparent;
+    color: #000000;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.main-download .tab-show .nav-link.active {
+    border-bottom: solid 3px #E9973B !important;
+    border-radius: 0;
+}
+
+.main-download .data-table .grid {
+    padding: 10px 20px;
+
+}
+
+.main-download .data-table th {
+    color: #ea973b;
+}
+
+.main-download .data-table tr {
+    height: 56px;
+    vertical-align: middle;
+}
+
+.title-graph span {
+    color: #E9973B;
+}
+

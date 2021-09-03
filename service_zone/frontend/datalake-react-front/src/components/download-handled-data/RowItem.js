@@ -12,8 +12,8 @@ export class RowItem extends React.Component {
         let checked = null
         let selectedElements = this.props.selectedElements
         if (selectedElements) {
-            selectedElements.map(s => {
-                if (JSON.stringify(s) == JSON.stringify(this.props.item)) {
+            selectedElements.forEach(s => {
+                if (JSON.stringify(s) === JSON.stringify(this.props.item)) {
                     checked = true
                 }
             })
@@ -31,14 +31,13 @@ export class RowItem extends React.Component {
         let endDate = this.props.endDate
         return (
             <tr>
-
                 <td>
                     <div className="form-check">
                         <input className="form-check-input" onChange={this.handleChange} checked={this.isSelected()}
-                               type="checkbox" value="" id="flexCheckDefault"/>
+                            type="checkbox" value="" id="flexCheckDefault"/>
                     </div>
                 </td>
-                <td scope="row">{this.props.item.filename}</td>
+                <td>{this.props.item.filename}</td>
                 <td>{this.props.item.filesize}</td>
                 <td>{beginDate}</td>
                 <td>{endDate}</td>

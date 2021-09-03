@@ -3,17 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@influxdata/giraffe": "^2.16.2",
+    "@influxdata/giraffe": "^2.18.2",
     "@testing-library/jest-dom": "^5.11.10",
     "@testing-library/react": "^11.2.6",
     "@testing-library/user-event": "^12.8.3",
     "axios": "^0.21.1",
     "bootstrap": "^5.1.0",
-    "popper.js": "^1.16.1",
     "chart.js": "^3.1.1",
     "d3": "^6.7.0",
     "jquery": "^3.6.0",
     "moment": "^2.29.1",
+    "popper.js": "^1.16.1",
     "react": "^17.0.2",
     "react-bootstrap": "^1.6.0",
     "react-dom": "^17.0.2",
@@ -23,6 +23,7 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.3",
     "react-table": "^7.7.0",
+    "react-toastify": "^8.0.2",
     "web-vitals": "^1.1.1"
   },
   "scripts": {

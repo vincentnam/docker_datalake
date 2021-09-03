@@ -1,5 +1,4 @@
 import React from "react";
-import {Header} from '../Header';
 import {RowItem} from './RowItem';
 import api from '../../api/api';
 import $ from 'jquery';
@@ -7,6 +6,7 @@ import {Filters} from "./Filters";
 import moment from "moment";
 import {Paginate} from "./Paginate";
 import {LoadingSpinner} from "../utils/LoadingSpinner";
+import { ToastContainer, toast } from 'react-toastify';
 
 export class DownloadRaw extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
@@ -61,7 +61,7 @@ export class DownloadRaw extends React.Component {
     validate() {
         let selectedElements = this.getSelectedElements()
         let body = []
-        selectedElements.map(element => {
+        selectedElements.forEach(element => {
             body.push({
                 'object_id': element.swift_object_id,
                 'container_name': element.swift_container
@@ -75,9 +75,18 @@ export class DownloadRaw extends React.Component {
                     let url = result.data.swift_zip
                     const link = document.createElement('a');
                     link.href = url;
-
                     link.click();
                     window.URL.revokeObjectURL(url);
+                    toast.success("Le téléchargement a été effectué avec succès !", {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
                 })
                 .catch(function (error, status) {
                     console.error(status, error.toString()); // eslint-disable-line
@@ -209,7 +218,7 @@ export class DownloadRaw extends React.Component {
             'beginDate': this.state.beginDate,
             'endDate': this.state.endDate
         }
-        let loading = this.state.loading
+        //let loading = this.state.loading
 
         return (
             <div>
@@ -283,7 +292,7 @@ export class DownloadRaw extends React.Component {
                 </div>
 
                 <LoadingSpinner loading={this.state.loading}/>
-
+                <ToastContainer />
             </div>
         );
     }

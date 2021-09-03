@@ -1,8 +1,8 @@
 import React from "react";
 import api from '../../api/api';
-import { Button } from "react-bootstrap";
+import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
 import moment from 'moment';
-
+import { ToastContainer, toast } from 'react-toastify';
 
 export class Filters extends React.Component {
     constructor(props) {
@@ -23,6 +23,10 @@ export class Filters extends React.Component {
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
+    updateData(){
+        this.props.dataGraph({});
+        this.props.data([]);
+    }
     handleChange(event) {
         const target = event.target;
         const value = target.type === 'checkbox' ? target.checked : target.value;
@@ -34,6 +38,7 @@ export class Filters extends React.Component {
                 this.setState({
                     [name]: value,
                 });
+                this.updateData();
             }
         } else if (name === "endDate") {
             if (moment(this.state.startDate).format('X') > moment(value).format('X')) {
@@ -42,6 +47,7 @@ export class Filters extends React.Component {
                 this.setState({
                     [name]: value,
                 });
+                this.updateData();
             }
         } else {
             this.setState({
@@ -54,15 +60,18 @@ export class Filters extends React.Component {
             this.loadMeasurements(value);
             this.props.selectMeasurement("");
             this.props.selectTopic("");
+            this.updateData();
         }
         if (name === "measurement") {
             this.props.selectMeasurement(value);
             this.loadTopics(this.state.bucket, value);
 
             this.props.selectTopic("");
+            this.updateData();
         }
         if (name === "topic") {
             this.props.selectTopic(value);
+            this.updateData();
         }
     }
     loadBuckets() {
@@ -107,19 +116,32 @@ export class Filters extends React.Component {
             });
     }
 
+    toastError(message){
+        toast.error(`${message}`, {
+            theme: "colored",
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+        });
+    }
+
     handleSubmit(event) {
         event.preventDefault();
         const start = this.state.startDate;
         const end = this.state.endDate;
 
         if (moment(start).format('X') === moment(end).format('X')) {
-            alert("Veuillez modifier l'espacement entre la date de début et la date de fin !");
-        } else if (this.state.bucket === null) {
-            alert("Veuillez selectionner un bucket !")
-        } else if (this.state.measurement === null) {
-            alert("Veuillez selectionner un measurement !")
+            this.toastError("Veuillez modifier l'espacement entre la date de début et la date de fin !");
+        } else if (this.state.bucket === null  || this.state.bucket === "") {
+            this.toastError("Veuillez selectionner un bucket !")
+        } else if (this.state.measurement === null || this.state.measurement === "") {
+            this.toastError("Veuillez selectionner un measurement !")
         } else if (this.state.topic === null || this.state.topic === "") {
-            alert("Veuillez selectionner un topic !")
+            this.toastError("Veuillez selectionner un topic !")
         } else {
             api.post('dataTimeSeries', {
                 bucket: this.state.bucket,
@@ -130,11 +152,11 @@ export class Filters extends React.Component {
             })
                 .then((response) => {
                     let result = [];
-                    for (const [key, value] of Object.entries(response.data.dataTimeSeries[0])) {
-                        result.push(value);
+                    for (const value of Object.entries(response.data.dataTimeSeries[0])) {
+                        result.push(value[1]);
                     }
                     let data = []
-                    result.map((dt) => {
+                    result.forEach((dt) => {
                         data.push({
                             _time: moment.unix(dt._time / 1000).format("DD/MM/YYYY HH:mm:ss"),
                             _value: dt._value,
@@ -144,7 +166,6 @@ export class Filters extends React.Component {
                     });
                     this.props.data(data);
                     this.props.dataGraph(response.data.dataTimeSeriesGraph[0]);
-
                 })
                 .catch(function (error) {
                     console.log(error);
@@ -157,7 +178,7 @@ export class Filters extends React.Component {
                 <option key={bucket} value={bucket}>{bucket}</option>
             ));
             return (
-                <select value={this.state.bucket} onChange={this.handleChange} multiple={false} name="bucket" class="form-control">
+                <select value={this.state.bucket} onChange={this.handleChange} multiple={false} name="bucket" className="form-select">
                     <option key="" value="">Veuillez sélectionner un bucket</option>
                     {listBuckets}
                 </select>
@@ -169,7 +190,7 @@ export class Filters extends React.Component {
                 <option key={measurement} value={measurement}>{measurement}</option>
             ));
             return (
-                <select value={this.state.measurement} onChange={this.handleChange} multiple={false} name="measurement" class="form-control">
+                <select value={this.state.measurement} onChange={this.handleChange} multiple={false} name="measurement" className="form-select">
                     <option key="" value="">Veuillez sélectionner un measurement</option>
                     {listMeasurements}
                 </select>
@@ -180,44 +201,57 @@ export class Filters extends React.Component {
                 <option key={topic} value={topic}>{topic}</option>
             ));
             return (
-                <select value={this.state.topic} onChange={this.handleChange} multiple={false} name="topic" class="form-control">
+                <select value={this.state.topic} onChange={this.handleChange} multiple={false} name="topic" className="form-select">
                     <option key="" value="">Veuillez sélectionner un topic</option>
                     {listTopics}
                 </select>
             );
         }
         return (
-            <div class="jumbotron">
-                <h2 class="display-4 text-center">Data visualisation - data processed Time Series</h2>
-                <form onSubmit={this.handleSubmit}>
-                    <div class="row justify-content-center">
-                        <div class="form-group col-sm-4">
-                            <label class="control-label">Bucket :</label>
-                            <SelectBucket />
+            <div>
+                <h4 className="mb-4">Data visualization</h4>
+                <div className="jumbotron shadow-sm">
+                    <Form onSubmit={this.handleSubmit}>
+                        <div className="row align-items-center">
+                            <div className="form-group col-md-2 border-right">
+                                <FormGroup>
+                                    <FormLabel>Bucket</FormLabel>
+                                    <SelectBucket />
+                                </FormGroup>
+                            </div>
+                            <div className="form-group col-md-2">
+                                <FormGroup>
+                                    <FormLabel>Measurement</FormLabel>
+                                    <SelectMesurements />
+                                </FormGroup>
+                            </div>
+                            <div className="form-group col-md-3">
+                                <FormGroup>
+                                    <FormLabel>Topic</FormLabel>
+                                    <SelectTopics />
+                                </FormGroup>
+                            </div>
+                            <div className="form-group col-md-2">                                
+                                <FormGroup>
+                                    <FormLabel>Date début</FormLabel>
+                                    <Form.Control type="date" onChange={this.handleChange} value={this.state.startDate} name="startDate" required />
+                                </FormGroup>
+                            </div>
+                            <div className="form-group col-md-2">                                
+                                <FormGroup>
+                                    <FormLabel>Date fin</FormLabel>
+                                    <Form.Control type="date" onChange={this.handleChange} value={this.state.endDate} name="endDate" required />
+                                </FormGroup>
+                            </div>
+                            <div className="form-group col-md-1">
+                                <Button type="submit" className="btn-oran btn-search float-end">
+                                    <img alt="Icon Search" src="/images/icon-search.svg"/>
+                                </Button>
+                            </div>
                         </div>
-                        <div class="form-group col-sm-4">
-                            <label class="control-label">Measurement :</label>
-                            <SelectMesurements />
-                        </div>
-                        <div class="form-group col-sm-4">
-                            <label class="control-label">Topic :</label>
-                            <SelectTopics />
-                        </div>
-                    </div>
-                    <div class="row justify-content-center">
-                        <div class="form-group col-sm-4">
-                            <label class="control-label">Date début :</label>
-                            <input type="date" onChange={this.handleChange} value={this.state.startDate} name="startDate" class="form-control" />
-                        </div>
-                        <div class="form-group col-sm-4">
-                            <label class="control-label">Date fin :</label>
-                            <input type="date" onChange={this.handleChange} value={this.state.endDate} name="endDate" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group col-md-12 text-center">
-                        <Button type="submit" variant="outline-primary">Filtrer</Button>
-                    </div>
-                </form>
+                    </Form>
+                </div>
+                <ToastContainer />
             </div>
         );
     }
