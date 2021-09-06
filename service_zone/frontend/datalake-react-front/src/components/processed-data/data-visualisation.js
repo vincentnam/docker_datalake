@@ -1,7 +1,7 @@
 import React from "react";
 import { Graph } from './graph';
-import { useTable, usePagination } from "react-table";
-
+import { useTable, useSortBy, usePagination } from "react-table";
+import * as Icon from 'react-bootstrap-icons';
 
 export class DataVisiualisation extends React.Component {
     constructor(props) {
@@ -92,7 +92,9 @@ export class DataVisiualisation extends React.Component {
                     data,
                     initialState: { pageIndex: 0 }
                 },
-                usePagination
+                useSortBy,
+                usePagination,
+                
             );
 
             // Render the UI for your table
@@ -104,7 +106,16 @@ export class DataVisiualisation extends React.Component {
                                 {headerGroups.map((headerGroup) => (
                                     <tr {...headerGroup.getHeaderGroupProps()}>
                                         {headerGroup.headers.map((column) => (
-                                            <th className="text-center th-color" scope="col" {...column.getHeaderProps()}>{column.render("Header")}</th>
+                                            <th className="text-center th-color" scope="col" {...column.getHeaderProps(column.getSortByToggleProps())}>
+                                                {column.render("Header")}
+                                                <span>
+                                                    {column.isSorted
+                                                    ? column.isSortedDesc
+                                                        ?  <Icon.CaretDownFill />
+                                                        :  <Icon.CaretUpFill />
+                                                    : ''}
+                                                </span>
+                                            </th>
                                         ))}
                                     </tr>
                                 ))}

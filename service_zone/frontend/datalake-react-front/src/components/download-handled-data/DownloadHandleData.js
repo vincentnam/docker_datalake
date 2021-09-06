@@ -6,18 +6,21 @@ import $ from 'jquery';
 import {RowItem} from "./RowItem";
 import {LoadingSpinner} from "../utils/LoadingSpinner";
 import {Paginate} from "../download-raw-data/Paginate";
+import DataTable from 'react-data-table-component';
+import Moment from 'moment';
 import { ToastContainer, toast } from 'react-toastify';
 
 export class DownloadHandleData extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
     title = 'Affichage des données traitées'
+    selectedElementsOnActualPage = []
 
     constructor(props) {
         super(props);
 
         // Bind the this context to the handler function
-        this.handler = this.handler.bind(this);
         this.validate = this.validate.bind(this)
+        this.handler = this.handler.bind(this);
         this.setFiletype = this.setFiletype.bind(this);
         this.setBeginDate = this.setBeginDate.bind(this);
         this.setEndDate = this.setEndDate.bind(this);
@@ -40,22 +43,6 @@ export class DownloadHandleData extends React.Component {
 
     getSelectedElements() {
         return this.state.selectedElements;
-    }
-
-    handler(selectedElements, event) {
-        let selectedElementsTemp = this.getSelectedElements()
-
-        // if checked
-        if (event.target.checked) {
-            selectedElementsTemp.push(selectedElements)
-
-        } else {
-            selectedElementsTemp = selectedElementsTemp.filter((element) => JSON.stringify(element) !== JSON.stringify(selectedElements))
-        }
-
-        this.setState({
-            selectedElements: selectedElementsTemp
-        })
     }
 
     validate() {
@@ -153,6 +140,48 @@ export class DownloadHandleData extends React.Component {
         });
     };
 
+    handler(event) {
+        //console.log(event)
+
+        // selected elements on all pages
+        let selectedElements = this.getSelectedElements()
+
+        // selected elements on actual page (component React DataTable send selected elements only on actual page)
+
+        // in actual page, if elements have been selected, add selected ones into selected elements global array
+        if(event.selectedRows !== undefined) {
+            // loop into selected rows in actual page
+            event.selectedRows.map((element) => {
+                // if selected rowx in actual page is not in global selected elements
+                console.log('page actuelle')
+                console.log(this.selectedElementsOnActualPage)
+                if(!this.selectedElementsOnActualPage.includes(element)){
+                    console.log('AJOUTE')
+                    //selectedElements.push(element)
+                } 
+            })
+        }
+
+       /* if(this.selectedElementsOnActualPage.length > 0) {
+            this.selectedElementsOnActualPage.map((selectedElement) => {
+                console.log('SELECTION')
+                console.log(event.selectedRows)
+                if(!event.selectedRows.includes(selectedElement)) {
+                    var index = selectedElements.indexOf(selectedElement)
+                    if(index != -1) {
+                        console.log('INDEX')
+                        console.log(index)
+                        selectedElements.splice(index, 1)
+                    }
+                }
+            })
+        }*/
+
+        this.setState({
+            selectedElements: event.selectedRows
+        })
+    }
+
     loadObjectsFromServer() {
         this.handleShow()
         $.ajax({
@@ -174,8 +203,9 @@ export class DownloadHandleData extends React.Component {
 
             success: (data) => {
                 if (!data.error) {
+                    let resultsData = this.prepareData(data)
                     this.setState({
-                        elements: data,
+                        elements: resultsData,
                         totalLength: Object.keys(data).length,
                         pageCount: Math.ceil(Object.keys(data).length / this.state.perPage),
                     });
@@ -190,6 +220,17 @@ export class DownloadHandleData extends React.Component {
                 this.handleClose()
             }
         });
+    }
+
+    prepareData(data) {
+        let elts = []
+        $.each(data, function(i, val) {
+            val.beginDate = this.state.beginDate
+            val.endDate = this.state.endDate
+            elts.push(val)
+        }.bind(this))
+
+        return elts
     }
 
     setFiletype(value) {
@@ -221,8 +262,8 @@ export class DownloadHandleData extends React.Component {
         if (this.state.elements) {
             elts = this.state.elements
         }
+        //console.log(elts)
         let selectedElements = this.getSelectedElements()
-        let handler = this.handler
         let setFiletype = this.setFiletype
         let setBeginDate = this.setBeginDate
         let setEndDate = this.setEndDate
@@ -235,6 +276,82 @@ export class DownloadHandleData extends React.Component {
         let beginDate = this.state.beginDate
         let endDate = this.state.endDate
         //let loading = this.state.loading
+
+        const columns = [
+            {
+                id: 'filename',
+                name: "Nom du fichier",
+                selector: row => row.filename
+            },
+            {
+                id: 'swift_container',
+                name: "Taille (en bytes)",
+                selector: row => row.filesize
+            },
+            {
+                id: 'beginDate',
+                name: "Date de début",
+                selector: row => row.beginDate
+            },
+            {
+                id: 'endDate',
+                name: "Date de fin",
+                selector: row => row.endDate
+            }
+        ];
+
+        //  Internally, customStyles will deep merges your customStyles with the default styling.
+        const customStyles = {
+            table: {
+                style: {
+                    padding: '0.5rem 0.5rem',
+                    borderBottomWidth: '1px',
+                    boxShadow: 'inset 0 0 0 9999px var(--bs-table-accent-bg)',
+                    '--bs-table-bg': 'transparent',
+                    '--bs-table-accent-bg': 'transparent',
+                    '--bs-table-striped-color': '#212529',
+                    '--bs-table-striped-bg': 'rgba(0, 0, 0, 0.05)',
+                    '--bs-table-active-color': '#212529',
+                    '--bs-table-active-bg': 'rgba(0, 0, 0, 0.1)',
+                    '--bs-table-hover-color': '#212529',
+                    '--bs-table-hover-bg': 'rgba(0, 0, 0, 0.075)',
+                    width: '100%',
+                    marginBottom: '1rem',
+                    color: '#212529',
+                    verticalAlign: 'top',
+                    borderColor: '#dee2e6',
+                    backgroundColor: 'rgba(0, 0, 0, 0.05)'
+                }
+            },
+            rows: {
+                style: {
+                    minHeight: '72px', // override the row height
+                    '&:hover': {
+                        cursor: 'pointer',
+                        backgroundColor: '#ea973b'
+                      },
+                },
+            },
+            headCells: {
+                style: {
+                    paddingLeft: '8px', // override the cell padding for head cells
+                    paddingRight: '8px',
+                    color: '#ea973b' ,
+                    borderColor: 'inherit',
+                    borderStyle: 'solid',
+                    borderWidth: '0',
+                    borderBottomColor: 'currentColor',
+                    backgroundColor: 'rgba(0, 0, 0, 0.05)'
+
+                },
+            },
+            cells: {
+                style: {
+                    paddingLeft: '8px', // override the cell padding for data cells
+                    paddingRight: '8px'
+                },
+            },
+        };
 
         return (
             <div>
@@ -259,32 +376,16 @@ export class DownloadHandleData extends React.Component {
                         </div>
                     </div>
                     <div className="grid mt5 shadow-sm">
-                        <table className="table">
-                            <thead>
-                            <tr>
-                                <th scope="col"></th>
-                                <th scope="col">Nom du fichier</th>
-                                <th scope="col">Taille (en bytes)</th>
-                                <th scope="col">Date de début</th>
-                                <th scope="col">Date de fin</th>
-                            </tr>
-                            </thead>
-                            <tbody>
+                        <DataTable
+                            columns={columns}
+                            data={elts}
+                            selectableRows
+                            onSelectedRowsChange={this.handler}
+                            persistSelectedRowsOnPageChange
+                            paginationTotalRows={this.state.totalLength}
+                            customStyles={customStyles}
+                        />
 
-                            {elts === [] || Object.keys(elts).length === 0 ?
-                                <tr>
-                                    <td colSpan='7' className="text-center">Pas de données</td>
-                                </tr> :
-                                Object.keys(elts).map(function (key, index) {
-                                    return <RowItem key={index} item={elts[key]}
-                                                    handler={handler}
-                                                    selectedElements={selectedElements}
-                                                    beginDate={beginDate}
-                                                    endDate={endDate}
-                                    />
-                                })}
-                            </tbody>
-                        </table>
                         <div className="p-4">
                             {Object.keys(elts).length ?
                                 <div className="col-12 text-center">

@@ -92,7 +92,7 @@ body {
 .main-download .title {
     font-size: 24px;
     font-weight: 700;
-    margin: 55px auto;
+    margin: 12px auto;
 }
 
 .main-download .tab-download .nav-link.active {
@@ -101,7 +101,7 @@ body {
 }
 
 .main-download .tab-download {
-    margin: 55px auto 30px;
+    margin: 12px auto 30px;
 }
 
 .main-download .btn-search {
@@ -127,10 +127,6 @@ body {
 
 .main-download .jumbotron .border-right {
     border-right: 1px solid #B4B4B4 !important;
-}
-
-.main-download .download-detail {
-    margin-top: 40px;
 }
 
 .main-download .download-detail .grid {

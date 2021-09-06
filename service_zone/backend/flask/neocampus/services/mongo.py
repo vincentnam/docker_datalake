@@ -47,6 +47,10 @@ def get_metadata(db_name, params):
 
     metadata = collection.find(dict_query)
 
+    # Sort columns
+    if("sort_field" in params.keys() and "sort_value" in params.keys()):
+        metadata.sort(params['sort_field'], params['sort_value'])
+
     if("offset" in params.keys() and "limit" in params.keys()):
         metadata = metadata.skip(params['offset'])
         metadata = metadata.limit(params['limit'])
