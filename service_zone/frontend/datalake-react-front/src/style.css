@@ -235,3 +235,6 @@ body {
     color: #E9973B;
 }
 
+::-webkit-calendar-picker-indicator {
+    background-image: url('datepicker-calendar.png');
+}
