@@ -1,5 +1,0 @@
-- name: "OS distribution : Fedora"
-  block:
-    - name: Install system packages
-      ansible.builting.debug:
-        msg: "ToDo"

@@ -31,20 +31,34 @@
     ansible.builtin.file:
       path: '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}/metadata_management_zone_mongoDB/docker-entrypoint.sh'
       mode: '755'
-
-  - name: Create MongoDB container
-    docker_image:
-      name: "mongo-enterprise:{{MONGODB_VERSION|lower}}"
-      source: "build"
-      build:
-        pull: "yes"
-        path: "{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR}}/metadata_management_zone_mongoDB/"
-        args:
-          MONGO_PACKAGE: "mongodb-enterprise"
-          MONGO_REPO: "repo.mongodb.com"
-    become: yes   
-  - name: Run MongoDB 
-    docker_container:
-      name: "metadata_management_system_mongodb_{{MONGODB_VERSION | lower}}"
-      image: "mongo-enterprise:{{MONGODB_VERSION | lower}}"
+  - name: Stop and delete any container
+    shell :
+      cmd : "docker stop $(docker ps -a -q); docker rm $(docker ps -a -q)"
     become: yes
+    ignore_errors: yes
+  - name : Build MongoDB container
+    shell:
+      cmd: 'docker build --build-arg MONGO_PACKAGE=mongodb-enterprise --build-arg MONGO_REPO=repo.mongodb.com -t {{MONGODB_USER}}/mongo-enterprise:{{MONGODB_VERSION|lower}} .'
+      chdir: '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR}}/metadata_management_zone_mongoDB/'
+    become: yes
+  - name: Start MongoDB container
+    shell:
+      cmd: 'docker run --name {{MONGODB_NAME}} -itd {{MONGODB_USER}}/mongo-enterprise:{{MONGODB_VERSION|lower}}'
+      chdir: '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR}}/metadata_management_zone_mongoDB/'
+    become: yes
+ #- name: Create MongoDB container
+  #  docker_image:
+   #   name: "mongo-enterprise:{{MONGODB_VERSION|lower}}"
+    #  source: "build"
+     # build:
+      #  pull: "yes"
+       # path: "{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR}}/metadata_management_zone_mongoDB/"
+#        args:
+ #         MONGO_PACKAGE: "mongodb-enterprise"
+  #        MONGO_REPO: "repo.mongodb.com"
+   # become: yes
+ # - name: Run MongoDB
+  #  docker_container:
+  #    name: "metadata_management_system_mongodb_{{MONGODB_VERSION | lower}}"
+   #   image: "mongo-enterprise:{{MONGODB_VERSION | lower}}"
+    #become: yes
