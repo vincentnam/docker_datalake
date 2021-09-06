@@ -411,8 +411,7 @@ export class DownloadRaw extends React.Component {
             cells: {
                 style: {
                     paddingLeft: '8px', // override the cell padding for data cells
-                    paddingRight: '8px',
-                    backgroundColor: 'rgba(0, 0, 0, 0.05)'
+                    paddingRight: '8px'
                 },
             },
         };

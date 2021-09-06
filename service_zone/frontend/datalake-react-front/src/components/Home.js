@@ -7,10 +7,13 @@ import api from '../api/api';
 import { config_processed_data } from '../configmeta/config_processed_data';
 import { Filters } from "./download-raw-data/Filters";
 import {RowItem} from './download-raw-data/RowItem';
+import Moment from "moment";
+import DataTable from 'react-data-table-component';
 import { LoadingSpinner } from "./utils/LoadingSpinner";
 
 export class Home extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
+    selectedElementsOnActualPage = []
 
     constructor(props) {
         super(props);
@@ -42,16 +45,31 @@ export class Home extends React.Component {
     }
 
     loadObjectsFromServer() {
-        this.handleShow()
-        $.ajax({
-            url: this.url + '/raw-data',
-            data: JSON.stringify({
+        let data = null
+        if(this.state.sort_field && this.state.sort_value) {
+            data = JSON.stringify({
+                limit: this.state.perPage,
+                offset: this.state.offset,
+                filetype: this.state.filetype,
+                beginDate: this.state.beginDate,
+                endDate: this.state.endDate,
+                sort_field: this.state.sort_field,
+                sort_value: this.state.sort_value
+            })
+        } else {
+            data = JSON.stringify({
                 limit: this.state.perPage,
                 offset: this.state.offset,
                 filetype: this.state.filetype,
                 beginDate: this.state.beginDate,
                 endDate: this.state.endDate
-            }),
+            })
+        }
+
+        this.handleShow()
+        $.ajax({
+            url: this.url + '/raw-data',
+            data: data,
             xhrFields: {
                 withCredentials: true
             },
@@ -149,19 +167,45 @@ export class Home extends React.Component {
     }
 
     
-    handler(selectedElements, event) {
-        let selectedElementsTemp = this.getSelectedElements()
+    handler(event) {
+        //console.log(event)
 
-        // if checked
-        if (event.target.checked) {
-            selectedElementsTemp.push(selectedElements)
+        // selected elements on all pages
+        let selectedElements = this.getSelectedElements()
 
-        } else {
-            selectedElementsTemp = selectedElementsTemp.filter((element) => JSON.stringify(element) !== JSON.stringify(selectedElements))
+        // selected elements on actual page (component React DataTable send selected elements only on actual page)
+
+        // in actual page, if elements have been selected, add selected ones into selected elements global array
+        if(event.selectedRows !== undefined) {
+            // loop into selected rows in actual page
+            event.selectedRows.map((element) => {
+                // if selected rowx in actual page is not in global selected elements
+                console.log('page actuelle')
+                console.log(this.selectedElementsOnActualPage)
+                if(!this.selectedElementsOnActualPage.includes(element)){
+                    console.log('AJOUTE')
+                    //selectedElements.push(element)
+                } 
+            })
         }
 
+       /* if(this.selectedElementsOnActualPage.length > 0) {
+            this.selectedElementsOnActualPage.map((selectedElement) => {
+                console.log('SELECTION')
+                console.log(event.selectedRows)
+                if(!event.selectedRows.includes(selectedElement)) {
+                    var index = selectedElements.indexOf(selectedElement)
+                    if(index != -1) {
+                        console.log('INDEX')
+                        console.log(index)
+                        selectedElements.splice(index, 1)
+                    }
+                }
+            })
+        }*/
+
         this.setState({
-            selectedElements: selectedElementsTemp
+            selectedElements: event.selectedRows
         })
     }
 
@@ -227,11 +271,131 @@ export class Home extends React.Component {
             elts = this.state.elements
         }
 
+         // sort columns
+         const handleSort = async (column, sortDirection) => {
+            /// reach out to some API and get new data using or sortField and sortDirection
+        
+            console.log(column)
+            console.log(sortDirection)
+            // for desc
+            let sort = 1
+            if(this.state.sort_value == 1) {
+                sort = -1
+            }
+            this.setState({
+                sort_field: column.id,
+                sort_value: sort
+            }, () => {
+                this.loadObjectsFromServer();
+            })
+        };
+
         let filterData = {
             'filetype': this.state.filetype,
             'beginDate': this.state.beginDate,
             'endDate': this.state.endDate
         }
+
+         //  Internally, customStyles will deep merges your customStyles with the default styling.
+         const customStyles = {
+            table: {
+                style: {
+                    padding: '0.5rem 0.5rem',
+                    borderBottomWidth: '1px',
+                    boxShadow: 'inset 0 0 0 9999px var(--bs-table-accent-bg)',
+                    '--bs-table-bg': 'transparent',
+                    '--bs-table-accent-bg': 'transparent',
+                    '--bs-table-striped-color': '#212529',
+                    '--bs-table-striped-bg': 'rgba(0, 0, 0, 0.05)',
+                    '--bs-table-active-color': '#212529',
+                    '--bs-table-active-bg': 'rgba(0, 0, 0, 0.1)',
+                    '--bs-table-hover-color': '#212529',
+                    '--bs-table-hover-bg': 'rgba(0, 0, 0, 0.075)',
+                    width: '100%',
+                    marginBottom: '1rem',
+                    color: '#212529',
+                    verticalAlign: 'top',
+                    borderColor: '#dee2e6',
+                    backgroundColor: 'rgba(0, 0, 0, 0.05)'
+                }
+            },
+            rows: {
+                style: {
+                    minHeight: '72px', // override the row height
+                    '&:hover': {
+                        cursor: 'pointer',
+                        backgroundColor: '#ea973b'
+                      },
+                },
+            },
+            headCells: {
+                style: {
+                    paddingLeft: '8px', // override the cell padding for head cells
+                    paddingRight: '8px',
+                    color: '#ea973b' ,
+                    borderColor: 'inherit',
+                    borderStyle: 'solid',
+                    borderWidth: '0',
+                    borderBottomColor: 'currentColor',
+                    backgroundColor: 'rgba(0, 0, 0, 0.05)'
+
+                },
+            },
+            cells: {
+                style: {
+                    paddingLeft: '8px', // override the cell padding for data cells
+                    paddingRight: '8px'
+                },
+            },
+        };
+
+        const columns = [
+            {
+                id: 'swift_object_id',
+                name: "Id objet Swift",
+                selector: row => row.swift_object_id,
+                sortable: true,
+            },
+            {
+                id: 'swift_container',
+                name: "Container Swift",
+                selector: row => row.swift_container
+            },
+            {
+                id: 'content_type',
+                name: "Type de fichier",
+                selector: row => row.content_type,
+                sortable: true,
+            },
+            {
+                id: 'swift_user',
+                name: "Utilisateur Swift",
+                selector: row => row.swift_user,
+                sortable: true,
+            },
+            {
+                id: 'original_object_name',
+                name: "Nom de l'objet",
+                selector: row => row.original_object_name,
+                sortable: true,
+            },
+            {
+                id: 'meta1',
+                name: "Meta 1",
+                selector: row => row.other_data ? row.other_data['meta1'] : '-'
+            },
+            {
+                id: 'meta2',
+                name: "Meta 2",
+                selector: row => row.other_data ? row.other_data['meta2'] : '-'
+            },
+            {
+                id: 'creation_date',
+                name: "Date de création",
+                selector: row => Moment(row.creation_date).format('YYYY-MM-DD hh:mm:ss'),
+                sortable: true
+            },
+        ];
 
         return (
             <div>
@@ -250,36 +414,19 @@ export class Home extends React.Component {
                     <div className="download-detail">
                         <div className="title">Dernières données brutes uploadées</div>
                         <div className="grid mt5 shadow-sm">
-                            <table className="table sortable">
-                                <thead>
-                                <tr>
-                                    <th scope="col"></th>
-                                    <th scope="col">Id objet Swift</th>
-                                    <th scope="col">Container Swift</th>
-                                    <th scope="col">Type de fichier</th>
-                                    <th scope="col">Utilisateur Swift</th>
-                                    <th scope="col">Nom de l'objet</th>
-                                    <th scope="col">Meta 1</th>
-                                    <th scope="col">Meta 2</th>
-                                    <th scope="col">Date de création</th>
-                                </tr>
-                                </thead>
-                                <tbody>
+                            <DataTable
+                                columns={columns}
+                                data={elts}
+                                selectableRows
+                                onSelectedRowsChange={this.handler}
+                                selectableRowSelected={this.isSelected}
+                                persistSelectedRowsOnPageChange
+                                paginationTotalRows={this.state.totalLength}
+                                onSort={handleSort}
+                                sortServer
+                                customStyles={customStyles}
+                            />
 
-                                {!elts.length ? <tr>
-                                        <td colSpan='7' className="text-center">Pas de données</td>
-                                    </tr> :
-
-                                    Object.keys(elts).map(function (key, index) {
-
-                                        return <RowItem key={index} item={elts[key]}
-                                                        handler={handler}
-                                                        selectedElements={selectedElements}/>
-
-                                    })}
-
-                                </tbody>
-                            </table>
                             <div className="p-4">
                                 {elts.length ?
                                     <div className="col-12 text-center">
