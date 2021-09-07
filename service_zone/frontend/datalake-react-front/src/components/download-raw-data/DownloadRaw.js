@@ -11,6 +11,54 @@ import { ToastContainer, toast } from 'react-toastify';
 import DataTable from 'react-data-table-component';
 import Moment from 'moment';
 
+ const columns = [
+            {
+                id: 'swift_object_id',
+                name: "Id objet Swift",
+                selector: row => row.swift_object_id,
+                sortable: true,
+            },
+            {
+                id: 'swift_container',
+                name: "Container Swift",
+                selector: row => row.swift_container
+            },
+            {
+                id: 'content_type',
+                name: "Type de fichier",
+                selector: row => row.content_type,
+                sortable: true,
+            },
+            {
+                id: 'swift_user',
+                name: "Utilisateur Swift",
+                selector: row => row.swift_user,
+                sortable: true,
+            },
+            {
+                id: 'original_object_name',
+                name: "Nom de l'objet",
+                selector: row => row.original_object_name,
+                sortable: true,
+            },
+            {
+                id: 'meta1',
+                name: "Meta 1",
+                selector: row => row.other_data ? row.other_data['meta1'] : '-'
+            },
+            {
+                id: 'meta2',
+                name: "Meta 2",
+                selector: row => row.other_data ? row.other_data['meta2'] : '-'
+            },
+            {
+                id: 'creation_date',
+                name: "Date de création",
+                selector: row => Moment(row.creation_date).format('YYYY-MM-DD hh:mm:ss'),
+                sortable: true
+            },
+        ];
+
 export class DownloadRaw extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
     title = 'Affichage des données brutes'
@@ -55,6 +103,7 @@ export class DownloadRaw extends React.Component {
         if (selectedElements) {
             selectedElements.map(s => {
                 if (JSON.stringify(s) == JSON.stringify(row)) {
+                    this.selectedElementsOnActualPage.push(s)
                     checked = true
                 }
             })
@@ -64,10 +113,10 @@ export class DownloadRaw extends React.Component {
     }
 
     handler(event) {
-        //console.log(event)
-
         // selected elements on all pages
         let selectedElements = this.getSelectedElements()
+
+        let selectedElementsTemp = selectedElements
 
         // selected elements on actual page (component React DataTable send selected elements only on actual page)
 
@@ -75,33 +124,32 @@ export class DownloadRaw extends React.Component {
         if(event.selectedRows !== undefined) {
             // loop into selected rows in actual page
             event.selectedRows.map((element) => {
-                // if selected rowx in actual page is not in global selected elements
+                // if selected rows in actual page are not in global selected elements
                 console.log('page actuelle')
                 console.log(this.selectedElementsOnActualPage)
-                if(!this.selectedElementsOnActualPage.includes(element)){
+                if(!this.selectedElementsOnActualPage.includes(element) && !selectedElements.includes(element)){
                     console.log('AJOUTE')
-                    //selectedElements.push(element)
+                    selectedElements.push(element)
                 } 
             })
-        }
 
-       /* if(this.selectedElementsOnActualPage.length > 0) {
-            this.selectedElementsOnActualPage.map((selectedElement) => {
-                console.log('SELECTION')
-                console.log(event.selectedRows)
-                if(!event.selectedRows.includes(selectedElement)) {
+            selectedElements.map((selectedElement) => {
+                // for deleting one row
+                if(!event.selectedRows.includes(selectedElement) && this.selectedElementsOnActualPage.includes(selectedElement)){
+                    console.log('SUPPRIME')
+
                     var index = selectedElements.indexOf(selectedElement)
                     if(index != -1) {
                         console.log('INDEX')
                         console.log(index)
-                        selectedElements.splice(index, 1)
+                        selectedElementsTemp.splice(index, 1)
                     }
                 }
             })
-        }*/
+        }
 
         this.setState({
-            selectedElements: event.selectedRows
+            selectedElements: selectedElementsTemp
         })
     }
 
@@ -143,6 +191,7 @@ export class DownloadRaw extends React.Component {
 
             // empty selected elements
             this.emptySelectedlements()
+            this.loadObjectsFromServer()
         } else {
             alert('Veuillez sélectionner une métadonnée !')
         }
@@ -171,6 +220,7 @@ export class DownloadRaw extends React.Component {
     }
 
     handlePageClick = (data) => {
+        this.selectedElementsOnActualPage = []
         let selected = data.selected;
         let offset = Math.ceil(selected * this.state.perPage);
 
@@ -256,6 +306,7 @@ export class DownloadRaw extends React.Component {
     }
 
     validateFilters() {
+        this.emptySelectedlements()
         this.setState({
             offset: 0
         }, () => {
@@ -282,71 +333,10 @@ export class DownloadRaw extends React.Component {
         }
         //let loading = this.state.loading
 
-        const columns = [
-            {
-                id: 'swift_object_id',
-                name: "Id objet Swift",
-                selector: row => row.swift_object_id,
-                sortable: true,
-            },
-            {
-                id: 'swift_container',
-                name: "Container Swift",
-                selector: row => row.swift_container
-            },
-            {
-                id: 'content_type',
-                name: "Type de fichier",
-                selector: row => row.content_type,
-                sortable: true,
-            },
-            {
-                id: 'swift_user',
-                name: "Utilisateur Swift",
-                selector: row => row.swift_user,
-                sortable: true,
-            },
-            {
-                id: 'original_object_name',
-                name: "Nom de l'objet",
-                selector: row => row.original_object_name,
-                sortable: true,
-            },
-            {
-                id: 'meta1',
-                name: "Meta 1",
-                selector: row => row.other_data ? row.other_data['meta1'] : '-'
-            },
-            {
-                id: 'meta2',
-                name: "Meta 2",
-                selector: row => row.other_data ? row.other_data['meta2'] : '-'
-            },
-            {
-                id: 'creation_date',
-                name: "Date de création",
-                selector: row => Moment(row.creation_date).format('YYYY-MM-DD hh:mm:ss'),
-                sortable: true
-            },
-        ];
-
-        const handlePageChange = async (newPerPage, page) => {
-
-            //let selected = data.selected;
-            let offset = Math.ceil((newPerPage-1) * this.state.perPage);
-    
-            this.setState({offset: offset}, () => {
-                this.loadObjectsFromServer();
-            });
-    
-            //setData(response.data.data);
-            //setPerPage(this.state.perPage);
-            //setLoading(false);
-        };
-
         // sort columns
         const handleSort = async (column, sortDirection) => {
             /// reach out to some API and get new data using or sortField and sortDirection
+            this.emptySelectedlements()
         
             console.log(column)
             console.log(sortDirection)
@@ -439,8 +429,6 @@ export class DownloadRaw extends React.Component {
                         </div>
                     </div>
                     <div className="grid mt5 shadow-sm">
-                        
-
                         <DataTable
                             columns={columns}
                             data={elts}
@@ -451,7 +439,6 @@ export class DownloadRaw extends React.Component {
                             paginationTotalRows={this.state.totalLength}
                             onSort={handleSort}
                             sortServer
-                            onChangePage={handlePageChange}
                             customStyles={customStyles}
                         />
 
