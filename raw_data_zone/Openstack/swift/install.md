@@ -306,3 +306,10 @@ Lancement swift :
     
  ### Warning !
  Airflow has to be launched to make swift works.
+ 
+
+
+
+## Docker container : 
+
+Don't forget to update bin/remakerings unless it wont work.

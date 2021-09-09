@@ -12,13 +12,5 @@
   - name: Print all available facts
     ansible.builtin.debug:
       var: hostvars.metadata_management_zone_mongodb.BUILD_DIR
-  - name: Create a build directory 
-    ansible.builtin.file:
-      path: "{{ hostvars.process_zone_apache_airflow.BUILD_DIR}}/process_zone_apache_airflow"
-      state: directory
-      mode: "0755"
-#curl -LfO 'https://airflow.apache.org/docs/apache-airflow/2.1.2/docker-compose.yaml'
-  - name: get Dockerfile for container building
-    get_url:
-      url : 'https://airflow.apache.org/docs/apache-airflow/2.1.2/docker-compose.yaml'
-      dest : '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}/metadata_management_zone_mongoDB/'
+
+# TODO
