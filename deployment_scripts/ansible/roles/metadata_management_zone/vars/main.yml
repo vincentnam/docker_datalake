@@ -2,3 +2,4 @@
 MONGODB_VERSION: 4.4
 MONGODB_USER: datalake
 MONGODB_NAME: metadata_management_system_mongodb
+MONGODB_PORT: 27017

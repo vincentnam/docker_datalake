@@ -1,8 +1,11 @@
 ---
 
-- import_playbook: "{{playbook_dir}}/../../base/tasks/main.yml"
+
+- import_playbook: "{{playbook_dir}}/../../base/tasks/docker_install.yml"
   vars:
     host: process_zone_apache_airflow
+
+
 
 
 - name : Download files
