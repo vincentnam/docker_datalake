@@ -19,6 +19,7 @@ import {
 import {Download} from './components/Download';
 import {DownloadRaw} from './components/download-raw-data/DownloadRaw';
 import {DownloadHandleData} from './components/download-handled-data/DownloadHandleData';
+import {Models} from './components/Models';
 
 ReactDOM.render(
     <React.StrictMode>
@@ -39,6 +40,9 @@ ReactDOM.render(
                     </Route>
                     <Route path="/data-processed-visualization">
                         <ProcessedDataVisualisationTimeSeries/>
+                    </Route>
+                    <Route path="/models">
+                        <Models/>
                     </Route>
                     <Route path="/">
                         <Home/>
