@@ -204,6 +204,11 @@ def get_models():
 
     return jsonify({'models': ""})
 
+@mongo_data_bp.route('/models/params', methods=['GET'])
+def get_models_params():
+    
+    return jsonify({'models': ""})
+
 @mongo_data_bp.route('/models/add', methods=['POST'])
 def add_models():
     
