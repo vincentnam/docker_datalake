@@ -37,7 +37,7 @@ export class Models extends React.Component {
         });
     }
     //handleCallbackData = (childData) =>{
-    //    this.setState({dataFilters: childData})
+    //    this.setState({model: childData})
     //}
     
     render() {
@@ -65,7 +65,7 @@ export class Models extends React.Component {
             ));
 
             return (
-                <div className="col-sm-4">
+                <div className="col-sm-3 border">
                     {Allmodels}
                 </div>
             );
@@ -76,7 +76,11 @@ export class Models extends React.Component {
                 <Header />
                 <div className="container mt-4">
                     <h3>Modèle configurations</h3>
-                    <Formulaire/>
+                    <div className="row d-flex">
+                        <ListModels />
+                        <Formulaire/>
+                    </div>
+                    
                 </div>
             </div>
         );

@@ -198,3 +198,18 @@ def get_handled_data_zipped_file():
         )
     else:
         return jsonify({'msg': "No content available."})
+
+@mongo_data_bp.route('/models', methods=['GET'])
+def get_models():
+
+    return jsonify({'models': ""})
+
+@mongo_data_bp.route('/models/add', methods=['POST'])
+def add_models():
+    
+    return jsonify({'model': ""})
+
+@mongo_data_bp.route('/models/edit', methods=['PUT'])
+def edit_models():
+    
+    return jsonify({'model': ""})
