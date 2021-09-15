@@ -80,7 +80,7 @@ export class Models extends React.Component {
         return (
             <div>
                 <Header />
-                <div className="container mt-4">
+                <div className="container mt-4 mb-4">
                     <h3>Modèle configurations</h3>
                     <div className="row d-flex justify-content-between mt-4">
                         <ListModels />

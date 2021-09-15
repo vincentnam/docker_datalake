@@ -8,8 +8,18 @@ export class ModelAddForm extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            models: [],
-            model: {},
+            metadonnees: [
+                {
+                    label: "",
+                    type: "",
+                    name: ""
+                }
+            ],
+            meta: {
+                label: "",
+                type: "",
+                name: ""
+            },
             label: "",
             newModel: {},
             typesFiles: types_files,
@@ -18,6 +28,7 @@ export class ModelAddForm extends React.Component {
         this.handleChange = this.handleChange.bind(this);
         this.handleChangeType = this.handleChangeType.bind(this);
         this.submitModels = this.submitModels.bind(this);
+        this.addMeta = this.addMeta.bind(this);
     }
     loadModel() {
         api.get('models')
@@ -61,14 +72,27 @@ export class ModelAddForm extends React.Component {
             [name]: value,
         });
     }
+
+    addMeta() {
+        const name = "metadonnees";
+        let data = Array.from(this.state.metadonnees);
+        data.push(this.state.meta);
+        this.setState({
+            [name]: data
+        });
+    }
+
     //handleCallbackData = (childData) =>{
     //    this.setState({dataFilters: childData})
     //}
 
     render() {
-        const Metadonnees = () => {
-            return (
-                <div className="card col-sm-5 mt-2 mb-2 pb-2 pt-2">
+        let Metadonnees = () => {
+            let data = Array.from(this.state.metadonnees);
+            let id = 0;
+            let listMetadonnees = data.map((meta) => (
+                <div className="card col-sm-5 mt-2 mb-2 pb-2 pt-2" key={id = id + 1}>
+                    <h6>Métadonnée n°{id + 1}</h6>
                     <FormGroup>
                         <FormLabel>Label</FormLabel>
                         <Form.Control
@@ -89,13 +113,18 @@ export class ModelAddForm extends React.Component {
                         <FormLabel>Name</FormLabel>
                         <Form.Control
                             type="text"
-                            placeholder="Name de la métadonnée" />
+                            placeholder="Name de la métadonnée"
+                        />
                     </FormGroup>
+                </div>
+            ));
+
+            return (
+                <div className="row d-flex justify-content-around col-sm-12">
+                    {listMetadonnees}
                 </div>
             );
         }
-
-
 
         return (
             <div className="col-sm-10 card pt-2 pb-2">
@@ -107,6 +136,7 @@ export class ModelAddForm extends React.Component {
                             type="text"
                             placeholder="Label du modèle"
                             name="label"
+                            value={this.state.label}
                             onChange={this.handleChange}
                         />
                     </FormGroup>
@@ -123,16 +153,12 @@ export class ModelAddForm extends React.Component {
                     <FormGroup className="mt-2">
                         <div>
                             <FormLabel>Métadonnées</FormLabel>
-                            <button className="btn btn-primary btn-sm m-2">Ajouter</button>
+                            <a className="btn btn-primary btn-sm m-2" onClick={this.addMeta}>Ajouter</a>
                         </div>
-                        <div className="row d-flex justify-content-around col-sm-12">
-                            <Metadonnees />
-                            <Metadonnees />
-                            <Metadonnees />
-                        </div>
+                        <Metadonnees />
                     </FormGroup>
                 </Form>
-            </div>
+            </div >
         );
     }
 }
