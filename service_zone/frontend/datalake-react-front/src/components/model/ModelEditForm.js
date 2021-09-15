@@ -46,8 +46,8 @@ export class ModelEditForm extends React.Component {
     
     render() {
         return (
-            <div>
-                <h3>Model edit</h3>
+            <div className="col-sm-8 card pt-2 pb-2">
+                <h5>Modification d'un modèle de métadonnées</h5>
             </div>
         );
     }

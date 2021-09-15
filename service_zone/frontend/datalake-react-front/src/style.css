@@ -238,3 +238,12 @@ body {
 ::-webkit-calendar-picker-indicator {
     background-image: url('datepicker-calendar.png');
 }
+
+.modelsList > a {
+    color: #E9973B;
+    text-decoration:none;
+}
+.modelsList > a:hover {
+    color: black;
+    text-decoration:none;
+}

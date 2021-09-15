@@ -11,7 +11,7 @@ export class Models extends React.Component {
             models: [],
             model: {},
             newModel: {},
-            show: "",
+            show: "add",
         };
     }
 
@@ -61,12 +61,18 @@ export class Models extends React.Component {
 
         const ListModels = () => {
             const Allmodels = this.state.models.map((model) => (
-                <a>{model.label}</a>
+                <a href="" className="mt-2"><b>{model.label}</b></a>
             ));
 
             return (
-                <div className="col-sm-3 border">
+                <div className="col-sm-2 card modelsList pt-2 pb-2">
+                    <h5>Liste des modèles de métadonnées</h5>
                     {Allmodels}
+                    <a className="mt-2" href=""><b>Model 1</b></a>
+                    <a className="mt-2" href=""><b>Model 2</b></a>
+                    <a className="mt-2" href=""><b>Model 3</b></a>
+                    <a className="mt-2" href=""><b>Model 4</b></a>
+                    <a className="mt-2" href=""><b>Model 5</b></a>
                 </div>
             );
         };
@@ -76,7 +82,7 @@ export class Models extends React.Component {
                 <Header />
                 <div className="container mt-4">
                     <h3>Modèle configurations</h3>
-                    <div className="row d-flex">
+                    <div className="row d-flex justify-content-between mt-4">
                         <ListModels />
                         <Formulaire/>
                     </div>
