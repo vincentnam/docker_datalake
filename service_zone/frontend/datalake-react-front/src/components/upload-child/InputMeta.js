@@ -25,8 +25,8 @@ export class InputMeta extends React.Component {
             <div key={this.props.meta.name} class="mb-3 col">
                 <label class="form-label meta-label">{this.props.meta.label}</label>
                 <input value={this.props.meta.value} onChange={(event) => this.editMeta(event)}
-                       type={this.props.meta.type} name={this.props.meta.name} class="form-control"
-                       placeholder="Saisissez vos métadonnées"/>
+                    type={this.props.meta.type} name={this.props.meta.name} class="form-control"
+                    placeholder="Saisissez vos métadonnées" />
             </div>
         )
     }

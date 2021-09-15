@@ -10,12 +10,14 @@ export class ModelAddForm extends React.Component {
         this.state = {
             models: [],
             model: {},
+            label: "",
             newModel: {},
             typesFiles: types_files,
             selectedTypesFiles: null
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleChangeType = this.handleChangeType.bind(this);
+        this.submitModels = this.submitModels.bind(this);
     }
     loadModel() {
         api.get('models')
@@ -29,7 +31,9 @@ export class ModelAddForm extends React.Component {
             });
     }
 
-    submitModels() {
+    submitModels(event) {
+        event.preventDefault();
+        console.log('add');
         api.post('models/add')
             .then((response) => {
                 console.log(response)
@@ -40,9 +44,8 @@ export class ModelAddForm extends React.Component {
     }
 
     handleChangeType(event) {
-        console.log(event);
         let types = [];
-        event.forEach( type =>types.push(type.value) );
+        event.forEach(type => types.push(type.value));
         const name = "selectedTypesFiles";
         this.setState({
             [name]: types,
@@ -50,7 +53,6 @@ export class ModelAddForm extends React.Component {
     }
 
     handleChange(event) {
-        console.log(event);
         const target = event.target;
         const value = target.type === 'checkbox' ? target.checked : target.value;
         const name = target.name;
@@ -69,7 +71,10 @@ export class ModelAddForm extends React.Component {
                 <div className="card col-sm-5 mt-2 mb-2 pb-2 pt-2">
                     <FormGroup>
                         <FormLabel>Label</FormLabel>
-                        <Form.Control type="text" placeholder="Label de la métadonnée"></Form.Control>
+                        <Form.Control
+                            type="text"
+                            placeholder="Label de la métadonnée"
+                        ></Form.Control>
                     </FormGroup>
                     <FormGroup>
                         <FormLabel>Type de champs</FormLabel>
@@ -82,7 +87,9 @@ export class ModelAddForm extends React.Component {
                     </FormGroup>
                     <FormGroup>
                         <FormLabel>Name</FormLabel>
-                        <Form.Control type="text" placeholder="Name de la métadonnée"></Form.Control>
+                        <Form.Control
+                            type="text"
+                            placeholder="Name de la métadonnée" />
                     </FormGroup>
                 </div>
             );
@@ -96,10 +103,15 @@ export class ModelAddForm extends React.Component {
                 <Form onSubmit={this.submitModels}>
                     <FormGroup>
                         <FormLabel>Label</FormLabel>
-                        <Form.Control type="text" placeholder="Label du modèle"></Form.Control>
+                        <Form.Control
+                            type="text"
+                            placeholder="Label du modèle"
+                            name="label"
+                            onChange={this.handleChange}
+                        />
                     </FormGroup>
                     <FormGroup>
-                        <FormLabel>Types de fichiers</FormLabel>
+                        <FormLabel className="mt-2">Types de fichiers</FormLabel>
                         <Select
                             onChange={this.handleChangeType}
                             isMulti
@@ -111,11 +123,9 @@ export class ModelAddForm extends React.Component {
                     <FormGroup className="mt-2">
                         <div>
                             <FormLabel>Métadonnées</FormLabel>
-                            <button className="btn btn-primary btn-sm">Ajouter</button>
+                            <button className="btn btn-primary btn-sm m-2">Ajouter</button>
                         </div>
                         <div className="row d-flex justify-content-around col-sm-12">
-                            <Metadonnees />
-                            <Metadonnees />
                             <Metadonnees />
                             <Metadonnees />
                             <Metadonnees />
