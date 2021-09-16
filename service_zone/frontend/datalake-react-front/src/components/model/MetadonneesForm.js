@@ -7,7 +7,7 @@ export class MetadonneesForm extends React.Component {
         this.handleChange = this.handleChange.bind(this);
     }
     handleClick = () => {
-        this.props.onDeleteMeta(this.props.value);
+        this.props.onDeleteMeta(this.props.meta.id);
     };
     handleChange = (event) => {
         this.props.onHandleChange(event, this.props.value);

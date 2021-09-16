@@ -11,12 +11,14 @@ export class ModelAddForm extends React.Component {
         this.state = {
             metadonnees: [
                 {
+                    id: 1,
                     label: "test1",
                     type: "text",
                     name: "text12"
                 }
             ],
             meta: {
+                id: 0,
                 label: "",
                 type: "",
                 name: ""
@@ -48,7 +50,14 @@ export class ModelAddForm extends React.Component {
     submitModels(event) {
         event.preventDefault();
         console.log('add');
-        api.post('models/add')
+        console.log(this.state.label);
+        console.log(this.state.selectedTypesFiles);
+        console.log(this.state.metadonnees);
+        api.post('models/add', {
+            label: this.state.label,
+            type_file_accepted: this.state.selectedTypesFiles,
+            metadonnees: this.state.metadonnees
+        })
             .then((response) => {
                 console.log(response)
             })
@@ -79,7 +88,17 @@ export class ModelAddForm extends React.Component {
     addMeta() {
         const name = "metadonnees";
         let data = Array.from(this.state.metadonnees);
-        data.push(this.state.meta);
+        let totalMetadonnees = data.length;
+        let lastNumber = this.state.metadonnees[totalMetadonnees - 1].id;
+        console.log(lastNumber);
+        data.push(
+            {
+                id: lastNumber + 1,
+                label: "",
+                type: "",
+                name: ""
+            }
+        );
         this.setState({
             [name]: data
         });
@@ -88,10 +107,15 @@ export class ModelAddForm extends React.Component {
     deleteMeta(id) {
         const name = "metadonnees";
         let data = Array.from(this.state.metadonnees);
-        const index = data.indexOf(id-1);
-        data.splice(index, 1);
+        let afterdelete = [];
+        data.forEach(d => {
+            if(d.id != id) {
+                afterdelete.push(d);
+            }
+        });
+
         this.setState({
-            [name]: data
+            [name]: afterdelete
         });
     }
 
@@ -103,17 +127,17 @@ export class ModelAddForm extends React.Component {
         const target = event.target;
         const value = target.type === 'checkbox' ? target.checked : target.value;
         const valueName = target.name;
-        
+
         let data = this.state.metadonnees;
 
-        if(valueName === "label") {
-            data[id-1].label = value;
+        if (valueName === "label") {
+            data[id - 1].label = value;
         }
-        if(valueName === "type") {
-            data[id-1].type = value;
+        if (valueName === "type") {
+            data[id - 1].type = value;
         }
-        if(valueName === "name") {
-            data[id-1].name = value;
+        if (valueName === "name") {
+            data[id - 1].name = value;
         }
         this.setState({
             [name]: data
@@ -175,6 +199,7 @@ export class ModelAddForm extends React.Component {
                         </div>
                         <Metadonnees />
                     </FormGroup>
+                    <Button className="btn btn-primary" type="submit">Valider</Button>
                 </Form>
             </div >
         );
