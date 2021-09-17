@@ -19,7 +19,8 @@ def get_swift_original_object_name(swift_container_name, swift_object_id):
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.swift
     mongo_collection = mongo_db[swift_container_name]
-    metadata_swift = mongo_collection.find_one({"swift_object_id": swift_object_id})
+    metadata_swift = mongo_collection.find_one(
+        {"swift_object_id": swift_object_id})
 
     return metadata_swift.get('original_object_name')
 
@@ -33,17 +34,18 @@ def get_metadata(db_name, params):
     start_date = params['beginDate']
     end_date = params['endDate']
 
-    metadata = collection.find({ 'creation_date': { '$exists': 'true', '$ne': [] } })
+    metadata = collection.find(
+        {'creation_date': {'$exists': 'true', '$ne': []}})
     dict_query = {"$and": []}
 
     if(params['filetype'] != ""):
-        filetype_query = {"content_type": {'$in': params['filetype']}} 
+        filetype_query = {"content_type": {'$in': params['filetype']}}
         dict_query['$and'].append(filetype_query)
 
     if(params['beginDate'] != "" and params['endDate'] != ""):
         dates_query = {'creation_date': {'$gte': start_date, '$lt': end_date}}
-        for item in [dates_query]: 
-            dict_query['$and'].append(item) 
+        for item in [dates_query]:
+            dict_query['$and'].append(item)
 
     metadata = collection.find(dict_query)
 
@@ -64,7 +66,8 @@ def get_id():
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url)
     return mongo_client.stats.swift.find_one_and_update({"type": "object_id_file"}, {"$inc": {"object_id": 1}})[
-            "object_id"]
+        "object_id"]
+
 
 def init_id():
     id_doc = {"type": "object_id_file", "object_id": 0}
@@ -75,12 +78,13 @@ def init_id():
         client.insert_one(id_doc)
     client.create_index("type", unique=True)
 
+
 def insert_datalake(file_content, user, key, authurl, container_name,
                     file_name, processed_data_area_service, data_process,
                     application, content_type,
                     mongodb_url, other_data):
     conn = swiftclient.Connection(user=user, key=key,
-                                authurl=authurl)
+                                  authurl=authurl)
     client = MongoClient(mongodb_url, connect=False)
     db = client.swift
     coll = db[container_name]
@@ -111,7 +115,8 @@ def insert_datalake(file_content, user, key, authurl, container_name,
     else:
         meta_data["other_data"] = {}
     _opts = {}
-    stats_it = SwiftService(_opts).stat(container=container_name, objects=None, options=None)
+    stats_it = SwiftService(_opts).stat(
+        container=container_name, objects=None, options=None)
     if stats_it["object"] is None:
         conn.put_container(container_name)
     retry = 0
@@ -128,6 +133,7 @@ def insert_datalake(file_content, user, key, authurl, container_name,
             if retry > 3:
                 return None
 
+
 def get_handled_data(params):
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url)
@@ -136,12 +142,12 @@ def get_handled_data(params):
     collection_name = ""
 
     start = dt.strptime(params.get('beginDate'), '%Y-%m-%d')
-    end =  dt.strptime(params.get('endDate'), '%Y-%m-%d')
+    end = dt.strptime(params.get('endDate'), '%Y-%m-%d')
 
-       # if certain filetype is selected, query will be ran on different MongoDB database
+    # if certain filetype is selected, query will be ran on different MongoDB database
     # Example : Image -> data_conso database
     if("image" in params.get('filetype')):
-         # Database "data_historique"
+        # Database "data_historique"
         mongo_database = mongo_client.data_conso
 
         # Collection "traitement_historique"
@@ -150,11 +156,12 @@ def get_handled_data(params):
         start = start.isoformat()
         end = end.isoformat()
 
-         # Collection "traitement_historique"
+        # Collection "traitement_historique"
         collection_traitement_historique = mongo_database[collection_name]
 
         # Query result (Cursor object)
-        result_query = collection_traitement_historique.find({'creation_date': {'$gte': start, '$lt': end}},{"content_image":False})
+        result_query = collection_traitement_historique.find(
+            {'creation_date': {'$gte': start, '$lt': end}}, {"content_image": False})
 
     if(collection_name == ""):
         return {}, 0
@@ -167,3 +174,86 @@ def get_handled_data(params):
     count = result_query.count()
 
     return json_result, count
+
+
+def get_models_all():
+    """
+    get models
+    :return: all models
+    """
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.models_management
+    models = mongo_db["models"]
+    metadata_models = models.find()
+    return metadata_models
+
+
+def get_model_id(id):
+    """
+    get model with id
+    :param id
+    :return: a model
+    """
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.models_management
+    models = mongo_db["models"]
+    query = {"_id": id}
+    metadata_models_param = models.find(query)
+
+    return metadata_models_param
+
+def get_models_params(param):
+    """
+    get models with param string
+    :param 
+    :return: all models
+    """
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.models_management
+    models = mongo_db["models"]
+    query = {"type_file_accepted": param}
+    metadata_models_param = models.find(query)
+
+    return metadata_models_param
+
+
+def add_model(param):
+    """
+    insert model
+    :param 
+    :return: done
+    """
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.models_management
+    models = mongo_db["models"]
+    models.insert_one(param)
+    result = "done"
+    return result
+
+
+def update_model(param):
+    """
+    insert model
+    :param 
+    :return: done
+    """
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.models_management
+    models = mongo_db["models"]
+    
+    query = {"_id": param.id}
+    updatevalues = {"$set": {
+        "label": param.label,
+        "type_file_accepted": param.type_file_accepted,
+        "metadonnees": param.metadonnees
+    }}
+    
+    models.update_one(query, updatevalues)
+    result = "done"
+    return result
+

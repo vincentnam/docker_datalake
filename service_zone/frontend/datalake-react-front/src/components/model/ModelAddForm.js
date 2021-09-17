@@ -109,7 +109,7 @@ export class ModelAddForm extends React.Component {
         let data = Array.from(this.state.metadonnees);
         let afterdelete = [];
         data.forEach(d => {
-            if(d.id != id) {
+            if(d.id !== id) {
                 afterdelete.push(d);
             }
         });

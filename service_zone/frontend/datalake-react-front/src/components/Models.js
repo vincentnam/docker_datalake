@@ -13,14 +13,19 @@ export class Models extends React.Component {
             newModel: {},
             show: "add",
         };
+        this.loadModel = this.loadModel.bind(this);
+    }
+    componentDidMount() {
+        this.loadModel();
     }
 
     loadModel() {
-        api.get('models')
+        api.get('models/all')
             .then((response) => {
                 this.setState({
-                    models: response.data.models
+                    models: response.data.models.data
                 });
+                
             })
             .catch(function (error) {
                 console.log(error);
@@ -61,18 +66,13 @@ export class Models extends React.Component {
 
         const ListModels = () => {
             const Allmodels = this.state.models.map((model) => (
-                <a href="" className="mt-2"><b>{model.label}</b></a>
+                <a href="" className="mt-2" key={model._id}><b>{model.label}</b></a>
             ));
 
             return (
                 <div className="col-sm-2 card modelsList pt-2 pb-2">
                     <h5>Liste des modèles de métadonnées</h5>
                     {Allmodels}
-                    <a className="mt-2" href=""><b>Model 1</b></a>
-                    <a className="mt-2" href=""><b>Model 2</b></a>
-                    <a className="mt-2" href=""><b>Model 3</b></a>
-                    <a className="mt-2" href=""><b>Model 4</b></a>
-                    <a className="mt-2" href=""><b>Model 5</b></a>
                 </div>
             );
         };
