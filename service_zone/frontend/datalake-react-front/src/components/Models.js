@@ -2,6 +2,7 @@ import React from "react";
 import { Header } from './Header';
 import { ModelAddForm } from './model/ModelAddForm';
 import { ModelEditForm } from './model/ModelEditForm';
+import { Button } from "react-bootstrap";
 import api from '../api/api';
 
 export class Models extends React.Component {
@@ -9,11 +10,14 @@ export class Models extends React.Component {
         super(props);
         this.state = {
             models: [],
+            modelsCache: [],
             model: {},
             newModel: {},
-            show: "add",
+            show: "",
         };
         this.loadModel = this.loadModel.bind(this);
+        this.formAdd = this.formAdd.bind(this);
+        this.handleCallShow = this.handleCallShow.bind(this);
     }
     componentDidMount() {
         this.loadModel();
@@ -25,7 +29,16 @@ export class Models extends React.Component {
                 this.setState({
                     models: response.data.models.data
                 });
-                
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+
+        api.get('models/cache/all')
+            .then((response) => {
+                this.setState({
+                    modelsCache: response.data.models.data
+                });
             })
             .catch(function (error) {
                 console.log(error);
@@ -41,38 +54,61 @@ export class Models extends React.Component {
             [name]: value,
         });
     }
-    //handleCallbackData = (childData) =>{
-    //    this.setState({model: childData})
-    //}
-    
+
+    formAdd() {
+        this.setState({
+            model: {},
+            show: "add",
+        });
+    }
+
+    handleCallLoadModels = () => {
+        this.loadModel();
+    }
+
+    handleCallShow = () => {
+        this.setState({
+            show: "",
+        });
+    }
+
     render() {
-        
+
         const Formulaire = () => {
             if (this.state.show === "") {
                 return (
                     <div></div>
                 );
-            } else if(this.state.show === "add") {
+            } else if (this.state.show === "add") {
                 return (
-                    <ModelAddForm/>
+                    <ModelAddForm
+                        loading={this.handleCallLoadModels}
+                        show={this.handleCallShow}
+                    />
                 );
-            } else if(this.state.show === "edit") {
+            } else if (this.state.show === "edit") {
                 return (
-                    <ModelEditForm/>
+                    <ModelEditForm
+                        modelEdit={this.state.model}
+                    />
                 );
             }
         };
 
-
         const ListModels = () => {
-            const Allmodels = this.state.models.map((model) => (
+            const AllModels = this.state.models.map((model) => (
+                <a href="" className="mt-2" key={model._id}><b>{model.label}</b></a>
+            ));
+            const AllModelsCache = this.state.modelsCache.map((model) => (
                 <a href="" className="mt-2" key={model._id}><b>{model.label}</b></a>
             ));
 
             return (
                 <div className="col-sm-2 card modelsList pt-2 pb-2">
-                    <h5>Liste des modèles de métadonnées</h5>
-                    {Allmodels}
+                    <h6><b>Liste des modèles de métadonnées visibles</b></h6>
+                    {AllModels}
+                    <h6 className="mt-4"><b>Liste des modèles de métadonnées cachés</b></h6>
+                    {AllModelsCache}
                 </div>
             );
         };
@@ -81,12 +117,14 @@ export class Models extends React.Component {
             <div>
                 <Header />
                 <div className="container mt-4 mb-4">
-                    <h3>Modèle configurations</h3>
+                    <h3>Modèle configurations
+                        <Button className="btn btn-sm m-2" onClick={this.formAdd}>Ajouter</Button>
+                    </h3>
                     <div className="row d-flex justify-content-between mt-4">
                         <ListModels />
-                        <Formulaire/>
+                        <Formulaire />
                     </div>
-                    
+
                 </div>
             </div>
         );

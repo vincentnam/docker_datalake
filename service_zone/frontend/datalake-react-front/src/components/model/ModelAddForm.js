@@ -9,14 +9,7 @@ export class ModelAddForm extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            metadonnees: [
-                {
-                    id: 1,
-                    label: "test1",
-                    type: "text",
-                    name: "text12"
-                }
-            ],
+            metadonnees: [],
             meta: {
                 id: 0,
                 label: "",
@@ -24,6 +17,7 @@ export class ModelAddForm extends React.Component {
                 name: ""
             },
             label: "",
+            status: true,
             newModel: {},
             typesFiles: types_files,
             selectedTypesFiles: null
@@ -49,17 +43,15 @@ export class ModelAddForm extends React.Component {
 
     submitModels(event) {
         event.preventDefault();
-        console.log('add');
-        console.log(this.state.label);
-        console.log(this.state.selectedTypesFiles);
-        console.log(this.state.metadonnees);
         api.post('models/add', {
             label: this.state.label,
             type_file_accepted: this.state.selectedTypesFiles,
-            metadonnees: this.state.metadonnees
+            metadonnees: this.state.metadonnees,
+            status: this.state.status
         })
-            .then((response) => {
-                console.log(response)
+            .then(() => {
+                this.props.loading();
+                this.props.show();
             })
             .catch(function (error) {
                 console.log(error);
@@ -89,8 +81,10 @@ export class ModelAddForm extends React.Component {
         const name = "metadonnees";
         let data = Array.from(this.state.metadonnees);
         let totalMetadonnees = data.length;
-        let lastNumber = this.state.metadonnees[totalMetadonnees - 1].id;
-        console.log(lastNumber);
+        let lastNumber = 0;
+        if(totalMetadonnees > 0) {
+            lastNumber = this.state.metadonnees[totalMetadonnees - 1].id;
+        }
         data.push(
             {
                 id: lastNumber + 1,
@@ -120,9 +114,6 @@ export class ModelAddForm extends React.Component {
     }
 
     handleChangeMeta(event, id) {
-
-        console.log(event);
-        console.log(id);
         const name = "metadonnees";
         const target = event.target;
         const value = target.type === 'checkbox' ? target.checked : target.value;
@@ -158,6 +149,7 @@ export class ModelAddForm extends React.Component {
                     meta={meta}
                     onDeleteMeta={this.deleteMeta}
                     onHandleChange={this.handleChangeMeta}
+                    key={id}
                 />
             ));
 

@@ -48,6 +48,7 @@ export class ModelEditForm extends React.Component {
         return (
             <div className="col-sm-8 card pt-2 pb-2">
                 <h5>Modification d'un modèle de métadonnées</h5>
+                {this.props.modelEdit}
             </div>
         );
     }
