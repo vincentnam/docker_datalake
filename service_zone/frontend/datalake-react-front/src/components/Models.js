@@ -18,6 +18,7 @@ export class Models extends React.Component {
         this.loadModel = this.loadModel.bind(this);
         this.formAdd = this.formAdd.bind(this);
         this.handleCallShow = this.handleCallShow.bind(this);
+        this.editChange = this.editChange.bind(this);
     }
     componentDidMount() {
         this.loadModel();
@@ -72,6 +73,13 @@ export class Models extends React.Component {
         });
     }
 
+    editChange = (model) => {
+        this.setState({
+            show: "edit",
+            model: model
+        });
+    }
+
     render() {
 
         const Formulaire = () => {
@@ -97,10 +105,10 @@ export class Models extends React.Component {
 
         const ListModels = () => {
             const AllModels = this.state.models.map((model) => (
-                <a href="" className="mt-2" key={model._id}><b>{model.label}</b></a>
+                <a className="mt-2" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></a>
             ));
             const AllModelsCache = this.state.modelsCache.map((model) => (
-                <a href="" className="mt-2" key={model._id}><b>{model.label}</b></a>
+                <a className="mt-2" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></a>
             ));
 
             return (

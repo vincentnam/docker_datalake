@@ -33,7 +33,7 @@ export class Filters extends React.Component {
         const name = target.name;
         if (name === "startDate") {
             if (moment(this.state.endDate).format('X') < moment(value).format('X')) {
-                alert('La date de début doit être inférieure à la date de fin !');
+                this.toastError('La date de début doit être inférieure à la date de fin !');
             } else {
                 this.setState({
                     [name]: value,
@@ -42,7 +42,7 @@ export class Filters extends React.Component {
             }
         } else if (name === "endDate") {
             if (moment(this.state.startDate).format('X') > moment(value).format('X')) {
-                alert('La date de fin doit être supérieure à la date de début !');
+                this.toastError('La date de fin doit être supérieure à la date de début !');
             } else {
                 this.setState({
                     [name]: value,

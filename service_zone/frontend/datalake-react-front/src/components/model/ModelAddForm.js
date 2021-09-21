@@ -4,6 +4,7 @@ import { FormGroup, FormLabel, Form, Button } from "react-bootstrap";
 import Select from 'react-select';
 import { types_files } from '../../configmeta/types_files';
 import { MetadonneesForm } from './MetadonneesForm';
+import { ToastContainer, toast } from 'react-toastify';
 
 export class ModelAddForm extends React.Component {
     constructor(props) {
@@ -20,7 +21,7 @@ export class ModelAddForm extends React.Component {
             status: true,
             newModel: {},
             typesFiles: types_files,
-            selectedTypesFiles: null
+            selectedTypesFiles: []
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleChangeType = this.handleChangeType.bind(this);
@@ -29,33 +30,65 @@ export class ModelAddForm extends React.Component {
         this.deleteMeta = this.deleteMeta.bind(this);
         this.handleChangeMeta = this.handleChangeMeta.bind(this);
     }
-    loadModel() {
-        api.get('models')
-            .then((response) => {
-                this.setState({
-                    models: response.data.models
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+
+    toastError(message) {
+        toast.error(`${message}`, {
+            theme: "colored",
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+        });
     }
 
     submitModels(event) {
         event.preventDefault();
-        api.post('models/add', {
-            label: this.state.label,
-            type_file_accepted: this.state.selectedTypesFiles,
-            metadonnees: this.state.metadonnees,
-            status: this.state.status
-        })
-            .then(() => {
-                this.props.loading();
-                this.props.show();
-            })
-            .catch(function (error) {
-                console.log(error);
+
+        let nbErrors = 0;
+
+        if (this.state.label.trim() === '') {
+            this.toastError("Veuillez renseigner un label de modèle de métadonnées !");
+            nbErrors += 1;
+        }
+
+        if (this.state.selectedTypesFiles.length === 0) {
+            this.toastError("Veuillez ajouter au minimum un type de fichier accepter !");
+            nbErrors += 1;
+        }
+
+        if (this.state.metadonnees.length === 0) {
+            this.toastError("Veuillez ajouter au minimum une métadonnée !");
+            nbErrors += 1;
+        }
+
+        if (this.state.metadonnees.length !== 0) {
+            this.state.metadonnees.forEach((meta) => {
+                console.log(meta);
+                if(meta.label.trim() === "" || meta.type.trim() === "" || meta.name.trim() === "") {
+                    this.toastError("Veuillez renseigner les informations dans les champs des métadonnées !");
+                    nbErrors += 1;
+                }
             });
+        }
+
+        if (nbErrors === 0) {
+            api.post('models/add', {
+                label: this.state.label,
+                type_file_accepted: this.state.selectedTypesFiles,
+                metadonnees: this.state.metadonnees,
+                status: this.state.status
+            })
+                .then(() => {
+                    this.props.loading();
+                    this.props.show();
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        }
     }
 
     handleChangeType(event) {
@@ -82,7 +115,7 @@ export class ModelAddForm extends React.Component {
         let data = Array.from(this.state.metadonnees);
         let totalMetadonnees = data.length;
         let lastNumber = 0;
-        if(totalMetadonnees > 0) {
+        if (totalMetadonnees > 0) {
             lastNumber = this.state.metadonnees[totalMetadonnees - 1].id;
         }
         data.push(
@@ -103,7 +136,7 @@ export class ModelAddForm extends React.Component {
         let data = Array.from(this.state.metadonnees);
         let afterdelete = [];
         data.forEach(d => {
-            if(d.id !== id) {
+            if (d.id !== id) {
                 afterdelete.push(d);
             }
         });
@@ -193,6 +226,7 @@ export class ModelAddForm extends React.Component {
                     </FormGroup>
                     <Button className="btn btn-primary" type="submit">Valider</Button>
                 </Form>
+                <ToastContainer />
             </div >
         );
     }
