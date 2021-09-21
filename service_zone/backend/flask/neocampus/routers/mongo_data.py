@@ -277,7 +277,6 @@ def get_models_params():
 @mongo_data_bp.route('/models/add', methods=['POST'])
 def add_models():
     data_request = request.get_json()
-    print(data_request)
     param = {
         'label': data_request['label'],
         'type_file_accepted': data_request['type_file_accepted'],
@@ -289,14 +288,15 @@ def add_models():
     return jsonify({'model': model})
 
 
-@mongo_data_bp.route('/models/edit', methods=['PUT'])
+@mongo_data_bp.route('/models/edit', methods=['POST'])
 def edit_models():
-    data_request = request.get_json(force=True)[0]
+    data_request = request.get_json()
     param = {
         'id': data_request['id'],
         'label': data_request['label'],
         'type_file_accepted': data_request['type_file_accepted'],
-        'metadonnees': data_request['metadonnees']
+        'metadonnees': data_request['metadonnees'],
+        'status': data_request['status']
     }
     model = mongo.update_model(param)
 

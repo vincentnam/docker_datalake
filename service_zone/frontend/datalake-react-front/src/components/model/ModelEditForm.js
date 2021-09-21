@@ -10,6 +10,7 @@ export class ModelEditForm extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            label: "",
             metadonnees: [],
             meta: {
                 id: 0,
@@ -17,8 +18,7 @@ export class ModelEditForm extends React.Component {
                 type: "",
                 name: ""
             },
-            label: "",
-            status: true,
+            status: "",
             typesFiles: types_files,
             selectedTypesFiles: null
         };
@@ -41,6 +41,9 @@ export class ModelEditForm extends React.Component {
 
         this.setState({
             selectedTypesFiles: selectedTypes,
+            metadonnees: this.props.modelEdit.metadonnees,
+            label: this.props.modelEdit.label,
+            status: this.props.modelEdit.status,
         });
     }
 
@@ -60,7 +63,6 @@ export class ModelEditForm extends React.Component {
     submitModels(event) {
         event.preventDefault();
         let types = [];
-        console.log(event);
         this.state.selectedTypesFiles.forEach(type => types.push(type.value));
 
         let nbErrors = 0;
@@ -74,7 +76,7 @@ export class ModelEditForm extends React.Component {
             this.toastError("Veuillez ajouter au minimum un type de fichier accepté !");
             nbErrors += 1;
         }
-        console.log(this.state.metadonnees);
+
         if (this.state.metadonnees.length === 0) {
             this.toastError("Veuillez ajouter au minimum une métadonnée !");
             nbErrors += 1;
@@ -82,8 +84,7 @@ export class ModelEditForm extends React.Component {
 
         if (this.state.metadonnees.length !== 0) {
             this.state.metadonnees.forEach((meta) => {
-                console.log(meta);
-                if(meta.label.trim() === "" || meta.type.trim() === "" || meta.name.trim() === "") {
+                if (meta.label.trim() === "" || meta.type.trim() === "" || meta.name.trim() === "") {
                     this.toastError("Veuillez renseigner les informations dans les champs des métadonnées !");
                     nbErrors += 1;
                 }
@@ -92,6 +93,7 @@ export class ModelEditForm extends React.Component {
 
         if (nbErrors === 0) {
             api.post('models/edit', {
+                id: this.props.modelEdit._id,
                 label: this.state.label,
                 type_file_accepted: types,
                 metadonnees: this.state.metadonnees,
@@ -188,7 +190,7 @@ export class ModelEditForm extends React.Component {
 
     render() {
         let Metadonnees = () => {
-            let data = Array.from(this.props.modelEdit.metadonnees);
+            let data = Array.from(this.state.metadonnees);
             let id = 0;
             let listMetadonnees = data.map((meta) => (
                 <MetadonneesEditForm
@@ -209,7 +211,19 @@ export class ModelEditForm extends React.Component {
 
         return (
             <div className="col-sm-10 card pt-2 pb-2">
-                <h5>Ajout d'un modèle de métadonnées</h5>
+                <div className="d-flex justify-content-between">
+                    <h5>Modification d'un modèle de métadonnées</h5>
+                    <Form.Group className="mb-3" controlId="status">
+                        <Form.Check 
+                            type="checkbox"
+                            checked={this.state.status}
+                            name="status"
+                            id="status"
+                            onChange={this.handleChange}
+                            label="Rendre visible le model"
+                        />
+                    </Form.Group>
+                </div>
                 <Form onSubmit={this.submitModels}>
                     <FormGroup>
                         <FormLabel>Label</FormLabel>
@@ -217,7 +231,7 @@ export class ModelEditForm extends React.Component {
                             type="text"
                             placeholder="Label du modèle"
                             name="label"
-                            value={this.props.modelEdit.label}
+                            value={this.state.label}
                             onChange={this.handleChange}
                         />
                     </FormGroup>

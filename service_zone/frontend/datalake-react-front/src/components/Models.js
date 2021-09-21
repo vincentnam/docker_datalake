@@ -97,6 +97,8 @@ export class Models extends React.Component {
             } else if (this.state.show === "edit") {
                 return (
                     <ModelEditForm
+                        loading={this.handleCallLoadModels}
+                        show={this.handleCallShow}
                         modelEdit={this.state.model}
                     />
                 );
@@ -105,10 +107,10 @@ export class Models extends React.Component {
 
         const ListModels = () => {
             const AllModels = this.state.models.map((model) => (
-                <a className="mt-2" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></a>
+                <button className="mt-2" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></button>
             ));
             const AllModelsCache = this.state.modelsCache.map((model) => (
-                <a className="mt-2" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></a>
+                <button className="mt-2" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></button>
             ));
 
             return (

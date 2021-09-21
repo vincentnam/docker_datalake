@@ -1,6 +1,7 @@
 import datetime
 from flask import current_app
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 import swiftclient
 from swiftclient.service import SwiftService
 import datetime
@@ -248,7 +249,7 @@ def add_model(param):
 
 def update_model(param):
     """
-    insert model
+    update model
     :param 
     :return: done
     """
@@ -256,15 +257,16 @@ def update_model(param):
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
-    
-    query = {"_id": param.id}
+    print(param)
+    query = {"_id": ObjectId(param['id'])}
     updatevalues = {"$set": {
-        "label": param.label,
-        "type_file_accepted": param.type_file_accepted,
-        "metadonnees": param.metadonnees
+        "label": param['label'],
+        "type_file_accepted": param['type_file_accepted'],
+        "metadonnees": param['metadonnees'],
+        "status": param['status']
     }}
     
-    models.update_one(query, updatevalues)
+    models.update_one(query, updatevalues, upsert=False)
     result = "done"
     return result
 

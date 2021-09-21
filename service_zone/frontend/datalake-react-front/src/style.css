@@ -239,11 +239,16 @@ body {
     background-image: url('datepicker-calendar.png');
 }
 
-.modelsList > a {
+.modelsList > button {
     color: #E9973B;
+    border: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    background-color: white;
     text-decoration:none;
 }
-.modelsList > a:hover {
+.modelsList > button:hover {
     color: black;
     text-decoration:none;
 }
