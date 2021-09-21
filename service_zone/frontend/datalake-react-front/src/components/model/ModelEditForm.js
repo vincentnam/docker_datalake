@@ -100,6 +100,16 @@ export class ModelEditForm extends React.Component {
                 status: this.state.status
             })
                 .then(() => {
+                    toast.success(`Votre modèle ${this.state.label} à bien été modifié !`, {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
                     this.props.loading();
                     this.props.show();
                 })

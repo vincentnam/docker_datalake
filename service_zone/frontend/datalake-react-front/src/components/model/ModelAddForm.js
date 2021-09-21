@@ -66,8 +66,7 @@ export class ModelAddForm extends React.Component {
 
         if (this.state.metadonnees.length !== 0) {
             this.state.metadonnees.forEach((meta) => {
-                console.log(meta);
-                if(meta.label.trim() === "" || meta.type.trim() === "" || meta.name.trim() === "") {
+                if (meta.label.trim() === "" || meta.type.trim() === "" || meta.name.trim() === "") {
                     this.toastError("Veuillez renseigner les informations dans les champs des métadonnées !");
                     nbErrors += 1;
                 }
@@ -84,6 +83,16 @@ export class ModelAddForm extends React.Component {
                 .then(() => {
                     this.props.loading();
                     this.props.show();
+                    toast.success(`Votre modèle ${this.state.label} à bien été enregistré !`, {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
                 })
                 .catch(function (error) {
                     console.log(error);
@@ -146,23 +155,10 @@ export class ModelAddForm extends React.Component {
         });
     }
 
-    handleChangeMeta(event, id) {
+    handleChangeMeta(meta, id) {
         const name = "metadonnees";
-        const target = event.target;
-        const value = target.type === 'checkbox' ? target.checked : target.value;
-        const valueName = target.name;
-
-        let data = this.state.metadonnees;
-
-        if (valueName === "label") {
-            data[id - 1].label = value;
-        }
-        if (valueName === "type") {
-            data[id - 1].type = value;
-        }
-        if (valueName === "name") {
-            data[id - 1].name = value;
-        }
+        const data = [...this.state.metadonnees];
+        data[id] = meta;
         this.setState({
             [name]: data
         });
@@ -182,7 +178,7 @@ export class ModelAddForm extends React.Component {
                     meta={meta}
                     onDeleteMeta={this.deleteMeta}
                     onHandleChange={this.handleChangeMeta}
-                    key={id}
+                    key={meta.id}
                 />
             ));
 

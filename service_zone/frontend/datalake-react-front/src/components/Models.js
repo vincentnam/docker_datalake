@@ -4,6 +4,7 @@ import { ModelAddForm } from './model/ModelAddForm';
 import { ModelEditForm } from './model/ModelEditForm';
 import { Button } from "react-bootstrap";
 import api from '../api/api';
+import { ToastContainer } from 'react-toastify';
 
 export class Models extends React.Component {
     constructor(props) {
@@ -134,7 +135,7 @@ export class Models extends React.Component {
                         <ListModels />
                         <Formulaire />
                     </div>
-
+                    <ToastContainer />
                 </div>
             </div>
         );
