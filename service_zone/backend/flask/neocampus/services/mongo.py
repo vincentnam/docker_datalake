@@ -211,7 +211,7 @@ def get_model_id(id):
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
-    query = {"_id": id}
+    query = {"_id": ObjectId(id)}
     metadata_models_param = models.find(query)
 
     return metadata_models_param

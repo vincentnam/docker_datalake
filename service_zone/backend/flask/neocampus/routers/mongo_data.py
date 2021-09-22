@@ -275,6 +275,25 @@ def get_models_params():
     return jsonify({'models': output})
 
 
+@mongo_data_bp.route('/models/id', methods=['GET', 'POST'])
+def get_model_id():
+    data_request = request.get_json()
+    id = data_request['id']
+    models = mongo.get_model_id(id)
+    model = list(models)
+
+    output = {'data': []}
+    for obj in model:
+        output['data'].append({
+            '_id': str(obj['_id']),
+            "label": obj['label'],
+            "type_file_accepted": obj['type_file_accepted'],
+            "metadonnees": obj['metadonnees'],
+            "status": obj['status'],
+        })
+        
+    return jsonify({'model': output})
+
 @mongo_data_bp.route('/models/add', methods=['POST'])
 def add_models():
     data_request = request.get_json()

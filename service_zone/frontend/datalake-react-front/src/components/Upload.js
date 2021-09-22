@@ -112,7 +112,9 @@ export class Upload extends React.Component {
                         })
                             .then((response) => {
                                 this.setState({
-                                    models: response.data.models.data
+                                    models: response.data.models.data,
+                                    model: "",
+                                    othermeta: []
                                 });
                             })
                             .catch(function (error) {
@@ -121,6 +123,21 @@ export class Upload extends React.Component {
                     }
                 })
             ));
+        }
+        if(name === "model") {
+            console.log(value);
+            api.post("models/id", {
+                id: value
+            })
+                .then((response) => {
+                    console.log(response.data.model.data[0]);
+                    this.setState({
+                        othermeta: response.data.model.data[0].metadonnees,
+                    });
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
         }
         if (this.state.typeFile !== "") {
             if (type_file_accepted.includes(this.state.typeFile) === false) {
