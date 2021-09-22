@@ -15,7 +15,8 @@ export class ModelAddForm extends React.Component {
                 id: 0,
                 label: "",
                 type: "",
-                name: ""
+                name: "",
+                value: "",
             },
             label: "",
             status: true,
@@ -132,7 +133,8 @@ export class ModelAddForm extends React.Component {
                 id: lastNumber + 1,
                 label: "",
                 type: "",
-                name: ""
+                name: "",
+                value: "",
             }
         );
         this.setState({
