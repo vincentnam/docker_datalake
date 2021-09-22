@@ -83,7 +83,7 @@ export class ModelAddForm extends React.Component {
                 .then(() => {
                     this.props.loading();
                     this.props.show();
-                    toast.success(`Votre modèle ${this.state.label} à bien été enregistré !`, {
+                    toast.success(`Le modèle ${this.state.label} à bien été enregistré !`, {
                         theme: "colored",
                         position: "top-right",
                         autoClose: 5000,
@@ -216,11 +216,11 @@ export class ModelAddForm extends React.Component {
                     <FormGroup className="mt-2">
                         <div>
                             <FormLabel>Métadonnées</FormLabel>
-                            <Button className="btn btn-primary btn-sm m-2" onClick={this.addMeta}>Ajouter</Button>
+                            <Button className="btn buttonModel btn-sm m-2" onClick={this.addMeta}>Ajouter</Button>
                         </div>
                         <Metadonnees />
                     </FormGroup>
-                    <Button className="btn btn-primary" type="submit">Valider</Button>
+                    <Button className="btn buttonModel" type="submit">Valider</Button>
                 </Form>
                 <ToastContainer />
             </div >

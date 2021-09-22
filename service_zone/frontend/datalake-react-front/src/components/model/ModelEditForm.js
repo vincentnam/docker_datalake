@@ -100,7 +100,7 @@ export class ModelEditForm extends React.Component {
                 status: this.state.status
             })
                 .then(() => {
-                    toast.success(`Votre modèle ${this.state.label} à bien été modifié !`, {
+                    toast.success(`Le modèle ${this.state.label} à bien été modifié !`, {
                         theme: "colored",
                         position: "top-right",
                         autoClose: 5000,
@@ -223,7 +223,7 @@ export class ModelEditForm extends React.Component {
             <div className="col-sm-10 card pt-2 pb-2">
                 <div className="d-flex justify-content-between">
                     <h5>Modification d'un modèle de métadonnées</h5>
-                    <Form.Group className="mb-3" controlId="status">
+                    <Form.Group className="mb-3 checkboxModel" controlId="status">
                         <Form.Check 
                             type="checkbox"
                             checked={this.state.status}
@@ -231,6 +231,7 @@ export class ModelEditForm extends React.Component {
                             id="status"
                             onChange={this.handleChange}
                             label="Rendre visible le model"
+                            className="checkboxModel"
                         />
                     </Form.Group>
                 </div>
@@ -259,11 +260,11 @@ export class ModelEditForm extends React.Component {
                     <FormGroup className="mt-2">
                         <div>
                             <FormLabel>Métadonnées</FormLabel>
-                            <Button className="btn btn-primary btn-sm m-2" onClick={this.addMeta}>Ajouter</Button>
+                            <Button className="btn buttonModel btn-primary btn-sm m-2" onClick={this.addMeta}>Ajouter</Button>
                         </div>
                         <Metadonnees />
                     </FormGroup>
-                    <Button className="btn btn-primary" type="submit">Valider</Button>
+                    <Button className="btn buttonModel btn-primary" type="submit">Valider</Button>
                 </Form>
                 <ToastContainer />
             </div >

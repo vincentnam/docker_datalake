@@ -129,7 +129,7 @@ export class Models extends React.Component {
                 <Header />
                 <div className="container mt-4 mb-4">
                     <h3>Modèles configurations
-                        <Button className="btn btn-sm m-2" onClick={this.formAdd}>Ajouter</Button>
+                        <Button className="btn buttonModel btn-sm m-2" onClick={this.formAdd}>Ajouter</Button>
                     </h3>
                     <div className="row d-flex justify-content-between mt-4">
                         <ListModels />

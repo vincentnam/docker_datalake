@@ -231,7 +231,7 @@ def get_models():
 def get_models_cache():
     models = mongo.get_models_all_cache()
     models_list = list(models)
-
+    #Data formatting for output
     output = {'data': []}
     for obj in models_list:
         output['data'].append({
@@ -245,22 +245,23 @@ def get_models_cache():
     return jsonify({'models': output})
 
 
-@mongo_data_bp.route('/models/params', methods=['GET'])
+@mongo_data_bp.route('/models/params', methods=['GET', 'POST'])
 def get_models_params():
-    data_request = request.get_json(force=True)[0]
-    
+    data_request = request.get_json()
     types_files = data_request['types_files']
-    
     models_list = []
+    #Recovery of all templates for each file type
     for type_file in types_files:
         models = mongo.get_models_params(type_file)
-        print(models)
         models_list.append(models)
         
+    #Liste des différents modèles sans doublon
     models_param = []
     for model in models_list:
-        if model not in models_param: models_param.append(model)
+        for m in model:
+            if m not in models_param: models_param.append(m)
         
+    #Data formatting for output
     listmodels = list(models_param)
     output = {'data': []}
     for obj in listmodels:
@@ -270,7 +271,7 @@ def get_models_params():
             "type_file_accepted": obj['type_file_accepted'],
             "metadonnees": obj['metadonnees'],
         })
-    
+    print(output)
     return jsonify({'models': output})
 
 
