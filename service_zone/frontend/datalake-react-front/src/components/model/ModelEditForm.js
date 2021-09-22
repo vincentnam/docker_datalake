@@ -206,6 +206,7 @@ export class ModelEditForm extends React.Component {
                 <MetadonneesEditForm
                     value={id = id + 1}
                     meta={meta}
+                    metadonnees={this.state.metadonnees}
                     onDeleteMeta={this.deleteMeta}
                     onHandleChange={this.handleChangeMeta}
                     key={id}

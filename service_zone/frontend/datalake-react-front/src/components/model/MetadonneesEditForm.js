@@ -10,7 +10,14 @@ export class MetadonneesEditForm extends React.Component {
         this.props.onDeleteMeta(this.props.meta.id);
     };
     handleChange = (event) => {
-        this.props.onHandleChange(event, this.props.value);
+        if (event !== undefined && event.target !== undefined) {
+            const metadata = this.props.metadonnees;
+            const value = event.target.value
+            metadata[this.props.value - 1][event.target.name] = value;
+            this.setState({
+                metadonnees: metadata
+            });
+        }
     };
 
     render() {

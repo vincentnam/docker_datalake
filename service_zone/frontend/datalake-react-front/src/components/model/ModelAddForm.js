@@ -178,6 +178,7 @@ export class ModelAddForm extends React.Component {
                 <MetadonneesForm
                     value={id = id + 1}
                     meta={meta}
+                    metadonnees={this.state.metadonnees}
                     onDeleteMeta={this.deleteMeta}
                     onHandleChange={this.handleChangeMeta}
                     key={meta.id}
