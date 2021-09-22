@@ -68,7 +68,9 @@ export class Upload extends React.Component {
             type_file_accepted: [],
             loading: false,
             percentProgressBar: 0,
-            textProgressBar: ''
+            textProgressBar: '',
+            models: [],
+            model: {}
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -102,10 +104,20 @@ export class Upload extends React.Component {
                 type.forEach((t) => {
                     if (t.id === parseInt(value)) {
                         this.setState({
-                            othermeta: t.metadonnees,
                             type_file_accepted: t.type_file_accepted
                         });
                         type_file_accepted = t.type_file_accepted
+                        api.post("models/params", {
+                            types_files: type_file_accepted
+                        })
+                            .then((response) => {
+                                this.setState({
+                                    models: response.data.models.data
+                                });
+                            })
+                            .catch(function (error) {
+                                console.log(error);
+                            });
                     }
                 })
             ));
@@ -192,7 +204,7 @@ export class Upload extends React.Component {
                         draggable: true,
                         progress: undefined,
                     });
-                    setTimeout(function(){window.location.reload()}, 1500);
+                    setTimeout(function () { window.location.reload() }, 1500);
                 })
                 .catch(function (error) {
                     toast.error("L'upload n'a pas réussi ! : " + error, {
@@ -264,6 +276,26 @@ export class Upload extends React.Component {
             );
         }
 
+        const SelectModel = () => {
+            if( this.state.models.length === 0 ){
+                return (
+                    <div>
+                        <p className="text-break">Aucun modèle de métadonnées</p>
+                    </div>
+                );
+            } else {
+                const listModels = this.state.models.map((model) => (
+                    <option key={model._id} value={model._id}>{model.label}</option>
+                ));
+                return (
+                    <select value={this.state.model} onChange={this.handleChange} name="model" class="form-select">
+                        <option value="">Sélectionnez un modèle de métadonnées</option>
+                        {listModels}
+                    </select>
+                );
+            }
+        }
+
         return (
             <div>
                 <Header />
@@ -275,6 +307,10 @@ export class Upload extends React.Component {
                                 <div class="form-group required col-6">
                                     <label class="control-label file-type">Type de fichier</label>
                                     <SelectDatatype />
+                                </div>
+                                <div class="form-group required col-6">
+                                    <label class="control-label file-type">Modèles</label>
+                                    <SelectModel />
                                 </div>
                             </div>
                             <Metadonnees />

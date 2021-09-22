@@ -226,7 +226,7 @@ def get_models_params(param):
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
-    query = {"type_file_accepted": param}
+    query = {"type_file_accepted": param, "status": True}
     metadata_models_param = models.find(query)
 
     return metadata_models_param
@@ -257,7 +257,6 @@ def update_model(param):
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
-    print(param)
     query = {"_id": ObjectId(param['id'])}
     updatevalues = {"$set": {
         "label": param['label'],
