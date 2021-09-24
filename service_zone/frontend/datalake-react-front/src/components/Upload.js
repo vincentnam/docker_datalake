@@ -8,6 +8,8 @@ import api from '../api/api';
 import { ProgressBarComponent } from "./upload-child/ProgressBarComponent";
 import filesize from "filesize";
 import { ToastContainer, toast } from 'react-toastify';
+import { ModelAddForm } from './upload-child/model/ModelAddForm';
+import { Modal, Button } from "react-bootstrap";
 
 export class Upload extends React.Component {
     constructor() {
@@ -70,11 +72,37 @@ export class Upload extends React.Component {
             percentProgressBar: 0,
             textProgressBar: '',
             models: [],
-            model: {}
+            model: "",
+            modalAdd: false,
+            modalEdit: false,
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.removeSelectedFile = this.removeSelectedFile.bind(this);
+        this.onChangeModalAdd = this.onChangeModalAdd.bind(this);
+        this.onChangeModalEdit = this.onChangeModalEdit.bind(this);
+        this.reload = this.reload.bind(this);
+    }
+
+    reload() {
+        this.setState({
+            model: "",
+            type: 0,
+            othermeta: [],
+        });
+    }
+
+
+    onChangeModalAdd() {
+        this.setState({
+            modalAdd: !this.state.modalAdd,
+        });
+    }
+
+    onChangeModalEdit() {
+        this.setState({
+            modalEdit: !this.state.modalEdit,
+        });
     }
 
     handleClose() {
@@ -124,7 +152,7 @@ export class Upload extends React.Component {
                 })
             ));
         }
-        if(name === "model") {
+        if (name === "model") {
             console.log(value);
             api.post("models/id", {
                 id: value
@@ -294,7 +322,7 @@ export class Upload extends React.Component {
         }
 
         const SelectModel = () => {
-            if( this.state.models.length === 0 ){
+            if (this.state.models.length === 0) {
                 return (
                     <div>
                         <p className="text-break">Aucun modèle de métadonnées</p>
@@ -311,6 +339,68 @@ export class Upload extends React.Component {
                     </select>
                 );
             }
+        }
+
+        const EditButton = () => {
+            if (this.state.model !== "") {
+                return (
+                    <button type="button" class="btn btn-primary buttonModel" onClick={() => this.onChangeModalEdit()}>Modifier le modèle</button>
+                );
+            } else {
+                return (
+                    <p></p>
+                )
+            }
+        }
+
+        const ModalAdd = () => {
+            return (
+                <Modal
+                    size="lg"
+                    show={this.state.modalAdd}
+                    onHide={() => this.onChangeModalAdd()}
+                    aria-labelledby="model-add"
+                >
+                    <Modal.Header>
+                        <Modal.Title id="model-add">
+                            Ajouter un modèle de métadonnées
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <ModelAddForm 
+                            close={this.onChangeModalAdd}
+                            reload={this.reload}
+                        />
+                    </Modal.Body>
+                </Modal>
+            )
+        }
+        const ModalEdit = () => {
+            return (
+                <Modal
+                    size="lg"
+                    show={this.state.modalEdit}
+                    onHide={() => this.onChangeModalEdit()}
+                    aria-labelledby="model-edit"
+                >
+                    <Modal.Header>
+                        <Modal.Title id="model-edit">
+                            Modifier le modèle
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        ...
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={this.onChangeModalEdit}>
+                            Fermer le formulaire
+                        </Button>
+                        <Button variant="primary" onClick={this.onChangeModalEdit}>
+                            Modifier
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+            )
         }
 
         return (
@@ -331,6 +421,10 @@ export class Upload extends React.Component {
                                 </div>
                             </div>
                             <Metadonnees />
+                            <div class="d-flex justify-content-between mt-2 mb-2">
+                                <button type="button" class="btn btn-primary buttonModel" onClick={() => this.onChangeModalAdd()}>Créer un modèle</button>
+                                <EditButton />
+                            </div>
                             <div class="form-group required">
                                 <label>Fichiers</label>
                                 <Dropzone value={this.state.file} name="file" onDrop={this.onDrop}
@@ -365,6 +459,8 @@ export class Upload extends React.Component {
                             </div>
                         </form>
                     </div>
+                    <ModalAdd />
+                    <ModalEdit />
                 </div>
 
                 {/* ProgressBar shown when upload form submitted with percent updated in onUploadProgress above */}
