@@ -271,7 +271,6 @@ def get_models_params():
             "type_file_accepted": obj['type_file_accepted'],
             "metadonnees": obj['metadonnees'],
         })
-    print(output)
     return jsonify({'models': output})
 
 
