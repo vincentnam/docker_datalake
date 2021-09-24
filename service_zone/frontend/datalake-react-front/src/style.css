@@ -239,7 +239,7 @@ body {
     background-image: url('datepicker-calendar.png');
 }
 
-.modelsList > button {
+.modelsList {
     color: #E9973B;
     border: none;
     padding: 0;
@@ -248,7 +248,7 @@ body {
     background-color: white;
     text-decoration:none;
 }
-.modelsList > button:hover {
+.modelsList:hover {
     color: black;
     text-decoration:none;
 }
@@ -267,4 +267,18 @@ body {
 .form-check-input:checked {
     background-color: #e58419!important;
     border-color: #e58419!important;
+}
+
+.modelsList-cacher {
+    color: grey;
+    border: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    background-color: white;
+    text-decoration:none;
+}
+.modelsList-cacher:hover {
+    color: black;
+    text-decoration:none;
 }

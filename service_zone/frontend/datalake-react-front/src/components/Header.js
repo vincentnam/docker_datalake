@@ -27,7 +27,7 @@ const Navbar = () => (
         <NavLink activeClassName="active"
                  className="nav-item nav-link"
                  to="/models">
-            Models
+            Gestion
         </NavLink>
     </nav>
 );

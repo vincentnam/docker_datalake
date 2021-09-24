@@ -108,14 +108,14 @@ export class Models extends React.Component {
 
         const ListModels = () => {
             const AllModels = this.state.models.map((model) => (
-                <button className="mt-2" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></button>
+                <button className="mt-2 modelsList" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></button>
             ));
             const AllModelsCache = this.state.modelsCache.map((model) => (
-                <button className="mt-2" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></button>
+                <button className="mt-2 modelsList-cacher" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></button>
             ));
 
             return (
-                <div className="col-sm-2 card modelsList pt-2 pb-2">
+                <div className="col-sm-2 card pt-2 pb-2">
                     <h6><b>Liste des modèles de métadonnées visibles</b></h6>
                     {AllModels}
                     <h6 className="mt-4"><b>Liste des modèles de métadonnées cachés</b></h6>
@@ -128,7 +128,7 @@ export class Models extends React.Component {
             <div>
                 <Header />
                 <div className="container mt-4 mb-4">
-                    <h3>Modèles configurations
+                    <h3>Gestion des modèles dynamiques de métadonnées
                         <Button className="btn buttonModel btn-sm m-2" onClick={this.formAdd}>Ajouter</Button>
                     </h3>
                     <div className="row d-flex justify-content-between mt-4">
