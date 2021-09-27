@@ -10,7 +10,7 @@ import filesize from "filesize";
 import { ToastContainer, toast } from 'react-toastify';
 import { ModelAddForm } from './upload-child/model/ModelAddForm';
 import { ModelEditForm } from './upload-child/model/ModelEditForm';
-import { Modal, Button } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
 
 export class Upload extends React.Component {
     constructor() {
@@ -197,24 +197,37 @@ export class Upload extends React.Component {
             ));
         }
         if (name === "model") {
-            api.post("models/id", {
-                id: value
-            })
-                .then((response) => {
-                    this.setState({
-                        othermeta: response.data.model.data[0].metadonnees,
-                        editModel: {
-                            id: response.data.model.data[0]._id,
-                            label: response.data.model.data[0].label,
-                            typesFiles: response.data.model.data[0].type_file_accepted,
-                            metadonnees: response.data.model.data[0].metadonnees,
-                            status: response.data.model.data[0].status,
-                        }
-                    });
+            if(value !== ""){
+                api.post("models/id", {
+                    id: value
                 })
-                .catch(function (error) {
-                    console.log(error);
+                    .then((response) => {
+                        this.setState({
+                            othermeta: response.data.model.data[0].metadonnees,
+                            editModel: {
+                                id: response.data.model.data[0]._id,
+                                label: response.data.model.data[0].label,
+                                typesFiles: response.data.model.data[0].type_file_accepted,
+                                metadonnees: response.data.model.data[0].metadonnees,
+                                status: response.data.model.data[0].status,
+                            }
+                        });
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            } else {
+                this.setState({
+                    othermeta: [],
+                    editModel: {
+                        id: 0,
+                        label: "",
+                        typesFiles: [],
+                        metadonnees: [],
+                        status: true,
+                    }
                 });
+            }
         }
         if (this.state.typeFile !== "") {
             if (type_file_accepted.includes(this.state.typeFile) === false) {
