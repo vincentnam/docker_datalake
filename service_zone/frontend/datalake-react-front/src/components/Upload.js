@@ -9,6 +9,7 @@ import { ProgressBarComponent } from "./upload-child/ProgressBarComponent";
 import filesize from "filesize";
 import { ToastContainer, toast } from 'react-toastify';
 import { ModelAddForm } from './upload-child/model/ModelAddForm';
+import { ModelEditForm } from './upload-child/model/ModelEditForm';
 import { Modal, Button } from "react-bootstrap";
 
 export class Upload extends React.Component {
@@ -75,6 +76,13 @@ export class Upload extends React.Component {
             model: "",
             modalAdd: false,
             modalEdit: false,
+            editModel: {
+                id: 0,
+                label: "",
+                typesFiles: [],
+                metadonnees: [],
+                status: true,
+            }
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -82,16 +90,45 @@ export class Upload extends React.Component {
         this.onChangeModalAdd = this.onChangeModalAdd.bind(this);
         this.onChangeModalEdit = this.onChangeModalEdit.bind(this);
         this.reload = this.reload.bind(this);
+        this.reloadEdit = this.reloadEdit.bind(this);
     }
 
     reload() {
         this.setState({
             model: "",
             type: 0,
+            models: [],
             othermeta: [],
         });
     }
 
+    reloadEdit() {
+        this.setState({
+            model: "",
+            models: [],
+            othermeta: [],
+        });
+        api.post("models/params", {
+            types_files: this.state.type_file_accepted
+        })
+            .then((response) => {
+                this.setState({
+                    models: response.data.models.data,
+                    model: "",
+                    othermeta: [],
+                    editModel: {
+                        id: 0,
+                        label: "",
+                        typesFiles: [],
+                        metadonnees: [],
+                        status: true,
+                    }
+                });
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
 
     onChangeModalAdd() {
         this.setState({
@@ -142,7 +179,14 @@ export class Upload extends React.Component {
                                 this.setState({
                                     models: response.data.models.data,
                                     model: "",
-                                    othermeta: []
+                                    othermeta: [],
+                                    editModel: {
+                                        id: 0,
+                                        label: "",
+                                        typesFiles: [],
+                                        metadonnees: [],
+                                        status: true,
+                                    }
                                 });
                             })
                             .catch(function (error) {
@@ -153,14 +197,19 @@ export class Upload extends React.Component {
             ));
         }
         if (name === "model") {
-            console.log(value);
             api.post("models/id", {
                 id: value
             })
                 .then((response) => {
-                    console.log(response.data.model.data[0]);
                     this.setState({
                         othermeta: response.data.model.data[0].metadonnees,
+                        editModel: {
+                            id: response.data.model.data[0]._id,
+                            label: response.data.model.data[0].label,
+                            typesFiles: response.data.model.data[0].type_file_accepted,
+                            metadonnees: response.data.model.data[0].metadonnees,
+                            status: response.data.model.data[0].status,
+                        }
                     });
                 })
                 .catch(function (error) {
@@ -367,7 +416,7 @@ export class Upload extends React.Component {
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <ModelAddForm 
+                        <ModelAddForm
                             close={this.onChangeModalAdd}
                             reload={this.reload}
                         />
@@ -389,16 +438,12 @@ export class Upload extends React.Component {
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        ...
+                        <ModelEditForm
+                            close={this.onChangeModalEdit}
+                            reload={this.reloadEdit}
+                            editModel={this.state.editModel}
+                        />
                     </Modal.Body>
-                    <Modal.Footer>
-                        <Button variant="secondary" onClick={this.onChangeModalEdit}>
-                            Fermer le formulaire
-                        </Button>
-                        <Button variant="primary" onClick={this.onChangeModalEdit}>
-                            Modifier
-                        </Button>
-                    </Modal.Footer>
                 </Modal>
             )
         }

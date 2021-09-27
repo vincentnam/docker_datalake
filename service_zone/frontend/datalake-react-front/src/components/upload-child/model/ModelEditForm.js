@@ -1,8 +1,8 @@
 import React from "react";
-import api from '../../api/api';
+import api from '../../../api/api';
 import { FormGroup, FormLabel, Form, Button } from "react-bootstrap";
 import Select from 'react-select';
-import { types_files } from '../../configmeta/types_files';
+import { types_files } from '../../../configmeta/types_files';
 import { MetadonneesEditForm } from './MetadonneesEditForm';
 import { ToastContainer, toast } from 'react-toastify';
 
@@ -32,7 +32,7 @@ export class ModelEditForm extends React.Component {
 
     componentDidMount() {
         let selectedTypes = []
-        this.props.modelEdit.type_file_accepted.forEach((type) => {
+        this.props.editModel.typesFiles.forEach((type) => {
             selectedTypes.push({
                 value: type,
                 label: type
@@ -41,9 +41,9 @@ export class ModelEditForm extends React.Component {
 
         this.setState({
             selectedTypesFiles: selectedTypes,
-            metadonnees: this.props.modelEdit.metadonnees,
-            label: this.props.modelEdit.label,
-            status: this.props.modelEdit.status,
+            metadonnees: this.props.editModel.metadonnees,
+            label: this.props.editModel.label,
+            status: this.props.editModel.status,
         });
     }
 
@@ -93,13 +93,15 @@ export class ModelEditForm extends React.Component {
 
         if (nbErrors === 0) {
             api.post('models/edit', {
-                id: this.props.modelEdit._id,
+                id: this.props.editModel.id,
                 label: this.state.label,
                 type_file_accepted: types,
                 metadonnees: this.state.metadonnees,
                 status: this.state.status
             })
                 .then(() => {
+                    this.props.reload();
+                    this.props.close();
                     toast.success(`Le modèle ${this.state.label} à bien été modifié !`, {
                         theme: "colored",
                         position: "top-right",
@@ -110,8 +112,6 @@ export class ModelEditForm extends React.Component {
                         draggable: true,
                         progress: undefined,
                     });
-                    this.props.loading();
-                    this.props.show();
                 })
                 .catch(function (error) {
                     console.log(error);
@@ -221,7 +221,7 @@ export class ModelEditForm extends React.Component {
         }
 
         return (
-            <div className="col-sm-10 card pt-2 pb-2">
+            <div className="">
                 <div className="d-flex justify-content-between">
                     <h5>Modification d'un modèle de métadonnées</h5>
                     <Form.Group className="mb-3 checkboxModel" controlId="status">
@@ -265,7 +265,15 @@ export class ModelEditForm extends React.Component {
                         </div>
                         <Metadonnees />
                     </FormGroup>
-                    <Button className="btn buttonModel btn-primary" type="submit">Valider</Button>
+                    <div className="d-flex justify-content-between mt-4">
+                        <Button className="btn buttonModel" type="submit">Valider</Button>
+                        <Button
+                            type="button"
+                            className="btn buttonModel"
+                            onClick={this.props.close}>
+                            Fermer
+                        </Button>
+                    </div>
                 </Form>
                 <ToastContainer />
             </div >
