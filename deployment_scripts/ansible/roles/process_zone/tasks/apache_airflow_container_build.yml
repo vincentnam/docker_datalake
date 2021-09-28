@@ -1,11 +1,8 @@
 ---
 
-
 - import_playbook: "{{playbook_dir}}/../../base/tasks/docker_install.yml"
   vars:
     host: process_zone_apache_airflow
-
-
 
 
 - name : Download files
@@ -15,7 +12,7 @@
   - name: Print all available facts
     ansible.builtin.debug:
       var: hostvars.metadata_management_zone_mongodb.BUILD_DIR
-  - name: Create a build directory 
+  - name: Create a build directory
     ansible.builtin.file:
       path: "{{ hostvars.process_zone_apache_airflow.BUILD_DIR}}/process_zone_apache_airflow"
       state: directory
@@ -23,41 +20,31 @@
   - name: get Dockerfile for container building
     get_url:
       url : 'https://airflow.apache.org/docs/apache-airflow/2.1.2/docker-compose.yaml'
-      dest : '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}/metadata_management_zone_mongoDB/'
-
-  - name: Start Airflow containers
-    community.docker.docker_compose:
-      project_src: '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}/metadata_management_zone_mongoDB/'
-      build: yes
-    register: output
-    beccome: yes
+      dest : "{{ hostvars.process_zone_apache_airflow.BUILD_DIR}}/process_zone_apache_airflow"
+    become : yes
+  - name: Stop and delete any container
+    shell :
+      cmd : "docker stop $(docker ps -a -q); docker rm $(docker ps -a -q)"
+    become : yes
+    ignore_errors: yes
+  - name : Create env and folders
+    shell :
+      cmd : 'mkdir -p ./dags ./logs ./plugins ; echo -e "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0" > .env'
+      chdir: "{{ hostvars.process_zone_apache_airflow.BUILD_DIR}}/process_zone_apache_airflow"
+    become: yes
+  - name : Init Airflow containers
+    shell:
+      cmd : 'docker-compose up airflow-init'
+      chdir : "{{ hostvars.process_zone_apache_airflow.BUILD_DIR}}/process_zone_apache_airflow"
+    become : yes
+    register : output
   - ansible.builtin.debug:
       var: output
-
-#
-#  - name: get docker-entrypoint.sh for container building
-#    get_url:
-#      url : 'https://raw.githubusercontent.com/docker-library/mongo/master/{{ MONGODB_VERSION }}/docker-entrypoint.sh'
-#      dest : '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}/metadata_management_zone_mongoDB/'
-#
-#  - name: change script mode
-#    ansible.builtin.file:
-#      path: '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}/metadata_management_zone_mongoDB/docker-entrypoint.sh'
-#      mode: '755'
-#
-#  - name: Create MongoDB container
-#    docker_image:
-#      name: "mongo-enterprise:{{MONGODB_VERSION|lower}}"
-#      source: "build"
-#      build:
-#        pull: "yes"
-#        path: "{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR}}/metadata_management_zone_mongoDB/"
-#        args:
-#          MONGO_PACKAGE: "mongodb-enterprise"
-#          MONGO_REPO: "repo.mongodb.com"
-#    become: yes
-#  - name: Run MongoDB
-#    docker_container:
-#      name: "metadata_management_system_mongodb_{{MONGODB_VERSION | lower}}"
-#      image: "mongo-enterprise:{{MONGODB_VERSION | lower}}"
-#    become: yes
+  - name : Start Airflow
+    shell :
+      cmd : '(docker-compose up &); sleep 10'
+      chdir : "{{ hostvars.process_zone_apache_airflow.BUILD_DIR}}/process_zone_apache_airflow"
+    become : yes
+    register: output
+  - ansible.builtin.debug:
+      var: output

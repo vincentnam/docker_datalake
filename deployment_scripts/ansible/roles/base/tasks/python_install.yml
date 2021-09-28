@@ -1,6 +1,6 @@
 ---
 - hosts: "{{ host }}"
-  name: "Install python and start it depending on OS"
+  name: "Install python3"
   tasks:
     - name : Check if Python/{{ansible_distribution|lower}}{{ ansible_distribution_major_version}}.yml exists
       ansible.builtin.stat:
