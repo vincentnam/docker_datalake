@@ -97,7 +97,7 @@ def extract_transform_load_time_series_text(swift_result, swift_container, swift
             # Create variable for upload in influxdb
             dt.append(
                 {
-                    "measurement": columns[key],
+                    "measurement": columns[key+1],
                     "tags": tags,
                     "fields": values,
                     "time": date_milliseconds
