@@ -186,6 +186,18 @@ def get_models_all():
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
+    metadata_models = models.find()
+    return metadata_models
+
+def get_models_show_all():
+    """
+    get models with status true
+    :return: all models
+    """
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.models_management
+    models = mongo_db["models"]
     metadata_models = models.find({"status": True})
     return metadata_models
 

@@ -26,7 +26,7 @@ export class Models extends React.Component {
     }
 
     loadModel() {
-        api.get('models/all')
+        api.get('models/show/all')
             .then((response) => {
                 this.setState({
                     models: response.data.models.data

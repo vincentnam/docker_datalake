@@ -209,10 +209,26 @@ def get_handled_data_zipped_file():
     else:
         return jsonify({'msg': "No content available."})
 
-
 @mongo_data_bp.route('/models/all', methods=['GET'])
 def get_models():
     models = mongo.get_models_all()
+    models_list = list(models)
+
+    output = {'data': []}
+    for obj in models_list:
+        output['data'].append({
+            '_id': str(obj['_id']),
+            "label": obj['label'],
+            "type_file_accepted": obj['type_file_accepted'],
+            "metadonnees": obj['metadonnees'],
+            "status": obj['status'],
+        })
+        
+    return jsonify({'models': output})
+
+@mongo_data_bp.route('/models/show/all', methods=['GET'])
+def get_models_show():
+    models = mongo.get_models_show_all()
     models_list = list(models)
 
     output = {'data': []}

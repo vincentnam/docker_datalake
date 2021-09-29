@@ -282,3 +282,14 @@ body {
     color: black;
     text-decoration:none;
 }
+
+.buttonClose {
+    color: white;
+    background-color: grey;
+    border: grey;
+}
+
+.buttonClose:hover {
+    background-color: rgb(143, 142, 142);
+    border: rgb(143, 142, 142);
+}

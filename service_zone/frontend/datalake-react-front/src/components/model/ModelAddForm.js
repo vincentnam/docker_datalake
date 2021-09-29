@@ -22,7 +22,8 @@ export class ModelAddForm extends React.Component {
             status: true,
             newModel: {},
             typesFiles: types_files,
-            selectedTypesFiles: []
+            selectedTypesFiles: [],
+            verifModels: []
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleChangeType = this.handleChangeType.bind(this);
@@ -30,6 +31,17 @@ export class ModelAddForm extends React.Component {
         this.addMeta = this.addMeta.bind(this);
         this.deleteMeta = this.deleteMeta.bind(this);
         this.handleChangeMeta = this.handleChangeMeta.bind(this);
+    }
+    componentDidMount() {
+        api.get('models/all')
+            .then((response) => {
+                this.setState({
+                    verifModels: response.data.models.data
+                });
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     toastError(message) {
@@ -49,6 +61,13 @@ export class ModelAddForm extends React.Component {
         event.preventDefault();
 
         let nbErrors = 0;
+
+        this.state.verifModels.forEach((model) => {
+            if (this.state.label === model.label) {
+                this.toastError("Veuillez renseigner un label de modèle de métadonnées qui n'est pas déjà utilisé !");
+                nbErrors += 1;
+            }
+        });
 
         if (this.state.label.trim() === '') {
             this.toastError("Veuillez renseigner un label de modèle de métadonnées !");

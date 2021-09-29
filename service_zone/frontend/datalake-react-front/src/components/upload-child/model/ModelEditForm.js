@@ -20,7 +20,9 @@ export class ModelEditForm extends React.Component {
             },
             status: "",
             typesFiles: types_files,
-            selectedTypesFiles: null
+            selectedTypesFiles: null,
+            verifModels: [],
+            oldLabel: ""
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleChangeType = this.handleChangeType.bind(this);
@@ -43,8 +45,19 @@ export class ModelEditForm extends React.Component {
             selectedTypesFiles: selectedTypes,
             metadonnees: this.props.editModel.metadonnees,
             label: this.props.editModel.label,
+            oldLabel: this.props.editModel.label,
             status: this.props.editModel.status,
         });
+
+        api.get('models/all')
+            .then((response) => {
+                this.setState({
+                    verifModels: response.data.models.data
+                });
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     toastError(message) {
@@ -66,6 +79,15 @@ export class ModelEditForm extends React.Component {
         this.state.selectedTypesFiles.forEach(type => types.push(type.value));
 
         let nbErrors = 0;
+
+        if(this.state.label.trim() !== this.state.oldLabel.trim()) {
+            this.state.verifModels.forEach((model) => {
+                if (this.state.label === model.label) {
+                    this.toastError("Veuillez renseigner un label de modèle de métadonnées qui n'est pas déjà utilisé !");
+                    nbErrors += 1;
+                }
+            });
+        }
 
         if (this.state.label.trim() === '') {
             this.toastError("Veuillez renseigner un label de modèle de métadonnées !");
@@ -269,7 +291,7 @@ export class ModelEditForm extends React.Component {
                         <Button className="btn buttonModel" type="submit">Valider</Button>
                         <Button
                             type="button"
-                            className="btn buttonModel"
+                            className="btn buttonClose"
                             onClick={this.props.close}>
                             Fermer
                         </Button>
