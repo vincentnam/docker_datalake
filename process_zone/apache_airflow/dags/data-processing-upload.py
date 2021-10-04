@@ -9,6 +9,11 @@ import config
 from services import extract_transform_load_time_series_csv
 from services import extract_transform_load_time_series_json
 from services import extract_transform_load_images
+from services import extract_transform_load_dump_sql
+from services import typefile
+import tempfile
+import base64
+from zipfile import ZipFile
 
 
 # The DAG object; we'll need this to instantiate a DAG
@@ -62,7 +67,37 @@ def get_swift_object(*args, **kwargs):
 
     process_type = "other"
     processed_data = {}
+    
+    if "application/x-zip-compressed" in content_type or "application/x-gzip" in content_type :
+        #Creation of a temp file for stock the data
+        fp = tempfile.TemporaryFile()
+        fp.write(swift_result)
+        fp.seek(0)
+        #Using ZipFile package to unzip zip file data
+        zip = ZipFile(fp, 'r')
+        #Using a for to read each file in the zip file
+        for file in zip.filelist:
+            #Read file to retrieve the data
+            data_file = zip.read(file.filename)
+            #Split the filename to retrieve the extension file for the type file
+            typef = file.filename.split('.')
+            typef = typef[1]
+            #Function return the type file
+            type_file = typefile(typef)
+            # Compare filetype
+            if "image/" in type_file :
+                process_type = "images"
+                processed_data = extract_transform_load_images(data_file, swift_container, swift_id, process_type)
+            if "application/json" in type_file:
+                process_type = "time_series_json"
+                # Json parsing
+                processed_data = extract_transform_load_time_series_json(data_file, swift_container, swift_id, process_type)
+            if "application/vnd.ms-excel" in type_file:
+                process_type = "time_series_csv"
+                # Json parsing
+                processed_data = extract_transform_load_time_series_csv(data_file, swift_container, swift_id, process_type)
 
+                
     # Compare filetype
     if "image/" in content_type :
         process_type = "images"
@@ -76,6 +111,11 @@ def get_swift_object(*args, **kwargs):
         process_type = "time_series_csv"
         # Json parsing
         processed_data = extract_transform_load_time_series_csv(swift_result, swift_container, swift_id, process_type)
+
+    if "application/sql" in content_type:
+        process_type = "sql_dump"
+        # Json parsing
+        processed_data = extract_transform_load_dump_sql(swift_result, swift_container, swift_id, process_type)
 
     # Handled data
     return processed_data

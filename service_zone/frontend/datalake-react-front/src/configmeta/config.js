@@ -2,15 +2,15 @@ export const config = {
     "types": [
         {
             "id": 0,
-            "label": "Veuillez choisir votre type de métadonnée ...",
+            "label": "Sélectionnez un type de fichier",
             "type_file_accepted": [],
             "metadonnees": [
             ]
         },
         {
             "id": 1,
-            "label": "Texte",
-            "type_file_accepted": ["text/plain", "application/csv", "application/vnd.ms-excel"],
+            "label": "Texte / CSV / Dump SQL",
+            "type_file_accepted": ["text/plain", "application/csv", "application/vnd.ms-excel", "application/sql"],
             "metadonnees": [
                 {
                     "id": 1,
@@ -137,6 +137,27 @@ export const config = {
             "id": 7,
             "label": "Binaire",
             "type_file_accepted": [],
+            "metadonnees": [
+                {
+                    "id": 1,
+                    "label": "Métadonnée Binaire 1",
+                    "type": "text",
+                    "name": "meta1",
+                    "value": "",
+                },
+                {
+                    "id": 2,
+                    "label": "Métadonnée Binaire 2",
+                    "type": "text",
+                    "name": "meta2",
+                    "value": "",
+                }
+            ]
+        },
+        {
+            "id": 8,
+            "label": "Archive",
+            "type_file_accepted": ["application/x-zip-compressed", "application/x-gzip"],
             "metadonnees": [
                 {
                     "id": 1,

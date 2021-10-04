@@ -56,6 +56,8 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
     for index, line in df.iterrows():
         # Parsing date timestamp to date milliseconds
         date = line[position_timestamp].replace('t', " ")
+        date = date.replace('T', " ")
+        date = date.replace('Z', "")
         date = date.replace('z', "")
         date = date.replace('.000', "")
         date = date.replace('-', "/")
