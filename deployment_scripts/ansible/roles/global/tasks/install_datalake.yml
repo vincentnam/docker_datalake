@@ -8,11 +8,11 @@
 - name : Install process zone
   import_playbook: "{{playbook_dir}}/../../process_zone/tasks/main.yml"
 
-- name : Install processed data zone
-  import_playbook: "{{playbook_dir}}/../../processed_data_zone/tasks/main.yml"
-
-- name: Install service zone
-  import_playbook: "{{playbook_dir}}/../../security_authentication_monitoring_zone/tasks/main.yml"
-
-- name: Install security, authentication and monitoring zone
-  import_playbook: "{{playbook_dir}}/../../security_authentication_monitoring_zone/tasks/main.yml"
+#- name : Install processed data zone
+#  import_playbook: "{{playbook_dir}}/../../processed_data_zone/tasks/main.yml"
+#
+#- name: Install service zone
+#  import_playbook: "{{playbook_dir}}/../../security_authentication_monitoring_zone/tasks/main.yml"
+#
+#- name: Install security, authentication and monitoring zone
+#  import_playbook: "{{playbook_dir}}/../../security_authentication_monitoring_zone/tasks/main.yml"

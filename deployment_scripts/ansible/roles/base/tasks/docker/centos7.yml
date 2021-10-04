@@ -9,6 +9,7 @@
         state: removed
         name:
           - docker
+          - docker-ce
           - docker-client
           - docker-client-latest
           - docker-common
@@ -16,6 +17,8 @@
           - docker-latest-logrotate
           - docker-logrotate
           - docker-engine
+      ignore_errors: yes
+      become: true
     - name: Install device-mapper-persistent-data
       yum:
         name: device-mapper-persistent-data
