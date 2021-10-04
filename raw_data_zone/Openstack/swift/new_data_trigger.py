@@ -6,9 +6,9 @@ from swift.proxy.controllers.base import get_container_info
 from eventlet import Timeout
 from swift.common.utils import register_swift_info
 
-URL = "http://141.115.103.32:8081"
+URL = ""
 ENDPOINT_PATH = "/api/experimental"
-DAG_NAME="test"
+DAG_NAME = "test"
 #
 # import ConfigParser
 # config = ConfigParser.ConfigParser().read(CONFIG_PATH).sections()

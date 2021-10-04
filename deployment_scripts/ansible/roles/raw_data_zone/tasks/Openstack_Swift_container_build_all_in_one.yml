@@ -9,6 +9,9 @@
   vars_files: ../vars/main.yml
   hosts: raw_data_zone_openstack_swift
   tasks:
+  - name : Test
+    ansible.builtin.debug:
+      var :  hostvars.process_zone_apache_airflow.ansible_host
   - name: Create a build directory
     ansible.builtin.file:
       path: "{{ hostvars.raw_data_zone_openstack_swift.BUILD_DIR}}/raw_data_zone_Openstack_Swift"
@@ -25,7 +28,7 @@
     ignore_errors: yes
   - name : Build Swift all in one container
     shell:
-      cmd : 'docker build --build-arg SWIFT_VERSION={{SWIFT_VERSION}} -t {{SWIFT_AIO_CONTAINER_NAME | lower}} .'
+      cmd : 'docker build --build-arg SWIFT_VERSION={{SWIFT_VERSION}} --build-arg AIRFLOW_HOST={{hostvars.process_zone_apache_airflow.ansible_host}} -t {{SWIFT_AIO_CONTAINER_NAME | lower}} .'
       chdir: '{{ hostvars.raw_data_zone_openstack_swift.BUILD_DIR}}/raw_data_zone_Openstack_Swift/'
     become: yes
     register: output
