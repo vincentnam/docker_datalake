@@ -1,0 +1,5 @@
+- name: "OS distribution : Arch-linux"
+  block:
+    - name: Install system packages
+      ansible.builting.debug:
+        msg: "ToDo"

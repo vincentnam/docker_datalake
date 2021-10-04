@@ -1,0 +1,50 @@
+---
+
+- import_playbook:  "{{playbook_dir}}/../../base/tasks/docker_install.yml"
+  vars:
+    host: raw_data_zone_openstack_swift
+
+
+- name : Download files
+  vars_files: ../vars/main.yml
+  hosts: raw_data_zone_openstack_swift
+  tasks:
+  - name : Test
+    ansible.builtin.debug:
+      var :  hostvars.process_zone_apache_airflow.ansible_host
+  - name: Create a build directory
+    ansible.builtin.file:
+      path: "{{ hostvars.raw_data_zone_openstack_swift.BUILD_DIR}}/raw_data_zone_Openstack_Swift"
+      state: directory
+      mode: "0755"
+  - name : Copy conf files for Openstack Swift container
+    ansible.builtin.copy:
+      src :  "../../../../../raw_data_zone/Openstack/swift/"
+      dest : '{{ hostvars.raw_data_zone_openstack_swift.BUILD_DIR}}/raw_data_zone_Openstack_Swift'
+  - name: Stop and delete any container
+    shell :
+      cmd : "docker stop $(docker ps -a -q); docker rm $(docker ps -a -q)"
+    become: yes
+    ignore_errors: yes
+  - name : Build Swift all in one container
+    shell:
+      cmd : 'docker build --build-arg SWIFT_VERSION={{SWIFT_VERSION}} --build-arg AIRFLOW_HOST={{hostvars.process_zone_apache_airflow.ansible_host}} -t {{SWIFT_AIO_CONTAINER_NAME | lower}} .'
+      chdir: '{{ hostvars.raw_data_zone_openstack_swift.BUILD_DIR}}/raw_data_zone_Openstack_Swift/'
+    become: yes
+    register: output
+  - ansible.builtin.debug:
+      var: output
+
+#  - name : Pull Swift all in one container
+#    shell:
+#      cmd: 'docker pull dockerswiftaio/docker-swift:{{SWIFT_VERSION}} -t {{SWIFT_AIO_CONTAINER_NAME}}'
+#    become: yes
+  - name : Run Swift all in one container
+    shell:
+# Sleep used to let output to be logged
+      cmd: '(docker run -p {{SWIFT_PORT}}:8080 {{SWIFT_AIO_CONTAINER_NAME|lower}}:{{SWIFT_VERSION}} & )&& sleep 20'
+#      chdir: '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR}}/metadata_management_zone_mongoDB/'
+    become: yes
+    register: output
+  - ansible.builtin.debug:
+      var: output

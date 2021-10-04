@@ -1,10 +1,11 @@
 ---
 
-- import_playbook: ../../base/tasks/docker_install.yml
+- import_playbook: "{{playbook_dir}}/../../base/tasks/docker_install.yml"
   vars:
     host: metadata_management_zone_mongodb
-
-
+- import_playbook: "{{playbook_dir}}/../../base/tasks/python_install.yml"
+  vars:
+    host: metadata_management_zone_mongodb
 
 
 - name : Download files
@@ -14,39 +15,44 @@
   - name: Print all available facts
     ansible.builtin.debug:
       var: hostvars.metadata_management_zone_mongodb.BUILD_DIR
-
+  - name: Create a build directory 
+    ansible.builtin.file:
+      path: "{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR}}/metadata_management_zone_mongoDB"
+      state: directory
+      mode: "0755"
   - name: get Dockerfile for container building
     get_url:
       url : 'https://raw.githubusercontent.com/docker-library/mongo/master/{{ MONGODB_VERSION }}/Dockerfile'
-      dest : '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}'
+      dest : '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}/metadata_management_zone_mongoDB/'
 
   - name: get docker-entrypoint.sh for container building
     get_url:
       url : 'https://raw.githubusercontent.com/docker-library/mongo/master/{{ MONGODB_VERSION }}/docker-entrypoint.sh'
-      dest : '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}'
-
+      dest : '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}/metadata_management_zone_mongoDB/'
+  - name : Copy conf files for Openstack Swift container
+    ansible.builtin.copy:
+      src :  "../files/"
+      dest : '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}/metadata_management_zone_mongoDB/'
   - name: change script mode
     ansible.builtin.file:
-      path: '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}/docker-entrypoint.sh'
+      path: '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR }}/metadata_management_zone_mongoDB/docker-entrypoint.sh'
       mode: '755'
-
-  - name: Create Mysql container
-    vars:
-      ansible_python_interpreter:
-    docker_container:
-      name: mysql
-      image: mysql
-      state: started
-      recreate: yes
-#      env:
-#        MYSQL_ROOT_PASSWORD: "{{ mysql_root_pass }}"
-#      exposed_ports:
-#        - "{{ mysql_port }}"
-      volumes:
-        - db_data:/var/lib/mysql/data
-#export MONGODB_VERSION=5.0-rc
-#export DOCKER_USERNAME=vincentnam
-#curl -O --remote-name-all
-#export DOCKER_USERNAME=username
-#chmod 755 ./docker-entrypoint.sh
-#docker build --build-arg MONGO_PACKAGE=mongodb-enterprise --build-arg MONGO_REPO=repo.mongodb.com -t $DOCKER_USERNAME/mongo-enterprise:$MONGODB_VERSION .
+  - name: Stop and delete any container
+    shell :
+      cmd : "docker stop $(docker ps -a -q); docker rm $(docker ps -a -q)"
+    become: yes
+    ignore_errors: yes
+  - name : Build MongoDB container
+    shell:
+      cmd: 'docker build --build-arg MONGO_PACKAGE=mongodb-enterprise --build-arg MONGO_REPO=repo.mongodb.com -t {{MONGODB_USER}}/mongo-enterprise:{{MONGODB_VERSION|lower}} .'
+      chdir: '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR}}/metadata_management_zone_mongoDB/'
+    become: yes
+  - name: Start MongoDB container
+    shell:
+      cmd: 'docker run --name {{MONGODB_NAME}} -p {{MONGODB_PORT}}:27017 -itd {{MONGODB_USER}}/mongo-enterprise:{{MONGODB_VERSION|lower}}'
+      chdir: '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR}}/metadata_management_zone_mongoDB/'
+    become: yes
+  - name: Run python initializer script
+    shell:
+      cmd: 'python3 initialise_metadata_base_mongodb.py "127.0.0.1:{{MONGODB_PORT}}" '
+      chdir: '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR}}/metadata_management_zone_mongoDB/'
