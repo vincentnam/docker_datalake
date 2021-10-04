@@ -27,11 +27,14 @@
       cmd : "docker stop $(docker ps -a -q); docker rm $(docker ps -a -q)"
     become : yes
     ignore_errors: yes
-  - name : Create env and folders
-    shell :
-      cmd : 'mkdir -p ./dags ./logs ./plugins ; echo -e "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0" > .env'
-      chdir: "{{ hostvars.process_zone_apache_airflow.BUILD_DIR}}/process_zone_apache_airflow"
-    become: yes
+  - name : Add build folders
+    ansible.builtin.copy:
+      src :  "{{playbook_dir}}/../files/"
+      dest : "{{ hostvars.process_zone_apache_airflow.BUILD_DIR }}/process_zone_apache_airflow/"
+  - name : Install DAG from git repository
+    ansible.builtin.copy:
+      src : "{{playbook_dir}}/../../../../../process_zone/apache_airflow/dags/"
+      dest : "{{ hostvars.process_zone_apache_airflow.BUILD_DIR }}/process_zone_apache_airflow/dags/"
   - name : Init Airflow containers
     shell:
       cmd : 'docker-compose up airflow-init'
@@ -48,3 +51,4 @@
     register: output
   - ansible.builtin.debug:
       var: output
+
