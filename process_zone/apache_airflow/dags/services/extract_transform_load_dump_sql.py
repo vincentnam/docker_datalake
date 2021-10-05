@@ -86,8 +86,8 @@ def extract_transform_load_sql_dump(swift_result, swift_container, swift_id, pro
 
         # Execute SQL select statement
         cursor.executemany(insert_into, values)
-        
-    db.commit()
+        db.commit()
+    
     # Close the connection
     db.close()
     
