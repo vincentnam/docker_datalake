@@ -1,4 +1,5 @@
 ARG SWIFT_VERSION
+# TODO : Change for https://hub.docker.com/r/openstackswift/saio official openstack swift container
 FROM dockerswiftaio/docker-swift:$SWIFT_VERSION
 # Overwrite conf
 

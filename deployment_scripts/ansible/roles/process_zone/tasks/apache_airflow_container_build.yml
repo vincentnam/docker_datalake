@@ -17,11 +17,11 @@
       path: "{{ hostvars.process_zone_apache_airflow.BUILD_DIR}}/process_zone_apache_airflow"
       state: directory
       mode: "0755"
-  - name: get Dockerfile for container building
-    get_url:
-      url : 'https://airflow.apache.org/docs/apache-airflow/2.1.2/docker-compose.yaml'
-      dest : "{{ hostvars.process_zone_apache_airflow.BUILD_DIR}}/process_zone_apache_airflow"
-    become : yes
+#  - name: get Dockerfile for container building
+#    get_url:
+#      url : 'https://airflow.apache.org/docs/apache-airflow/2.1.2/docker-compose.yaml'
+#      dest : "{{ hostvars.process_zone_apache_airflow.BUILD_DIR}}/process_zone_apache_airflow"
+#    become : yes
   - name: Stop and delete any container
     shell :
       cmd : "docker stop $(docker ps -a -q); docker rm $(docker ps -a -q)"
