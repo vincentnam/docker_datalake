@@ -1,6 +1,5 @@
 ARG SWIFT_VERSION
-# TODO : Change for https://hub.docker.com/r/openstackswift/saio official openstack swift container
-FROM dockerswiftaio/docker-swift:$SWIFT_VERSION
+FROM openstackswift/saio:$SWIFT_VERSION
 # Overwrite conf
 
 ARG AIRFLOW_HOST
@@ -19,7 +18,8 @@ RUN mkdir -p /mnt/sdb1/1 /mnt/sdb1/2 && \
 
 COPY ./swift/ /etc/swift/
 COPY ./new_data_trigger.py /usr/local/src/swift/swift/common/middleware/new_data_trigger.py
-RUN sed -i "s/URL = \"\"/URL = \"http:\/\/$AIRFLOW_HOST:8081\"/g" /usr/local/src/swift/swift/common/middleware/new_data_trigger.py
+COPY ./config.py /usr/local/src/swift/swift/common/middleware/config.py
+#RUN sed -i "s/URL = \"\"/URL = \"http:\/\/$AIRFLOW_HOST:8081\"/g" /usr/local/src/swift/swift/common/middleware/new_data_trigger.py
 #TODO : Add port custom for Airflow webserver (here : 8081)
 COPY ./bin/ /swift/bin/
 COPY ./conf/rsyncd.conf /etc/

@@ -21,6 +21,19 @@
     ansible.builtin.copy:
       src :  "../../../../../raw_data_zone/Openstack/swift/"
       dest : '{{ hostvars.raw_data_zone_openstack_swift.BUILD_DIR}}/raw_data_zone_Openstack_Swift'
+  - name : Create config file
+    ansible.builtin.copy:
+      src : '../../../../../raw_data_zone/Openstack/swift/config.py.sample'
+      dest : '../../../../../raw_data_zone/Openstack/swift/config.py'
+  - name : Update Openstack Swift IP
+    ansible.builtin.replace:
+      path :  '../../../../../raw_data_zone/Openstack/swift/config.py'
+      regexp: 'AIRFLOW_API_URL = ""'
+      replace: "AIRFLOW_API_URL = \"http://{{hostvars.process_zone_apache_airflow.ansible_host}}:8081/api/v1\" "
+  - name: Copy file on host
+    ansible.builtin.copy:
+      src: '../../../../../raw_data_zone/Openstack/swift/config.py.sample'
+      dest: "{{ hostvars.raw_data_zone_openstack_swift.BUILD_DIR}}/raw_data_zone_Openstack_Swift/"
   - name: Stop and delete any container
     shell :
       cmd : "docker stop $(docker ps -a -q); docker rm $(docker ps -a -q)"
@@ -35,15 +48,10 @@
   - ansible.builtin.debug:
       var: output
 
-#  - name : Pull Swift all in one container
-#    shell:
-#      cmd: 'docker pull dockerswiftaio/docker-swift:{{SWIFT_VERSION}} -t {{SWIFT_AIO_CONTAINER_NAME}}'
-#    become: yes
   - name : Run Swift all in one container
     shell:
 # Sleep used to let output to be logged
       cmd: '(docker run -p {{SWIFT_PORT}}:8080 {{SWIFT_AIO_CONTAINER_NAME|lower}}:{{SWIFT_VERSION}} & )&& sleep 20'
-#      chdir: '{{ hostvars.metadata_management_zone_mongodb.BUILD_DIR}}/metadata_management_zone_mongoDB/'
     become: yes
     register: output
   - ansible.builtin.debug:

@@ -11,17 +11,12 @@
   tasks:
   - name: Print all available facts
     ansible.builtin.debug:
-      var: hostvars.metadata_management_zone_mongodb.BUILD_DIR
+      var: hostvars
   - name: Create a build directory
     ansible.builtin.file:
       path: "{{ hostvars.process_zone_apache_airflow.BUILD_DIR}}/process_zone_apache_airflow"
       state: directory
       mode: "0755"
-#  - name: get Dockerfile for container building
-#    get_url:
-#      url : 'https://airflow.apache.org/docs/apache-airflow/2.1.2/docker-compose.yaml'
-#      dest : "{{ hostvars.process_zone_apache_airflow.BUILD_DIR}}/process_zone_apache_airflow"
-#    become : yes
   - name: Stop and delete any container
     shell :
       cmd : "docker stop $(docker ps -a -q); docker rm $(docker ps -a -q)"
@@ -31,10 +26,34 @@
     ansible.builtin.copy:
       src :  "{{playbook_dir}}/../files/"
       dest : "{{ hostvars.process_zone_apache_airflow.BUILD_DIR }}/process_zone_apache_airflow/"
-  - name : Install DAG from git repository
+  - name : Update Airflow webserver port
+    ansible.builtin.replace:
+      path : "{{ hostvars.process_zone_apache_airflow.BUILD_DIR }}/process_zone_apache_airflow/docker-compose.yaml"
+      regexp:   "airflow-webserver:\n
+                  <<: *airflow-common\n
+                  command: webserver\n
+                  ports:\n
+                    - 8081:8080"
+      replace: "airflow-webserver:\n
+                  <<: *airflow-common\n
+                  command: webserver\n
+                  ports:\n
+                    - {{AIRFLOW_WEBSERVER_PORT}}:8080"
+  - name : Install DAG from repository
     ansible.builtin.copy:
       src : "{{playbook_dir}}/../../../../../process_zone/apache_airflow/dags/"
       dest : "{{ hostvars.process_zone_apache_airflow.BUILD_DIR }}/process_zone_apache_airflow/dags/"
+  - name : Update MongoDB IP
+    ansible.builtin.replace:
+      path : "{{ hostvars.process_zone_apache_airflow.BUILD_DIR }}/process_zone_apache_airflow/dags/config.yml"
+      regexp: 'META_MONGO_IP : ".*"'
+      replace: "META_MONGO_IP : \"{{hostvars.process_zone_apache_airflow.ansible_host}} \" "
+  - name : Update Openstack Swift IP
+    ansible.builtin.replace:
+      path : "{{ hostvars.process_zone_apache_airflow.BUILD_DIR }}/process_zone_apache_airflow/dags/config.yml"
+      regexp: 'OPENSTACK_SWIFT_IP : ".*"'
+      replace: "OPENSTACK_SWIFT_IP : \"{{ hostvars.raw_data_zone_openstack_swift.ansible_host }} \" "
+
   - name : Init Airflow containers
     shell:
       cmd : 'docker-compose up airflow-init'
