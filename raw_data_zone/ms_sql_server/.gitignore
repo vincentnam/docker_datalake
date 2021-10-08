@@ -1,0 +1,14 @@
+sapassword.env
+
+# exclude everything
+mssql/*
+sqlserver/data/*
+sqlserver/log/*
+sqlserver/backup/*
+
+# exception to the rule
+!mssql/.gitkeep 
+!sqlserver/.gitkeep
+!sqlserver/data/.gitkeep
+!sqlserver/log/.gitkeep
+!sqlserver/backup/.gitkeep
