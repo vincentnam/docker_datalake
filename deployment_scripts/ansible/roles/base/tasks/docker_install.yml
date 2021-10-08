@@ -1,89 +1,35 @@
 ---
-
-
-- name : Install docker
-  vars_files: ../vars/main.yml
-  hosts: '{{ host }}'
+- hosts: "{{ host }}"
+  name: "Install docker (and docker_compose) and start it depending on OS"
   tasks:
-  - name: Install docker with package installer
-    ansible.builtin.package:
-      name: docker
-      state: present
-# TODO : Do install on OS
-#  - name: Install python3
-#    ansible.builtin.package:
-#      name: python3
-#      state: present
-  - name: Create pyenv
-    pip:
-      name: docker
-      virtualenv: '{{ VIRTUALENV_PATH }}'
-#- name : check docker version
-#  hosts : test
-#  remote_user: vdang
-#
-#
-#  tasks:
-#    - name: Install yum utils
-#      yum:
-#        name: yum-utils
-#        state: latest
-#
-#    - name: Install device-mapper-persistent-data
-#      yum:
-#        name: device-mapper-persistent-data
-#        state: latest
-#
-#    - name: Install lvm2
-#      yum:
-#        name: lvm2
-#        state: latest
-#    - name: Add Docker repo
-#      get_url:
-#        url: https://download.docker.com/linux/centos/docker-ce.repo
-#        dest: /etc/yum.repos.d/docer-ce.repo
-#      become: yes
-#
-#    - name: Enable Docker Edge repo
-#      ini_file:
-#        dest: /etc/yum.repos.d/docer-ce.repo
-#        section: 'docker-ce-edge'
-#        option: enabled
-#        value: 0
-#      become: yes
-#
-#    - name: Enable Docker Test repo
-#      ini_file:
-#        dest: /etc/yum.repos.d/docer-ce.repo
-#        section: 'docker-ce-test'
-#        option: enabled
-#        value: 0
-#      become: yes
-#
-#    - name: Install Docker
-#      package:
-#        name: docker-ce
-#        state: latest
-#      become: yes
-#
-#    - name: Start Docker service
-#      service:
-#        name: docker
-#        state: started
-#        enabled: yes
-#      become: yes
-#
-#    - name: Git clone Openstack Swift container branch
-#      git:
-#        repo: https://github.com/vincentnam/docker_datalake.git
-#        version: docker
-#        dest: /tmp/
-#
-#- name: Download files
-#  hosts: metadata_management_zone_mongodb
-##  vars_files: ../vars/main.yml
-#  tasks:
-#    - name: Print all available facts
-#      ansible.builtin.debug:
-#        var: ansible_search_path
-#
+    - name : Print all available facts
+      ansible.builtin.debug:
+        var: ansible_facts
+    - name : Check if docker/{{ansible_distribution|lower}}{{ ansible_distribution_major_version}}.yml exists
+      ansible.builtin.stat:
+        path: "{{playbook_dir}}/docker/{{ ansible_distribution|lower }}{{ ansible_distribution_major_version }}.yml"
+      register: playbook_name_with_version 
+    - name : Check if docker/{{ansible_distribution|lower}}.yml exists
+      ansible.builtin.stat:
+        path: "{{playbook_dir}}/docker/{{ ansible_distribution|lower}}.yml"
+      register: playbook_name
+      when : not playbook_name_with_version.stat.exists and playbook_name_with_version.stat.exists is defined
+    - name : "Try include playbook {{ansible_distribution|lower}}{{ansible_distribution_major_version}}.yml"
+      include_tasks:
+        file : "{{playbook_name_with_version.stat.path}}"
+      when : playbook_name.skipped is defined and (playbook_name_with_version.stat.exists is defined and playbook_name_with_version.stat.exists)
+    - name : "Try include playbook {{ansible_distribution|lower}}.yml ({{ansible_distribution|lower}}{{ansible_distribution_major_version}}.yml not found)"
+      include_tasks:
+        file : "{{playbook_name.stat.path}}"
+      when : playbook_name_with_version.stat.exists is defined and not playbook_name_with_version.stat.exists and (playbook_name.stat.exists is defined and playbook_name.stat.exists) 
+      register : result_default
+    - name: "{{ansible_distribution|lower}}{{ansible_distribution_major_version}}.yml"
+      ansible.builtin.debug:
+        msg : "{{playbook_name_with_version}}"
+    - name: "{{ansible_distribution|lower}}.yml"
+      ansible.builtin.debug:
+        msg : "{{playbook_name}}"
+    - name: "{{ansible_distribution|lower}}.yml skipped"
+      ansible.builtin.debug:
+        msg : "{{ansible_distribution|lower}}.yml has been skipped. See logs to see what playbook has been executed."
+      when: playbook_name is skipped

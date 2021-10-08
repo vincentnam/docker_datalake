@@ -1,0 +1,8 @@
+---
+# Use only lowercase
+SWIFT_VERSION : "latest"
+SWIFT_AIO_CONTAINER_NAME: "raw_data_storage_openstack_swift"
+SWIFT_STORAGE_PATH: "/tmp/"
+SWIFT_CONFIG_proxy-server: ""
+SWIFT_PORT: "8080"
+# TODO : Custom swift nodes in conf

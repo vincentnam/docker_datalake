@@ -5,31 +5,54 @@ import { InputMeta } from './upload-child/InputMeta';
 import { TextAreaMeta } from './upload-child/TextAreaMeta';
 import { config } from '../configmeta/config';
 import api from '../api/api';
-import { LoadingSpinner } from "./download-page/LoadingSpinner";
+import { ProgressBarComponent } from "./upload-child/ProgressBarComponent";
+import filesize from "filesize";
+import { ToastContainer, toast } from 'react-toastify';
 
 export class Upload extends React.Component {
     constructor() {
         super();
         this.onDrop = (files) => {
-            if(files.length < 1) {
-                alert('Format de fichier non accepté.')
-            } 
-            files.map((file) => { 
-                const typeFile = file.type;
+            if (files.length < 1) {
+                toast.error('Format de fichier non accepté.', {
+                    theme: "colored",
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
+            }
+            files.forEach((file) => {
+                let typeFile = file.type;
                 const filename = file.name;
-                if(this.state.type_file_accepted.includes(typeFile) === false) {
-                    alert("Format de fichier non accepté.\nVeuillez ajouter un fichier qui correspond à un de ses types : \n" + this.state.type_file_accepted)
+                if (!typeFile && filename.split('.').pop().toLowerCase() === "sql") {
+                    typeFile = "application/sql"
+                }
+                if (this.state.type_file_accepted.includes(typeFile) === false) {
+                    toast.error("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + this.state.type_file_accepted.join(' '), {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
                 } else {
                     var reader = new FileReader();
                     reader.readAsDataURL(file);
-                    reader.onload = () => this.setState({file: reader.result});
-                    this.setState({typeFile: typeFile});
-                    this.setState({filename: filename});
+                    reader.onload = () => this.setState({ file: reader.result });
+                    this.setState({ typeFile: typeFile });
+                    this.setState({ filename: filename });
                     const f = [file]
-                    this.setState({files: f});
+                    this.setState({ files: f });
                 }
             });
-            
+
         };
         this.state = {
             files: [],
@@ -44,9 +67,12 @@ export class Upload extends React.Component {
             othermeta: [],
             type_file_accepted: [],
             loading: false,
+            percentProgressBar: 0,
+            textProgressBar: ''
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.removeSelectedFile = this.removeSelectedFile.bind(this);
     }
 
     handleClose() {
@@ -67,13 +93,13 @@ export class Upload extends React.Component {
         const name = target.name;
 
         this.setState({
-        [name]: value
+            [name]: value
         });
         let type_file_accepted = [];
         if (name === "type") {
             const types = [config.types];
-            types.map((type) => (
-                type.map((t) => {
+            types.forEach((type) => (
+                type.forEach((t) => {
                     if (t.id === parseInt(value)) {
                         this.setState({
                             othermeta: t.metadonnees,
@@ -84,30 +110,68 @@ export class Upload extends React.Component {
                 })
             ));
         }
-        if(this.state.typeFile !== "") {
-            if(type_file_accepted.includes(this.state.typeFile) === false) {
-                alert("Format de fichier non accepté.\nVeuillez ajouter un fichier qui correspond à un de ses types : \n" + type_file_accepted)
-                this.setState({file: ''});
-                this.setState({typeFile: ''});
-                this.setState({filename: ''});
-                this.setState({files: []});
+        if (this.state.typeFile !== "") {
+            if (type_file_accepted.includes(this.state.typeFile) === false) {
+                toast.error("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + type_file_accepted.join(' '), {
+                    theme: "colored",
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
+                this.removeSelectedFile()
             }
         }
     }
-    
+
     handleSubmit(event) {
         event.preventDefault();
         const type = parseInt(this.state.type);
         const other = {};
 
-        this.state.othermeta.map((meta) => {
+        // options about upload progressBar
+        const options = {
+            onUploadProgress: (progressEvent) => {
+                this.setState({ textProgressBar: "Envoi en cours..." })
+                const { loaded, total } = progressEvent;
+                let percent = Math.floor((loaded * 100) / total)
+                this.setState({ percentProgressBar: percent })
+
+                if (percent > 99) {
+                    this.setState({ textProgressBar: "Finalisation du traitement..." })
+                }
+            }
+        }
+
+        this.state.othermeta.forEach((meta) => {
             other[meta.name] = meta.value
         });
 
         if (this.state.type === 0) {
-            window.alert("Veuillez renseigner le type de données !");
-        } else if ( this.state.filename === ''){
-            window.alert("Veuillez ajouter un fichier !");
+            toast.error("Veuillez renseigner le type de données !", {
+                theme: "colored",
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+        } else if (this.state.filename === '') {
+            toast.error("Veuillez ajouter un fichier !", {
+                theme: "colored",
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         } else {
             this.handleShow()
             api.post('storage', {
@@ -116,23 +180,53 @@ export class Upload extends React.Component {
                 filename: this.state.filename,
                 file: this.state.file,
                 othermeta: other
-            })
-            .then(function () {
-                window.alert("L'upload a bien été fait")
-                window.location.reload();
-            })
-            .catch(function (error) {
-                console.log(error);
-                window.alert("L'upload n'a pas réussi ! : " + error)
-            }).finally(function(){this.handleClose()}.bind(this))
+            }, options)
+                .then(function () {
+                    toast.success("L'upload a bien été fait !", {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 1500,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: false,
+                        draggable: true,
+                        progress: undefined,
+                    });
+                    setTimeout(function(){window.location.reload()}, 1500);
+                })
+                .catch(function (error) {
+                    toast.error("L'upload n'a pas réussi ! : " + error, {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 4000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
+                }).finally(function () {
+                    this.handleClose()
+                }.bind(this))
         }
+    }
+
+    // remove selected file on upload page
+    removeSelectedFile() {
+        this.setState({ file: '' });
+        this.setState({ typeFile: '' });
+        this.setState({ filename: '' });
+        this.setState({ files: [] });
     }
 
     render() {
 
         const files = this.state.files.map(file => (
             <li key={file.name}>
-                {JSON.stringify(file.name)}
+                {file.name} <span className="filesize">{filesize(file.size)}</span>
+                <div className="supprimer" onClick={this.removeSelectedFile}>
+                    <span aria-hidden="true">Supprimer</span><img alt="Icon Trash" src="/images/trash.svg" />
+                </div>
             </li>
         ));
 
@@ -141,70 +235,92 @@ export class Upload extends React.Component {
             const othermeta = this.state.othermeta;
             listMeta = (
                 othermeta.map((meta) => {
-                    const index = othermeta.indexOf(meta)
-                    if(meta.type === "number" || meta.type === "text") 
-                        return  <InputMeta key={meta.name} meta={meta} othermeta={othermeta} index={index} />
-    
-                    if(meta.type === "textarea") 
-                        return  <TextAreaMeta key={meta.name} meta={meta} othermeta={othermeta} index={index} />
+                    const index = othermeta.indexOf(meta);
+                    if (meta.type === "number" || meta.type === "text")
+                        return <InputMeta key={meta.name} meta={meta} othermeta={othermeta} index={index} />
+
+                    if (meta.type === "textarea")
+                        return <TextAreaMeta key={meta.name} meta={meta} othermeta={othermeta} index={index} />
                 })
             );
             return (
-                <div>
+                <div className="row">
                     {listMeta}
                 </div>
-                
+
             );
         }
         const SelectDatatype = () => {
             const types = [config.types];
             const listTypes = types.map((type) => (
-                type.map((t) => 
+                type.map((t) =>
                     <option value={t.id}>{t.label}</option>
                 )
             ));
             return (
-                <select value={this.state.type} onChange={this.handleChange} name="type" class="form-control">
+                <select value={this.state.type} onChange={this.handleChange} name="type" class="form-select">
                     {listTypes}
                 </select>
             );
         }
 
-        return(
+        return (
             <div>
                 <Header />
-                <div class="p-4">
+                <div class="container main-upload">
+                    <div className="title">Upload de données</div>
                     <div class="jumbotron">
-                        <h2 class="display-4 text-center">Upload de données</h2>
                         <form onSubmit={this.handleSubmit}>
-                            <div class="form-group required">
-                                <label class="control-label">Type de données</label>
-                                <SelectDatatype />
+                            <div className="row">
+                                <div class="form-group required col-6">
+                                    <label class="control-label file-type">Type de fichier</label>
+                                    <SelectDatatype />
+                                </div>
                             </div>
                             <Metadonnees />
                             <div class="form-group required">
-                                <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} accept="image/*,application/JSON,.csv,text/plain">
-                                    {({getRootProps, getInputProps}) => (
-                                    <section>
-                                        <div {...getRootProps({className: 'drop'})}>
-                                            <input {...getInputProps()} />
-                                            <label class="control-label">Drag 'n' drop veuillez glisser un fichier ou cliquer pour ajouter un fichier.</label>
-                                        </div>
-                                        <aside class="pt-3">
-                                            <h5>Fichiers</h5>
-                                            <ul>{files}</ul>
-                                        </aside>
-                                    </section>
+                                <label>Fichiers</label>
+                                <Dropzone value={this.state.file} name="file" onDrop={this.onDrop}
+                                    accept="image/*,application/JSON,.csv,text/plain,.sql,application/x-gzip,application/x-zip-compressed">
+                                    {({ getRootProps, getInputProps }) => (
+                                        <section>
+                                            <div {...getRootProps({ className: 'drop' })}>
+                                                <input {...getInputProps()} />
+                                                <div>
+                                                    Veuillez glisser un fichier ici<br />
+                                                    ou<br />
+                                                    <u>cliquer pour ajouter un fichier</u><br />
+                                                    Taille limitée à 20Mo (.jpg, .jpeg, .png, .svg, .gif, .tif, .psd,
+                                                    .pdf, .eps, .ai, .indd, .svg)
+                                                </div>
+                                            </div>
+                                            <aside class="pt-3">
+                                                {files.length !== 0 ?
+                                                    <aside class="pt-3">
+                                                        <ul>
+                                                            {files}
+                                                        </ul>
+                                                    </aside>
+                                                    : ''}
+                                            </aside>
+                                        </section>
                                     )}
                                 </Dropzone>
                             </div>
-                            <br />
-                            <button type="submit" class="btn btn-primary">Upload</button>
+                            <div className="d-md-flex justify-content-center">
+                                <button type="submit" className="btn btn-oran">Upload le fichier</button>
+                            </div>
                         </form>
                     </div>
                 </div>
 
-                <LoadingSpinner loading={this.state.loading} />
+                {/* ProgressBar shown when upload form submitted with percent updated in onUploadProgress above */}
+                <ProgressBarComponent
+                    loading={this.state.loading}
+                    percentProgressBar={this.state.percentProgressBar}
+                    text={this.state.textProgressBar}
+                />
+                <ToastContainer />
             </div>
         );
     }

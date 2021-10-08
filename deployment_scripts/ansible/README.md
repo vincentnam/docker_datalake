@@ -1,3 +1,7 @@
+# Ansible node install
+
+      ansible-galaxy collection install community.docker
+
 # Directory structure
 The latest version of Ansible is the 2.11.1 at the point  
 The Ansible directory structure is based on common directory structure defined in Ansible documentation (https://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_roles.html#role-directory-structure) : 
@@ -92,3 +96,44 @@ https://docs.ansible.com/ansible/latest/collections/community/docker/index.html
 Ansible Variable : 
 
 https://docs.ansible.com/ansible/latest/reference_appendices/special_variables.html#sts=Magic%20variables%C2%B6
+
+### Host configuration
+
+As package installation requires a privileged user, an user on the host has to be created.
+This user has to have SUDO right :
+- the best way is without password and sudo right for anything without password. A Ssh_key has to be deployed on this user to access remotely.
+- set up a password and add it in inventory files.
+
+In inventory, ansible_sudo_pass has to be added if user used doesn't have root privilege withtout password.
+
+### Playbook installation customisation : 
+
+Base role is defined to deploy any basic installation.
+
+The main.yml include any other playbook that ensure a part of the minimum installation. 
+At this moment, 2 things are required : 
+- Docker installation 
+- Python installation and Docker python lib 
+
+For each playbook, a folder is defined to specify OS-related installation. 
+"facts" are gathered at the beginning and the corresponding playbook is defined with : 
+- {{ansible_ditribution | lower}}{{ansible_distribution_major_version}}.yml
+- {{ansible_ditribution | lower}}.yml
+
+The priority order is this one. Example : centos.yml will be used only if centos7.yml playbook doesn't exist.
+To define an OS-related playbook, use template.yml as a basis. 
+
+Only Centos7 has been introduced at this moment (26/07/2021).
+
+
+### Centos7 installation :
+
+Docker API isn't accessible through systemctl. 
+In playbook, docker has been launched through a shell command in background launching "dockerd".
+
+
+### TODO : 
+
+- Add user in docker group (to allow to use docker without privileged) only accessible with SSH key and without password.
+- Remove all "become: yes" -> a specific configuration on different hosts has to be done, "become:yes" is the easiest way to deploy it for a first step.
+- Change user owner for Airflow files (.env)

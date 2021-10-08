@@ -4,6 +4,8 @@ from pymongo import MongoClient
 import swiftclient
 from swiftclient.service import SwiftService
 import datetime
+from bson.json_util import dumps
+from datetime import datetime as dt
 
 
 def get_swift_original_object_name(swift_container_name, swift_object_id):
@@ -35,21 +37,19 @@ def get_metadata(db_name, params):
     dict_query = {"$and": []}
 
     if(params['filetype'] != ""):
-        filetype_query = {"content_type": {'$regex': params['filetype'], '$options': 'i'}}
-        for item in [filetype_query]: 
-            dict_query['$and'].append(item) 
+        filetype_query = {"content_type": {'$in': params['filetype']}} 
+        dict_query['$and'].append(filetype_query)
 
     if(params['beginDate'] != "" and params['endDate'] != ""):
         dates_query = {'creation_date': {'$gte': start_date, '$lt': end_date}}
         for item in [dates_query]: 
             dict_query['$and'].append(item) 
 
-    if(params['datatype'] != ""):
-        datatype_query = {"swift_container": params['datatype']}
-        for item in [datatype_query]: 
-            dict_query['$and'].append(item)
-
     metadata = collection.find(dict_query)
+
+    # Sort columns
+    if("sort_field" in params.keys() and "sort_value" in params.keys()):
+        metadata.sort(params['sort_field'], params['sort_value'])
 
     if("offset" in params.keys() and "limit" in params.keys()):
         metadata = metadata.skip(params['offset'])
@@ -127,3 +127,43 @@ def insert_datalake(file_content, user, key, authurl, container_name,
             retry += 1
             if retry > 3:
                 return None
+
+def get_handled_data(params):
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url)
+
+    mongo_database = ""
+    collection_name = ""
+
+    start = dt.strptime(params.get('beginDate'), '%Y-%m-%d')
+    end =  dt.strptime(params.get('endDate'), '%Y-%m-%d')
+
+       # if certain filetype is selected, query will be ran on different MongoDB database
+    # Example : Image -> data_conso database
+    if("image" in params.get('filetype')):
+         # Database "data_historique"
+        mongo_database = mongo_client.data_conso
+
+        # Collection "traitement_historique"
+        collection_name = "processed_data"
+
+        start = start.isoformat()
+        end = end.isoformat()
+
+         # Collection "traitement_historique"
+        collection_traitement_historique = mongo_database[collection_name]
+
+        # Query result (Cursor object)
+        result_query = collection_traitement_historique.find({'creation_date': {'$gte': start, '$lt': end}},{"content_image":False})
+
+    if(collection_name == ""):
+        return {}, 0
+
+    # Conversion to a list of dictionaries
+    list_cursor = list(result_query)
+
+    # JSON Conversion
+    json_result = dumps(list_cursor)
+    count = result_query.count()
+
+    return json_result, count

@@ -9,27 +9,24 @@ export class TextAreaMeta extends React.Component {
     }
 
     editMeta(event) {
-        console.log("test");
-        
-        if(event !== undefined && event.target !== undefined) {
-            console.log(event)
+        if (event !== undefined && event.target !== undefined) {
             const other = this.props.othermeta;
-            console.log(other)
             const value = event.target.value
             other[this.props.index].value = value;
-            console.log(other)
             this.setState({
                 othermeta: other
             });
         }
-        
+
     }
 
     render() {
         return (
             <div key={this.props.meta.name} class="mb-3">
                 <label class="form-label">{this.props.meta.label}</label>
-                <textarea value={this.props.meta.value} onChange={(event) => this.editMeta(event)} name={this.props.meta.name} class="form-control" rows="3" />
+                <textarea value={this.props.meta.value} onChange={(event) => this.editMeta(event)}
+                          name={this.props.meta.name} class="form-control" rows="3"
+                          placeholder="Saisissez vos métadonnées"/>
             </div>
         )
     }
