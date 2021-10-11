@@ -1,5 +1,18 @@
 from swift.common.swob import wsgify
 from swift.common.utils import split_path, get_logger
+
+from swift.common.request_helpers import get_sys_meta_prefix
+from swift.proxy.controllers.base import get_container_info
+from eventlet import Timeout
+from swift.common.utils import register_swift_info
+
+# URL = ""
+# ENDPOINT_PATH = "/api/v1"
+# DAG_NAME = "branching"
+#
+# import ConfigParser
+# config = ConfigParser.ConfigParser().read(CONFIG_PATH).sections()
+
 import six
 
 if six.PY3:
@@ -16,7 +29,7 @@ class NewDataTriggerMiddleware(object):
         self.app = app
         self.logger = get_logger(conf, log_route='new_data_trigger')
         self.airflow_api_url = AIRFLOW_API_URL
-        self.airflow_new_upload_dag_id = "data-processing-upload"
+        self.airflow_new_upload_dag_id = "branching"
 
     @wsgify
     def __call__(self, req):

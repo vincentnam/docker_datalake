@@ -1,0 +1,16 @@
+---
+
+- import_playbook: "{{playbook_dir}}/../../base/tasks/docker_install.yml"
+  vars:
+    host: process_zone_apache_airflow
+
+
+- name : Download files
+  vars_files: ../vars/main.yml
+  hosts: process_zone_apache_airflow
+  tasks:
+  - name: Print all available facts
+    ansible.builtin.debug:
+      var: hostvars.metadata_management_zone_mongodb.BUILD_DIR
+
+# TODO

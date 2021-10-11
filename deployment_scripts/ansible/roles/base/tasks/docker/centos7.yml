@@ -1,0 +1,57 @@
+---
+- block :
+    - name: Install yum utils
+      yum:
+        name: yum-utils
+        state: latest
+    - name: Remove docker if installed from CentOS repo
+      yum:
+        state: removed
+        name:
+          - docker
+          - docker-ce
+          - docker-client
+          - docker-client-latest
+          - docker-common
+          - docker-latest
+          - docker-latest-logrotate
+          - docker-logrotate
+          - docker-engine
+      ignore_errors: yes
+      become: true
+    - name: Install device-mapper-persistent-data
+      yum:
+        name: device-mapper-persistent-data
+        state: latest
+      become: true
+    - name: Install lvm2
+      yum:
+        name: lvm2
+        state: latest
+      become: yes
+    - name: Add Docker repository
+      shell : " yum-config-manager     --add-repo     https://download.docker.com/linux/centos/docker-ce.repo"
+      become : yes
+    - name: Install Docker
+      yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: latest
+      become: yes
+    - name: Start docker service
+      ansible.builtin.systemd:
+        state: started
+        name: docker
+      become: yes
+    - name : Get docker-compose 1.29.2
+      shell :
+        cmd : ' curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /bin/docker-compose '
+        warn: false
+      become : yes
+    - name : Change docker-compose mode
+      ansible.builtin.file :
+        path: "/bin/docker-compose"
+        mode: "+x"
+      become: yes

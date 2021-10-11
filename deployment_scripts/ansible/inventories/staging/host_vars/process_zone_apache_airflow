@@ -1,2 +1,4 @@
 ---
 BUILD_DIR: "/tmp"
+# Deploy each Apache Airflow service on a specific host node (true) or on the same host node
+APACHE_AIRFLOW_MULTI_NODE: false

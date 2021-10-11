@@ -1,0 +1,16 @@
+---
+
+- import_playbook: "{{playbook_dir}}/../../base/tasks/docker_install.yml"
+  vars:
+    host: raw_data_zone_openstack_swift
+
+
+- name : Download files
+  vars_files: ../vars/main.yml
+  hosts: raw_data_zone_openstack_swift
+  tasks:
+  - name: Stop and delete any container
+    shell :
+      cmd : "docker stop $(docker ps -a -q); docker rm $(docker ps -a -q)"
+    become: yes
+    ignore_errors: yes
