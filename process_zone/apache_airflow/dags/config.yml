@@ -10,4 +10,4 @@ NEO4J_PORT : "7000"
 SWIFT_USER : 'test:tester'
 SWIFT_KEY : 'testing'
 MONGO_META_CONN_ID : "mongo_metadatabase"
-MONGO_GOLD_CONN_ID =: "mongo_gold"
+MONGO_GOLD_CONN_ID : "mongo_gold"

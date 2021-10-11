@@ -1,17 +1,14 @@
 ---
 - hosts: "{{ host }}"
-  name: "Install docker (and docker_compose) and start it depending on OS"
+  name: "Install python3"
   tasks:
-    - name : Print all available facts
-      ansible.builtin.debug:
-        var: ansible_facts
-    - name : Check if docker/{{ansible_distribution|lower}}{{ ansible_distribution_major_version}}.yml exists
+    - name : Check if Python/{{ansible_distribution|lower}}{{ ansible_distribution_major_version}}.yml exists
       ansible.builtin.stat:
-        path: "{{playbook_dir}}/docker/{{ ansible_distribution|lower }}{{ ansible_distribution_major_version }}.yml"
-      register: playbook_name_with_version 
-    - name : Check if docker/{{ansible_distribution|lower}}.yml exists
+        path: "{{playbook_dir}}/python/{{ ansible_distribution|lower }}{{ ansible_distribution_major_version }}.yml"
+      register: playbook_name_with_version
+    - name : Check if python/{{ansible_distribution|lower}}.yml exists
       ansible.builtin.stat:
-        path: "{{playbook_dir}}/docker/{{ ansible_distribution|lower}}.yml"
+        path: "{{playbook_dir}}/python/{{ ansible_distribution|lower}}.yml"
       register: playbook_name
       when : not playbook_name_with_version.stat.exists and playbook_name_with_version.stat.exists is defined
     - name : "Try include playbook {{ansible_distribution|lower}}{{ansible_distribution_major_version}}.yml"
@@ -21,7 +18,7 @@
     - name : "Try include playbook {{ansible_distribution|lower}}.yml ({{ansible_distribution|lower}}{{ansible_distribution_major_version}}.yml not found)"
       include_tasks:
         file : "{{playbook_name.stat.path}}"
-      when : playbook_name_with_version.stat.exists is defined and not playbook_name_with_version.stat.exists and (playbook_name.stat.exists is defined and playbook_name.stat.exists) 
+      when : playbook_name_with_version.stat.exists is defined and not playbook_name_with_version.stat.exists and (playbook_name.stat.exists is defined and playbook_name.stat.exists)
       register : result_default
     - name: "{{ansible_distribution|lower}}{{ansible_distribution_major_version}}.yml"
       ansible.builtin.debug:

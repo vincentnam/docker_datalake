@@ -1,0 +1,8 @@
+---
+- name : All-in-one installation
+  import_playbook: Openstack_Swift_container_build_all_in_one.yml
+  when : not hostvars.raw_data_zone_openstack_swift.OPENSTACK_SWIFT_MULTI_NODE
+
+- name : Multinode installation
+  import_playbook: Openstack_Swift_container_build.yml
+  when : hostvars.raw_data_zone_openstack_swift.OPENSTACK_SWIFT_MULTI_NODE

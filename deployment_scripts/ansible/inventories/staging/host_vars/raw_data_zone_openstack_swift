@@ -1,2 +1,3 @@
 ---
 BUILD_DIR: "/tmp"
+OPENSTACK_SWIFT_MULTI_NODE: false

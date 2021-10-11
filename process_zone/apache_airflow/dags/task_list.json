@@ -1,0 +1,64 @@
+{
+  "image/": {
+      "default": [
+        {
+          "operator" : "PythonOperator",
+          "task_id" : "Default_image",
+          "python_callable" : "default_image"
+        }
+      ],
+      "mygates": [
+        {
+          "operator" : "PythonOperator",
+          "task_id" : "Mygates_object_in_png_in_neo4j",
+          "python_callable" : "content_neo4j_node_creation"
+        }
+      ]
+  },
+  "application/json": {
+      "default": [
+        {
+          "operator" : "PythonOperator",
+          "task_id" : "Default_JSON",
+          "python_callable" : "default_application_json"
+        }
+      ],
+      "neocampus": [
+        {
+          "operator" : "PythonOperator",
+          "task_id" : "Json_log_to_timeserie_influxdb",
+          "python_callable" : "from_mongodb_to_influx"
+        }
+      ]
+  },
+  "application/vnd.ms-excel":
+  {
+    "default": [
+      {
+      "operator": "PythonOperator",
+      "task_id": "Default_excel",
+      "python_callable": "default_application_vnd_ms_excel"
+
+      }
+    ]
+  },
+  "application/x-zip-compressed" :
+  {
+    "default": [
+      {
+        "operator": "PythonOperator",
+        "task_id":"Default_ZIP",
+        "python_callable":"default_zip"
+      }
+    ]
+  },
+  "not_handled": {
+      "default": [
+        {
+          "operator" : "PythonOperator",
+          "task_id" : "Not_handled",
+          "python_callable" : "not_handled_call"
+        }
+      ]
+  }
+  }
