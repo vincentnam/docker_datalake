@@ -1,0 +1,8 @@
+---
+- name : Mono node installation
+  import_playbook: apache_airflow_container_build.yml
+  when : not hostvars.process_zone_apache_airflow.APACHE_AIRFLOW_MULTI_NODE
+
+- name : Multinode installation
+  import_playbook: apache_airflow_container_build_multinode.yml
+  when : hostvars.process_zone_apache_airflow.APACHE_AIRFLOW_MULTI_NODE
