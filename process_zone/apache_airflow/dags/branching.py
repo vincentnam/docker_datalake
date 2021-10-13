@@ -508,12 +508,16 @@ def default_check_type(**kwargs):
 
 def workflow_selection(**kwargs):
     # GET AUTH TOKEN
-    user, password = 'test:tester', 'testing'
-    # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
-    url = 'http://141.115.103.30:8080/auth/v1.0'
+    # user, password = 'test:tester', 'testing'
+    # # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
+    # url = 'http://141.115.103.30:8080/auth/v1.0'
+    url = "http://" + config.url_swift + "/auth/v1.0"
+    user = config.user_swift
+    key = config.key_swift
     headers = {'X-Storage-User': user,
-               'X-Storage-Pass': password
+               'X-Storage-Pass': key
                }
+
     token_response = urlopen(Request(url, headers=headers)).getheaders()
 
     opener = urllib.request.build_opener()
@@ -561,9 +565,9 @@ def workflow_selection(**kwargs):
 
 # import configurations of different services needed :
 # IP and port of Swift, MongoDB, etc..
-with open(cwd + "/config.yml", "r") as config:
-    y = yaml.safe_load(config)
-globals().update(y)
+# with open(cwd + "/config.yml", "r") as config:
+#     y = yaml.safe_load(config)
+# globals().update(y)
 
 
 def custom_user_workflow(**kwargs):
@@ -597,15 +601,14 @@ def neocampus_get_swift_object(**kwargs):
 
     print("kwargs['dag_run'].conf")
     print(kwargs["dag_run"].conf)
-    # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
-
-    # TODO : 13/10/2020 CHANGE USERS / PASS
-    user, password = 'test:tester', 'testing'
-    # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
-    url = 'http://141.115.103.30:8080/auth/v1.0'
+    
+    url = "http://" + config.url_swift + "/auth/v1.0"
+    user = config.user_swift
+    key = config.key_swift
     headers = {'X-Storage-User': user,
-               'X-Storage-Pass': password
+               'X-Storage-Pass': key
                }
+    
     token_response = urlopen(Request(url, headers=headers)).getheaders()
 
     opener = urllib.request.build_opener()
