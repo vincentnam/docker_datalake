@@ -1,7 +1,10 @@
 from flask import Blueprint, jsonify, request, send_file, escape
 from ..services import mongo, influxdb
 from datetime import datetime
-import json, io, zipfile, time
+import json
+import io
+import zipfile
+import time
 import pandas as pd
 from ..utils.size_conversion import convert_unit, SIZE_UNIT
 
@@ -20,24 +23,25 @@ def get_metadata():
         return jsonify({'error': 'Missing required fields.'})
 
     if(params.get('filetype') == ""):
-            return jsonify({'error': 'Missing required fields.'})
+        return jsonify({'error': 'Missing required fields.'})
 
     if(("limit" in request.get_json() and "offset" not in request.get_json()) or ("limit" not in request.get_json() and "offset" in request.get_json())):
         return jsonify({'error': 'Limit and offset have to be sent together.'})
 
     if("sort_field" in request.get_json() and "sort_value" in request.get_json()):
-        params['sort_field'] =  request.get_json()['sort_field']
-        params['sort_value'] =  request.get_json()['sort_value']
+        params['sort_field'] = request.get_json()['sort_field']
+        params['sort_value'] = request.get_json()['sort_value']
 
     # Sort columns
     if("limit" in request.get_json() and "offset" in request.get_json()):
-        params['limit'] =  request.get_json()['limit']
-        params['offset'] =  request.get_json()['offset']
+        params['limit'] = request.get_json()['limit']
+        params['offset'] = request.get_json()['offset']
 
     date_format = "%Y-%m-%d"
 
     try:
-        convertedBeginDate = datetime.strptime(params['beginDate'], date_format)
+        convertedBeginDate = datetime.strptime(
+            params['beginDate'], date_format)
         convertedEndDate = datetime.strptime(params['endDate'], date_format)
     except Exception as e:
         return jsonify({'error': str(e)})
@@ -47,7 +51,8 @@ def get_metadata():
         params['endDate'] = params['endDate'] + " 00:00:00"
         date_format = "%Y-%m-%d %H:%M:%S"
 
-        convertedBeginDateTemp = datetime.strptime(params['beginDate'], date_format)
+        convertedBeginDateTemp = datetime.strptime(
+            params['beginDate'], date_format)
         convertedBeginDate = datetime.strptime(params['endDate'], date_format)
         convertedEndDate = convertedBeginDateTemp
 
@@ -56,7 +61,8 @@ def get_metadata():
         params['endDate'] = params['endDate'] + " 23:59:59"
         date_format = "%Y-%m-%d %H:%M:%S"
 
-        convertedBeginDate = datetime.strptime(params['beginDate'], date_format)
+        convertedBeginDate = datetime.strptime(
+            params['beginDate'], date_format)
         convertedEndDate = datetime.strptime(params['endDate'], date_format)
 
     params['beginDate'] = convertedBeginDate
@@ -81,6 +87,7 @@ def get_metadata():
 
     return jsonify({'result': output})
 
+
 @mongo_data_bp.route('/handled-data-list', methods=['POST'])
 def get_handled_data_list():
     result = {}
@@ -103,7 +110,8 @@ def get_handled_data_list():
 
     import sys
     # Parse InfluxDB response to Pandas DataFrame
-    influxdb_result, number_of_rows_influxdb = influxdb.create_csv_file(influxDB)
+    influxdb_result, number_of_rows_influxdb = influxdb.create_csv_file(
+        influxDB)
     nb_lines_influxDB = len(list(influxDB))
 
     # If there is Influx data (> 1 because Header is present at minimum in csv file) and filter "Time series" is selected
@@ -123,6 +131,7 @@ def get_handled_data_list():
         result['MongoDB'] = metadata_mongo_file
 
     return jsonify(result)
+
 
 @mongo_data_bp.route('/handled-data-file', methods=['POST'])
 def get_handled_data_zipped_file():
@@ -160,7 +169,8 @@ def get_handled_data_zipped_file():
             result['InfluxDB'] = influxdb.get_handled_data(params)
 
             # Parse InfluxDB response to Pandas DataFrame
-            influxdb_result, number_of_rows_influxdb = influxdb.create_csv_file(result['InfluxDB'])
+            influxdb_result, number_of_rows_influxdb = influxdb.create_csv_file(
+                result['InfluxDB'])
 
     memory_file = io.BytesIO()
     with zipfile.ZipFile(memory_file, 'w') as zip_file:
@@ -182,7 +192,7 @@ def get_handled_data_zipped_file():
         if(number_of_rows_influxdb > 1):
             data = zipfile.ZipInfo("donnees-serie-temporelle-influxdb.csv")
             data.date_time = time.localtime(time.time())[:6]
-            data.compress_type = zipfile.ZIP_DEFLATED 
+            data.compress_type = zipfile.ZIP_DEFLATED
 
             # Writing CSV file into zipped result
             zip_file.writestr(data, influxdb_result)
@@ -192,9 +202,137 @@ def get_handled_data_zipped_file():
 
     if memory_file.getbuffer().nbytes > 22:
         return send_file(
-            memory_file, 
-            attachment_filename='handled_data.zip', 
+            memory_file,
+            attachment_filename='handled_data.zip',
             as_attachment=True
         )
     else:
         return jsonify({'msg': "No content available."})
+
+@mongo_data_bp.route('/models/all', methods=['GET'])
+def get_models():
+    models = mongo.get_models_all()
+    models_list = list(models)
+
+    output = {'data': []}
+    for obj in models_list:
+        output['data'].append({
+            '_id': str(obj['_id']),
+            "label": obj['label'],
+            "type_file_accepted": obj['type_file_accepted'],
+            "metadonnees": obj['metadonnees'],
+            "status": obj['status'],
+        })
+        
+    return jsonify({'models': output})
+
+@mongo_data_bp.route('/models/show/all', methods=['GET'])
+def get_models_show():
+    models = mongo.get_models_show_all()
+    models_list = list(models)
+
+    output = {'data': []}
+    for obj in models_list:
+        output['data'].append({
+            '_id': str(obj['_id']),
+            "label": obj['label'],
+            "type_file_accepted": obj['type_file_accepted'],
+            "metadonnees": obj['metadonnees'],
+            "status": obj['status'],
+        })
+        
+    return jsonify({'models': output})
+
+@mongo_data_bp.route('/models/cache/all', methods=['GET'])
+def get_models_cache():
+    models = mongo.get_models_all_cache()
+    models_list = list(models)
+    #Data formatting for output
+    output = {'data': []}
+    for obj in models_list:
+        output['data'].append({
+            '_id': str(obj['_id']),
+            "label": obj['label'],
+            "type_file_accepted": obj['type_file_accepted'],
+            "metadonnees": obj['metadonnees'],
+            "status": obj['status'],
+        })
+        
+    return jsonify({'models': output})
+
+
+@mongo_data_bp.route('/models/params', methods=['GET', 'POST'])
+def get_models_params():
+    data_request = request.get_json()
+    types_files = data_request['types_files']
+    models_list = []
+    #Recovery of all templates for each file type
+    for type_file in types_files:
+        models = mongo.get_models_params(type_file)
+        models_list.append(models)
+        
+    #Liste des différents modèles sans doublon
+    models_param = []
+    for model in models_list:
+        for m in model:
+            if m not in models_param: models_param.append(m)
+        
+    #Data formatting for output
+    listmodels = list(models_param)
+    output = {'data': []}
+    for obj in listmodels:
+        output['data'].append({
+            '_id': str(obj['_id']),
+            "label": obj['label'],
+            "type_file_accepted": obj['type_file_accepted'],
+            "metadonnees": obj['metadonnees'],
+        })
+    return jsonify({'models': output})
+
+
+@mongo_data_bp.route('/models/id', methods=['GET', 'POST'])
+def get_model_id():
+    data_request = request.get_json()
+    id = data_request['id']
+    models = mongo.get_model_id(id)
+    model = list(models)
+
+    output = {'data': []}
+    for obj in model:
+        output['data'].append({
+            '_id': str(obj['_id']),
+            "label": obj['label'],
+            "type_file_accepted": obj['type_file_accepted'],
+            "metadonnees": obj['metadonnees'],
+            "status": obj['status'],
+        })
+        
+    return jsonify({'model': output})
+
+@mongo_data_bp.route('/models/add', methods=['POST'])
+def add_models():
+    data_request = request.get_json()
+    param = {
+        'label': data_request['label'],
+        'type_file_accepted': data_request['type_file_accepted'],
+        'metadonnees': data_request['metadonnees'],
+        'status': data_request['status'],
+    }
+    model = mongo.add_model(param)
+
+    return jsonify({'model': model})
+
+
+@mongo_data_bp.route('/models/edit', methods=['POST'])
+def edit_models():
+    data_request = request.get_json()
+    param = {
+        'id': data_request['id'],
+        'label': data_request['label'],
+        'type_file_accepted': data_request['type_file_accepted'],
+        'metadonnees': data_request['metadonnees'],
+        'status': data_request['status']
+    }
+    model = mongo.update_model(param)
+
+    return jsonify({'model': model})

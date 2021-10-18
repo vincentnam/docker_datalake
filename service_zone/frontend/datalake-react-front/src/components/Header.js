@@ -24,6 +24,11 @@ const Navbar = () => (
                  to="/data-processed-visualization">
             Data Visualization
         </NavLink>
+        <NavLink activeClassName="active"
+                 className="nav-item nav-link"
+                 to="/models">
+            Gestion
+        </NavLink>
     </nav>
 );
 

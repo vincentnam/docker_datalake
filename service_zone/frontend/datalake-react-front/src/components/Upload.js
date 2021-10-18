@@ -8,6 +8,9 @@ import api from '../api/api';
 import { ProgressBarComponent } from "./upload-child/ProgressBarComponent";
 import filesize from "filesize";
 import { ToastContainer, toast } from 'react-toastify';
+import { ModelAddForm } from './upload-child/model/ModelAddForm';
+import { ModelEditForm } from './upload-child/model/ModelEditForm';
+import { Modal } from "react-bootstrap";
 
 export class Upload extends React.Component {
     constructor() {
@@ -68,11 +71,75 @@ export class Upload extends React.Component {
             type_file_accepted: [],
             loading: false,
             percentProgressBar: 0,
-            textProgressBar: ''
+            textProgressBar: '',
+            models: [],
+            model: "",
+            modalAdd: false,
+            modalEdit: false,
+            editModel: {
+                id: 0,
+                label: "",
+                typesFiles: [],
+                metadonnees: [],
+                status: true,
+            }
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.removeSelectedFile = this.removeSelectedFile.bind(this);
+        this.onChangeModalAdd = this.onChangeModalAdd.bind(this);
+        this.onChangeModalEdit = this.onChangeModalEdit.bind(this);
+        this.reload = this.reload.bind(this);
+        this.reloadEdit = this.reloadEdit.bind(this);
+    }
+
+    reload() {
+        this.setState({
+            model: "",
+            type: 0,
+            models: [],
+            othermeta: [],
+        });
+    }
+
+    reloadEdit() {
+        this.setState({
+            model: "",
+            models: [],
+            othermeta: [],
+        });
+        api.post("models/params", {
+            types_files: this.state.type_file_accepted
+        })
+            .then((response) => {
+                this.setState({
+                    models: response.data.models.data,
+                    model: "",
+                    othermeta: [],
+                    editModel: {
+                        id: 0,
+                        label: "",
+                        typesFiles: [],
+                        metadonnees: [],
+                        status: true,
+                    }
+                });
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
+
+    onChangeModalAdd() {
+        this.setState({
+            modalAdd: !this.state.modalAdd,
+        });
+    }
+
+    onChangeModalEdit() {
+        this.setState({
+            modalEdit: !this.state.modalEdit,
+        });
     }
 
     handleClose() {
@@ -102,13 +169,65 @@ export class Upload extends React.Component {
                 type.forEach((t) => {
                     if (t.id === parseInt(value)) {
                         this.setState({
-                            othermeta: t.metadonnees,
                             type_file_accepted: t.type_file_accepted
                         });
                         type_file_accepted = t.type_file_accepted
+                        api.post("models/params", {
+                            types_files: type_file_accepted
+                        })
+                            .then((response) => {
+                                this.setState({
+                                    models: response.data.models.data,
+                                    model: "",
+                                    othermeta: [],
+                                    editModel: {
+                                        id: 0,
+                                        label: "",
+                                        typesFiles: [],
+                                        metadonnees: [],
+                                        status: true,
+                                    }
+                                });
+                            })
+                            .catch(function (error) {
+                                console.log(error);
+                            });
                     }
                 })
             ));
+        }
+        if (name === "model") {
+            if(value !== ""){
+                api.post("models/id", {
+                    id: value
+                })
+                    .then((response) => {
+                        this.setState({
+                            othermeta: response.data.model.data[0].metadonnees,
+                            editModel: {
+                                id: response.data.model.data[0]._id,
+                                label: response.data.model.data[0].label,
+                                typesFiles: response.data.model.data[0].type_file_accepted,
+                                metadonnees: response.data.model.data[0].metadonnees,
+                                status: response.data.model.data[0].status,
+                            }
+                        });
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            } else {
+                this.setState({
+                    othermeta: [],
+                    editModel: {
+                        id: 0,
+                        label: "",
+                        typesFiles: [],
+                        metadonnees: [],
+                        status: true,
+                    }
+                });
+            }
         }
         if (this.state.typeFile !== "") {
             if (type_file_accepted.includes(this.state.typeFile) === false) {
@@ -192,7 +311,7 @@ export class Upload extends React.Component {
                         draggable: true,
                         progress: undefined,
                     });
-                    setTimeout(function(){window.location.reload()}, 1500);
+                    setTimeout(function () { window.location.reload() }, 1500);
                 })
                 .catch(function (error) {
                     toast.error("L'upload n'a pas réussi ! : " + error, {
@@ -264,6 +383,84 @@ export class Upload extends React.Component {
             );
         }
 
+        const SelectModel = () => {
+            if (this.state.models.length === 0) {
+                return (
+                    <div>
+                        <p className="text-break">Aucun modèle de métadonnées</p>
+                    </div>
+                );
+            } else {
+                const listModels = this.state.models.map((model) => (
+                    <option key={model._id} value={model._id}>{model.label}</option>
+                ));
+                return (
+                    <select value={this.state.model} onChange={this.handleChange} name="model" class="form-select">
+                        <option value="">Sélectionnez un modèle de métadonnées</option>
+                        {listModels}
+                    </select>
+                );
+            }
+        }
+
+        const EditButton = () => {
+            if (this.state.model !== "") {
+                return (
+                    <button type="button" class="btn btn-primary buttonModel" onClick={() => this.onChangeModalEdit()}>Modifier le modèle</button>
+                );
+            } else {
+                return (
+                    <p></p>
+                )
+            }
+        }
+
+        const ModalAdd = () => {
+            return (
+                <Modal
+                    size="lg"
+                    show={this.state.modalAdd}
+                    onHide={() => this.onChangeModalAdd()}
+                    aria-labelledby="model-add"
+                >
+                    <Modal.Header>
+                        <Modal.Title id="model-add">
+                            Ajouter un modèle de métadonnées
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <ModelAddForm
+                            close={this.onChangeModalAdd}
+                            reload={this.reload}
+                        />
+                    </Modal.Body>
+                </Modal>
+            )
+        }
+        const ModalEdit = () => {
+            return (
+                <Modal
+                    size="lg"
+                    show={this.state.modalEdit}
+                    onHide={() => this.onChangeModalEdit()}
+                    aria-labelledby="model-edit"
+                >
+                    <Modal.Header>
+                        <Modal.Title id="model-edit">
+                            Modifier le modèle
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <ModelEditForm
+                            close={this.onChangeModalEdit}
+                            reload={this.reloadEdit}
+                            editModel={this.state.editModel}
+                        />
+                    </Modal.Body>
+                </Modal>
+            )
+        }
+
         return (
             <div>
                 <Header />
@@ -276,8 +473,16 @@ export class Upload extends React.Component {
                                     <label class="control-label file-type">Type de fichier</label>
                                     <SelectDatatype />
                                 </div>
+                                <div class="form-group required col-6">
+                                    <label class="control-label file-type">Modèles</label>
+                                    <SelectModel />
+                                </div>
                             </div>
                             <Metadonnees />
+                            <div class="d-flex justify-content-between mt-2 mb-2">
+                                <button type="button" class="btn btn-primary buttonModel" onClick={() => this.onChangeModalAdd()}>Créer un modèle</button>
+                                <EditButton />
+                            </div>
                             <div class="form-group required">
                                 <label>Fichiers</label>
                                 <Dropzone value={this.state.file} name="file" onDrop={this.onDrop}
@@ -312,6 +517,8 @@ export class Upload extends React.Component {
                             </div>
                         </form>
                     </div>
+                    <ModalAdd />
+                    <ModalEdit />
                 </div>
 
                 {/* ProgressBar shown when upload form submitted with percent updated in onUploadProgress above */}
