@@ -13,7 +13,7 @@ services:
             - sqlsystem:/var/opt/mssql/
             - sqldata:/var/opt/sqlserver/data
             - sqllog:/var/opt/sqlserver/log
-            - sqlbackup:/var/opt/sqlserver/backup
+            - ./sqlserver/backup:/var/opt/sqlserver/backup
 volumes:
     sqlsystem:
     sqldata:

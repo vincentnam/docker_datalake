@@ -105,7 +105,7 @@ def from_mongodb_to_influx(token=None, nb_retry=10, **kwargs):
     import json
     # InfluxDB Token to access
     if token is None:
-        token = "SutSmr4uKZ9DxALVa5O7CucjxWMPkccLIn9MAAvgzCxZOSgV6UUfgr3bflIc9YcetB4F3cNohsqJFqiyEXxVwA=="
+        token = config.token_influxdb
     integrator = InfluxIntegrator(influx_host=globals()["GOLD_INFLUX_IP"],
                                   influx_port=globals()["INFLUXDB_PORT"],
                                   token=token)
