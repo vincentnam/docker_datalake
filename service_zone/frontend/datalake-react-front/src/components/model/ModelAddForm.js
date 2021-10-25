@@ -75,7 +75,7 @@ export class ModelAddForm extends React.Component {
         }
 
         if (this.state.selectedTypesFiles.length === 0) {
-            this.toastError("Veuillez ajouter au minimum un type de fichier accepter !");
+            this.toastError("Veuillez ajouter au minimum un type de fichier accepté !");
             nbErrors += 1;
         }
 
@@ -184,10 +184,6 @@ export class ModelAddForm extends React.Component {
             [name]: data
         });
     }
-
-    //handleCallbackData = (childData) =>{
-    //    this.setState({dataFilters: childData})
-    //}
 
     render() {
         let Metadonnees = () => {
