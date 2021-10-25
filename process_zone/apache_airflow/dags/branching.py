@@ -294,11 +294,12 @@ def default_application_json(**kwargs):
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
-    if "application/json" in metadata_doc[content_type]:
-        process_type = "time_series_json"
-        # Json parsing
-        processed_data = extract_transform_load_time_series_json(
-            swift_result, swift_container, swift_id, process_type)
+    if "x-object-meta-source" not in swift_object[0]:
+        if "application/json" in metadata_doc[content_type]:
+            process_type = "time_series_json"
+            # Json parsing
+            processed_data = extract_transform_load_time_series_json(
+                swift_result, swift_container, swift_id, process_type)
     return processed_data
 
 

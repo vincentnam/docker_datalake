@@ -215,10 +215,6 @@ export class ModelEditForm extends React.Component {
         });
     }
 
-    //handleCallbackData = (childData) =>{
-    //    this.setState({dataFilters: childData})
-    //}
-
     render() {
         let Metadonnees = () => {
             let data = Array.from(this.state.metadonnees);
