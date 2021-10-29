@@ -234,9 +234,9 @@ def successful_data_processing(*args, **kwargs):
 
 # TODO : Create 1 task to get Swift object and use intern communication to share it
 def default_image(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    swift_container = metadata_doc["swift_container"]
-    swift_id = metadata_doc["swift_obj_id"]
+    # metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
     # Openstack Swift
     ip_address = config.ip_address_swift
@@ -255,7 +255,7 @@ def default_image(**kwargs):
     print('----------- OBJET SWIFT -------------')
     print(swift_object)
     # Content type récupéré de l'object swift
-    content_type = metadata_doc["content_type"]
+    # content_type = metadata_doc["content_type"]
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -268,10 +268,9 @@ def default_image(**kwargs):
 
 
 def default_application_json(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    swift_container = metadata_doc["swift_container"]
-    swift_id = metadata_doc["swift_obj_id"]
+    
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
     # Openstack Swift
     ip_address = config.ip_address_swift
@@ -290,7 +289,7 @@ def default_application_json(**kwargs):
     print('----------- OBJET SWIFT -------------')
     print(swift_object)
     # Content type récupéré de l'object swift
-    content_type = metadata_doc["content_type"]
+    # content_type = metadata_doc["content_type"]
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -304,9 +303,8 @@ def default_application_json(**kwargs):
 
 
 def default_application_vnd_ms_excel(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    swift_container = metadata_doc["swift_container"]
-    swift_id = metadata_doc["swift_obj_id"]
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
     # Openstack Swift
     ip_address = config.ip_address_swift
@@ -325,7 +323,7 @@ def default_application_vnd_ms_excel(**kwargs):
     print('----------- OBJET SWIFT -------------')
     print(swift_object)
     # Content type récupéré de l'object swift
-    content_type = metadata_doc["content_type"]
+    # content_type = metadata_doc["content_type"]
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -338,9 +336,8 @@ def default_application_vnd_ms_excel(**kwargs):
 
 
 def default_application_sql(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    swift_container = metadata_doc["swift_container"]
-    swift_id = metadata_doc["swift_obj_id"]
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
     # Openstack Swift
     ip_address = config.ip_address_swift
@@ -359,7 +356,7 @@ def default_application_sql(**kwargs):
     print('----------- OBJET SWIFT -------------')
     print(swift_object)
     # Content type récupéré de l'object swift
-    content_type = metadata_doc["content_type"]
+    # content_type = metadata_doc["content_type"]
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -371,9 +368,8 @@ def default_application_sql(**kwargs):
 
 
 def default_text_plain(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    swift_container = metadata_doc["swift_container"]
-    swift_id = metadata_doc["swift_obj_id"]
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
     # Openstack Swift
     ip_address = config.ip_address_swift
@@ -392,7 +388,7 @@ def default_text_plain(**kwargs):
     print('----------- OBJET SWIFT -------------')
     print(swift_object)
     # Content type récupéré de l'object swift
-    content_type = metadata_doc["content_type"]
+    # content_type = metadata_doc["content_type"]
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -404,9 +400,8 @@ def default_text_plain(**kwargs):
 
 
 def default_zip(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    swift_container = metadata_doc["swift_container"]
-    swift_id = metadata_doc["swift_obj_id"]
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
     # Openstack Swift
     ip_address = config.ip_address_swift
@@ -425,7 +420,7 @@ def default_zip(**kwargs):
     print('----------- OBJET SWIFT -------------')
     print(swift_object)
     # Content type récupéré de l'object swift
-    content_type = metadata_doc["content_type"]
+    # content_type = metadata_doc["content_type"]
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -481,30 +476,35 @@ def default_check_type(**kwargs):
     :param kwargs: Airflow context
     :return:
     """
-    meta_base = MongoClient(
-        "mongodb://" + globals()["META_MONGO_IP"] + ":" + globals()[
-            "MONGO_PORT"] + "/"
-    )
 
     group = kwargs["dag_run"].conf["swift_container"]
-    swift_id = str(kwargs["dag_run"].conf["swift_id"])
-    print(group)
-    print(swift_id)
-    metadata_doc = meta_base.swift[group].find_one({
-        "swift_object_id": swift_id})
-    print(metadata_doc)
-    kwargs["ti"].xcom_push(key="metadata_doc", value=metadata_doc)
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+    
+    authurl = "http://" + config.url_swift + "/auth/v1.0"
+    user = config.user_swift
+    key = config.key_swift
+    # Connction à Swift
+    conn = swiftclient.Connection(
+        user=user,
+        key=key,
+        authurl=authurl
+    )
+    # Récupération de l'object Swift
+    swift_object = conn.get_object(group, swift_id)
+    content_type = swift_object[0]['content-type']
+    with open(cwd + "/task_list.json", "r") as f:
+        task_dict = json.load(f)
 
-    if metadata_doc["content_type"] in task_dict:
-        if group in task_dict[metadata_doc["content_type"]]:
-            return task_dict[metadata_doc["content_type"]].task_id
+    if content_type in task_dict:
+        if group in task_dict[content_type]:
+            return task_dict[content_type]["default"][0]["task_id"]
         else:
-            return task_dict[metadata_doc["content_type"]].task_id
+            return task_dict[content_type]["default"][0]["task_id"]
     else:
-        if group in task_dict[metadata_doc["not_handled"]]:
-            return task_dict[metadata_doc["not_handled"]].task_id
+        if group in task_dict[content_type]:
+            return task_dict[content_type]["default"][0]["task_id"]
         else:
-            return task_dict[metadata_doc["not_handled"]].task_id
+            return task_dict[content_type]["default"][0]["task_id"]
 
 
 def workflow_selection(**kwargs):
@@ -531,7 +531,7 @@ def workflow_selection(**kwargs):
             url = i
 
     container = kwargs["dag_run"].conf["swift_container"]
-    swift_id = str(kwargs["dag_run"].conf["swift_id"])
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
     urllib.request.install_opener(opener)
     # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
@@ -546,10 +546,7 @@ def workflow_selection(**kwargs):
             print(e404)
             sleep(10)
 
-    meta_base = MongoClient(
-        "mongodb://" + globals()["META_MONGO_IP"] + ":" + globals()[
-            "MONGO_PORT"] + "/"
-    )
+    meta_base = MongoClient(config.mongodb_url)
     meta_base.server_info()
 
     # print(group)
@@ -561,7 +558,7 @@ def workflow_selection(**kwargs):
         "swift_object_id": str(swift_id)})
     kwargs["ti"].xcom_push(key="metadata_doc", value=metadata_doc)
     print(metadata_doc)
-    return metadata_doc["data_processing"]
+    return "default"
 
 
 # import configurations of different services needed :
