@@ -44,19 +44,37 @@ export class Home extends React.Component {
         })
     }
 
+    componentDidMount() {
+        this.loadObjectsFromServer()
+    }
+
+    // TODO : To refactor later
     loadObjectsFromServer() {
         let data = null
-        if(this.state.sort_field && this.state.sort_value) {
+        let routeName = '/raw-data'
+
+        // when homepage finished to load, load last 10 uploaded raw data
+        // OR there is sorting data less filters
+        if( (this.state.sort_field === undefined && 
+            this.state.sort_value === undefined && 
+            this.state.beginDate === undefined ) 
+            || 
+            (this.state.sort_field !== undefined && 
+                this.state.sort_value !== undefined &&
+                this.state.beginDate === undefined)) {
+            routeName = '/last-raw-data'
             data = JSON.stringify({
                 limit: this.state.perPage,
                 offset: this.state.offset,
-                filetype: this.state.filetype,
-                beginDate: this.state.beginDate,
-                endDate: this.state.endDate,
                 sort_field: this.state.sort_field,
                 sort_value: this.state.sort_value
             })
-        } else {
+        }
+
+        // when filters button has been clicked less sorting data
+        if(this.state.sort_field === undefined && 
+            this.state.sort_value === undefined && 
+            this.state.beginDate !== undefined) {
             data = JSON.stringify({
                 limit: this.state.perPage,
                 offset: this.state.offset,
@@ -66,9 +84,24 @@ export class Home extends React.Component {
             })
         }
 
+         // when filters button has been clicked with sorting data
+         if(this.state.sort_field !== undefined && 
+            this.state.sort_value !== undefined && 
+            this.state.beginDate !== undefined) {
+            data = JSON.stringify({
+                limit: this.state.perPage,
+                offset: this.state.offset,
+                filetype: this.state.filetype,
+                beginDate: this.state.beginDate,
+                endDate: this.state.endDate,
+                sort_field: this.state.sort_field,
+                sort_value: this.state.sort_value
+            })
+        }
+
         this.handleShow()
         $.ajax({
-            url: this.url + '/raw-data',
+            url: this.url + routeName,
             data: data,
             xhrFields: {
                 withCredentials: true
@@ -275,8 +308,6 @@ export class Home extends React.Component {
          const handleSort = async (column, sortDirection) => {
             /// reach out to some API and get new data using or sortField and sortDirection
         
-            console.log(column)
-            console.log(sortDirection)
             // for desc
             let sort = 1
             if(this.state.sort_value == 1) {

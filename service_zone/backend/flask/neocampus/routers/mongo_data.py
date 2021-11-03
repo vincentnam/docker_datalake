@@ -10,6 +10,37 @@ from ..utils.size_conversion import convert_unit, SIZE_UNIT
 
 mongo_data_bp = Blueprint('mongo_data_bp', __name__)
 
+@mongo_data_bp.route('/last-raw-data', methods=['POST'])
+def get_last_raw_data():
+    params = request.get_json()
+
+    if(("limit" in request.get_json() and "offset" not in request.get_json()) or ("limit" not in request.get_json() and "offset" in request.get_json())):
+        return jsonify({'error': 'Limit and offset have to be sent together.'})
+
+    if("sort_field" in request.get_json() and "sort_value" in request.get_json()):
+        params['sort_field'] = request.get_json()['sort_field']
+        params['sort_value'] = request.get_json()['sort_value']
+
+    nb_objects, mongo_collections = mongo.get_last_metadata("neOCampus", params)
+    mongo_collections = list(mongo_collections)
+
+    output = {'objects': []}
+    for obj in mongo_collections:
+        if('other_data' in obj.keys()):
+            output['objects'].append({
+                'original_object_name': obj['original_object_name'],
+                "swift_container": obj['swift_container'],
+                "content_type": obj['content_type'],
+                'swift_object_id': obj['swift_object_id'],
+                'other_data': obj['other_data'],
+                'swift_user': obj['swift_user'],
+                'creation_date': obj['creation_date']
+            })
+
+    output['length'] = nb_objects
+
+    return jsonify({'result': output})    
+
 
 @mongo_data_bp.route('/raw-data', methods=['POST'])
 def get_metadata():
