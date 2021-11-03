@@ -65,6 +65,15 @@ def get_metadata():
             params['beginDate'], date_format)
         convertedEndDate = datetime.strptime(params['endDate'], date_format)
 
+    if(convertedBeginDate < convertedEndDate):
+        params['beginDate'] = params['beginDate'] + " 00:00:00"
+        params['endDate'] = params['endDate'] + " 23:59:59"
+        date_format = "%Y-%m-%d %H:%M:%S"
+
+        convertedBeginDate = datetime.strptime(
+            params['beginDate'], date_format)
+        convertedEndDate = datetime.strptime(params['endDate'], date_format)
+
     params['beginDate'] = convertedBeginDate
     params['endDate'] = convertedEndDate
 
