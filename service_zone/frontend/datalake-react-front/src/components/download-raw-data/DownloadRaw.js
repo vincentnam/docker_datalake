@@ -459,9 +459,7 @@ export class DownloadRaw extends React.Component {
                         />
                     </div>
                 </div>
-
                 <LoadingSpinner loading={this.state.loading}/>
-                <ToastContainer />
             </div>
         );
     }
