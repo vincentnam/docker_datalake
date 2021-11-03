@@ -574,10 +574,27 @@ def custom_user_workflow(**kwargs):
 
 
 def neocampus_branching(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    group = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+    
+    authurl = "http://" + config.url_swift + "/auth/v1.0"
+    user = config.user_swift
+    key = config.key_swift
+    # Connction à Swift
+    conn = swiftclient.Connection(
+        user=user,
+        key=key,
+        authurl=authurl
+    )
+    # Récupération de l'object Swift
+    swift_object = conn.get_object(group, swift_id)
+    content_type = swift_object[0]['content-type']
+
     # TODO : 14/10/2020 REFACTOR DICT_TASK
     type_to_task = {"bson": "neocampus_bson_get"}
-    return type_to_task[metadata_doc["content_type"]]
+    
+    type_to_task["content_type"] = content_type
+    return type_to_task
 
 
 def neocampus_bson(**kwargs):
@@ -595,7 +612,9 @@ callable_dict = {"PythonOperator": PythonOperator,
 
 def neocampus_get_swift_object(**kwargs):
     # TODO : 13/10/2020 DIRECT READ FILE IF LOOPBACK DEVICE ARE REMOVED (if swift can directly write on storage servers)
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    # metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
     print("kwargs['dag_run'].conf")
     print(kwargs["dag_run"].conf)
@@ -621,7 +640,7 @@ def neocampus_get_swift_object(**kwargs):
 
     urllib.request.install_opener(opener)
     # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
-    urllib.request.urlretrieve(url[1] + "/" + metadata_doc["swift_container"] + "/" + metadata_doc["swift_object_id"],
+    urllib.request.urlretrieve(url[1] + "/" + swift_container + "/" + swift_id,
                                "/datalake/airflow/airflow_tmp/" + metadata_doc["original_object_name"])
 
     print(os.path.dirname(os.path.abspath(__file__)))
@@ -630,17 +649,20 @@ def neocampus_get_swift_object(**kwargs):
 
 
 def neocampus_mongoimport(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    # metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+    
     file_name = kwargs["dag_run"].dag_id
     # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
     # TODO : 13/10/2020 FIND A SOLUTION TO CHOSE DATABASE AND COLLECTION
     print("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d " +
-          metadata_doc["swift_container"] + " -c " +
+          swift_container + " -c " +
           metadata_doc["original_object_name"]
           + " /datalake/airflow/airflow_tmp/" + metadata_doc["original_object_name"] + "'")
     os.system("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d " +
-              metadata_doc["swift_container"] + " -c " +
-              metadata_doc["original_object_name"]
+              swift_container + " -c " +
+              metadata_doc["original_object_name"] 
               + " /datalake/airflow/airflow_tmp/" + metadata_doc["original_object_name"] + "'")
 
 
