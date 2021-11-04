@@ -21,6 +21,7 @@ from services import extract_transform_load_time_series_text
 from services import extract_transform_load_images
 from services import extract_transform_load_dump_sql
 from services import typefile
+from services import connection_mongo_metadata
 import tempfile
 import base64
 from zipfile import ZipFile
@@ -170,11 +171,8 @@ def failed_data_processing(*args, **kwargs):
     print(args[0])
     group = args[0]["dag_run"].conf["swift_container"]
     swift_id = str(args[0]["dag_run"].conf["swift_id"])
-
-    meta_base = MongoClient(
-        "mongodb://" + globals()["META_MONGO_IP"] + ":" + globals()[
-            "MONGO_PORT"] + "/"
-    )
+    mongodb_url = config.mongodb_url
+    meta_base = MongoClient(mongodb_url, connect=False)
     print(meta_base.swift[group].find_one_and_update(
         {
             "swift_object_id": swift_id,
@@ -203,11 +201,8 @@ def successful_data_processing(*args, **kwargs):
     print(args[0])
     group = args[0]["dag_run"].conf["swift_container"]
     swift_id = str(args[0]["dag_run"].conf["swift_id"])
-
-    meta_base = MongoClient(
-        "mongodb://" + globals()["META_MONGO_IP"] + ":" + globals()[
-            "MONGO_PORT"] + "/"
-    )
+    mongodb_url = config.mongodb_url
+    meta_base = MongoClient(mongodb_url, connect=False)
     print(meta_base.swift[group].find_one_and_update(
         {
             "swift_object_id": swift_id,
@@ -229,9 +224,6 @@ def successful_data_processing(*args, **kwargs):
     )
 
 
-# task_dict = False
-
-
 # TODO : Create 1 task to get Swift object and use intern communication to share it
 def default_image(**kwargs):
     # metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
@@ -239,8 +231,6 @@ def default_image(**kwargs):
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
     # Openstack Swift
-    ip_address = config.ip_address_swift
-    address_name = config.address_name_swift
     authurl = "http://" + config.url_swift + "/auth/v1.0"
     user = config.user_swift
     key = config.key_swift
@@ -254,13 +244,11 @@ def default_image(**kwargs):
     swift_object = conn.get_object(swift_container, swift_id)
     print('----------- OBJET SWIFT -------------')
     print(swift_object)
-    # Content type récupéré de l'object swift
-    # content_type = metadata_doc["content_type"]
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
     # Compare filetype
-    if "image/" in metadata_doc[content_type]:
+    if "image/" in swift_object[0]['content-type']:
         process_type = "images"
         processed_data = extract_transform_load_images(
             swift_result, swift_container, swift_id, process_type)
@@ -273,8 +261,6 @@ def default_application_json(**kwargs):
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
     # Openstack Swift
-    ip_address = config.ip_address_swift
-    address_name = config.address_name_swift
     authurl = "http://" + config.url_swift + "/auth/v1.0"
     user = config.user_swift
     key = config.key_swift
@@ -288,13 +274,11 @@ def default_application_json(**kwargs):
     swift_object = conn.get_object(swift_container, swift_id)
     print('----------- OBJET SWIFT -------------')
     print(swift_object)
-    # Content type récupéré de l'object swift
-    # content_type = metadata_doc["content_type"]
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
     if "x-object-meta-source" not in swift_object[0]:
-        if "application/json" in metadata_doc[content_type]:
+        if "application/json" in swift_object[0]['content-type']:
             process_type = "time_series_json"
             # Json parsing
             processed_data = extract_transform_load_time_series_json(
@@ -307,8 +291,6 @@ def default_application_vnd_ms_excel(**kwargs):
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
     # Openstack Swift
-    ip_address = config.ip_address_swift
-    address_name = config.address_name_swift
     authurl = "http://" + config.url_swift + "/auth/v1.0"
     user = config.user_swift
     key = config.key_swift
@@ -322,8 +304,6 @@ def default_application_vnd_ms_excel(**kwargs):
     swift_object = conn.get_object(swift_container, swift_id)
     print('----------- OBJET SWIFT -------------')
     print(swift_object)
-    # Content type récupéré de l'object swift
-    # content_type = metadata_doc["content_type"]
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -340,8 +320,6 @@ def default_application_sql(**kwargs):
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
     # Openstack Swift
-    ip_address = config.ip_address_swift
-    address_name = config.address_name_swift
     authurl = "http://" + config.url_swift + "/auth/v1.0"
     user = config.user_swift
     key = config.key_swift
@@ -355,8 +333,6 @@ def default_application_sql(**kwargs):
     swift_object = conn.get_object(swift_container, swift_id)
     print('----------- OBJET SWIFT -------------')
     print(swift_object)
-    # Content type récupéré de l'object swift
-    # content_type = metadata_doc["content_type"]
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -372,8 +348,6 @@ def default_text_plain(**kwargs):
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
     # Openstack Swift
-    ip_address = config.ip_address_swift
-    address_name = config.address_name_swift
     authurl = "http://" + config.url_swift + "/auth/v1.0"
     user = config.user_swift
     key = config.key_swift
@@ -387,8 +361,6 @@ def default_text_plain(**kwargs):
     swift_object = conn.get_object(swift_container, swift_id)
     print('----------- OBJET SWIFT -------------')
     print(swift_object)
-    # Content type récupéré de l'object swift
-    # content_type = metadata_doc["content_type"]
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -404,8 +376,6 @@ def default_zip(**kwargs):
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
     # Openstack Swift
-    ip_address = config.ip_address_swift
-    address_name = config.address_name_swift
     authurl = "http://" + config.url_swift + "/auth/v1.0"
     user = config.user_swift
     key = config.key_swift
@@ -419,8 +389,6 @@ def default_zip(**kwargs):
     swift_object = conn.get_object(swift_container, swift_id)
     print('----------- OBJET SWIFT -------------')
     print(swift_object)
-    # Content type récupéré de l'object swift
-    # content_type = metadata_doc["content_type"]
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -480,18 +448,11 @@ def default_check_type(**kwargs):
     group = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
     
-    authurl = "http://" + config.url_swift + "/auth/v1.0"
-    user = config.user_swift
-    key = config.key_swift
-    # Connction à Swift
-    conn = swiftclient.Connection(
-        user=user,
-        key=key,
-        authurl=authurl
-    )
-    # Récupération de l'object Swift
-    swift_object = conn.get_object(group, swift_id)
-    content_type = swift_object[0]['content-type']
+    #Return data from the swift_object_id in mongodb metadata
+    metadata_doc = connection_mongo_metadata(swift_id)
+    
+    content_type = metadata_doc['content-type']
+    
     with open(cwd + "/task_list.json", "r") as f:
         task_dict = json.load(f)
 
@@ -574,21 +535,11 @@ def custom_user_workflow(**kwargs):
 
 
 def neocampus_branching(**kwargs):
-    group = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+    #Return data from the swift_object_id in mongodb metadata
+    metadata_doc = connection_mongo_metadata(swift_id)
     
-    authurl = "http://" + config.url_swift + "/auth/v1.0"
-    user = config.user_swift
-    key = config.key_swift
-    # Connction à Swift
-    conn = swiftclient.Connection(
-        user=user,
-        key=key,
-        authurl=authurl
-    )
-    # Récupération de l'object Swift
-    swift_object = conn.get_object(group, swift_id)
-    content_type = swift_object[0]['content-type']
+    content_type = metadata_doc['content-type']
 
     # TODO : 14/10/2020 REFACTOR DICT_TASK
     type_to_task = {"bson": "neocampus_bson_get"}
@@ -637,6 +588,8 @@ def neocampus_get_swift_object(**kwargs):
         if i[0] == "X-Storage-Url":
             url = i
     print(url[1])
+    #Return data from the swift_object_id in mongodb metadata
+    metadata_doc = connection_mongo_metadata(swift_id)
 
     urllib.request.install_opener(opener)
     # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
@@ -649,9 +602,9 @@ def neocampus_get_swift_object(**kwargs):
 
 
 def neocampus_mongoimport(**kwargs):
-    # metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
     swift_container = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+    metadata_doc = connection_mongo_metadata(swift_id)
     
     file_name = kwargs["dag_run"].dag_id
     # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
