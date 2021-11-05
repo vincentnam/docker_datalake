@@ -451,7 +451,7 @@ def default_check_type(**kwargs):
     #Return data from the swift_object_id in mongodb metadata
     metadata_doc = connection_mongo_metadata(swift_id)
     
-    content_type = metadata_doc['content-type']
+    content_type = metadata_doc['content_type']
     
     with open(cwd + "/task_list.json", "r") as f:
         task_dict = json.load(f)
@@ -539,7 +539,7 @@ def neocampus_branching(**kwargs):
     #Return data from the swift_object_id in mongodb metadata
     metadata_doc = connection_mongo_metadata(swift_id)
     
-    content_type = metadata_doc['content-type']
+    content_type = metadata_doc['content_type']
 
     # TODO : 14/10/2020 REFACTOR DICT_TASK
     type_to_task = {"bson": "neocampus_bson_get"}
