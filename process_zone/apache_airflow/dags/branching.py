@@ -592,9 +592,9 @@ def neocampus_get_swift_object(**kwargs):
     metadata_doc = connection_mongo_metadata(swift_id)
 
     urllib.request.install_opener(opener)
-    # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
+    
     urllib.request.urlretrieve(url[1] + "/" + swift_container + "/" + swift_id,
-                               "/datalake/airflow/airflow_tmp/" + metadata_doc["original_object_name"])
+                               config.airflow_tmp + metadata_doc["original_object_name"])
 
     print(os.path.dirname(os.path.abspath(__file__)))
 
@@ -607,16 +607,15 @@ def neocampus_mongoimport(**kwargs):
     metadata_doc = connection_mongo_metadata(swift_id)
     
     file_name = kwargs["dag_run"].dag_id
-    # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
     # TODO : 13/10/2020 FIND A SOLUTION TO CHOSE DATABASE AND COLLECTION
     print("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d " +
           swift_container + " -c " +
           metadata_doc["original_object_name"]
-          + " /datalake/airflow/airflow_tmp/" + metadata_doc["original_object_name"] + "'")
+          + config.airflow_tmp + metadata_doc["original_object_name"] + "'")
     os.system("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d " +
               swift_container + " -c " +
               metadata_doc["original_object_name"] 
-              + " /datalake/airflow/airflow_tmp/" + metadata_doc["original_object_name"] + "'")
+              + config.airflow_tmp + metadata_doc["original_object_name"] + "'")
 
 
 def construct_operator(**kwargs):

@@ -24,3 +24,5 @@ mariadb_host=""
 mariadb_user=""
 mariadb_passwd=""
 mariadb_database=""
+
+airflow_tmp = ""
