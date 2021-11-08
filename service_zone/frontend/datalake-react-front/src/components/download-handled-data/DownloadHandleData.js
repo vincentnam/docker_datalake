@@ -403,9 +403,7 @@ export class DownloadHandleData extends React.Component {
                         />
                     </div>
                 </div>
-
                 <LoadingSpinner loading={this.state.loading}/>
-                <ToastContainer />
             </div>
         );
     }
