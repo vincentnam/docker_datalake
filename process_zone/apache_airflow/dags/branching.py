@@ -591,6 +591,8 @@ def neocampus_get_swift_object(**kwargs):
     #Return data from the swift_object_id in mongodb metadata
     metadata_doc = connection_mongo_metadata(swift_id)
     
+    path = config.airflow_tmp + metadata_doc["original_object_name"]
+    
     urllib.request.install_opener(opener)
     urllib.request.urlretrieve(url[1] + "/" + swift_container + "/" + swift_id, path)
 
@@ -612,7 +614,7 @@ def neocampus_mongoimport(**kwargs):
           + config.airflow_tmp + metadata_doc["original_object_name"] + "'")
     os.system("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d " +
               swift_container + " -c " +
-              metadata_doc["original_object_name"] 
+              metadata_doc["original_object_name"] + " " +
               + config.airflow_tmp + metadata_doc["original_object_name"] + "'")
 
 
