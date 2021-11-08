@@ -25,6 +25,26 @@ def get_swift_original_object_name(swift_container_name, swift_object_id):
 
     return metadata_swift.get('original_object_name')
 
+def get_last_metadata(db_name, params):
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.swift
+    collection = mongo_db[db_name]
+
+    metadata = collection.find()
+
+    # Sort columns
+    if("sort_field" in params.keys() and "sort_value" in params.keys()):
+        metadata.sort(params['sort_field'], params['sort_value'])
+
+    if("offset" in params.keys() and "limit" in params.keys()):
+        metadata = metadata.skip(params['offset'])
+        metadata = metadata.limit(params['limit'])
+
+    nb_objects = metadata.count()
+
+    return nb_objects, metadata
+
 
 def get_metadata(db_name, params):
     mongodb_url = current_app.config['MONGO_URL']
