@@ -22,6 +22,7 @@ from services import extract_transform_load_images
 from services import extract_transform_load_dump_sql
 from services import typefile
 from services import connection_mongo_metadata
+from services import connection_swift
 import tempfile
 import base64
 from zipfile import ZipFile
@@ -230,20 +231,9 @@ def default_image(**kwargs):
     swift_container = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
-    # Openstack Swift
-    authurl = "http://" + config.url_swift + "/auth/v1.0"
-    user = config.user_swift
-    key = config.key_swift
-    # Connction à Swift
-    conn = swiftclient.Connection(
-        user=user,
-        key=key,
-        authurl=authurl
-    )
-    # Récupération de l'object Swift
-    swift_object = conn.get_object(swift_container, swift_id)
-    print('----------- OBJET SWIFT -------------')
-    print(swift_object)
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
+    
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -260,20 +250,9 @@ def default_application_json(**kwargs):
     swift_container = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
-    # Openstack Swift
-    authurl = "http://" + config.url_swift + "/auth/v1.0"
-    user = config.user_swift
-    key = config.key_swift
-    # Connction à Swift
-    conn = swiftclient.Connection(
-        user=user,
-        key=key,
-        authurl=authurl
-    )
-    # Récupération de l'object Swift
-    swift_object = conn.get_object(swift_container, swift_id)
-    print('----------- OBJET SWIFT -------------')
-    print(swift_object)
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
+    
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -290,20 +269,9 @@ def default_application_vnd_ms_excel(**kwargs):
     swift_container = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
-    # Openstack Swift
-    authurl = "http://" + config.url_swift + "/auth/v1.0"
-    user = config.user_swift
-    key = config.key_swift
-    # Connction à Swift
-    conn = swiftclient.Connection(
-        user=user,
-        key=key,
-        authurl=authurl
-    )
-    # Récupération de l'object Swift
-    swift_object = conn.get_object(swift_container, swift_id)
-    print('----------- OBJET SWIFT -------------')
-    print(swift_object)
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
+    
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -319,20 +287,9 @@ def default_application_sql(**kwargs):
     swift_container = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
-    # Openstack Swift
-    authurl = "http://" + config.url_swift + "/auth/v1.0"
-    user = config.user_swift
-    key = config.key_swift
-    # Connction à Swift
-    conn = swiftclient.Connection(
-        user=user,
-        key=key,
-        authurl=authurl
-    )
-    # Récupération de l'object Swift
-    swift_object = conn.get_object(swift_container, swift_id)
-    print('----------- OBJET SWIFT -------------')
-    print(swift_object)
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
+    
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -347,20 +304,9 @@ def default_text_plain(**kwargs):
     swift_container = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
-    # Openstack Swift
-    authurl = "http://" + config.url_swift + "/auth/v1.0"
-    user = config.user_swift
-    key = config.key_swift
-    # Connction à Swift
-    conn = swiftclient.Connection(
-        user=user,
-        key=key,
-        authurl=authurl
-    )
-    # Récupération de l'object Swift
-    swift_object = conn.get_object(swift_container, swift_id)
-    print('----------- OBJET SWIFT -------------')
-    print(swift_object)
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
+    
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -375,20 +321,9 @@ def default_zip(**kwargs):
     swift_container = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
-    # Openstack Swift
-    authurl = "http://" + config.url_swift + "/auth/v1.0"
-    user = config.user_swift
-    key = config.key_swift
-    # Connction à Swift
-    conn = swiftclient.Connection(
-        user=user,
-        key=key,
-        authurl=authurl
-    )
-    # Récupération de l'object Swift
-    swift_object = conn.get_object(swift_container, swift_id)
-    print('----------- OBJET SWIFT -------------')
-    print(swift_object)
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
+    
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
