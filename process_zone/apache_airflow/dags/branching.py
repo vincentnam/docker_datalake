@@ -550,7 +550,7 @@ def neocampus_mongoimport(**kwargs):
     os.system("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d " +
               swift_container + " -c " +
               metadata_doc["original_object_name"] + " " +
-              + config.airflow_tmp + metadata_doc["original_object_name"] + "'")
+              config.airflow_tmp + metadata_doc["original_object_name"] + "'")
 
 
 def construct_operator(**kwargs):
