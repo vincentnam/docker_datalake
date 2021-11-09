@@ -21,6 +21,7 @@ from services import extract_transform_load_time_series_text
 from services import extract_transform_load_images
 from services import extract_transform_load_dump_sql
 from services import typefile
+from services import insert_sge_data
 import tempfile
 import base64
 from zipfile import ZipFile
@@ -472,6 +473,38 @@ def default_zip(**kwargs):
                 swift_result, swift_container, swift_id, process_type)
     return processed_data
 
+def default_application_octet_stream(**kwargs):
+    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    swift_container = metadata_doc["swift_container"]
+    swift_id = metadata_doc["swift_obj_id"]
+
+    # Openstack Swift
+    ip_address = config.ip_address_swift
+    address_name = config.address_name_swift
+    authurl = "http://" + config.url_swift + "/auth/v1.0"
+    user = config.user_swift
+    key = config.key_swift
+    # Connction à Swift
+    conn = swiftclient.Connection(
+        user=user,
+        key=key,
+        authurl=authurl
+    )
+    # Récupération de l'object Swift
+    swift_object = conn.get_object(swift_container, swift_id)
+    print('----------- OBJET SWIFT -------------')
+    print(swift_object)
+    # Content type récupéré de l'object swift
+    content_type = metadata_doc["content_type"]
+    # Récupération du fichier encoder dans l'object swift
+    swift_result = swift_object[1]
+    processed_data = {}
+    process_type = "sge_data"
+    # Text parsing
+    processed_data = insert_sge_data(
+        swift_result, swift_container, swift_id, process_type)
+    return processed_data
+
 
 def default_check_type(**kwargs):
     """
@@ -744,6 +777,7 @@ callable_dict = {"content_neo4j_node_creation": content_neo4j_node_creation,
                  "default_application_vnd_ms_excel": default_application_vnd_ms_excel,
                  "default_application_sql": default_application_sql,
                  "default_text_plain": default_text_plain,
+                 "default_application_octet_stream": default_application_octet_stream,
                  "default_zip": default_zip,
                  "PythonOperator": PythonOperator,
                  "DummyOperator": DummyOperator,

@@ -15,6 +15,15 @@
       }
     ]
   },
+  "application/octet-stream": {
+    "default":[
+      {
+        "operator": "PythonOperator",
+        "task_id": "Default_octet_stream",
+        "python_callable": "default_application_octet_stream"
+      }
+    ]
+  },
   "application/json": {
     "default": [
       {
