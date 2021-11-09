@@ -4,6 +4,8 @@ from zipfile import ZipFile
 import base64
 from flask import Blueprint, jsonify, current_app, request, send_from_directory
 from ..services import swift, mongo
+import os
+import paramiko
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
@@ -76,3 +78,18 @@ def storage():
                         content_type, mongodb_url, other_data)
 
     return jsonify({"response": "Done !"})
+
+@swift_file_bp.route('/register-sge-file', methods=['POST'])
+def sge_file():
+    ssh = paramiko.SSHClient()
+    ssh.connect(
+        current_app.config['SGE_IP_ADDRESS'], 
+        username=current_app.config['SGE_USERNAME'], 
+        password=current_app.config['SGE_PASSWORD']
+    )
+    sftp = ssh.open_sftp()
+    localpath = 'IndexCPT_Differentiel'
+    remotepath = current_app.config['SGE_REMOTE_PATH']
+    sftp.put(localpath, remotepath)
+    sftp.close()
+    ssh.close()

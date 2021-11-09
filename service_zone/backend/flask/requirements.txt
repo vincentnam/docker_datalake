@@ -4,3 +4,4 @@ python-swiftclient>=3.11,<3.12
 pymongo>=3.11,<3.12
 pandas
 influxdb_client
+paramiko
