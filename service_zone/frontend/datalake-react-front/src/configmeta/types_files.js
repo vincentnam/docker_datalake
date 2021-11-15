@@ -35,4 +35,8 @@ export const types_files = [
         "value": "application/x-gzip",
         "label": "application/x-gzip",
     },
+    {
+        "value": "application/octet-stream",
+        "label": "application/octet-stream",
+    },
 ]

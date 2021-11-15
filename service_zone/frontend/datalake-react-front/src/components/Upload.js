@@ -4,6 +4,7 @@ import Dropzone from 'react-dropzone';
 import { InputMeta } from './upload-child/InputMeta';
 import { TextAreaMeta } from './upload-child/TextAreaMeta';
 import { config } from '../configmeta/config';
+import { extensions_types_files } from '../configmeta/extensions_types_files';
 import api from '../api/api';
 import { ProgressBarComponent } from "./upload-child/ProgressBarComponent";
 import filesize from "filesize";
@@ -72,6 +73,7 @@ export class Upload extends React.Component {
             loading: false,
             percentProgressBar: 0,
             textProgressBar: '',
+            linkFile: "",
             models: [],
             model: "",
             modalAdd: false,
@@ -268,6 +270,7 @@ export class Upload extends React.Component {
         this.state.othermeta.forEach((meta) => {
             other[meta.name] = meta.value
         });
+        let nbErrors = 0;
 
         if (this.state.type === 0) {
             toast.error("Veuillez renseigner le type de données !", {
@@ -280,8 +283,11 @@ export class Upload extends React.Component {
                 draggable: true,
                 progress: undefined,
             });
-        } else if (this.state.filename === '') {
-            toast.error("Veuillez ajouter un fichier !", {
+            nbErrors += 1;
+        }
+        
+        if (this.state.filename === '' && this.state.linkFile.trim() === '') {
+            toast.error("Veuillez ajouter un fichier ou un lien pour un fichier !", {
                 theme: "colored",
                 position: "top-right",
                 autoClose: 5000,
@@ -292,12 +298,64 @@ export class Upload extends React.Component {
                 progress: undefined,
             });
         } else {
+            if (this.state.filename !== '' && this.state.linkFile.trim() !== '' ) {
+                toast.error("Veuillez choisir entre ajouter un fichier ou un lien pour un fichier !", {
+                    theme: "colored",
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
+                nbErrors += 1;
+            } else {
+
+                if (this.state.linkFile.trim() !== '' &&  this.state.filename === '') {
+                    let extension = this.state.linkFile.trim().split(".");
+                    console.log(extension);
+                    extension = extension[extension.length - 1];
+                    console.log(extension);
+                    let content_type = "";
+
+                    extensions_types_files.forEach(type => {
+                        if(type.value === extension){
+                            content_type = type.content_type;
+                        }
+                    });
+                    
+                    if(content_type === ""){
+                        content_type = "application/octet-stream";
+                    }
+                    console.log(content_type);
+                    if(this.state.type_file_accepted.includes(content_type) === false) {
+                        toast.error("Le type de fichier dans le lien n'est pas identique au type sélectionné !", {
+                            theme: "colored",
+                            position: "top-right",
+                            autoClose: 5000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            progress: undefined,
+                        });
+                        nbErrors += 1;
+                    }
+                }
+            }
+        }
+
+
+
+        if (nbErrors === 0) {
             this.handleShow()
             api.post('storage', {
                 idType: type,
                 typeFile: this.state.typeFile,
                 filename: this.state.filename,
                 file: this.state.file,
+                linkFile: this.state.linkFile.trim(),
                 othermeta: other
             }, options)
                 .then(function () {
@@ -483,34 +541,60 @@ export class Upload extends React.Component {
                                 <button type="button" class="btn btn-primary buttonModel" onClick={() => this.onChangeModalAdd()}>Créer un modèle</button>
                                 <EditButton />
                             </div>
-                            <div class="form-group required">
-                                <label>Fichiers</label>
-                                <Dropzone value={this.state.file} name="file" onDrop={this.onDrop}
-                                    accept="image/*,application/JSON,.csv,text/plain,.sql,application/x-gzip,application/x-zip-compressed">
-                                    {({ getRootProps, getInputProps }) => (
-                                        <section>
-                                            <div {...getRootProps({ className: 'drop' })}>
-                                                <input {...getInputProps()} />
-                                                <div>
-                                                    Veuillez glisser un fichier ici<br />
-                                                    ou<br />
-                                                    <u>cliquer pour ajouter un fichier</u><br />
-                                                    Taille limitée à 20Mo (.jpg, .jpeg, .png, .svg, .gif, .tif, .psd,
-                                                    .pdf, .eps, .ai, .indd, .svg)
-                                                </div>
-                                            </div>
-                                            <aside class="pt-3">
-                                                {files.length !== 0 ?
-                                                    <aside class="pt-3">
-                                                        <ul>
-                                                            {files}
-                                                        </ul>
-                                                    </aside>
-                                                    : ''}
-                                            </aside>
-                                        </section>
-                                    )}
-                                </Dropzone>
+                            <div className="main-download">
+                                <nav className="tab-download">
+                                    <div className="nav nav-pills " id="pills-tab" role="tablist">
+                                        <button className="nav-link active" id="nav-raw-tab" data-bs-toggle="pill"
+                                                data-bs-target="#nav-small-file" type="button" role="tab" aria-controls="nav-small-file"
+                                                aria-selected="true">Fichier moins de -- Go
+                                        </button>
+                                        <button className="nav-link" id="nav-handled-tab" data-bs-toggle="pill"
+                                                data-bs-target="#nav-large-file" type="button" role="tab" aria-controls="nav-large-file"
+                                                aria-selected="false">Fichier plus de -- Go
+                                        </button>
+                                    </div>
+                                </nav>
+                                <div className="tab-content" id="pills-tabContent">
+                                    <div className="tab-pane fade show active" id="nav-small-file" role="tabpanel"
+                                        aria-labelledby="nav-small-file-tab">
+                                        <div class="form-group required">
+                                            <label>Fichiers</label>
+                                            <Dropzone value={this.state.file} name="file" onDrop={this.onDrop}
+                                                accept="image/*,application/JSON,.csv,text/plain,.sql,application/x-gzip,application/x-zip-compressed,application/octet-stream">
+                                                {({ getRootProps, getInputProps }) => (
+                                                    <section>
+                                                        <div {...getRootProps({ className: 'drop' })}>
+                                                            <input {...getInputProps()} />
+                                                            <div>
+                                                                Veuillez glisser un fichier ici<br />
+                                                                ou<br />
+                                                                <u>cliquer pour ajouter un fichier</u><br />
+                                                                Taille limitée à 20Mo (.jpg, .jpeg, .png, .svg, .csv, .json, .zip, .sql, .txt et sans extension)
+                                                            </div>
+                                                        </div>
+                                                        <aside class="pt-3">
+                                                            {files.length !== 0 ?
+                                                                <aside class="pt-3">
+                                                                    <ul>
+                                                                        {files}
+                                                                    </ul>
+                                                                </aside>
+                                                                : ''}
+                                                        </aside>
+                                                    </section>
+                                                )}
+                                            </Dropzone>
+                                        </div>
+                                    </div>
+                                    <div className="tab-pane fade mb-4" id="nav-large-file" role="tabpanel"
+                                        aria-labelledby="nav-large-file-tab">
+                                        <div class="form-group required">
+                                            <label class="form-label">Lien web vers le fichier</label>
+                                            <input value={this.state.linkFile} onChange={this.handleChange} type="text" name="linkFile" class="form-control"
+                                                placeholder="Saisissez vos métadonnées" />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div className="d-md-flex justify-content-center">
                                 <button type="submit" className="btn btn-oran">Upload le fichier</button>

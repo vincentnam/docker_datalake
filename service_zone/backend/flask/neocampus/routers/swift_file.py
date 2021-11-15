@@ -46,33 +46,39 @@ def storage():
     filename = request.get_json()["filename"]
     other_meta = request.get_json()["othermeta"]
     type_file = request.get_json()["typeFile"]
-
-    data_file = file.split(",")
-    data_file = data_file[1]
-    data_file = base64.b64decode(data_file)
-
-    # FIXME : put in DAG to Apache Airflow handling and get picture content from MongoDB
-    # Else pictures will not be printed after download
-
-    #data_file = str(data_file)
-    #data_file = data_file.split("'")
-    #file_content = ''.join(map(str.capitalize, data_file[1:]))
+    link_file = request.get_json()["linkFile"]
     
-    file_content = data_file
+    if link_file != "":
+        print(link_file)
+    else:
+        data_file = file.split(",")
+        data_file = data_file[1]
+        data_file = base64.b64decode(data_file)
+        
+        
 
-    container_name = "neOCampus"
-    mongodb_url = current_app.config['MONGO_URL']
-    user = current_app.config['SWIFT_USER']
-    key = current_app.config['SWIFT_KEY']
-    authurl = current_app.config['SWIFT_AUTHURL']
-    content_type = type_file
-    application = None
-    data_process = "custom"
-    processed_data_area_service = ["MongoDB"]
-    other_data = other_meta
-    
-    mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
-                        processed_data_area_service, data_process, application,
-                        content_type, mongodb_url, other_data)
+        # FIXME : put in DAG to Apache Airflow handling and get picture content from MongoDB
+        # Else pictures will not be printed after download
+
+        #data_file = str(data_file)
+        #data_file = data_file.split("'")
+        #file_content = ''.join(map(str.capitalize, data_file[1:]))
+        
+        file_content = data_file
+
+        container_name = "neOCampus"
+        mongodb_url = current_app.config['MONGO_URL']
+        user = current_app.config['SWIFT_USER']
+        key = current_app.config['SWIFT_KEY']
+        authurl = current_app.config['SWIFT_AUTHURL']
+        content_type = type_file
+        application = None
+        data_process = "custom"
+        processed_data_area_service = ["MongoDB"]
+        other_data = other_meta
+        
+        mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
+                            processed_data_area_service, data_process, application,
+                            content_type, mongodb_url, other_data)
 
     return jsonify({"response": "Done !"})
