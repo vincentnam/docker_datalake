@@ -313,24 +313,72 @@ export class Upload extends React.Component {
             } else {
 
                 if (this.state.linkFile.trim() !== '' &&  this.state.filename === '') {
-                    let extension = this.state.linkFile.trim().split(".");
-                    console.log(extension);
-                    extension = extension[extension.length - 1];
-                    console.log(extension);
-                    let content_type = "";
+                    let link = this.state.linkFile.trim().split(".");
 
+                    // Check extension if is the same with choose in select type file
+                    let extension = link[link.length - 1];
+                    let content_type = "";
                     extensions_types_files.forEach(type => {
                         if(type.value === extension){
                             content_type = type.content_type;
                         }
                     });
-                    
                     if(content_type === ""){
                         content_type = "application/octet-stream";
                     }
-                    console.log(content_type);
                     if(this.state.type_file_accepted.includes(content_type) === false) {
                         toast.error("Le type de fichier dans le lien n'est pas identique au type sélectionné !", {
+                            theme: "colored",
+                            position: "top-right",
+                            autoClose: 5000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            progress: undefined,
+                        });
+                        nbErrors += 1;
+                    }
+                    // Check if HTTP or HTTPS in link
+                    let check_http = false
+                    let str_http = link[0].split("/");
+                    console.log(str_http)
+                    if(str_http[0] === "https:"){
+                        console.log("https:");
+                        check_http = true;
+                    }
+                    if(str_http[0] === "http:"){
+                        console.log("http:");
+                        check_http = true;
+                    }
+                    console.log(check_http);
+                    if(check_http === false){
+                        toast.error("Le lien du fichier ne contient pas d'HTTP !", {
+                            theme: "colored",
+                            position: "top-right",
+                            autoClose: 5000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            progress: undefined,
+                        });
+                        nbErrors += 1;
+                    }
+
+                    // Check if is a web site .com or .fr 
+
+                    let pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+                        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+                        '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+                        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+                        '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+                        '(\\#[-a-z\\d_]*)?$','i');
+
+
+                    console.log(!!pattern.test(this.state.linkFile.trim()));
+                    if(!pattern.test(this.state.linkFile.trim())){
+                        toast.error("Le lien du fichier n'est pas pas un lien conforme !", {
                             theme: "colored",
                             position: "top-right",
                             autoClose: 5000,
