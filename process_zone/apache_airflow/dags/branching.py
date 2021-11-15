@@ -388,8 +388,12 @@ def default_check_type(**kwargs):
     
     content_type = metadata_doc['content_type']
     
+    if "image/" in content_type:
+        content_type = "image/"
+    
     with open(cwd + "/task_list.json", "r") as f:
         task_dict = json.load(f)
+        
 
     if content_type in task_dict:
         if group in task_dict[content_type]:
