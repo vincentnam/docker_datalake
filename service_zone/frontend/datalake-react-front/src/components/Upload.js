@@ -342,7 +342,6 @@ export class Upload extends React.Component {
                     // Check if HTTP or HTTPS in link
                     let check_http = false
                     let str_http = link[0].split("/");
-                    console.log(str_http)
                     if(str_http[0] === "https:"){
                         console.log("https:");
                         check_http = true;
@@ -351,7 +350,6 @@ export class Upload extends React.Component {
                         console.log("http:");
                         check_http = true;
                     }
-                    console.log(check_http);
                     if(check_http === false){
                         toast.error("Le lien du fichier ne contient pas d'HTTP !", {
                             theme: "colored",
@@ -366,8 +364,7 @@ export class Upload extends React.Component {
                         nbErrors += 1;
                     }
 
-                    // Check if is a web site .com or .fr 
-
+                    // Check if is a web site is compliant
                     let pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
                         '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
                         '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
@@ -375,9 +372,32 @@ export class Upload extends React.Component {
                         '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
                         '(\\#[-a-z\\d_]*)?$','i');
 
-
-                    console.log(!!pattern.test(this.state.linkFile.trim()));
                     if(!pattern.test(this.state.linkFile.trim())){
+                        toast.error("Le lien du fichier n'est pas pas un lien conforme !", {
+                            theme: "colored",
+                            position: "top-right",
+                            autoClose: 5000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            progress: undefined,
+                        });
+                        nbErrors += 1;
+                    }
+                    
+                    //Search the domain site .com, .fr, .gouv et etc
+                    let link_check = this.state.linkFile.trim().split('.');
+                    let extension_domain_link = link_check[1].split('/');
+                    extension_domain_link = extension_domain_link[0];
+                    let domain_check = false;
+                    extensions_types_files.forEach(type => {
+                        if(type.value === extension_domain_link){
+                            domain_check = true;
+                        }
+                    });
+
+                    if(domain_check === true) {
                         toast.error("Le lien du fichier n'est pas pas un lien conforme !", {
                             theme: "colored",
                             position: "top-right",
