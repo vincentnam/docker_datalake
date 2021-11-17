@@ -6,6 +6,7 @@ from flask import Blueprint, jsonify, current_app, request, send_from_directory
 from ..services import swift, mongo
 import os
 import paramiko
+from pathlib import Path
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
@@ -81,15 +82,51 @@ def storage():
 
 @swift_file_bp.route('/register-sge-file', methods=['POST'])
 def sge_file():
+    sge_ip_address = "10.200.156.253"
+    host_key = "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBHJdWchwbWG661xt2c53FP2LRXV3vwJ0OaqCpkVe7LoYmuD8BlfxgDVvDt5ZtveMaKu4XjmR7DRY6tV2i7KhDOw="
     ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    from base64 import decodebytes
+
+    transport = paramiko.Transport(sge_ip_address)
+    transport.get_security_options().key_types = ["ecdsa-sha2-nistp256"]
+
+    #keydata = b""""""
+    keydata = current_app.config['SSH_KEY']
+    key = paramiko.ECDSAKey(data=decodebytes(keydata))
+
+    ssh.load_system_host_keys()
     ssh.connect(
-        current_app.config['SGE_IP_ADDRESS'], 
+        sge_ip_address, 
         username=current_app.config['SGE_USERNAME'], 
         password=current_app.config['SGE_PASSWORD']
     )
     sftp = ssh.open_sftp()
-    localpath = 'IndexCPT_Differentiel'
-    remotepath = current_app.config['SGE_REMOTE_PATH']
-    sftp.put(localpath, remotepath)
+    filename = ""
+    localpath = '/home/'
+    remotepath = current_app.config['SGE_REMOTE_PATH']+filename
+    sftp.get(remotepath, localpath)
     sftp.close()
     ssh.close()
+
+    data_file = Path(localpath).read_text()
+    filename = data_file.name
+
+    data_file = base64.b64decode(data_file)
+    file_content = data_file
+
+    container_name = "neOCampus"
+    mongodb_url = current_app.config['MONGO_URL']
+    user = current_app.config['SWIFT_USER']
+    key = current_app.config['SWIFT_KEY']
+    authurl = current_app.config['SWIFT_AUTHURL']
+    content_type = "application/octet-stream"
+    application = None
+    data_process = "default"
+    processed_data_area_service = ["MongoDB"]
+    other_data = "sge_data"
+    
+    mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
+                        processed_data_area_service, data_process, application,
+                        content_type, mongodb_url, other_data)
