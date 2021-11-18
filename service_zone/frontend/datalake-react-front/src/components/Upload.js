@@ -199,7 +199,7 @@ export class Upload extends React.Component {
             ));
         }
         if (name === "model") {
-            if(value !== ""){
+            if (value !== "") {
                 api.post("models/id", {
                     id: value
                 })
@@ -285,7 +285,7 @@ export class Upload extends React.Component {
             });
             nbErrors += 1;
         }
-        
+
         if (this.state.filename === '' && this.state.linkFile.trim() === '') {
             toast.error("Veuillez ajouter un fichier ou un lien pour un fichier !", {
                 theme: "colored",
@@ -298,8 +298,8 @@ export class Upload extends React.Component {
                 progress: undefined,
             });
         } else {
-            if (this.state.filename !== '' && this.state.linkFile.trim() !== '' ) {
-                toast.error("Veuillez choisir entre ajouter un fichier ou un lien pour un fichier !", {
+            if (this.state.filename !== '' && this.state.linkFile.trim() !== '') {
+                toast.error("Veuillez choisir entre ajouter un fichier, un lien http ou une ip pour ajouter un fichier !", {
                     theme: "colored",
                     position: "top-right",
                     autoClose: 5000,
@@ -311,104 +311,131 @@ export class Upload extends React.Component {
                 });
                 nbErrors += 1;
             } else {
-
-                if (this.state.linkFile.trim() !== '' &&  this.state.filename === '') {
-                    let link = this.state.linkFile.trim().split(".");
-
-                    // Check extension if is the same with choose in select type file
-                    let extension = link[link.length - 1];
-                    let content_type = "";
-                    extensions_types_files.forEach(type => {
-                        if(type.value === extension){
-                            content_type = type.content_type;
-                        }
-                    });
-                    if(content_type === ""){
-                        content_type = "application/octet-stream";
-                    }
-                    if(this.state.type_file_accepted.includes(content_type) === false) {
-                        toast.error("Le type de fichier dans le lien n'est pas identique au type sélectionné !", {
-                            theme: "colored",
-                            position: "top-right",
-                            autoClose: 5000,
-                            hideProgressBar: false,
-                            closeOnClick: true,
-                            pauseOnHover: true,
-                            draggable: true,
-                            progress: undefined,
-                        });
-                        nbErrors += 1;
-                    }
+                if (this.state.linkFile.trim() !== '' && this.state.filename === '') {
                     // Check if HTTP or HTTPS in link
                     let check_http = false
-                    let str_http = link[0].split("/");
-                    if(str_http[0] === "https:"){
-                        console.log("https:");
+                    let str_http = this.state.linkFile.trim().split("/");
+                    if (str_http[0] === "https:") {
                         check_http = true;
                     }
-                    if(str_http[0] === "http:"){
-                        console.log("http:");
+                    if (str_http[0] === "http:") {
                         check_http = true;
                     }
-                    if(check_http === false){
-                        toast.error("Le lien du fichier ne contient pas d'HTTP !", {
-                            theme: "colored",
-                            position: "top-right",
-                            autoClose: 5000,
-                            hideProgressBar: false,
-                            closeOnClick: true,
-                            pauseOnHover: true,
-                            draggable: true,
-                            progress: undefined,
+                    if (check_http === true) {
+                        let link = this.state.linkFile.trim().split(".");
+                        // Check extension if is the same with choose in select type file
+                        let extension = link[link.length - 1];
+                        let content_type = "";
+                        extensions_types_files.forEach(type => {
+                            if (type.value === extension) {
+                                content_type = type.content_type;
+                            }
                         });
-                        nbErrors += 1;
-                    }
-
-                    // Check if is a web site is compliant
-                    let pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
-                        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
-                        '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
-                        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
-                        '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
-                        '(\\#[-a-z\\d_]*)?$','i');
-
-                    if(!pattern.test(this.state.linkFile.trim())){
-                        toast.error("Le lien du fichier n'est pas pas un lien conforme !", {
-                            theme: "colored",
-                            position: "top-right",
-                            autoClose: 5000,
-                            hideProgressBar: false,
-                            closeOnClick: true,
-                            pauseOnHover: true,
-                            draggable: true,
-                            progress: undefined,
-                        });
-                        nbErrors += 1;
-                    }
-                    
-                    //Search the domain site .com, .fr, .gouv et etc
-                    let link_check = this.state.linkFile.trim().split('.');
-                    let extension_domain_link = link_check[1].split('/');
-                    extension_domain_link = extension_domain_link[0];
-                    let domain_check = false;
-                    extensions_types_files.forEach(type => {
-                        if(type.value === extension_domain_link){
-                            domain_check = true;
+                        if (content_type === "") {
+                            content_type = "application/octet-stream";
                         }
-                    });
+                        if (this.state.type_file_accepted.includes(content_type) === false) {
+                            toast.error("Le type de fichier dans le lien n'est pas identique au type sélectionné !", {
+                                theme: "colored",
+                                position: "top-right",
+                                autoClose: 5000,
+                                hideProgressBar: false,
+                                closeOnClick: true,
+                                pauseOnHover: true,
+                                draggable: true,
+                                progress: undefined,
+                            });
+                            nbErrors += 1;
+                        }
 
-                    if(domain_check === true) {
-                        toast.error("Le lien du fichier n'est pas pas un lien conforme !", {
-                            theme: "colored",
-                            position: "top-right",
-                            autoClose: 5000,
-                            hideProgressBar: false,
-                            closeOnClick: true,
-                            pauseOnHover: true,
-                            draggable: true,
-                            progress: undefined,
+                        // Check if is a web site is compliant
+                        let pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
+                            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+                            '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+                            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+                            '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+                            '(\\#[-a-z\\d_]*)?$', 'i');
+
+                        if (!pattern.test(this.state.linkFile.trim())) {
+                            toast.error("Le lien du fichier n'est pas pas un lien conforme !", {
+                                theme: "colored",
+                                position: "top-right",
+                                autoClose: 5000,
+                                hideProgressBar: false,
+                                closeOnClick: true,
+                                pauseOnHover: true,
+                                draggable: true,
+                                progress: undefined,
+                            });
+                            nbErrors += 1;
+                        }
+                        //Search the domain site .com, .fr, .gouv et etc
+                        let link_check = this.state.linkFile.trim().split('.');
+                        let extension_domain_link = link_check[1].split('/');
+                        extension_domain_link = extension_domain_link[0];
+                        let domain_check = false;
+                        extensions_types_files.forEach(type => {
+                            if (type.value === extension_domain_link) {
+                                domain_check = true;
+                            }
                         });
-                        nbErrors += 1;
+
+                        if (domain_check === true) {
+                            toast.error("Le lien du fichier n'est pas pas un lien conforme !", {
+                                theme: "colored",
+                                position: "top-right",
+                                autoClose: 5000,
+                                hideProgressBar: false,
+                                closeOnClick: true,
+                                pauseOnHover: true,
+                                draggable: true,
+                                progress: undefined,
+                            });
+                            nbErrors += 1;
+                        }
+                    } else {
+                        let link = this.state.linkFile.trim().split("/");
+                        // Check extension if is the same with choose in select type file
+                        let extension = link[link.length - 1].split(".");
+                        extension = extension[1];
+                        let content_type = "";
+                        extensions_types_files.forEach(type => {
+                            if (type.value === extension) {
+                                content_type = type.content_type;
+                            }
+                        });
+                        if (content_type === "") {
+                            content_type = "application/octet-stream";
+                        }
+                        if (this.state.type_file_accepted.includes(content_type) === false) {
+                            toast.error("Le type de fichier dans le lien n'est pas identique au type sélectionné !", {
+                                theme: "colored",
+                                position: "top-right",
+                                autoClose: 5000,
+                                hideProgressBar: false,
+                                closeOnClick: true,
+                                pauseOnHover: true,
+                                draggable: true,
+                                progress: undefined,
+                            });
+                            nbErrors += 1;
+                        }
+                        //Check IP adress is compliant
+                        let ipformat = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+                        let iplink = link[0];
+                        if (!ipformat.test(iplink)) {
+                            toast.error("L'adresse IP n'est pas conforme !", {
+                                theme: "colored",
+                                position: "top-right",
+                                autoClose: 5000,
+                                hideProgressBar: false,
+                                closeOnClick: true,
+                                pauseOnHover: true,
+                                draggable: true,
+                                progress: undefined,
+                            });
+                            nbErrors += 1;
+                        }
                     }
                 }
             }
@@ -613,12 +640,12 @@ export class Upload extends React.Component {
                                 <nav className="tab-download">
                                     <div className="nav nav-pills " id="pills-tab" role="tablist">
                                         <button className="nav-link active" id="nav-raw-tab" data-bs-toggle="pill"
-                                                data-bs-target="#nav-small-file" type="button" role="tab" aria-controls="nav-small-file"
-                                                aria-selected="true">Fichier moins de -- Go
+                                            data-bs-target="#nav-small-file" type="button" role="tab" aria-controls="nav-small-file"
+                                            aria-selected="true">Fichier moins de -- Go
                                         </button>
                                         <button className="nav-link" id="nav-handled-tab" data-bs-toggle="pill"
-                                                data-bs-target="#nav-large-file" type="button" role="tab" aria-controls="nav-large-file"
-                                                aria-selected="false">Fichier plus de -- Go
+                                            data-bs-target="#nav-large-file" type="button" role="tab" aria-controls="nav-large-file"
+                                            aria-selected="false">Fichier plus de -- Go
                                         </button>
                                     </div>
                                 </nav>
@@ -657,9 +684,9 @@ export class Upload extends React.Component {
                                     <div className="tab-pane fade mb-4" id="nav-large-file" role="tabpanel"
                                         aria-labelledby="nav-large-file-tab">
                                         <div class="form-group required">
-                                            <label class="form-label">Lien web vers le fichier</label>
+                                            <label class="form-label">Lien vers le fichier</label>
                                             <input value={this.state.linkFile} onChange={this.handleChange} type="text" name="linkFile" class="form-control"
-                                                placeholder="Saisissez vos métadonnées" />
+                                                placeholder="https://-----/dossier/file.extension ou XX.XX.XX.XXX/dossier/file.extension" />
                                         </div>
                                     </div>
                                 </div>
