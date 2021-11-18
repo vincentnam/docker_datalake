@@ -7,8 +7,3 @@ INFLUXDB_URL = "http://XXXXXXX:8086"
 INFLUXDB_TOKEN = "XXXXXXX"
 INFLUXDB_ORG = "XXXXXX"
 INFLUXDB_BUCKET = "xxxx"
-
-SSH_KEY = ""
-SGE_REMOTE_PATH = "/absolute/path"
-SGE_USERNAME = "username"
-SGE_PASSWORD = "password"
