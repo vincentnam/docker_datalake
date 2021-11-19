@@ -54,7 +54,7 @@ import Moment from 'moment';
             {
                 id: 'creation_date',
                 name: "Date de création",
-                selector: row => Moment(row.creation_date).format('YYYY-MM-DD hh:mm:ss'),
+                selector: row => Moment(row.creation_date).format('YYYY-MM-DD HH:mm:ss'),
                 sortable: true
             },
         ];

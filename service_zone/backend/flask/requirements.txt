@@ -2,5 +2,8 @@ flask>=1.1,<1.2
 uwsgi>=2.0,<2.1
 python-swiftclient>=3.11,<3.12
 pymongo>=3.11,<3.12
-pandas
 influxdb_client
+pandas
+pynacl
+pyOpenSSL
+paramiko
