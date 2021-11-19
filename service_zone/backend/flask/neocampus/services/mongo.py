@@ -36,7 +36,9 @@ def get_last_metadata(db_name, params):
     # Sort columns
     if("sort_field" in params.keys() and "sort_value" in params.keys()):
         metadata.sort(params['sort_field'], params['sort_value'])
-
+    else:
+        metadata.sort("creation_date", -1)
+        
     if("offset" in params.keys() and "limit" in params.keys()):
         metadata = metadata.skip(params['offset'])
         metadata = metadata.limit(params['limit'])
@@ -73,6 +75,8 @@ def get_metadata(db_name, params):
     # Sort columns
     if("sort_field" in params.keys() and "sort_value" in params.keys()):
         metadata.sort(params['sort_field'], params['sort_value'])
+    else:
+        metadata.sort("creation_date", -1)
 
     if("offset" in params.keys() and "limit" in params.keys()):
         metadata = metadata.skip(params['offset'])
