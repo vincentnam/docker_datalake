@@ -8,6 +8,6 @@ RUN mkdir /app
 WORKDIR /app
 COPY ./requirements.txt /app/requirements.txt
 
-RUN apk add --update --no-cache g++ linux-headers &&\
+RUN apk add --update --no-cache g++ linux-headers libffi-dev make &&\
     pip install --upgrade pip && \
     pip install -r requirements.txt
