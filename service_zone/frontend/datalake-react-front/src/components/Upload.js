@@ -253,6 +253,9 @@ export class Upload extends React.Component {
         const type = parseInt(this.state.type);
         const other = {};
 
+        let type_link = "";
+        let type_file = "";
+
         // options about upload progressBar
         const options = {
             onUploadProgress: (progressEvent) => {
@@ -322,6 +325,7 @@ export class Upload extends React.Component {
                         check_http = true;
                     }
                     if (check_http === true) {
+                        type_link = "http";
                         let link = this.state.linkFile.trim().split(".");
                         // Check extension if is the same with choose in select type file
                         let extension = link[link.length - 1];
@@ -334,6 +338,7 @@ export class Upload extends React.Component {
                         if (content_type === "") {
                             content_type = "application/octet-stream";
                         }
+                        type_file = content_type;
                         if (this.state.type_file_accepted.includes(content_type) === false) {
                             toast.error("Le type de fichier dans le lien n'est pas identique au type sélectionné !", {
                                 theme: "colored",
@@ -394,6 +399,7 @@ export class Upload extends React.Component {
                             nbErrors += 1;
                         }
                     } else {
+                        type_link = "ip";
                         let link = this.state.linkFile.trim().split("/");
                         // Check extension if is the same with choose in select type file
                         let extension = link[link.length - 1].split(".");
@@ -407,6 +413,7 @@ export class Upload extends React.Component {
                         if (content_type === "") {
                             content_type = "application/octet-stream";
                         }
+                        type_file = content_type;
                         if (this.state.type_file_accepted.includes(content_type) === false) {
                             toast.error("Le type de fichier dans le lien n'est pas identique au type sélectionné !", {
                                 theme: "colored",
@@ -440,17 +447,19 @@ export class Upload extends React.Component {
                 }
             }
         }
-
-
-
         if (nbErrors === 0) {
+            let typeFile = this.state.typeFile;
+            if(this.state.linkFile.trim() !== ""){
+                typeFile = type_file;
+            }
             this.handleShow()
             api.post('storage', {
                 idType: type,
-                typeFile: this.state.typeFile,
+                typeFile: typeFile,
                 filename: this.state.filename,
                 file: this.state.file,
                 linkFile: this.state.linkFile.trim(),
+                linkType: type_link,
                 othermeta: other
             }, options)
                 .then(function () {

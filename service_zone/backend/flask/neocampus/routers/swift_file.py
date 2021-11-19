@@ -47,16 +47,40 @@ def storage():
     other_meta = request.get_json()["othermeta"]
     type_file = request.get_json()["typeFile"]
     link_file = request.get_json()["linkFile"]
+    link_type = request.get_json()["linkType"]
     
-    if link_file != "":
-        print(link_file)
+    if link_file != "":        
+        link = link_file.split('/')
+        path = ""
+        if link_type == "http":
+            link_http = link[0]
+            path = "/" + "/".join(link[3:])
+        else:
+            link_ip = link[0]
+            path = "/" + "/".join(link[1:])
+        
+        if type_file == "application/octet-stream":
+            print("SGE")
+            if link_type == "http":
+                print(link_http)
+                print(path)
+            else:
+                print(link_ip)
+                print(path)
+        
+        else:
+            print("Other type file")
+            if link_type == "http":
+                print(link_http)
+                print(path)
+            else:
+                print(link_ip)
+                print(path)
+        
     else:
         data_file = file.split(",")
         data_file = data_file[1]
         data_file = base64.b64decode(data_file)
-        
-        
-
         # FIXME : put in DAG to Apache Airflow handling and get picture content from MongoDB
         # Else pictures will not be printed after download
 
