@@ -74,26 +74,7 @@ def ssh_file(
         #data_file = base64.b64decode(content_file)
         file_content = content_file
 
-        # All variables to put informations in MongoDB
-        # and in OpenstackSwift
-        container_name = "neOCampus"
-        mongodb_url = current_app.config['MONGO_URL']
-        user = current_app.config['SWIFT_USER']
-        key = current_app.config['SWIFT_KEY']
-        authurl = current_app.config['SWIFT_AUTHURL']
-        content_type = type_file
-        application = None
-        data_process = "default"
-        processed_data_area_service = ["MongoDB"]
-        other_data = {
-            "type_link": "ssh"
-        }
-        
-        mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
-                            processed_data_area_service, data_process, application,
-                            content_type, mongodb_url, other_data)
-
-        return "OK"
+        return file_content
     except Exception as e:
         print(e)
         return "Problem"

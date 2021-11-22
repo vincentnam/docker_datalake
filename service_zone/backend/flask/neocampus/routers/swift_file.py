@@ -68,8 +68,8 @@ def storage():
             path = "/" + "/".join(link[3:])
 
         filename = path.split("/")[-1]
-        
-        swift.ssh_file(
+
+        file_content = swift.ssh_file(
             link_ssh,
             user,
             password,
@@ -77,6 +77,9 @@ def storage():
             filename,
             type_file
         )
+        other_data = {
+            "type_link": "ssh"
+        }
 
     else:
         data_file = file.split(",")
@@ -91,19 +94,19 @@ def storage():
 
         file_content = data_file
 
-        container_name = "neOCampus"
-        mongodb_url = current_app.config['MONGO_URL']
-        user = current_app.config['SWIFT_USER']
-        key = current_app.config['SWIFT_KEY']
-        authurl = current_app.config['SWIFT_AUTHURL']
-        content_type = type_file
-        application = None
-        data_process = "custom"
-        processed_data_area_service = ["MongoDB"]
-        other_data = other_meta
+    container_name = "neOCampus"
+    mongodb_url = current_app.config['MONGO_URL']
+    user = current_app.config['SWIFT_USER']
+    key = current_app.config['SWIFT_KEY']
+    authurl = current_app.config['SWIFT_AUTHURL']
+    content_type = type_file
+    application = None
+    data_process = "custom"
+    processed_data_area_service = ["MongoDB"]
+    other_data = other_meta
 
-        mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
-                              processed_data_area_service, data_process, application,
-                              content_type, mongodb_url, other_data)
+    mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
+                          processed_data_area_service, data_process, application,
+                          content_type, mongodb_url, other_data)
 
     return jsonify({"response": "Done !"})

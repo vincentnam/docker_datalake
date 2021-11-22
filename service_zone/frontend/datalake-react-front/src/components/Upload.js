@@ -164,40 +164,7 @@ export class Upload extends React.Component {
         this.setState({
             [name]: value
         });
-        let type_file_accepted = [];
-        if (name === "type") {
-            const types = [config.types];
-            types.forEach((type) => (
-                type.forEach((t) => {
-                    if (t.id === parseInt(value)) {
-                        this.setState({
-                            type_file_accepted: t.type_file_accepted
-                        });
-                        type_file_accepted = t.type_file_accepted
-                        api.post("models/params", {
-                            types_files: type_file_accepted
-                        })
-                            .then((response) => {
-                                this.setState({
-                                    models: response.data.models.data,
-                                    model: "",
-                                    othermeta: [],
-                                    editModel: {
-                                        id: 0,
-                                        label: "",
-                                        typesFiles: [],
-                                        metadonnees: [],
-                                        status: true,
-                                    }
-                                });
-                            })
-                            .catch(function (error) {
-                                console.log(error);
-                            });
-                    }
-                })
-            ));
-        }
+        
         if (name === "model") {
             if (value !== "") {
                 api.post("models/id", {
@@ -230,20 +197,55 @@ export class Upload extends React.Component {
                     }
                 });
             }
-        }
-        if (this.state.typeFile !== "") {
-            if (type_file_accepted.includes(this.state.typeFile) === false) {
-                toast.error("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + type_file_accepted.join(' '), {
-                    theme: "colored",
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                });
-                this.removeSelectedFile()
+        } else {
+            let type_file_accepted = [];
+            if (name === "type") {
+                const types = [config.types];
+                types.forEach((type) => (
+                    type.forEach((t) => {
+                        if (t.id === parseInt(value)) {
+                            this.setState({
+                                type_file_accepted: t.type_file_accepted
+                            });
+                            type_file_accepted = t.type_file_accepted
+                            api.post("models/params", {
+                                types_files: type_file_accepted
+                            })
+                                .then((response) => {
+                                    this.setState({
+                                        models: response.data.models.data,
+                                        model: "",
+                                        othermeta: [],
+                                        editModel: {
+                                            id: 0,
+                                            label: "",
+                                            typesFiles: [],
+                                            metadonnees: [],
+                                            status: true,
+                                        }
+                                    });
+                                })
+                                .catch(function (error) {
+                                    console.log(error);
+                                });
+                        }
+                    })
+                ));
+            }
+            if (this.state.typeFile !== "") {
+                if (type_file_accepted.includes(this.state.typeFile) === false) {
+                    toast.error("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + type_file_accepted.join(' '), {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
+                    this.removeSelectedFile()
+                }
             }
         }
     }
