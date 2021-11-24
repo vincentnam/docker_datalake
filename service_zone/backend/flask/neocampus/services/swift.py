@@ -6,7 +6,6 @@ from .mongo import get_swift_original_object_name
 from ..services import mongo
 import paramiko
 from pathlib import Path
-import threading
 
 def download_object_file(container_name, object_id):
     """
@@ -75,8 +74,6 @@ def ssh_file(
         #data_file = base64.b64decode(content_file)
         file_content = content_file
         
-        print(file_content)
-
         # All variables to put informations in MongoDB
         # and in OpenstackSwift
         container_name = "neOCampus"
@@ -91,13 +88,10 @@ def ssh_file(
         other_data = {
             "type_link": "ssh"
         }
-        
-        with current_app.app_context():
-            insert_datalake = threading.Thread(target=mongo.insert_datalake, name="insert_datalake", args=(file_content, user, key, authurl, container_name, filename,
+        mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
                             processed_data_area_service, data_process, application,
-                            content_type, mongodb_url, other_data))
-            insert_datalake.start()
-
+                            content_type, mongodb_url, other_data)
+        
         return "OK"
     except Exception as e:
         print(e)

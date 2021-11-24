@@ -5,7 +5,7 @@ import base64
 from flask import Blueprint, jsonify, current_app, request, send_from_directory
 from ..services import swift, mongo
 import os
-import threading
+from multiprocessing import Process
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
@@ -47,8 +47,6 @@ def download(filename):
 
 @swift_file_bp.route('/storage', methods=['POST'])
 def storage():
-    # id_type = request.get_json()["idType"]
-    
     file = request.get_json()["file"]
     filename = request.get_json()["filename"]
     other_meta = request.get_json()["othermeta"]
@@ -70,19 +68,16 @@ def storage():
             path = "/" + "/".join(link[3:])
 
         filename = path.split("/")[-1]
-        with current_app.app_context():
-            current_app.use_reloader=False
-            upload_thread = threading.Thread(target=swift.ssh_file, name="Upload_ssh", args=(
-                link_ssh,
-                user,
-                password,
-                path,
-                filename,
-                type_file
-            ))
-            upload_thread.daemon = True
-            upload_thread.start()
-        
+
+        upload_processing = Process(target=swift.ssh_file, name="Upload_ssh", args=(
+            link_ssh,
+            user,
+            password,
+            path,
+            filename,
+            type_file
+        ))
+        upload_processing.start()
 
     else:
         data_file = file.split(",")
