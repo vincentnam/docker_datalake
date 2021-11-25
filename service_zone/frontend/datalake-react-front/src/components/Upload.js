@@ -652,11 +652,11 @@ export class Upload extends React.Component {
                                     <div className="nav nav-pills " id="pills-tab" role="tablist">
                                         <button className="nav-link active" id="nav-raw-tab" data-bs-toggle="pill"
                                             data-bs-target="#nav-small-file" type="button" role="tab" aria-controls="nav-small-file"
-                                            aria-selected="true">Fichier moins de -- Go
+                                            aria-selected="true">Fichier moins de 100 Mo
                                         </button>
                                         <button className="nav-link" id="nav-handled-tab" data-bs-toggle="pill"
                                             data-bs-target="#nav-large-file" type="button" role="tab" aria-controls="nav-large-file"
-                                            aria-selected="false">Fichier plus de -- Go
+                                            aria-selected="false">Fichier plus de 100 Mo
                                         </button>
                                     </div>
                                 </nav>
@@ -675,7 +675,9 @@ export class Upload extends React.Component {
                                                                 Veuillez glisser un fichier ici<br />
                                                                 ou<br />
                                                                 <u>cliquer pour ajouter un fichier</u><br />
-                                                                Taille limitée à 20Mo (.jpg, .jpeg, .png, .svg, .csv, .json, .zip, .sql, .txt et sans extension)
+                                                                Taille limitée à 100Mo (.jpg, .jpeg, .png, .svg, .csv, .json, .zip, .sql et .txt)
+                                                                <br/>Vous ne pouvez pas ajouter dans le dépose un fichier sans extension (ex: Dump et differentiel des données SGE)
+                                                                <br/>Veuillez passer par l'upload de gros fichier
                                                             </div>
                                                         </div>
                                                         <aside class="pt-3">
