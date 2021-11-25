@@ -18,7 +18,7 @@ export class Upload extends React.Component {
         super();
         this.onDrop = (files) => {
             if (files.length < 1) {
-                toast.error('Format de fichier non accepté.', {
+                toast.error('Format de fichier non accepté ou trop grand !', {
                     theme: "colored",
                     position: "top-right",
                     autoClose: 5000,
@@ -164,7 +164,7 @@ export class Upload extends React.Component {
         this.setState({
             [name]: value
         });
-        
+
         if (name === "model") {
             if (value !== "") {
                 api.post("models/id", {
@@ -451,7 +451,7 @@ export class Upload extends React.Component {
         }
         if (nbErrors === 0) {
             let typeFile = this.state.typeFile;
-            if(this.state.linkFile.trim() !== ""){
+            if (this.state.linkFile.trim() !== "") {
                 typeFile = type_file;
             }
             this.handleShow()
@@ -652,11 +652,11 @@ export class Upload extends React.Component {
                                     <div className="nav nav-pills " id="pills-tab" role="tablist">
                                         <button className="nav-link active" id="nav-raw-tab" data-bs-toggle="pill"
                                             data-bs-target="#nav-small-file" type="button" role="tab" aria-controls="nav-small-file"
-                                            aria-selected="true">Fichier moins de 100 Mo
+                                            aria-selected="true">Fichier moins de 250 Mo
                                         </button>
                                         <button className="nav-link" id="nav-handled-tab" data-bs-toggle="pill"
                                             data-bs-target="#nav-large-file" type="button" role="tab" aria-controls="nav-large-file"
-                                            aria-selected="false">Fichier plus de 100 Mo
+                                            aria-selected="false">Fichier plus de 250 Mo
                                         </button>
                                     </div>
                                 </nav>
@@ -665,7 +665,7 @@ export class Upload extends React.Component {
                                         aria-labelledby="nav-small-file-tab">
                                         <div class="form-group required">
                                             <label>Fichiers</label>
-                                            <Dropzone value={this.state.file} name="file" onDrop={this.onDrop}
+                                            <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} maxSize={250000000}
                                                 accept="image/*,application/JSON,.csv,text/plain,.sql,application/x-gzip,application/x-zip-compressed,application/octet-stream">
                                                 {({ getRootProps, getInputProps }) => (
                                                     <section>
@@ -675,9 +675,9 @@ export class Upload extends React.Component {
                                                                 Veuillez glisser un fichier ici<br />
                                                                 ou<br />
                                                                 <u>cliquer pour ajouter un fichier</u><br />
-                                                                Taille limitée à 100Mo (.jpg, .jpeg, .png, .svg, .csv, .json, .zip, .sql et .txt)
-                                                                <br/>Vous ne pouvez pas ajouter dans le dépose un fichier sans extension (ex: Dump et differentiel des données SGE)
-                                                                <br/>Veuillez passer par l'upload de gros fichier
+                                                                Taille limitée à 250Mo (.jpg, .jpeg, .png, .svg, .csv, .json, .zip, .sql et .txt)
+                                                                <br />Vous ne pouvez pas ajouter dans le dépose un fichier sans extension (ex: Dump et differentiel des données SGE)
+                                                                <br />Veuillez passer par l'upload de gros fichier
                                                             </div>
                                                         </div>
                                                         <aside class="pt-3">
