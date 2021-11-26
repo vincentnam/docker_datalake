@@ -20,6 +20,7 @@ from services import extract_transform_load_time_series_json
 from services import extract_transform_load_time_series_text
 from services import extract_transform_load_images
 from services import extract_transform_load_dump_sql
+from services import extract_transform_load_sge
 from services import typefile
 from services import connection_mongo_metadata
 from services import connection_swift
@@ -368,6 +369,23 @@ def default_zip(**kwargs):
             # Text parsing
             processed_data = extract_transform_load_time_series_text(
                 swift_result, swift_container, swift_id, process_type)
+    return processed_data
+
+def default_sge(**kwargs):
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
+    
+    # Récupération du fichier encoder dans l'object swift
+    swift_result = swift_object[1]
+    processed_data = {}
+    process_type = "time_series_txt"
+    # Text parsing
+    processed_data = extract_transform_load_sge(
+        swift_result, swift_container, swift_id, process_type)
+    
     return processed_data
 
 
