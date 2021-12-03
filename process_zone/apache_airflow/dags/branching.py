@@ -381,7 +381,7 @@ def default_sge(**kwargs):
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
-    process_type = "time_series_txt"
+    process_type = "sge_dump"
     # Text parsing
     processed_data = extract_transform_load_sge(
         swift_result, swift_container, swift_id, process_type)

@@ -26,3 +26,8 @@ mariadb_passwd=""
 mariadb_database=""
 
 airflow_tmp = ""
+
+mssqlserver_url = ""
+mssqlserver_user = ""
+mssqlserver_pwd = ""
+mssqlserver_db_environment = ""
