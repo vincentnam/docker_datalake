@@ -1,6 +1,5 @@
 import sys
 import os
-from datetime import strftime
 import pyodbc
 from time import gmtime, sleep
 import tempfile

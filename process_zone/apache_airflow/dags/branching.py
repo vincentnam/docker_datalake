@@ -673,6 +673,7 @@ callable_dict = {"content_neo4j_node_creation": content_neo4j_node_creation,
                  "default_application_sql": default_application_sql,
                  "default_text_plain": default_text_plain,
                  "default_zip": default_zip,
+                 "default_sge": default_sge,
                  "PythonOperator": PythonOperator,
                  "DummyOperator": DummyOperator,
                  "BranchPythonOperator": BranchPythonOperator
