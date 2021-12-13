@@ -11,7 +11,8 @@ from services import restore_diff
 def extract_transform_load_sge(swift_result, swift_container, swift_id, process_type):
 
     # Start of treatment 
-    data=str(swift_result,'utf-8').replace("\\n", "\n")
+    # A tester 
+    # data=str(swift_result,'utf-8').replace("\\n", "\n")
     # lines = StringIO()
     # lines.write(s)
     # lines.seek(0)
@@ -28,10 +29,10 @@ def extract_transform_load_sge(swift_result, swift_container, swift_id, process_
     filename_split = filename.split("_")
     if(filename_split[1] == "Différentielle"):
         print("Diff")
-        restore_diff(data, filename_split[1])
+        restore_diff(swift_result, filename_split[1])
     else:
         print("Dump")
-        restore_backup(data, filename_split[1])
+        restore_backup(swift_result, filename_split[1])
     
     return [{'result': 'Insert done'}]
 

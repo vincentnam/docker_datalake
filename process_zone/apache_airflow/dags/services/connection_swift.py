@@ -19,7 +19,7 @@ def connection_swift(swift_container, swift_id):
     # Récupération de l'object Swift
     swift_object = conn.get_object(swift_container, swift_id)
     print('----------- OBJET SWIFT -------------')
-    print(swift_object)
+    # print(swift_object)
 
     return swift_object
     

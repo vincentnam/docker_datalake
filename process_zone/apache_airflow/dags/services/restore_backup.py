@@ -1,15 +1,13 @@
 import sys
-import os
 import pyodbc
 from time import gmtime, sleep
 import tempfile
 import config
 
 def restore_backup(data, filename):
-    driver = "ODBC Driver 19 for SQL Server"
+    driver = "ODBC Driver 17 for SQL Server"
     
     localserver = config.mssqlserver_url
-    db_environment = config.mssqlserver_db_environment
     localusername = config.mssqlserver_user
     password = config.mssqlserver_pwd
     
@@ -18,8 +16,8 @@ def restore_backup(data, filename):
     fp.seek(0)
     name_file_temp = fp.name
         
-    connectionString = (('DRIVER='+driver+';PORT=1433;SERVER='+localserver +
-                    ';PORT=1443;DATABASE=' + db_environment + ';UID='+localusername+';PWD=' + password))
+    connectionString = (('DRIVER={'+driver+'};SERVER='+localserver +
+                        ';UID='+localusername+';PWD=' + password))
     db_connection = pyodbc.connect(connectionString, autocommit=True)
     cursor = db_connection.cursor()
     
@@ -57,6 +55,7 @@ def restore_backup(data, filename):
         """
     
     cursor.execute(sql)
+    # Request for view percent of restore database
     db_connection1 = pyodbc.connect(connectionString)
     cursor1 = db_connection1.cursor()
     database_restored_sql = """select top 1 * from msdb.dbo.restorehistory order by restore_date desc"""
