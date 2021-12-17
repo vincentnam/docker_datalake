@@ -27,12 +27,13 @@ def extract_transform_load_sge(swift_result, swift_container, swift_id, process_
     filename = result["original_object_name"]
 
     filename_split = filename.split("_")
-    if(filename_split[1] == "Différentielle"):
+    last_filename_split = filename_split[len(filename_split) - 1]
+    if( last_filename_split == "Différentielle"):
         print("Diff")
-        restore_diff(swift_result, filename_split[1])
+        restore_diff(swift_result, filename_split[0])
     else:
         print("Dump")
-        restore_backup(swift_result, filename_split[1])
+        restore_backup(swift_result, filename)
     
     return [{'result': 'Insert done'}]
 

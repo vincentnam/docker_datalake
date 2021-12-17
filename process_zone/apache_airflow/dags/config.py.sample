@@ -31,3 +31,9 @@ mssqlserver_url = ""
 mssqlserver_user = ""
 mssqlserver_pwd = ""
 mssqlserver_db_environment = ""
+
+
+host_server_ms_sql = ""
+host_server_ms_sql_user = ""
+host_server_ms_sql_password = ""
+path_server_ms_sql_file = ""
