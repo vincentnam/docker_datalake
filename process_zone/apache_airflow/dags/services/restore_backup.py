@@ -72,6 +72,7 @@ def restore_backup(data, filename):
         WITH MOVE 'GTE_UPS_SQL_INDEX_CPT' to '/var/opt/mssql/data/GTE_UPS_SQL_INDEX_CPT.mdf'
         , MOVE 'GTE_UPS_SQL_INDEX_CPT_log' to '/var/opt/mssql/data/GTE_UPS_SQL_INDEX_CPT_log.ldf'
         , NORECOVERY
+        , REPLACE
         """
         
     if filename == "TRENDTABLE":
@@ -82,6 +83,7 @@ def restore_backup(data, filename):
         WITH MOVE 'GTE_UPS_SQLSERVEREVAL' to '/var/opt/mssql/data/GTE_UPS_SQLSERVEREVAL.mdf' 
         , MOVE 'GTE_UPS_SQLSERVEREVAL_log' to '/var/opt/mssql/data/GTE_UPS_SQLSERVEREVAL_log.ldf'
         , NORECOVERY
+        , REPLACE
         """
         
     if filename == "BigData":
@@ -92,6 +94,7 @@ def restore_backup(data, filename):
         WITH MOVE 'BigData' to '/var/opt/mssql/data/BigData.mdf'
         , MOVE 'BigData_log' to '/var/opt/mssql/data/BigData.ldf'
         , NORECOVERY
+        , REPLACE
         """
     
     cursor.execute(sql)
