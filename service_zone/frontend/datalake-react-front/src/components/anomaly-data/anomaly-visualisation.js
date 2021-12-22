@@ -1,44 +1,13 @@
 import React from "react";
-import { Graph } from './graph';
 import { useTable, useSortBy, usePagination } from "react-table";
 import * as Icon from 'react-bootstrap-icons';
 
-export class DataVisiualisation extends React.Component {
+export class DataAnomalyVisiualisation extends React.Component {
     constructor(props) {
         super(props);
         this.props = props;
     }
-    times() {
-        const times = this.props.dataGraph._time;
-        const result = [];
-        if (times !== undefined) {
-            for (const value of Object.entries(times)) {
-                result.push(value[1]);
-            }
-        }
-        return result;
-    }
-
-    values() {
-        const values = this.props.dataGraph._value;
-        const result = [];
-        if (values !== undefined) {
-            for (const value of Object.entries(values)) {
-                result.push(value[1]);
-            }
-        }
-        return result;
-    }
-    numberData() {
-        let data = this.props.dataGraph._value;
-        let result = null
-        if (data === undefined) {
-            result = 0;
-        } else {
-            result = Object.keys(this.props.dataGraph._value).length;
-        }
-        return result;
-    }
+    
     render() {
         const Table = ({ data }) => {
             const columns = React.useMemo(
@@ -47,21 +16,26 @@ export class DataVisiualisation extends React.Component {
                         Header: 'Tableau des données',
                         columns: [
                             {
-                                Header: "Datetime",
-                                accessor: "_time"
+                                Header: "Topic",
+                                accessor: "_topic"
+                            },
+                            {
+                                Header: "Measurement",
+                                accessor: "_unit"
                             },
                             {
                                 Header: "Valeur",
                                 accessor: "_value"
                             },
+                            
                             {
-                                Header: "Measurement",
-                                accessor: "_measurement"
+                                Header: "Date first detection",
+                                accessor: "_datetime"
                             },
                             {
-                                Header: "Topic",
-                                accessor: "topic"
-                            }
+                                Header: "Date last detection",
+                                accessor: "_endDate_detection"
+                            },
                         ]
                     }
                 ],
@@ -178,34 +152,9 @@ export class DataVisiualisation extends React.Component {
                 </>
             );
         }
-        const TitleGraph = () => {
-            if (this.props.topic === "") {
-                return (
-                    <></>
-                );
-            } else {
-                return (
-                    <h5 className="title-graph mb-4">Bucket: <span><b>{this.props.bucket}</b></span> - Measurement: <span><b>{this.props.measurement}</b></span> - Topic: <span><b>{this.props.topic}</b></span></h5>
-                );
-            }
-        }
+       
         
-        const Show = () => {
-            if (this.props.topic === "") {
-                return (
-                    <div></div>
-                );
-            } else {
-                return (
-                    <div className="card p-3">
-                        <TitleGraph />
-                        <Graph 
-                            dataGraph={this.props.dataGraph}
-                        />
-                    </div>
-                );
-            }
-        }
+        
 
         return (
             <div  className="data-table">

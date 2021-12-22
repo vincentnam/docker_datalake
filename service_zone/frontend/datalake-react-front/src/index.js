@@ -20,6 +20,7 @@ import {Download} from './components/Download';
 import {DownloadRaw} from './components/download-raw-data/DownloadRaw';
 import {DownloadHandleData} from './components/download-handled-data/DownloadHandleData';
 import {Models} from './components/Models';
+import { DetectionAnomalies } from './components/DetectionAnomalies';
 
 ReactDOM.render(
     <React.StrictMode>
@@ -43,6 +44,9 @@ ReactDOM.render(
                     </Route>
                     <Route path="/models">
                         <Models/>
+                    </Route>
+                    <Route path="/detection-anomalies" >
+                        <DetectionAnomalies />
                     </Route>
                     <Route path="/">
                         <Home/>
