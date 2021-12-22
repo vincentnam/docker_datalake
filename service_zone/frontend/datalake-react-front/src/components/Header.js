@@ -1,5 +1,9 @@
 import React from "react";
-import {NavLink} from 'react-router-dom';
+
+import {NavLink,Link,} from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import api from '../api/api';
+import history from "./utils/history";
 
 const Navbar = () => (
     <nav className="navbar-nav">
@@ -29,10 +33,70 @@ const Navbar = () => (
                  to="/models">
             Gestion
         </NavLink>
+        <NavLink activeClassName="active"
+                 className="nav-item nav-link"
+                 to="/detection-anomalies">
+            Anomalies
+        </NavLink>
     </nav>
 );
 
+/*
+const CustomToastWithLink = () => (
+    <div>
+      <Link to="/toasttest">This is a link</Link>
+    </div>
+  );
+const letsToast = () => {
+    toast.info(CustomToastWithLink);
+  };
+const ToastTest = () => (
+    <div>
+      <h3>Toast Test</h3>
+      Toast Test Satisfactory
+    </div>
+  );*/
 export class Header extends React.Component {
+    
+    componentDidMount(){
+        this.countData();
+
+        setInterval(function()
+{
+   console.log('Hello Set Interval')
+}, 5000); //10000 milliseconds = 10 second
+    }
+    countData() {
+        api.get('getDataAnomalyAll')
+            .then((response) => {
+                let result = response.data.anomaly.length;
+                
+                if (result != 0){
+                    this.toastError("on a " + result + " anomalies dans mangoDB");
+                }
+                
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+        }
+    
+    toastError(message){
+        toast.error(`${message}`, {
+            theme: "colored",
+            position: "top-right",
+            hideProgressBar: false,
+            closeOnClick: true,
+            autoClose:false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            onClick : props => {
+                
+                history.push('/detection-anomalies')
+            }, 
+        });
+    }
     render() {
         return (
             <nav className="navbar navbar-expand-lg navbar-dark">
@@ -49,7 +113,10 @@ export class Header extends React.Component {
                         <Navbar/>
                     </div>
                 </div>
+
+                <ToastContainer />
             </nav>
+            
         );
     }
 }
