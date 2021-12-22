@@ -349,3 +349,56 @@ def insert_anomaly(anomaly,endDate):
             mongo_client.insert_one(ano)            
     result = "done"
     return result
+
+
+def get_anomaly(params,measurement,topic):
+    """
+    get_anomaly from 
+    :param params: start date & end date 
+    :param measurement:
+    :param topic: 
+    :return: metadate
+    """
+    mongodb_url = current_app.config['MONGO_URL']
+    collection = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
+
+    start_date =  datetime.datetime.strptime(str(params['beginDate']), "%Y-%m-%dT%H:%M:%S.%fZ")
+    end_date = datetime.datetime.strptime(str(params['endDate']), "%Y-%m-%dT%H:%M:%S.%fZ")
+    topic = topic
+    measurement = measurement
+    dict_query = {"$and": []}
+    if(start_date != "" and end_date != "" and topic != "" and measurement != ""):
+        dates_query = {'unit': measurement}
+        for item in [dates_query]:
+            dict_query['$and'].append(item)
+
+        dates_query = {'topic': topic}
+        for item in [dates_query]:
+            dict_query['$and'].append(item)
+
+        dates_query = {'startDate_detection': {'$gte': start_date}}
+        for item in [dates_query]:
+            dict_query['$and'].append(item)
+
+        dates_query = {'endDate_detection': {'$lt': end_date}}
+        for item in [dates_query]:
+            dict_query['$and'].append(item)
+
+    metadata = collection.find(dict_query)
+    #print(metadata)
+    return metadata
+
+
+def get_anomaly_all():
+    """
+    get all anomaly from mongodb
+
+    :return: metadate
+    """
+    mongodb_url = current_app.config['MONGO_URL']
+    collection = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
+
+    metadata = collection.find()
+    nbr_metadata = metadata.count()
+    print(nbr_metadata)
+    return nbr_metadata, metadata
