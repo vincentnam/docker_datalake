@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, send_file, escape
+from flask import Blueprint, jsonify, request, send_file, escape, current_app
 from ..services import mongo, influxdb
 from datetime import datetime
 import json
@@ -7,6 +7,8 @@ import zipfile
 import time
 import pandas as pd
 from ..utils.size_conversion import convert_unit, SIZE_UNIT
+from pymongo import MongoClient
+import datetime
 
 mongo_data_bp = Blueprint('mongo_data_bp', __name__)
 
@@ -376,3 +378,89 @@ def edit_models():
     model = mongo.update_model(param)
 
     return jsonify({'model': model})
+
+@mongo_data_bp.route('/getDataAnomaly', methods=['GET','POST'])
+def get_anomalies():
+    """
+    insert_anomaly from influx db to mongodb 
+    :param anomaly:
+    :param mongodb_url:
+    :return: done
+    """
+    measurement = request.get_json()["measurement"]
+    topic = request.get_json()["topic"]
+    
+    start = request.get_json()["startDate"]
+    end = request.get_json()["endDate"]
+    try:
+        params = {
+            'beginDate' : start + "T00:00:00.000000Z",
+            'endDate' : end + "T23:59:59.000000Z"}
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+    x = influxdb.get_data_anomaly(50, 150)
+    print("insert")    
+    print(params['beginDate'])
+    print(params['endDate'])
+
+    mongo_collections = mongo.get_anomaly(params,measurement,topic)
+    mongo_collections = list(mongo_collections)
+
+    output = {'objects': []}
+    for obj in mongo_collections:
+        output['objects'].append({
+            '_id': str(obj['_id']),
+            "topic": obj['topic'],
+            "value": obj['value'],
+            "unit": obj['unit'],
+            'datetime': obj['datetime'],
+            'endDate_detection': obj['endDate_detection'],
+            'startDate_detection': obj['startDate_detection']
+        })
+
+    return jsonify({'anomly': output})
+
+@mongo_data_bp.route('/getDataAnomalyAll', methods=['GET'])
+def get_anomalies_all():
+    """
+    insert_anomaly from influx db to mongodb 
+    :param anomaly:
+    :param mongodb_url:
+    :return: done
+    """
+    
+    nbr_metadata, metadata = mongo.get_anomaly_all()
+
+    mongo_collections = list(metadata)
+    print('all anomaly')
+    print(metadata)
+    output = {'objects': []}
+    for obj in mongo_collections:
+        output['objects'].append({
+            '_id': str(obj['_id']),
+            "topic": obj['topic'],
+            "value": obj['value'],
+            "unit": obj['unit'],
+            'datetime': obj['datetime'],
+            'endDate_detection': obj['endDate_detection'],
+            'startDate_detection': obj['startDate_detection']
+        })
+    output['length'] = nbr_metadata
+    
+    return jsonify({'anomaly': output})
+
+@mongo_data_bp.route('/countDataAnomalyAll', methods=['GET'])
+def count_anomalies_all():
+    """
+    insert_anomaly from influx db to mongodb 
+    :param anomaly:
+    :param mongodb_url:
+    :return: done
+    """
+    mongodb_url = current_app.config['MONGO_URL']
+    collection = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
+
+    metadata = collection.find()
+    nbrAnomaly = str(metadata.count())
+    return nbrAnomaly
