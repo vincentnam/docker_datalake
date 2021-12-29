@@ -125,7 +125,7 @@ def from_mongodb_to_influx(token=None, nb_retry=10, **kwargs):
             # swift_json is a tuple : (meta_data, data)
             swift_json = swift_co.get_object(
                 kwargs["dag_run"].conf["swift_container"],
-                kwargs["dag_run"].conf["swift_id"])
+                kwargs["dag_run"].conf["swift_obj_id"])
         except Exception as e:
             # If swift is
             retry += 1
@@ -172,7 +172,7 @@ def failed_data_processing(*args, **kwargs):
     print(args[0]["execution_date"])
     print(args[0])
     group = args[0]["dag_run"].conf["swift_container"]
-    swift_id = str(args[0]["dag_run"].conf["swift_id"])
+    swift_id = str(args[0]["dag_run"].conf["swift_obj_id"])
     mongodb_url = config.mongodb_url
     meta_base = MongoClient(mongodb_url, connect=False)
     print(meta_base.swift[group].find_one_and_update(
@@ -202,7 +202,7 @@ def successful_data_processing(*args, **kwargs):
     print(args[0]["execution_date"])
     print(args[0])
     group = args[0]["dag_run"].conf["swift_container"]
-    swift_id = str(args[0]["dag_run"].conf["swift_id"])
+    swift_id = str(args[0]["dag_run"].conf["swift_obj_id"])
     mongodb_url = config.mongodb_url
     meta_base = MongoClient(mongodb_url, connect=False)
     print(meta_base.swift[group].find_one_and_update(

@@ -50,7 +50,7 @@ def restore_backup(data, filename):
     scp.put(name_file_temp, name_file_temp_after_split)
 
     #Copy file to docker container
-    container_id = "336e9bf2022c"
+    container_id = config.id_container_ms_sql
     command = "sudo docker cp " + name_file_temp_after_split + " " + container_id +":/var/opt/sqlserver/backup/"+ name_file_temp_after_split
     ssh.exec_command(command)
 
@@ -104,7 +104,6 @@ def restore_backup(data, filename):
     ssh.exec_command(command_rm_mssql_tempsfile)
     ssh.exec_command(command_rm_home_tempsfile)
     scp.close()
-    db_connection.autocommit = False
     return "Done"
 
 sys.modules[__name__] = restore_backup
