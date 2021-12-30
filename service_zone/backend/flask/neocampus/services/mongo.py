@@ -424,5 +424,4 @@ def get_anomaly_all():
 
     metadata = collection.find()
     nbr_metadata = metadata.count()
-    print(nbr_metadata)
     return nbr_metadata, metadata

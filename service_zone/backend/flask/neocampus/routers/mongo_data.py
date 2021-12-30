@@ -433,8 +433,6 @@ def get_anomalies_all():
     nbr_metadata, metadata = mongo.get_anomaly_all()
 
     mongo_collections = list(metadata)
-    print('all anomaly')
-    print(metadata)
     output = {'objects': []}
     for obj in mongo_collections:
         output['objects'].append({
