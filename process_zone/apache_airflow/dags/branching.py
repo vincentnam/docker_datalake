@@ -20,6 +20,7 @@ from services import extract_transform_load_time_series_json
 from services import extract_transform_load_time_series_text
 from services import extract_transform_load_images
 from services import extract_transform_load_dump_sql
+from services import extract_transform_load_sge
 from services import typefile
 from services import connection_mongo_metadata
 from services import connection_swift
@@ -124,7 +125,7 @@ def from_mongodb_to_influx(token=None, nb_retry=10, **kwargs):
             # swift_json is a tuple : (meta_data, data)
             swift_json = swift_co.get_object(
                 kwargs["dag_run"].conf["swift_container"],
-                kwargs["dag_run"].conf["swift_id"])
+                kwargs["dag_run"].conf["swift_obj_id"])
         except Exception as e:
             # If swift is
             retry += 1
@@ -171,7 +172,7 @@ def failed_data_processing(*args, **kwargs):
     print(args[0]["execution_date"])
     print(args[0])
     group = args[0]["dag_run"].conf["swift_container"]
-    swift_id = str(args[0]["dag_run"].conf["swift_id"])
+    swift_id = str(args[0]["dag_run"].conf["swift_obj_id"])
     mongodb_url = config.mongodb_url
     meta_base = MongoClient(mongodb_url, connect=False)
     print(meta_base.swift[group].find_one_and_update(
@@ -201,7 +202,7 @@ def successful_data_processing(*args, **kwargs):
     print(args[0]["execution_date"])
     print(args[0])
     group = args[0]["dag_run"].conf["swift_container"]
-    swift_id = str(args[0]["dag_run"].conf["swift_id"])
+    swift_id = str(args[0]["dag_run"].conf["swift_obj_id"])
     mongodb_url = config.mongodb_url
     meta_base = MongoClient(mongodb_url, connect=False)
     print(meta_base.swift[group].find_one_and_update(
@@ -368,6 +369,23 @@ def default_zip(**kwargs):
             # Text parsing
             processed_data = extract_transform_load_time_series_text(
                 swift_result, swift_container, swift_id, process_type)
+    return processed_data
+
+def default_sge(**kwargs):
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
+    
+    # Récupération du fichier encoder dans l'object swift
+    swift_result = swift_object[1]
+    processed_data = {}
+    process_type = "sge_dump"
+    # Text parsing
+    processed_data = extract_transform_load_sge(
+        swift_result, swift_container, swift_id, process_type)
+    
     return processed_data
 
 
@@ -655,6 +673,7 @@ callable_dict = {"content_neo4j_node_creation": content_neo4j_node_creation,
                  "default_application_sql": default_application_sql,
                  "default_text_plain": default_text_plain,
                  "default_zip": default_zip,
+                 "default_sge": default_sge,
                  "PythonOperator": PythonOperator,
                  "DummyOperator": DummyOperator,
                  "BranchPythonOperator": BranchPythonOperator

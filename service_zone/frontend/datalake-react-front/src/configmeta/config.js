@@ -46,6 +46,11 @@ export const config = {
             "id": 8,
             "label": "Archive",
             "type_file_accepted": ["application/x-zip-compressed", "application/x-gzip"],
+        },
+        {
+            "id": 9,
+            "label": "Fichier données SGE",
+            "type_file_accepted": ["application/octet-stream"],
         }
     ]
 }

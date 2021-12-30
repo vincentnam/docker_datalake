@@ -67,6 +67,15 @@
       }
     ]
   },
+  "application/octet-stream": {
+    "default": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "Default_SGE",
+        "python_callable": "default_sge"
+      }
+    ]
+  },
   "not_handled": {
     "default": [
       {

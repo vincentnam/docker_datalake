@@ -153,6 +153,48 @@ export const config_processed_data = {
                     "value": "",
                 }
             ]
+        },
+        {
+            "id": 8,
+            "label": "Archive",
+            "type_file_accepted": ["application/x-zip-compressed", "application/x-gzip"],
+            "metadonnees": [
+                {
+                    "id": 1,
+                    "label": "Métadonnée Archive 1",
+                    "type": "text",
+                    "name": "meta1",
+                    "value": "",
+                },
+                {
+                    "id": 2,
+                    "label": "Métadonnée Archive 2",
+                    "type": "text",
+                    "name": "meta2",
+                    "value": "",
+                }
+            ]
+        },
+        {
+            "id": 9,
+            "label": "Fichier données SGE",
+            "type_file_accepted": ["application/octet-stream"],
+            "metadonnees": [
+                {
+                    "id": 1,
+                    "label": "Métadonnée SGE 1",
+                    "type": "text",
+                    "name": "meta1",
+                    "value": "",
+                },
+                {
+                    "id": 2,
+                    "label": "Métadonnée SGE 2",
+                    "type": "text",
+                    "name": "meta2",
+                    "value": "",
+                }
+            ]
         }
     ]
 }

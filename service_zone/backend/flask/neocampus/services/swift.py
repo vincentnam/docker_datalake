@@ -28,12 +28,13 @@ def download_object_file(container_name, object_id):
 
     return file_path
 
-def sge_file(
-    sge_ip_address,
+def ssh_file(
+    address,
     username,
     password,
     remote_path,
-    filename
+    filename,
+    type_file
     ):
     try:
         ssh = paramiko.SSHClient()
@@ -45,8 +46,8 @@ def sge_file(
 
         # Connect to server throughout SSH protocol
         ssh.connect(
-            sge_ip_address, 
-            username=username, 
+            address, 
+            username=username,
             password=password
         )
         sftp = ssh.open_sftp()
@@ -54,7 +55,7 @@ def sge_file(
         localpath = '/home/'+filename
 
         # Remote path on the server to find the file
-        remotepath = remote_path+filename
+        remotepath = remote_path
 
         # Get and download it locally
         sftp.get(remotepath, localpath)
@@ -62,12 +63,17 @@ def sge_file(
         ssh.close()
 
         path =  Path(localpath)
-        content_file = path.read_text()
+        
+        
+        if type_file == "application/octet-stream":
+            content_file = path.read_bytes()
+        else:
+            content_file = path.read_text()
         filename = path.name
 
         #data_file = base64.b64decode(content_file)
         file_content = content_file
-
+        
         # All variables to put informations in MongoDB
         # and in OpenstackSwift
         container_name = "neOCampus"
@@ -75,16 +81,17 @@ def sge_file(
         user = current_app.config['SWIFT_USER']
         key = current_app.config['SWIFT_KEY']
         authurl = current_app.config['SWIFT_AUTHURL']
-        content_type = "application/octet-stream"
+        content_type = type_file
         application = None
         data_process = "default"
         processed_data_area_service = ["MongoDB"]
-        other_data = "sge_data"
-        
+        other_data = {
+            "type_link": "ssh"
+        }
         mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
                             processed_data_area_service, data_process, application,
                             content_type, mongodb_url, other_data)
-
+        
         return "OK"
     except Exception as e:
         print(e)
