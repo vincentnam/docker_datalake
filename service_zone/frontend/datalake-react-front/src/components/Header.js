@@ -1,6 +1,6 @@
 import React from "react";
 
-import {NavLink,Link,} from 'react-router-dom';
+import { NavLink, Link, } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import api from '../api/api';
 import history from "./utils/history";
@@ -8,34 +8,34 @@ import history from "./utils/history";
 const Navbar = () => (
     <nav className="navbar-nav">
         <NavLink exact
-                 activeClassName="active"
-                 className="nav-item nav-link"
-                 to="/">
+            activeClassName="active"
+            className="nav-item nav-link"
+            to="/">
             Home
         </NavLink>
         <NavLink activeClassName="active"
-                 className="nav-item nav-link"
-                 to="/upload">
+            className="nav-item nav-link"
+            to="/upload">
             Upload
         </NavLink>
         <NavLink activeClassName="active"
-                 className="nav-item nav-link"
-                 to="/download">
+            className="nav-item nav-link"
+            to="/download">
             Download
         </NavLink>
         <NavLink activeClassName="active"
-                 className="nav-item nav-link"
-                 to="/data-processed-visualization">
+            className="nav-item nav-link"
+            to="/data-processed-visualization">
             Data Visualization
         </NavLink>
         <NavLink activeClassName="active"
-                 className="nav-item nav-link"
-                 to="/models">
+            className="nav-item nav-link"
+            to="/models">
             Gestion
         </NavLink>
         <NavLink activeClassName="active"
-                 className="nav-item nav-link"
-                 to="/detection-anomalies">
+            className="nav-item nav-link"
+            to="/detection-anomalies">
             Anomalies
         </NavLink>
     </nav>
@@ -57,66 +57,59 @@ const ToastTest = () => (
     </div>
   );*/
 export class Header extends React.Component {
-    
-    componentDidMount(){
-        this.countData();
 
-        setInterval(function()
-{
-   console.log('Hello Set Interval')
-}, 5000); //10000 milliseconds = 10 second
+    componentDidMount() {
+        this.countData();
     }
     countData() {
         api.get('getDataAnomalyAll')
             .then((response) => {
                 let result = response.data.anomaly.length;
-                
-                if (result != 0){
-                    this.toastError("on a " + result + " anomalies dans mangoDB");
+
+                if (result != 0) {
+                    this.toastError("Il y a " + result + " anomalies dans les données du Datalake !");
                 }
-                
             })
             .catch(function (error) {
                 console.log(error);
             });
-        }
-    
-    toastError(message){
+    }
+
+    toastError(message) {
         toast.error(`${message}`, {
             theme: "colored",
             position: "top-right",
             hideProgressBar: false,
             closeOnClick: true,
-            autoClose:false,
+            autoClose: false,
             pauseOnHover: true,
             draggable: true,
             progress: undefined,
-            onClick : props => {
-                
+            onClick: props => {
                 history.push('/detection-anomalies')
-            }, 
+            },
         });
     }
     render() {
         return (
             <nav className="navbar navbar-expand-lg navbar-dark">
                 <div className="container">
-                    <a className="navbar-brand" href="/"><img src="images/logo-datalake.svg" alt="neOCampus"/></a>
+                    <a className="navbar-brand" href="/"><img src="images/logo-datalake.svg" alt="neOCampus" /></a>
                     <a href="/" className="navbar-brand-text">Datalake</a>
                     <button className="navbar-toggler" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup"
-                            aria-expanded="false"
-                            aria-label="Toggle navigation">
-                        <span className="navbar-toggler-icon"/>
+                        data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation">
+                        <span className="navbar-toggler-icon" />
                     </button>
                     <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
-                        <Navbar/>
+                        <Navbar />
                     </div>
                 </div>
 
                 <ToastContainer />
             </nav>
-            
+
         );
     }
 }
