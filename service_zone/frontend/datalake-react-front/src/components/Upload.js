@@ -541,7 +541,7 @@ export class Upload extends React.Component {
                 )
             ));
             return (
-                <select value={this.state.type} onChange={this.handleChange} name="type" class="form-select">
+                <select value={this.state.type} onChange={this.handleChange} name="type" className="form-select">
                     {listTypes}
                 </select>
             );
@@ -559,7 +559,7 @@ export class Upload extends React.Component {
                     <option key={model._id} value={model._id}>{model.label}</option>
                 ));
                 return (
-                    <select value={this.state.model} onChange={this.handleChange} name="model" class="form-select">
+                    <select value={this.state.model} onChange={this.handleChange} name="model" className="form-select">
                         <option value="">Sélectionnez un modèle de métadonnées</option>
                         {listModels}
                     </select>
@@ -570,7 +570,7 @@ export class Upload extends React.Component {
         const EditButton = () => {
             if (this.state.model !== "") {
                 return (
-                    <button type="button" class="btn btn-primary buttonModel" onClick={() => this.onChangeModalEdit()}>Modifier le modèle</button>
+                    <button type="button" className="btn btn-primary buttonModel" onClick={() => this.onChangeModalEdit()}>Modifier le modèle</button>
                 );
             } else {
                 return (
@@ -628,23 +628,23 @@ export class Upload extends React.Component {
         return (
             <div>
                 <Header />
-                <div class="container main-upload">
+                <div className="container main-upload">
                     <div className="title">Upload de données</div>
-                    <div class="jumbotron">
+                    <div className="jumbotron">
                         <form onSubmit={this.handleSubmit}>
                             <div className="row">
-                                <div class="form-group required col-6">
-                                    <label class="control-label file-type">Type de fichier</label>
+                                <div className="form-group required col-6">
+                                    <label className="control-label file-type">Type de fichier</label>
                                     <SelectDatatype />
                                 </div>
-                                <div class="form-group required col-6">
-                                    <label class="control-label file-type">Modèles</label>
+                                <div className="form-group required col-6">
+                                    <label className="control-label file-type">Modèles</label>
                                     <SelectModel />
                                 </div>
                             </div>
                             <Metadonnees />
-                            <div class="d-flex justify-content-between mt-2 mb-2">
-                                <button type="button" class="btn btn-primary buttonModel" onClick={() => this.onChangeModalAdd()}>Créer un modèle</button>
+                            <div className="d-flex justify-content-between mt-2 mb-2">
+                                <button type="button" className="btn btn-primary buttonModel" onClick={() => this.onChangeModalAdd()}>Créer un modèle</button>
                                 <EditButton />
                             </div>
                             <div className="main-download">
@@ -663,7 +663,7 @@ export class Upload extends React.Component {
                                 <div className="tab-content" id="pills-tabContent">
                                     <div className="tab-pane fade show active" id="nav-small-file" role="tabpanel"
                                         aria-labelledby="nav-small-file-tab">
-                                        <div class="form-group required">
+                                        <div className="form-group required">
                                             <label>Fichiers</label>
                                             <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} maxSize={250000000}
                                                 accept="image/*,application/JSON,.csv,text/plain,.sql,application/x-gzip,application/x-zip-compressed,application/octet-stream">
@@ -680,9 +680,9 @@ export class Upload extends React.Component {
                                                                 <br />Veuillez passer par l'upload de gros fichier
                                                             </div>
                                                         </div>
-                                                        <aside class="pt-3">
+                                                        <aside className="pt-3">
                                                             {files.length !== 0 ?
-                                                                <aside class="pt-3">
+                                                                <aside className="pt-3">
                                                                     <ul>
                                                                         {files}
                                                                     </ul>
@@ -696,9 +696,9 @@ export class Upload extends React.Component {
                                     </div>
                                     <div className="tab-pane fade mb-4" id="nav-large-file" role="tabpanel"
                                         aria-labelledby="nav-large-file-tab">
-                                        <div class="form-group required">
-                                            <label class="form-label">Lien vers le fichier</label>
-                                            <input value={this.state.linkFile} onChange={this.handleChange} type="text" name="linkFile" class="form-control"
+                                        <div className="form-group required">
+                                            <label className="form-label">Lien vers le fichier</label>
+                                            <input value={this.state.linkFile} onChange={this.handleChange} type="text" name="linkFile" className="form-control"
                                                 placeholder="https://-----/dossier/file.extension ou XX.XX.XX.XXX/dossier/file.extension" />
                                         </div>
                                     </div>

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { NavLink, Link, } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import api from '../api/api';
 import history from "./utils/history";
@@ -41,21 +41,6 @@ const Navbar = () => (
     </nav>
 );
 
-/*
-const CustomToastWithLink = () => (
-    <div>
-      <Link to="/toasttest">This is a link</Link>
-    </div>
-  );
-const letsToast = () => {
-    toast.info(CustomToastWithLink);
-  };
-const ToastTest = () => (
-    <div>
-      <h3>Toast Test</h3>
-      Toast Test Satisfactory
-    </div>
-  );*/
 export class Header extends React.Component {
 
     componentDidMount() {
@@ -66,7 +51,7 @@ export class Header extends React.Component {
             .then((response) => {
                 let result = response.data.anomaly.length;
 
-                if (result != 0) {
+                if (result !== 0) {
                     this.toastError("Il y a " + result + " anomalies dans les données du Datalake !");
                 }
             })

@@ -2,7 +2,7 @@ import React from "react";
 import {Header} from './Header';
 import {DownloadRaw} from "./download-raw-data/DownloadRaw";
 import {DownloadHandleData} from "./download-handled-data/DownloadHandleData";
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 export class Download extends React.Component {
     render() {
         return (

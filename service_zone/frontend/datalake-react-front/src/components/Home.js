@@ -4,9 +4,7 @@ import '../home.css';
 import $ from 'jquery';
 import { config } from '../configmeta/config';
 import api from '../api/api';
-import { config_processed_data } from '../configmeta/config_processed_data';
 import { Filters } from "./download-raw-data/Filters";
-import {RowItem} from './download-raw-data/RowItem';
 import Moment from "moment";
 import DataTable from 'react-data-table-component';
 import { LoadingSpinner } from "./utils/LoadingSpinner";
@@ -55,11 +53,11 @@ export class Home extends React.Component {
 
         // when homepage finished to load, load last 10 uploaded raw data
         // OR there is sorting data less filters
-        if( (this.state.sort_field === undefined && 
-            this.state.sort_value === undefined && 
-            this.state.beginDate === undefined ) 
-            || 
-            (this.state.sort_field !== undefined && 
+        if ((this.state.sort_field === undefined &&
+            this.state.sort_value === undefined &&
+            this.state.beginDate === undefined)
+            ||
+            (this.state.sort_field !== undefined &&
                 this.state.sort_value !== undefined &&
                 this.state.beginDate === undefined)) {
             routeName = '/last-raw-data'
@@ -72,8 +70,8 @@ export class Home extends React.Component {
         }
 
         // when filters button has been clicked less sorting data
-        if(this.state.sort_field === undefined && 
-            this.state.sort_value === undefined && 
+        if (this.state.sort_field === undefined &&
+            this.state.sort_value === undefined &&
             this.state.beginDate !== undefined) {
             data = JSON.stringify({
                 limit: this.state.perPage,
@@ -84,9 +82,9 @@ export class Home extends React.Component {
             })
         }
 
-         // when filters button has been clicked with sorting data
-         if(this.state.sort_field !== undefined && 
-            this.state.sort_value !== undefined && 
+        // when filters button has been clicked with sorting data
+        if (this.state.sort_field !== undefined &&
+            this.state.sort_value !== undefined &&
             this.state.beginDate !== undefined) {
             data = JSON.stringify({
                 limit: this.state.perPage,
@@ -149,7 +147,7 @@ export class Home extends React.Component {
 
         datatypeConf.map((type) => (
             // loop in config file
-            type.map((t) => {
+            type.forEach((t) => {
                 // if selected data type corresponds with current data type
                 if (t.id === parseInt(id)) {
                     filetypesResult = t.type_file_accepted
@@ -166,8 +164,8 @@ export class Home extends React.Component {
         const value = target.type === 'checkbox' ? target.checked : target.value;
         const name = target.name;
 
-        let filetypesResult = this.getFiletypeById( [config.types], value)
-        this.setFiletype(filetypesResult) 
+        let filetypesResult = this.getFiletypeById([config.types], value)
+        this.setFiletype(filetypesResult)
 
         this.setState({
             [name]: value
@@ -199,44 +197,11 @@ export class Home extends React.Component {
         })
     }
 
-    
+
     handler(event) {
-        //console.log(event)
-
-        // selected elements on all pages
-        let selectedElements = this.getSelectedElements()
-
         // selected elements on actual page (component React DataTable send selected elements only on actual page)
 
         // in actual page, if elements have been selected, add selected ones into selected elements global array
-        if(event.selectedRows !== undefined) {
-            // loop into selected rows in actual page
-            event.selectedRows.map((element) => {
-                // if selected rowx in actual page is not in global selected elements
-                console.log('page actuelle')
-                console.log(this.selectedElementsOnActualPage)
-                if(!this.selectedElementsOnActualPage.includes(element)){
-                    console.log('AJOUTE')
-                    //selectedElements.push(element)
-                } 
-            })
-        }
-
-       /* if(this.selectedElementsOnActualPage.length > 0) {
-            this.selectedElementsOnActualPage.map((selectedElement) => {
-                console.log('SELECTION')
-                console.log(event.selectedRows)
-                if(!event.selectedRows.includes(selectedElement)) {
-                    var index = selectedElements.indexOf(selectedElement)
-                    if(index != -1) {
-                        console.log('INDEX')
-                        console.log(index)
-                        selectedElements.splice(index, 1)
-                    }
-                }
-            })
-        }*/
-
         this.setState({
             selectedElements: event.selectedRows
         })
@@ -245,7 +210,7 @@ export class Home extends React.Component {
     validate() {
         let selectedElements = this.getSelectedElements()
         let body = []
-        selectedElements.map(element => {
+        selectedElements.forEach(element => {
             body.push({
                 'object_id': element.swift_object_id,
                 'container_name': element.swift_container
@@ -266,8 +231,8 @@ export class Home extends React.Component {
                 .catch(function (error, status) {
                     console.error(status, error.toString()); // eslint-disable-line
                 }).finally(function () {
-                this.handleClose()
-            }.bind(this))
+                    this.handleClose()
+                }.bind(this))
 
             // empty selected elements
             this.emptySelectedlements()
@@ -278,39 +243,18 @@ export class Home extends React.Component {
 
 
     render() {
-         // data type field
-         const SelectDatatype = () => {
-            let types = [config.types];
-            if(this.props.title == "Affichage des données traitées"){
-                types = [config_processed_data.types];
-            }
-            // loop into conf to get all data types
-            const listTypes = types.map((type) => (
-                type.map((t) => 
-                    <option key={t.id} value={t.id}>{t.label}</option>
-                )
-            ));
-            return (
-                <select value={this.state.type} onChange={this.handleChange} name="type" className="form-control">
-                    {listTypes}
-                </select>
-            );
-        }
-        let handler = this.handler
-        let selectedElements = this.getSelectedElements()
-        
         let elts = []
         if (this.state.elements) {
             elts = this.state.elements
         }
 
-         // sort columns
-         const handleSort = async (column, sortDirection) => {
+        // sort columns
+        const handleSort = async (column, sortDirection) => {
             /// reach out to some API and get new data using or sortField and sortDirection
-        
+
             // for desc
             let sort = 1
-            if(this.state.sort_value == 1) {
+            if (this.state.sort_value === 1) {
                 sort = -1
             }
             this.setState({
@@ -327,8 +271,8 @@ export class Home extends React.Component {
             'endDate': this.state.endDate
         }
 
-         //  Internally, customStyles will deep merges your customStyles with the default styling.
-         const customStyles = {
+        //  Internally, customStyles will deep merges your customStyles with the default styling.
+        const customStyles = {
             table: {
                 style: {
                     padding: '0.5rem 0.5rem',
@@ -356,14 +300,14 @@ export class Home extends React.Component {
                     '&:hover': {
                         cursor: 'pointer',
                         backgroundColor: '#ea973b'
-                      },
+                    },
                 },
             },
             headCells: {
                 style: {
                     paddingLeft: '8px', // override the cell padding for head cells
                     paddingRight: '8px',
-                    color: '#ea973b' ,
+                    color: '#ea973b',
                     borderColor: 'inherit',
                     borderStyle: 'solid',
                     borderWidth: '0',
@@ -430,7 +374,7 @@ export class Home extends React.Component {
 
         return (
             <div>
-                <Header/>
+                <Header />
                 <div className="container main-download">
                     <div className="title">Home</div>
                     <Filters
@@ -462,7 +406,7 @@ export class Home extends React.Component {
                                 {elts.length ?
                                     <div className="col-12 text-center">
                                         <button className="btn btn-darkblue" onClick={this.validate}
-                                                type="submit">Télécharger
+                                            type="submit">Télécharger
                                         </button>
                                     </div>
                                     : ''}
@@ -471,7 +415,7 @@ export class Home extends React.Component {
                     </div>
                 </div>
 
-                <LoadingSpinner loading={this.state.loading}/>
+                <LoadingSpinner loading={this.state.loading} />
             </div>
         );
     }

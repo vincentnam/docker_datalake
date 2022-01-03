@@ -3,12 +3,10 @@ import {Filters} from "../download-raw-data/Filters";
 import moment from "moment";
 import api from '../../api/api';
 import $ from 'jquery';
-import {RowItem} from "./RowItem";
 import {LoadingSpinner} from "../utils/LoadingSpinner";
 import {Paginate} from "../download-raw-data/Paginate";
 import DataTable from 'react-data-table-component';
-import Moment from 'moment';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 
 export class DownloadHandleData extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
@@ -141,42 +139,9 @@ export class DownloadHandleData extends React.Component {
     };
 
     handler(event) {
-        //console.log(event)
-
-        // selected elements on all pages
-        let selectedElements = this.getSelectedElements()
-
         // selected elements on actual page (component React DataTable send selected elements only on actual page)
 
         // in actual page, if elements have been selected, add selected ones into selected elements global array
-        if(event.selectedRows !== undefined) {
-            // loop into selected rows in actual page
-            event.selectedRows.map((element) => {
-                // if selected rowx in actual page is not in global selected elements
-                console.log('page actuelle')
-                console.log(this.selectedElementsOnActualPage)
-                if(!this.selectedElementsOnActualPage.includes(element)){
-                    console.log('AJOUTE')
-                    //selectedElements.push(element)
-                } 
-            })
-        }
-
-       /* if(this.selectedElementsOnActualPage.length > 0) {
-            this.selectedElementsOnActualPage.map((selectedElement) => {
-                console.log('SELECTION')
-                console.log(event.selectedRows)
-                if(!event.selectedRows.includes(selectedElement)) {
-                    var index = selectedElements.indexOf(selectedElement)
-                    if(index != -1) {
-                        console.log('INDEX')
-                        console.log(index)
-                        selectedElements.splice(index, 1)
-                    }
-                }
-            })
-        }*/
-
         this.setState({
             selectedElements: event.selectedRows
         })
@@ -262,8 +227,6 @@ export class DownloadHandleData extends React.Component {
         if (this.state.elements) {
             elts = this.state.elements
         }
-        //console.log(elts)
-        let selectedElements = this.getSelectedElements()
         let setFiletype = this.setFiletype
         let setBeginDate = this.setBeginDate
         let setEndDate = this.setEndDate
@@ -273,9 +236,6 @@ export class DownloadHandleData extends React.Component {
             'beginDate': this.state.beginDate,
             'endDate': this.state.endDate
         }
-        let beginDate = this.state.beginDate
-        let endDate = this.state.endDate
-        //let loading = this.state.loading
 
         const columns = [
             {
