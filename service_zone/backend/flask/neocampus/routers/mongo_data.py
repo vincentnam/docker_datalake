@@ -8,7 +8,6 @@ import time
 import pandas as pd
 from ..utils.size_conversion import convert_unit, SIZE_UNIT
 from pymongo import MongoClient
-import datetime
 
 mongo_data_bp = Blueprint('mongo_data_bp', __name__)
 
