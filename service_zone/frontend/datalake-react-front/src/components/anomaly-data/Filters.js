@@ -3,7 +3,6 @@ import api from '../../api/api';
 import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
 import moment from 'moment';
 import { ToastContainer, toast } from 'react-toastify';
-import { DiscFill } from "react-bootstrap-icons";
 
 export class Filters extends React.Component {
     constructor(props) {

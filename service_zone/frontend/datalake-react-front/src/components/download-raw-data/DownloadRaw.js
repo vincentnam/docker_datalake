@@ -1,17 +1,15 @@
-import React, { isValidElement, useState } from "react";
-import {Header} from '../Header';
-import {RowItem} from './RowItem';
+import React from "react";
 import api from '../../api/api';
 import $ from 'jquery';
 import {Filters} from "./Filters";
 import moment from "moment";
 import {Paginate} from "./Paginate";
 import {LoadingSpinner} from "../utils/LoadingSpinner";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import DataTable from 'react-data-table-component';
 import Moment from 'moment';
 
- const columns = [
+const columns = [
             {
                 id: 'swift_object_id',
                 name: "Id objet Swift",
@@ -101,8 +99,8 @@ export class DownloadRaw extends React.Component {
         let checked = null
         let selectedElements = this.state.selectedElements
         if (selectedElements) {
-            selectedElements.map(s => {
-                if (JSON.stringify(s) == JSON.stringify(row)) {
+            selectedElements.forEach(s => {
+                if (JSON.stringify(s) === JSON.stringify(row)) {
                     this.selectedElementsOnActualPage.push(s)
                     checked = true
                 }
@@ -123,25 +121,19 @@ export class DownloadRaw extends React.Component {
         // in actual page, if elements have been selected, add selected ones into selected elements global array
         if(event.selectedRows !== undefined) {
             // loop into selected rows in actual page
-            event.selectedRows.map((element) => {
+            event.selectedRows.forEach((element) => {
                 // if selected rows in actual page are not in global selected elements
-                console.log('page actuelle')
-                console.log(this.selectedElementsOnActualPage)
                 if(!this.selectedElementsOnActualPage.includes(element) && !selectedElements.includes(element)){
-                    console.log('AJOUTE')
                     selectedElements.push(element)
                 } 
             })
 
-            selectedElements.map((selectedElement) => {
+            selectedElements.forEach((selectedElement) => {
                 // for deleting one row
                 if(!event.selectedRows.includes(selectedElement) && this.selectedElementsOnActualPage.includes(selectedElement)){
-                    console.log('SUPPRIME')
 
                     var index = selectedElements.indexOf(selectedElement)
-                    if(index != -1) {
-                        console.log('INDEX')
-                        console.log(index)
+                    if(index !== -1) {
                         selectedElementsTemp.splice(index, 1)
                     }
                 }
@@ -320,8 +312,6 @@ export class DownloadRaw extends React.Component {
         if (this.state.elements) {
             elts = this.state.elements
         }
-        let selectedElements = this.getSelectedElements()
-        let handler = this.handler
         let setFiletype = this.setFiletype
         let setBeginDate = this.setBeginDate
         let setEndDate = this.setEndDate
@@ -342,7 +332,7 @@ export class DownloadRaw extends React.Component {
             console.log(sortDirection)
             // for desc
             let sort = 1
-            if(this.state.sort_value == 1) {
+            if(this.state.sort_value === 1) {
                 sort = -1
             }
             this.setState({
