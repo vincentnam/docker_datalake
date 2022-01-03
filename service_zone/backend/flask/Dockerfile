@@ -1,4 +1,4 @@
-FROM python:3.9-alpine
+FROM python:3.9-slim-bullseye
 
 MAINTAINER Li XU
 
@@ -8,6 +8,6 @@ RUN mkdir /app
 WORKDIR /app
 COPY ./requirements.txt /app/requirements.txt
 
-RUN apk add --update --no-cache g++ linux-headers libffi-dev make &&\
+RUN apt update && apt install -y gcc &&\
     pip install --upgrade pip && \
     pip install -r requirements.txt
