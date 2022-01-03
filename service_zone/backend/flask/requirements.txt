@@ -7,3 +7,4 @@ pandas
 pynacl
 pyOpenSSL
 paramiko
+uwsgi
