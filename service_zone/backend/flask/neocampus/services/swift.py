@@ -6,6 +6,8 @@ from .mongo import get_swift_original_object_name
 from ..services import mongo
 import paramiko
 from pathlib import Path
+from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 def download_object_file(container_name, object_id):
     """
@@ -56,14 +58,41 @@ def ssh_file(
 
         # Remote path on the server to find the file
         remotepath = remote_path
+        
+        #Connection to mongodb and variable for calback function
+        mongodb_url = current_app.config['MONGO_URL']
+        mongo_client = MongoClient(mongodb_url, connect=False)
+        mongo_db = mongo_client.upload
+        mongo_collection = mongo_db["file_upload"]
+        new_value = True
+        id_file_upload = ""
+        #Callback function
+        def callback_large_file_upload(transferred, toBeTransferred):
+            nonlocal new_value
+            nonlocal id_file_upload
+            if new_value == True:
+                print("New value in mongodb")
+                data = {
+                    "filename": filename,
+                    "type_file": type_file,
+                    "total_bytes_download": transferred,
+                    "total_bytes": toBeTransferred
+                }
+                _id = mongo_collection.insert_one(data).inserted_id
+                id_file_upload = _id
+                new_value = False
+            else:
+                doc = {"_id": ObjectId(id_file_upload)}
+                newvalues = { "$set": { "total_bytes_download": transferred } }
+                print("Transferred: {0}\tOut of: {1}".format(transferred, toBeTransferred))
+                mongo_collection.update_one(doc, newvalues)
 
         # Get and download it locally
-        sftp.get(remotepath, localpath)
+        sftp.get(remotepath, localpath,callback=callback_large_file_upload)
         sftp.close()
         ssh.close()
 
         path =  Path(localpath)
-        
         
         if type_file == "application/octet-stream":
             content_file = path.read_bytes()
@@ -76,22 +105,25 @@ def ssh_file(
         
         # All variables to put informations in MongoDB
         # and in OpenstackSwift
-        container_name = "neOCampus"
-        mongodb_url = current_app.config['MONGO_URL']
-        user = current_app.config['SWIFT_USER']
-        key = current_app.config['SWIFT_KEY']
-        authurl = current_app.config['SWIFT_AUTHURL']
-        content_type = type_file
-        application = None
-        data_process = "default"
-        processed_data_area_service = ["MongoDB"]
-        other_data = {
-            "type_link": "ssh"
-        }
-        mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
-                            processed_data_area_service, data_process, application,
-                            content_type, mongodb_url, other_data)
+        # container_name = "neOCampus"
+        # mongodb_url = current_app.config['MONGO_URL']
+        # user = current_app.config['SWIFT_USER']
+        # key = current_app.config['SWIFT_KEY']
+        # authurl = current_app.config['SWIFT_AUTHURL']
+        # content_type = type_file
+        # application = None
+        # data_process = "default"
+        # processed_data_area_service = ["MongoDB"]
+        # other_data = {
+        #     "type_link": "ssh"
+        # }
+        # mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
+        #                     processed_data_area_service, data_process, application,
+        #                     content_type, mongodb_url, other_data)
         
+        #Delete the doc upload after the process has finished
+        doc = {"_id": ObjectId(id_file_upload)}
+        mongo_collection.delete_one(doc)
         return "OK"
     except Exception as e:
         print(e)

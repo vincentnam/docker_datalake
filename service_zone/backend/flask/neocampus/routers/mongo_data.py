@@ -461,3 +461,21 @@ def count_anomalies_all():
     metadata = collection.find()
     nbrAnomaly = str(metadata.count())
     return nbrAnomaly
+
+
+@mongo_data_bp.route('/uploadssh/', methods=['GET'])
+def count_anomalies_all():
+    """
+    get all upload large file no finished upload process
+    :return: list all files in upload
+    """
+    
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.upload
+    collection = mongo_db["file_upload"]
+    
+    files_upload = collection.find({},{ "_id": 0})
+    models_list = list(files_upload)
+        
+    return jsonify({'file_upload': models_list})
