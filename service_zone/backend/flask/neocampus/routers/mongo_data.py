@@ -477,5 +477,4 @@ def list_upload_ssh():
     
     files_upload = collection.find({},{ "_id": 0})
     models_list = list(files_upload)
-    print(models_list)
     return jsonify({'file_upload': models_list})
