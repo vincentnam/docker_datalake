@@ -8,6 +8,7 @@ import paramiko
 from pathlib import Path
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+import datetime
 
 def download_object_file(container_name, object_id):
     """
@@ -70,21 +71,22 @@ def ssh_file(
         def callback_large_file_upload(transferred, toBeTransferred):
             nonlocal new_value
             nonlocal id_file_upload
+            
+            # date = dt.strptime(dt.now(tz=None), '%Y-%m-%d')
             if new_value == True:
-                print("New value in mongodb")
                 data = {
                     "filename": filename,
                     "type_file": type_file,
                     "total_bytes_download": transferred,
-                    "total_bytes": toBeTransferred
+                    "total_bytes": toBeTransferred,
+                    "created_at": datetime.datetime.now(),
+                    "update_at": datetime.datetime.now(),
                 }
-                _id = mongo_collection.insert_one(data).inserted_id
-                id_file_upload = _id
+                id_file_upload = mongo_collection.insert_one(data).inserted_id
                 new_value = False
             else:
                 doc = {"_id": ObjectId(id_file_upload)}
-                newvalues = { "$set": { "total_bytes_download": transferred } }
-                print("Transferred: {0}\tOut of: {1}".format(transferred, toBeTransferred))
+                newvalues = { "$set": { "total_bytes_download": transferred, "update_at": datetime.datetime.now() } }
                 mongo_collection.update_one(doc, newvalues)
 
         # Get and download it locally
@@ -100,26 +102,25 @@ def ssh_file(
             content_file = path.read_text()
         filename = path.name
 
-        #data_file = base64.b64decode(content_file)
         file_content = content_file
         
         # All variables to put informations in MongoDB
         # and in OpenstackSwift
-        # container_name = "neOCampus"
-        # mongodb_url = current_app.config['MONGO_URL']
-        # user = current_app.config['SWIFT_USER']
-        # key = current_app.config['SWIFT_KEY']
-        # authurl = current_app.config['SWIFT_AUTHURL']
-        # content_type = type_file
-        # application = None
-        # data_process = "default"
-        # processed_data_area_service = ["MongoDB"]
-        # other_data = {
-        #     "type_link": "ssh"
-        # }
-        # mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
-        #                     processed_data_area_service, data_process, application,
-        #                     content_type, mongodb_url, other_data)
+        container_name = "neOCampus"
+        mongodb_url = current_app.config['MONGO_URL']
+        user = current_app.config['SWIFT_USER']
+        key = current_app.config['SWIFT_KEY']
+        authurl = current_app.config['SWIFT_AUTHURL']
+        content_type = type_file
+        application = None
+        data_process = "default"
+        processed_data_area_service = ["MongoDB"]
+        other_data = {
+            "type_link": "ssh"
+        }
+        mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
+                            processed_data_area_service, data_process, application,
+                            content_type, mongodb_url, other_data)
         
         #Delete the doc upload after the process has finished
         doc = {"_id": ObjectId(id_file_upload)}

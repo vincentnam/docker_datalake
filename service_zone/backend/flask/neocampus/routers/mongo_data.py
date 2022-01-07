@@ -463,8 +463,8 @@ def count_anomalies_all():
     return nbrAnomaly
 
 
-@mongo_data_bp.route('/uploadssh/', methods=['GET'])
-def count_anomalies_all():
+@mongo_data_bp.route('/uploadssh', methods=['GET'])
+def list_upload_ssh():
     """
     get all upload large file no finished upload process
     :return: list all files in upload
@@ -477,5 +477,5 @@ def count_anomalies_all():
     
     files_upload = collection.find({},{ "_id": 0})
     models_list = list(files_upload)
-        
+    print(models_list)
     return jsonify({'file_upload': models_list})
