@@ -159,6 +159,80 @@ def insert_datalake(file_content, user, key, authurl, container_name,
             if retry > 3:
                 return None
 
+def insert_datalake_cbir_ai(file_content, user, key, authurl, container_name,
+                    file_name, processed_data_area_service, data_process,
+                    application, content_type,
+                    mongodb_url, other_data, descriptor):
+    conn = swiftclient.Connection(user=user, key=key,
+                                  authurl=authurl)
+    client = MongoClient(mongodb_url, connect=False)
+    db = client.swift
+    coll = db[container_name]
+    if content_type is not None:
+        # TODO : Check MIME type
+        pass
+    meta_data = {}
+    if content_type is not None:
+        meta_data["content_type"] = content_type
+    else:
+        meta_data["content_type"] = "None"
+    meta_data["data_processing"] = data_process
+    meta_data["swift_user"] = user
+    meta_data["swift_container"] = container_name
+    meta_data["swift_object_id"] = str(get_id()+1)
+    if application is not None:
+        meta_data["application"] = application
+    else:
+        meta_data["application"] = user + "_" + container_name
+    meta_data["original_object_name"] = file_name
+    meta_data["creation_date"] = datetime.datetime.now()
+    meta_data["last_modified"] = datetime.datetime.now()
+    meta_data["successful_operations"] = []
+    meta_data["failed_operations"] = []
+    meta_data["processed_data_area_service"] = processed_data_area_service
+
+    meta_data["Dissimilarity"] = descriptor[1];
+    meta_data["Correlation"] = descriptor[2];
+    meta_data["Contrast"] = descriptor[3];
+    meta_data["Homogeneity"] = descriptor[4];
+    meta_data["Energy"] = descriptor[5];
+    meta_data["L_1"] = descriptor[6];
+    meta_data["U_1"] = descriptor[7];
+    meta_data["V_1"] = descriptor[8];
+    meta_data["Percent_1"] = descriptor[9];
+    meta_data["L_2"] = descriptor[10];
+    meta_data["U_2"] = descriptor[11];
+    meta_data["V_2"] = descriptor[12];
+    meta_data["Percent_2"] = descriptor[13];
+    meta_data["L_3"] = descriptor[14];
+    meta_data["U_3"] = descriptor[15];
+    meta_data["V_3"] = descriptor[16];
+    meta_data["Percent_3"] = descriptor[17];
+    meta_data["Label"] = descriptor[18];
+
+    if meta_data is not None:
+        meta_data["other_data"] = other_data
+    else:
+        meta_data["other_data"] = {}
+    _opts = {}
+    stats_it = SwiftService(_opts).stat(
+        container=container_name, objects=None, options=None)
+    if stats_it["object"] is None:
+        conn.put_container(container_name)
+    retry = 0
+    while True:
+        try:
+            conn.put_object(container_name, meta_data["swift_object_id"],
+                            contents=file_content,
+                            content_type=meta_data["content_type"])
+            coll.insert_one(meta_data)
+            return None
+        except Exception as e:
+            print(e)
+            retry += 1
+            if retry > 3:
+                return None
+
 
 def get_handled_data(params):
     mongodb_url = current_app.config['MONGO_URL']

@@ -1,13 +1,15 @@
 from flask import Blueprint, jsonify, request, send_file, escape, current_app
 from ..services import mongo, influxdb
 from datetime import datetime
-import json
+import json, csv
 import io
 import zipfile
 import time
+import mimetypes
 import pandas as pd
 from ..utils.size_conversion import convert_unit, SIZE_UNIT
 from pymongo import MongoClient
+from pathlib import Path
 
 mongo_data_bp = Blueprint('mongo_data_bp', __name__)
 
@@ -461,3 +463,62 @@ def count_anomalies_all():
     metadata = collection.find()
     nbrAnomaly = str(metadata.count())
     return nbrAnomaly
+
+@mongo_data_bp.route('/descriptorIa/add', methods=['POST'])
+def insert_pictures_and_descriptors():
+    localpath = "/app/neocampus/static/DATA_CBIRH/"
+    path =  Path(localpath)
+   
+    # Array of descriptors - Result
+    descriptors = []
+
+    # CSV file 
+    descriptors_file = open(localpath+'Data_Features_1.csv', 'r')
+
+    # CSV reading
+    filereader = csv.reader(descriptors_file, delimiter=',', quotechar='"')
+
+    #  Skip first line (column names)
+    next(filereader, None)
+
+    # Loop into it
+    for data in filereader:
+        descriptors.append(data)
+
+    # Loop into descriptors
+    for descriptor in descriptors:
+        current_descriptor = descriptor[0]
+        # Split by ";" to get data into array properly
+        current_descriptor = current_descriptor.split(';')
+
+        # Split filename by "_" to get object type and get picture in directory relative to the object type
+        filename = current_descriptor[0]
+        
+        filename_splitted = filename.split('_')
+        object_type = filename_splitted[0].upper()
+
+        # Get picture content to put it into Openstack Swift
+        picture_path = Path(localpath + object_type + '/' + filename)
+        file_content = picture_path.read_bytes()
+
+        type_file = mimetypes.guess_type(picture_path)[0]
+
+        # All variables to put informations in MongoDB
+        # and in OpenstackSwift
+        container_name = "data_descriptor"
+        mongodb_url = current_app.config['MONGO_URL']
+        user = current_app.config['SWIFT_USER']
+        key = current_app.config['SWIFT_KEY']
+        authurl = current_app.config['SWIFT_AUTHURL']
+        content_type = type_file
+        application = None
+        data_process = "default"
+        processed_data_area_service = ["MongoDB"]
+        other_data = {
+            "other_meta": "data_descriptor"
+        }
+        mongo.insert_datalake_cbir_ai(file_content, user, key, authurl, container_name, filename,
+                            processed_data_area_service, data_process, application,
+                            content_type, mongodb_url, other_data, current_descriptor)
+
+    return "Done"
