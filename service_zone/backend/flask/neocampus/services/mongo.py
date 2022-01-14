@@ -162,7 +162,7 @@ def insert_datalake(file_content, user, key, authurl, container_name,
 def insert_datalake_cbir_ai(file_content, user, key, authurl, container_name,
                     file_name, processed_data_area_service, data_process,
                     application, content_type,
-                    mongodb_url, other_data, descriptor):
+                    mongodb_url, other_data, descriptor, headers):
     conn = swiftclient.Connection(user=user, key=key,
                                   authurl=authurl)
     client = MongoClient(mongodb_url, connect=False)
@@ -191,24 +191,9 @@ def insert_datalake_cbir_ai(file_content, user, key, authurl, container_name,
     meta_data["failed_operations"] = []
     meta_data["processed_data_area_service"] = processed_data_area_service
 
-    meta_data["Dissimilarity"] = descriptor[1];
-    meta_data["Correlation"] = descriptor[2];
-    meta_data["Contrast"] = descriptor[3];
-    meta_data["Homogeneity"] = descriptor[4];
-    meta_data["Energy"] = descriptor[5];
-    meta_data["L_1"] = descriptor[6];
-    meta_data["U_1"] = descriptor[7];
-    meta_data["V_1"] = descriptor[8];
-    meta_data["Percent_1"] = descriptor[9];
-    meta_data["L_2"] = descriptor[10];
-    meta_data["U_2"] = descriptor[11];
-    meta_data["V_2"] = descriptor[12];
-    meta_data["Percent_2"] = descriptor[13];
-    meta_data["L_3"] = descriptor[14];
-    meta_data["U_3"] = descriptor[15];
-    meta_data["V_3"] = descriptor[16];
-    meta_data["Percent_3"] = descriptor[17];
-    meta_data["Label"] = descriptor[18];
+    # Load variable names dynamically from CSV headers (first line) and add it to metadata dictionary to be added in MongoDB
+    for key in range(0, len(headers)):
+        meta_data[headers[key]] = descriptor[key]
 
     if meta_data is not None:
         meta_data["other_data"] = other_data
@@ -232,6 +217,23 @@ def insert_datalake_cbir_ai(file_content, user, key, authurl, container_name,
             retry += 1
             if retry > 3:
                 return None
+
+def descriptor_exists(filename):
+    client = MongoClient(current_app.config['MONGO_URL'], connect=False)
+    db = client.swift
+    data_descriptor = db['data_descriptor']
+
+    # Query result 
+    results = data_descriptor.find(
+        {"original_object_name": filename}
+    )
+
+    result = False
+
+    if(results.count() > 0):
+        result = True
+
+    return result
 
 
 def get_handled_data(params):

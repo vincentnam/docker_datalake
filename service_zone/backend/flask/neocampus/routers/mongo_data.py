@@ -478,12 +478,18 @@ def insert_pictures_and_descriptors():
     # CSV reading
     filereader = csv.reader(descriptors_file, delimiter=',', quotechar='"')
 
-    #  Skip first line (column names)
-    next(filereader, None)
-
     # Loop into it
     for data in filereader:
         descriptors.append(data)
+
+      # prints headers first line
+    columns_names = descriptors[0][0].split(';')
+
+    # prints count of columns
+    nb_columns_header = len(columns_names)
+
+    # Delete headers (first line of CSV) for processing descriptors
+    descriptors.pop(0)
 
     # Loop into descriptors
     for descriptor in descriptors:
@@ -491,15 +497,30 @@ def insert_pictures_and_descriptors():
         # Split by ";" to get data into array properly
         current_descriptor = current_descriptor.split(';')
 
+        # Get number of columns to compare with headers number of columns
+        nb_columns_current_descriptor = len(current_descriptor)
+
         # Split filename by "_" to get object type and get picture in directory relative to the object type
         filename = current_descriptor[0]
+
+        # checks if current descriptor exists in database, if True, it skips immediately and goes on to the next descriptor
+        if(mongo.descriptor_exists(filename)):
+            continue
+
+        # Throws Exception if number of columns of current descriptor does not catch with number of columns in headers
+        if nb_columns_current_descriptor != nb_columns_header :
+            raise Exception('problem between number of columns in this descriptor : ' + filename)
         
         filename_splitted = filename.split('_')
         object_type = filename_splitted[0].upper()
 
-        # Get picture content to put it into Openstack Swift
-        picture_path = Path(localpath + object_type + '/' + filename)
-        file_content = picture_path.read_bytes()
+        try:
+            # Get picture content to put it into Openstack Swift
+            picture_path = Path(localpath + object_type + '/' + filename)
+
+            file_content = picture_path.read_bytes()
+        except:
+            raise Exception('picture name not present : ' + filename)
 
         type_file = mimetypes.guess_type(picture_path)[0]
 
@@ -519,6 +540,6 @@ def insert_pictures_and_descriptors():
         }
         mongo.insert_datalake_cbir_ai(file_content, user, key, authurl, container_name, filename,
                             processed_data_area_service, data_process, application,
-                            content_type, mongodb_url, other_data, current_descriptor)
+                            content_type, mongodb_url, other_data, current_descriptor, columns_names)
 
     return "Done"
