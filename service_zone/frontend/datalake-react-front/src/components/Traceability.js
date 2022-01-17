@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Header } from './Header';
 import api from '../api/api';
 import Moment from 'moment';
