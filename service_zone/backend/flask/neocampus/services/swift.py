@@ -122,9 +122,6 @@ def ssh_file(
                             processed_data_area_service, data_process, application,
                             content_type, mongodb_url, other_data)
         
-        #Delete the doc upload after the process has finished
-        doc = {"_id": ObjectId(id_file_upload)}
-        mongo_collection.delete_one(doc)
         return "OK"
     except Exception as e:
         print(e)

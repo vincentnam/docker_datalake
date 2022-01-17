@@ -1,8 +1,8 @@
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 import { Header } from './Header';
 import api from '../api/api';
 import Moment from 'moment';
-import {ProgressBar} from 'react-bootstrap';
+import { ProgressBar } from 'react-bootstrap';
 
 export class Traceability extends React.Component {
     constructor(props) {
@@ -20,6 +20,14 @@ export class Traceability extends React.Component {
 
     componentDidMount() {
         this.loadTraceability();
+        this.timerID = setInterval(
+            () => this.loadTraceability(),
+            5000
+        );
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.timerID);
     }
 
     loadTraceability() {
@@ -34,49 +42,95 @@ export class Traceability extends React.Component {
             });
     }
     render() {
-
-        const Table = () => {
-            useEffect(() => {
-                setTimeout(() => {
-                    this.loadTraceability();
-                }, 5000);
-            });
-            let data = "";
-            if(this.state.elements.length === 0){
-                data = (
+        const TableInProgress = () => {
+            let dataTableInProgress = "";
+            if (this.state.elements.length === 0) {
+                dataTableInProgress = (
                     <tr>
-                        <td colspan="5" align="center"><p>Il n'y a aucun fichier qui est en cours d'upload !</p></td>
+                        <td colSpan="5" align="center"><p>Il n'y a aucun fichier qui est en cours d'upload !</p></td>
                     </tr>
-                    
                 );
             }
-            
-            if(this.state.elements.length !== 0) {
-                data = this.state.elements.map((element) => (
+
+            if (this.state.elements.length !== 0) {
+                let dataInProgress = [];
+                this.state.elements.forEach((element) => {
+                    if (element.total_bytes_download !== element.total_bytes) {
+                        dataInProgress.push(element);
+                    }
+                });
+                dataTableInProgress = dataInProgress.map((element) => (
                     <tr>
                         <td>{element.filename}</td>
                         <td>{element.type_file}</td>
                         <td>
                             <ProgressBar now={(element.total_bytes_download / element.total_bytes) * 100} label={`${Math.round((element.total_bytes_download / element.total_bytes) * 100)}%`} />
                         </td>
-                        <td>{Moment(element.created_at).format('YYYY-MM-DD hh:mm:ss')}</td>
-                        <td>{Moment(element.update_at).format('YYYY-MM-DD hh:mm:ss')}</td>
+                        <td>{Moment(element.created_at).format('DD/MM/YYYY HH:mm:ss')}</td>
+                        <td>{Moment(element.update_at).format('DD/MM/YYYY HH:mm:ss')}</td>
                     </tr>
                 ));
-            } 
+            }
             return (
-                <table className="table table-traceability table-striped table-responsive">
+                <table className="table table-traceability table-striped table-responsive" id="TableInProgress">
                     <thead>
-                        <tr style={{color: '#ea973b'}}>
+                        <tr style={{ color: '#ea973b' }}>
                             <th>Nom du fichier</th>
                             <th>Type du fichier</th>
-                            <th>Progression du téléchargement</th>
-                            <th>Début du téléchargement</th>
-                            <th>Dernière modification</th>
+                            <th>Progression de l'upload</th>
+                            <th>Début de l'upload</th>
+                            <th>Time of control</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {data}
+                        {dataTableInProgress}
+                    </tbody>
+                </table>
+            )
+        }
+
+        const TableFinished = () => {
+            let dataTableFinished = "";
+            if (this.state.elements.length === 0) {
+                dataTableFinished = (
+                    <tr>
+                        <td colSpan="5" align="center"><p>Il n'y a aucun fichier qui est en upload terminé !</p></td>
+                    </tr>
+
+                );
+            }
+            if (this.state.elements.length !== 0) {
+                let dataFinished = [];
+                this.state.elements.forEach((element) => {
+                    if (element.total_bytes_download === element.total_bytes) {
+                        dataFinished.push(element);
+                    }
+                });
+                dataTableFinished = dataFinished.map((element) => (
+                    <tr>
+                        <td>{element.filename}</td>
+                        <td>{element.type_file}</td>
+                        <td>
+                            <b style={{ color: '#ea973b' }}>Terminé</b>
+                        </td>
+                        <td>{Moment(element.created_at).format('DD/MM/YYYY HH:mm:ss')}</td>
+                        <td>{Moment(element.update_at).format('DD/MM/YYYY HH:mm:ss')}</td>
+                    </tr>
+                ));
+            }
+            return (
+                <table className="table table-traceability table-striped table-responsive" id="TableFinished">
+                    <thead>
+                        <tr style={{ color: '#ea973b' }}>
+                            <th>Nom du fichier</th>
+                            <th>Type du fichier</th>
+                            <th>Progression de l'upload</th>
+                            <th>Début de l'upload</th>
+                            <th>Time of control</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {dataTableFinished}
                     </tbody>
                 </table>
             )
@@ -88,9 +142,16 @@ export class Traceability extends React.Component {
                     <div className="title">Traçabilité des fichiers en cours d'upload :</div>
                     <div className="mt-4">
                         <div className="data-table">
-                            <Table />
+                            <TableInProgress />
                         </div>
                     </div>
+                    <div className="title mt-4">Traçabilité des fichiers en upload fini :</div>
+                    <div className="mt-4">
+                        <div className="data-table">
+                            <TableFinished />
+                        </div>
+                    </div>
+
                 </div>
             </div>
         )
