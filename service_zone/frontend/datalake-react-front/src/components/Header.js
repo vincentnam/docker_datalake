@@ -5,48 +5,14 @@ import { ToastContainer, toast } from 'react-toastify';
 import api from '../api/api';
 import history from "./utils/history";
 
-const Navbar = () => (
-    <nav className="navbar-nav">
-        <NavLink exact
-            activeClassName="active"
-            className="nav-item nav-link"
-            to="/">
-            Home
-        </NavLink>
-        <NavLink activeClassName="active"
-            className="nav-item nav-link"
-            to="/upload">
-            Upload
-        </NavLink>
-        <NavLink activeClassName="active"
-            className="nav-item nav-link"
-            to="/traceability">
-            Traçabilité
-        </NavLink>
-        <NavLink activeClassName="active"
-            className="nav-item nav-link"
-            to="/download">
-            Download
-        </NavLink>
-        <NavLink activeClassName="active"
-            className="nav-item nav-link"
-            to="/data-processed-visualization">
-            Data Visualization
-        </NavLink>
-        <NavLink activeClassName="active"
-            className="nav-item nav-link"
-            to="/models">
-            Gestion
-        </NavLink>
-        <NavLink activeClassName="active"
-            className="nav-item nav-link"
-            to="/detection-anomalies">
-            Anomalies
-        </NavLink>
-    </nav>
-);
-
 export class Header extends React.Component {
+
+    constructor() {
+        super();
+        this.state = {
+            anomalies: []
+        }
+    }
 
     componentDidMount() {
         this.countData();
@@ -54,33 +20,61 @@ export class Header extends React.Component {
     countData() {
         api.get('getDataAnomalyAll')
             .then((response) => {
-                let result = response.data.anomaly.length;
-
-                if (result !== 0) {
-                    this.toastError("Il y a " + result + " anomalies dans les données du Datalake !");
-                }
+                this.setState({
+                    anomalies: response.data.anomaly
+                })
             })
             .catch(function (error) {
                 console.log(error);
             });
     }
-
-    toastError(message) {
-        toast.error(`${message}`, {
-            theme: "colored",
-            position: "top-right",
-            hideProgressBar: false,
-            closeOnClick: true,
-            autoClose: false,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            onClick: props => {
-                history.push('/detection-anomalies')
-            },
-        });
-    }
     render() {
+        const Navbar = () => (
+            <nav className="navbar-nav">
+                <NavLink exact
+                    activeClassName="active"
+                    className="nav-item nav-link"
+                    to="/">
+                    Home
+                </NavLink>
+                <NavLink activeClassName="active"
+                    className="nav-item nav-link"
+                    to="/upload">
+                    Upload
+                </NavLink>
+                <NavLink activeClassName="active"
+                    className="nav-item nav-link"
+                    to="/traceability">
+                    Traçabilité
+                </NavLink>
+                <NavLink activeClassName="active"
+                    className="nav-item nav-link"
+                    to="/download">
+                    Download
+                </NavLink>
+                <NavLink activeClassName="active"
+                    className="nav-item nav-link"
+                    to="/data-processed-visualization">
+                    Data Visualization
+                </NavLink>
+                <NavLink activeClassName="active"
+                    className="nav-item nav-link"
+                    to="/models">
+                    Gestion
+                </NavLink>
+                <NavLink activeClassName="active"
+                    className="nav-item nav-link"
+                    to="/detection-anomalies">
+                    Anomalies
+                    {this.state.anomalies.length > 0 &&
+                        <span class="position-absolute translate-small top-0 badge badge-secondary rounded-pill bg-danger" style={{ marginTop: '5px' }}>
+                            {this.state.anomalies.length}
+                        </span>
+                    }
+
+                </NavLink>
+            </nav>
+        );
         return (
             <nav className="navbar navbar-expand-lg navbar-dark">
                 <div className="container">
@@ -97,7 +91,6 @@ export class Header extends React.Component {
                     </div>
                 </div>
 
-                <ToastContainer />
             </nav>
 
         );
