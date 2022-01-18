@@ -48,8 +48,12 @@ def restore_diff(data, filename):
     #Mouv file airflow to machine SQL Server
     scp.put(name_file_temp, name_file_temp_after_split)
     
+    #Recovery container id of ms sql server
+    command_id_docker = 'sudo docker ps -aqf "name=ms_sql_server_sqlserver1"'
+    stdin, stdout, stderr = ssh.exec_command(command_id_docker)
+    container_id = stdout.read().decode("utf-8").strip()
+    
     #Copy file to docker container
-    container_id = config.id_container_ms_sql
     command = "sudo docker cp " + name_file_temp_after_split + " " + container_id +":/var/opt/sqlserver/backup/"+ name_file_temp_after_split
     ssh.exec_command(command)
 
