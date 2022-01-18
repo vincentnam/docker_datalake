@@ -293,3 +293,14 @@ body {
     background-color: rgb(143, 142, 142);
     border: rgb(143, 142, 142);
 }
+
+.table-traceability {
+    padding: '0.5rem 0.5rem';
+    width: '100%';
+    margin-bottom: '1rem';
+    color: '#212529';
+    vertical-align: 'top';
+    border-color: '#dee2e6';
+    background-color: rgba(0, 0, 0, 0.05)
+}
+

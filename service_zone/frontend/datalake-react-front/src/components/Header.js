@@ -20,6 +20,11 @@ const Navbar = () => (
         </NavLink>
         <NavLink activeClassName="active"
             className="nav-item nav-link"
+            to="/traceability">
+            Traçabilité
+        </NavLink>
+        <NavLink activeClassName="active"
+            className="nav-item nav-link"
             to="/download">
             Download
         </NavLink>

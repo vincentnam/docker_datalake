@@ -93,28 +93,7 @@ export const config_processed_data = {
         },
         {
             "id": 5,
-            "label": "Tuple",
-            "type_file_accepted": [],
-            "metadonnees": [
-                {
-                    "id": 1,
-                    "label": "Métadonnée Tuple 1",
-                    "type": "text",
-                    "name": "meta1",
-                    "value": "",
-                },
-                {
-                    "id": 2,
-                    "label": "Métadonnée Tuple 2",
-                    "type": "text",
-                    "name": "meta2",
-                    "value": "",
-                }
-            ]
-        },
-        {
-            "id": 6,
-            "label": "Arbre",
+            "label": "Arbre(JSON)",
             "type_file_accepted": ["application/json"],
             "metadonnees": [
                 {
@@ -134,28 +113,7 @@ export const config_processed_data = {
             ]
         },
         {
-            "id": 7,
-            "label": "Binaire",
-            "type_file_accepted": [],
-            "metadonnees": [
-                {
-                    "id": 1,
-                    "label": "Métadonnée Binaire 1",
-                    "type": "text",
-                    "name": "meta1",
-                    "value": "",
-                },
-                {
-                    "id": 2,
-                    "label": "Métadonnée Binaire 2",
-                    "type": "text",
-                    "name": "meta2",
-                    "value": "",
-                }
-            ]
-        },
-        {
-            "id": 8,
+            "id": 6,
             "label": "Archive",
             "type_file_accepted": ["application/x-zip-compressed", "application/x-gzip"],
             "metadonnees": [
@@ -176,7 +134,7 @@ export const config_processed_data = {
             ]
         },
         {
-            "id": 9,
+            "id": 7,
             "label": "Fichier données SGE",
             "type_file_accepted": ["application/octet-stream"],
             "metadonnees": [
