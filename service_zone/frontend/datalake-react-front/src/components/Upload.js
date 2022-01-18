@@ -74,6 +74,7 @@ export class Upload extends React.Component {
             percentProgressBar: 0,
             textProgressBar: '',
             linkFile: "",
+            uploadLink: true,
             models: [],
             model: "",
             modalAdd: false,
@@ -88,6 +89,7 @@ export class Upload extends React.Component {
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.changeType = this.changeType.bind(this);
         this.removeSelectedFile = this.removeSelectedFile.bind(this);
         this.onChangeModalAdd = this.onChangeModalAdd.bind(this);
         this.onChangeModalEdit = this.onChangeModalEdit.bind(this);
@@ -156,6 +158,73 @@ export class Upload extends React.Component {
         })
     }
 
+    changeType(event) {
+        const target = event.target;
+        const value = target.type === 'checkbox' ? target.checked : target.value;
+        const name = target.name;
+
+        let type_file_accepted = [];
+        if (name === "type") {
+            if (value === "9") {
+                this.setState({
+                    type: value,
+                    uploadLink: false,
+                });
+            } else {
+                this.setState({
+                    type: value,
+                    uploadLink: true,
+                });
+            }
+            const types = [config.types];
+            types.forEach((type) => (
+                type.forEach((t) => {
+                    if (t.id === parseInt(value)) {
+                        this.setState({
+                            type_file_accepted: t.type_file_accepted
+                        });
+                        type_file_accepted = t.type_file_accepted
+                        api.post("models/params", {
+                            types_files: type_file_accepted
+                        })
+                            .then((response) => {
+                                this.setState({
+                                    models: response.data.models.data,
+                                    model: "",
+                                    othermeta: [],
+                                    editModel: {
+                                        id: 0,
+                                        label: "",
+                                        typesFiles: [],
+                                        metadonnees: [],
+                                    }
+                                });
+                            })
+                            .catch(function (error) {
+                                console.log(error);
+                            });
+                    }
+                })
+            ));
+        }
+        if (this.state.typeFile !== "") {
+            if (type_file_accepted.includes(this.state.typeFile) === false) {
+                toast.error("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + type_file_accepted.join(' '), {
+                    theme: "colored",
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
+                this.removeSelectedFile()
+            }
+        }
+    }
+
+
     handleChange(event) {
         const target = event.target;
         const value = target.type === 'checkbox' ? target.checked : target.value;
@@ -164,7 +233,6 @@ export class Upload extends React.Component {
         this.setState({
             [name]: value
         });
-
         if (name === "model") {
             if (value !== "") {
                 api.post("models/id", {
@@ -196,56 +264,6 @@ export class Upload extends React.Component {
                         status: true,
                     }
                 });
-            }
-        } else {
-            let type_file_accepted = [];
-            if (name === "type") {
-                const types = [config.types];
-                types.forEach((type) => (
-                    type.forEach((t) => {
-                        if (t.id === parseInt(value)) {
-                            this.setState({
-                                type_file_accepted: t.type_file_accepted
-                            });
-                            type_file_accepted = t.type_file_accepted
-                            api.post("models/params", {
-                                types_files: type_file_accepted
-                            })
-                                .then((response) => {
-                                    this.setState({
-                                        models: response.data.models.data,
-                                        model: "",
-                                        othermeta: [],
-                                        editModel: {
-                                            id: 0,
-                                            label: "",
-                                            typesFiles: [],
-                                            metadonnees: [],
-                                            status: true,
-                                        }
-                                    });
-                                })
-                                .catch(function (error) {
-                                    console.log(error);
-                                });
-                        }
-                    })
-                ));
-            }
-            if (this.state.typeFile !== "") {
-                if (type_file_accepted.includes(this.state.typeFile) === false) {
-                    toast.error("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + type_file_accepted.join(' '), {
-                        theme: "colored",
-                        position: "top-right",
-                        autoClose: 5000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                    });
-                    this.removeSelectedFile()
-                }
             }
         }
     }
@@ -541,7 +559,7 @@ export class Upload extends React.Component {
                 )
             ));
             return (
-                <select value={this.state.type} onChange={this.handleChange} name="type" className="form-select">
+                <select value={this.state.type} onChange={this.changeType} name="type" className="form-select">
                     {listTypes}
                 </select>
             );
@@ -647,63 +665,88 @@ export class Upload extends React.Component {
                                 <button type="button" className="btn btn-primary buttonModel" onClick={() => this.onChangeModalAdd()}>Créer un modèle</button>
                                 <EditButton />
                             </div>
-                            <div className="main-download">
-                                <nav className="tab-download">
-                                    <div className="nav nav-pills " id="pills-tab" role="tablist">
-                                        <button className="nav-link active" id="nav-raw-tab" data-bs-toggle="pill"
-                                            data-bs-target="#nav-small-file" type="button" role="tab" aria-controls="nav-small-file"
-                                            aria-selected="true">Fichier moins de 250 Mo
-                                        </button>
-                                        <button className="nav-link" id="nav-handled-tab" data-bs-toggle="pill"
-                                            data-bs-target="#nav-large-file" type="button" role="tab" aria-controls="nav-large-file"
-                                            aria-selected="false">Fichier plus de 250 Mo
-                                        </button>
-                                    </div>
-                                </nav>
-                                <div className="tab-content" id="pills-tabContent">
-                                    <div className="tab-pane fade show active" id="nav-small-file" role="tabpanel"
-                                        aria-labelledby="nav-small-file-tab">
-                                        <div className="form-group required">
-                                            <label>Fichiers</label>
-                                            <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} maxSize={250000000}
-                                                accept="image/*,application/JSON,.csv,text/plain,.sql,application/x-gzip,application/x-zip-compressed,application/octet-stream">
-                                                {({ getRootProps, getInputProps }) => (
-                                                    <section>
-                                                        <div {...getRootProps({ className: 'drop' })}>
-                                                            <input {...getInputProps()} />
-                                                            <div>
-                                                                Veuillez glisser un fichier ici<br />
-                                                                ou<br />
-                                                                <u>cliquer pour ajouter un fichier</u><br />
-                                                                Taille limitée à 250Mo (.jpg, .jpeg, .png, .svg, .csv, .json, .zip, .sql et .txt)
-                                                                <br />Vous ne pouvez pas ajouter dans le dépose un fichier sans extension (ex: Dump et differentiel des données SGE)
-                                                                <br />Veuillez passer par l'upload de gros fichier
-                                                            </div>
-                                                        </div>
-                                                        <aside className="pt-3">
-                                                            {files.length !== 0 ?
-                                                                <aside className="pt-3">
-                                                                    <ul>
-                                                                        {files}
-                                                                    </ul>
-                                                                </aside>
-                                                                : ''}
-                                                        </aside>
-                                                    </section>
-                                                )}
-                                            </Dropzone>
+                            {this.state.uploadLink === false &&
+                                <div className="main-download">
+                                    <nav className="tab-download">
+                                        <div className="nav nav-pills " id="pills-tab" role="tablist">
+                                            <button className="nav-link active" id="nav-handled-tab" data-bs-toggle="pill"
+                                                data-bs-target="#nav-large-file" type="button" role="tab" aria-controls="nav-large-file"
+                                                aria-selected="false">Fichier plus de 250 Mo
+                                            </button>
                                         </div>
-                                    </div>
-                                    <div className="tab-pane fade mb-4" id="nav-large-file" role="tabpanel"
-                                        aria-labelledby="nav-large-file-tab">
-                                        <div className="form-group required">
-                                            <label className="form-label">Lien vers le fichier</label>
-                                            <input value={this.state.linkFile} onChange={this.handleChange} type="text" name="linkFile" className="form-control"
-                                                placeholder="https://-----/dossier/file.extension ou XX.XX.XX.XXX/dossier/file.extension" />
+                                    </nav>
+                                    <div className="tab-content" id="pills-tabContent">
+                                        <div className="tab-pane fade mb-4 show active" id="nav-large-file" role="tabpanel"
+                                            aria-labelledby="nav-large-file-tab">
+                                            <div className="form-group required">
+                                                <label className="form-label">Lien vers le fichier</label>
+                                                <input value={this.state.linkFile} onChange={this.handleChange} type="text" name="linkFile" className="form-control"
+                                                    placeholder="https://-----/dossier/file.extension ou XX.XX.XX.XXX/dossier/file.extension" />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            }
+                            {this.state.uploadLink === true &&
+                                <div className="main-download">
+                                    <div className="main-download">
+                                        <nav className="tab-download">
+                                            <div className="nav nav-pills " id="pills-tab" role="tablist">
+                                                <button className="nav-link active" id="nav-raw-tab" data-bs-toggle="pill"
+                                                    data-bs-target="#nav-small-file" type="button" role="tab" aria-controls="nav-small-file"
+                                                    aria-selected="true">Fichier moins de 250 Mo
+                                                </button>
+                                                <button className="nav-link" id="nav-handled-tab" data-bs-toggle="pill"
+                                                    data-bs-target="#nav-large-file" type="button" role="tab" aria-controls="nav-large-file"
+                                                    aria-selected="false">Fichier plus de 250 Mo
+                                                </button>
+                                            </div>
+                                        </nav>
+                                        <div className="tab-content" id="pills-tabContent">
+                                            <div className="tab-pane fade show active" id="nav-small-file" role="tabpanel"
+                                                aria-labelledby="nav-small-file-tab">
+                                                <div className="form-group required">
+                                                    <label>Fichiers</label>
+                                                    <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} maxSize={250000000}
+                                                        accept="image/*,application/JSON,.csv,text/plain,.sql,application/x-gzip,application/x-zip-compressed,application/octet-stream">
+                                                        {({ getRootProps, getInputProps }) => (
+                                                            <section>
+                                                                <div {...getRootProps({ className: 'drop' })}>
+                                                                    <input {...getInputProps()} />
+                                                                    <div>
+                                                                        Veuillez glisser un fichier ici<br />
+                                                                        ou<br />
+                                                                        <u>cliquer pour ajouter un fichier</u><br />
+                                                                        Taille limitée à 250Mo (.jpg, .jpeg, .png, .svg, .csv, .json, .zip, .sql et .txt)
+                                                                    </div>
+                                                                </div>
+                                                                <aside className="pt-3">
+                                                                    {files.length !== 0 ?
+                                                                        <aside className="pt-3">
+                                                                            <ul>
+                                                                                {files}
+                                                                            </ul>
+                                                                        </aside>
+                                                                        : ''}
+                                                                </aside>
+                                                            </section>
+                                                        )}
+                                                    </Dropzone>
+                                                </div>
+                                            </div>
+                                            <div className="tab-pane fade mb-4" id="nav-large-file" role="tabpanel"
+                                                aria-labelledby="nav-large-file-tab">
+                                                <div className="form-group required">
+                                                    <label className="form-label">Lien vers le fichier</label>
+                                                    <input value={this.state.linkFile} onChange={this.handleChange} type="text" name="linkFile" className="form-control"
+                                                        placeholder="https://-----/dossier/file.extension ou XX.XX.XX.XXX/dossier/file.extension" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
                             <div className="d-md-flex justify-content-center">
                                 <button type="submit" className="btn btn-oran">Upload le fichier</button>
                             </div>
