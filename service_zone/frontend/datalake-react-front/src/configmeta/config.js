@@ -29,26 +29,16 @@ export const config = {
         },
         {
             "id": 5,
-            "label": "Tuple",
-            "type_file_accepted": [],
-        },
-        {
-            "id": 6,
-            "label": "Arbre",
+            "label": "Arbre(JSON)",
             "type_file_accepted": ["application/json"],
         },
         {
-            "id": 7,
-            "label": "Binaire",
-            "type_file_accepted": [],
-        },
-        {
-            "id": 8,
+            "id": 6,
             "label": "Archive",
             "type_file_accepted": ["application/x-zip-compressed", "application/x-gzip"],
         },
         {
-            "id": 9,
+            "id": 7,
             "label": "Fichier données SGE",
             "type_file_accepted": ["application/octet-stream"],
         }

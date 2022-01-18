@@ -6,6 +6,9 @@ from .mongo import get_swift_original_object_name
 from ..services import mongo
 import paramiko
 from pathlib import Path
+from pymongo import MongoClient
+from bson.objectid import ObjectId
+import datetime
 
 def download_object_file(container_name, object_id):
     """
@@ -56,14 +59,42 @@ def ssh_file(
 
         # Remote path on the server to find the file
         remotepath = remote_path
+        
+        #Connection to mongodb and variable for calback function
+        mongodb_url = current_app.config['MONGO_URL']
+        mongo_client = MongoClient(mongodb_url, connect=False)
+        mongo_db = mongo_client.upload
+        mongo_collection = mongo_db["file_upload"]
+        new_value = True
+        id_file_upload = ""
+        #Callback function
+        def callback_large_file_upload(transferred, toBeTransferred):
+            nonlocal new_value
+            nonlocal id_file_upload
+            
+            # date = dt.strptime(dt.now(tz=None), '%Y-%m-%d')
+            if new_value == True:
+                data = {
+                    "filename": filename,
+                    "type_file": type_file,
+                    "total_bytes_download": transferred,
+                    "total_bytes": toBeTransferred,
+                    "created_at": datetime.datetime.now(),
+                    "update_at": datetime.datetime.now(),
+                }
+                id_file_upload = mongo_collection.insert_one(data).inserted_id
+                new_value = False
+            else:
+                doc = {"_id": ObjectId(id_file_upload)}
+                newvalues = { "$set": { "total_bytes_download": transferred, "update_at": datetime.datetime.now() } }
+                mongo_collection.update_one(doc, newvalues)
 
         # Get and download it locally
-        sftp.get(remotepath, localpath)
+        sftp.get(remotepath, localpath,callback=callback_large_file_upload)
         sftp.close()
         ssh.close()
 
         path =  Path(localpath)
-        
         
         if type_file == "application/octet-stream":
             content_file = path.read_bytes()
@@ -71,7 +102,6 @@ def ssh_file(
             content_file = path.read_text()
         filename = path.name
 
-        #data_file = base64.b64decode(content_file)
         file_content = content_file
         
         # All variables to put informations in MongoDB
