@@ -51,7 +51,6 @@ export class Traceability extends React.Component {
                     </tr>
                 );
             }
-
             if (this.state.elements.length !== 0) {
                 let dataInProgress = [];
                 this.state.elements.forEach((element) => {
@@ -59,17 +58,26 @@ export class Traceability extends React.Component {
                         dataInProgress.push(element);
                     }
                 });
-                dataTableInProgress = dataInProgress.map((element) => (
-                    <tr>
-                        <td>{element.filename}</td>
-                        <td>{element.type_file}</td>
-                        <td>
-                            <ProgressBar now={(element.total_bytes_download / element.total_bytes) * 100} label={`${Math.round((element.total_bytes_download / element.total_bytes) * 100)}%`} />
-                        </td>
-                        <td>{Moment(element.created_at).format('DD/MM/YYYY HH:mm:ss')}</td>
-                        <td>{Moment(element.update_at).format('DD/MM/YYYY HH:mm:ss')}</td>
-                    </tr>
-                ));
+                if (dataInProgress.length === 0) {
+                    dataTableInProgress = (
+                        <tr>
+                            <td colSpan="5" align="center"><p>Il n'y a aucun fichier qui est en cours d'upload !</p></td>
+                        </tr>
+                    );
+                } else {
+                    dataTableInProgress = dataInProgress.map((element) => (
+                        <tr>
+                            <td>{element.filename}</td>
+                            <td>{element.type_file}</td>
+                            <td>
+                                <ProgressBar now={(element.total_bytes_download / element.total_bytes) * 100} label={`${Math.round((element.total_bytes_download / element.total_bytes) * 100)}%`} />
+                            </td>
+                            <td>{Moment(element.created_at).format('DD/MM/YYYY HH:mm:ss')}</td>
+                            <td>{Moment(element.update_at).format('DD/MM/YYYY HH:mm:ss')}</td>
+                        </tr>
+                    ));
+                }
+                
             }
             return (
                 <table className="table table-traceability table-striped table-responsive" id="TableInProgress">
@@ -139,19 +147,39 @@ export class Traceability extends React.Component {
             <div>
                 <Header />
                 <div className="container main-upload">
-                    <div className="title">Traçabilité des fichiers en cours d'upload :</div>
-                    <div className="mt-4">
-                        <div className="data-table">
-                            <TableInProgress />
+                    <div className="title">Traçabilité des fichiers upload :</div>
+                    <div className="main-download">
+                        <nav className="tab-download">
+                            <div className="nav nav-pills " id="pills-tab" role="tablist">
+                                <button className="nav-link active" id="nav-in-progress-tab" data-bs-toggle="pill"
+                                    data-bs-target="#nav-in-progress" type="button" role="tab" aria-controls="nav-small-file"
+                                    aria-selected="true">En cours d'upload
+                                </button>
+                                <button className="nav-link" id="nav-finished-tab" data-bs-toggle="pill"
+                                    data-bs-target="#nav-finished" type="button" role="tab" aria-controls="nav-large-file"
+                                    aria-selected="false">Upload terminé
+                                </button>
+                            </div>
+                        </nav>
+                        <div className="tab-content" id="pills-tabContent">
+                            <div className="tab-pane fade show active" id="nav-in-progress" role="tabpanel"
+                                aria-labelledby="nav-in-progress-tab">
+                                <div className="mt-4">
+                                    <div className="data-table">
+                                        <TableInProgress />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="tab-pane fade mb-4" id="nav-finished" role="tabpanel"
+                                aria-labelledby="nav-finished-tab">
+                                <div className="mt-4">
+                                    <div className="data-table">
+                                        <TableFinished />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div className="title mt-4">Traçabilité des fichiers en upload fini :</div>
-                    <div className="mt-4">
-                        <div className="data-table">
-                            <TableFinished />
-                        </div>
-                    </div>
-
                 </div>
             </div>
         )
