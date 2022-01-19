@@ -1,9 +1,7 @@
 import React from "react";
 
 import { NavLink } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
 import api from '../api/api';
-import history from "./utils/history";
 
 export class Header extends React.Component {
 
@@ -67,7 +65,7 @@ export class Header extends React.Component {
                     to="/detection-anomalies">
                     Anomalies
                     {this.state.anomalies.length > 0 &&
-                        <span class="position-absolute translate-small top-0 badge badge-secondary rounded-pill bg-danger" style={{ marginTop: '5px' }}>
+                        <span className="position-absolute translate-small top-0 badge badge-secondary rounded-pill bg-danger" style={{ marginTop: '5px' }}>
                             {this.state.anomalies.length}
                         </span>
                     }
