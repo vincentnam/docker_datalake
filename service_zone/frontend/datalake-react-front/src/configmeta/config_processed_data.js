@@ -93,7 +93,7 @@ export const config_processed_data = {
         },
         {
             "id": 5,
-            "label": "Arbre(JSON)",
+            "label": "Arbre (JSON)",
             "type_file_accepted": ["application/json"],
             "metadonnees": [
                 {

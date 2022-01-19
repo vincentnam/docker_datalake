@@ -29,7 +29,7 @@ export const config = {
         },
         {
             "id": 5,
-            "label": "Arbre(JSON)",
+            "label": "Arbre (JSON)",
             "type_file_accepted": ["application/json"],
         },
         {
