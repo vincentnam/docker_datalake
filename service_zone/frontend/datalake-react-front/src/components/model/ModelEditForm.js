@@ -78,8 +78,8 @@ export class ModelEditForm extends React.Component {
         this.state.selectedTypesFiles.forEach(type => types.push(type.value));
 
         let nbErrors = 0;
-        
-        if(this.state.label.trim() !== this.state.oldLabel.trim()) {
+
+        if (this.state.label.trim() !== this.state.oldLabel.trim()) {
             this.state.verifModels.forEach((model) => {
                 if (this.state.label === model.label) {
                     this.toastError("Veuillez renseigner un label de modèle de métadonnées qui n'est pas déjà utilisé !");
@@ -104,12 +104,32 @@ export class ModelEditForm extends React.Component {
         }
 
         if (this.state.metadonnees.length !== 0) {
+            let errName = 0;
+            let errLabel = 0;
             this.state.metadonnees.forEach((meta) => {
                 if (meta.label.trim() === "" || meta.type.trim() === "" || meta.name.trim() === "") {
                     this.toastError("Veuillez renseigner les informations dans les champs des métadonnées !");
                     nbErrors += 1;
                 }
+                
+                this.state.metadonnees.forEach((othermeta) => {
+                    if (meta.label.trim() === othermeta.label.trim()) {
+                        errLabel += 1;
+                    }
+                    if (meta.name.trim() === othermeta.name.trim()) {
+                        errName += 1;
+                    }
+                });
             });
+
+            if (errLabel > this.state.metadonnees.length) {
+                this.toastError("Attention il y a un minimum deux metadonnées qui ont le même label !");
+                nbErrors += 1;
+            }
+            if (errName > this.state.metadonnees.length) {
+                this.toastError("Attention il y a un minimum deux metadonnées qui ont le même name !");
+                nbErrors += 1;
+            }
         }
 
         if (nbErrors === 0) {
@@ -242,7 +262,7 @@ export class ModelEditForm extends React.Component {
                 <div className="d-flex justify-content-between">
                     <h5>Modification d'un modèle de métadonnées</h5>
                     <Form.Group className="mb-3 checkboxModel" controlId="status">
-                        <Form.Check 
+                        <Form.Check
                             type="checkbox"
                             checked={this.state.status}
                             name="status"
