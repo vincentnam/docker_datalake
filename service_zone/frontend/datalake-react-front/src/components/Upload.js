@@ -666,24 +666,11 @@ export class Upload extends React.Component {
                                 <EditButton />
                             </div>
                             {this.state.uploadLink === false &&
-                                <div className="main-download">
-                                    <nav className="tab-download">
-                                        <div className="nav nav-pills " id="pills-tab" role="tablist">
-                                            <button className="nav-link active" id="nav-handled-tab" data-bs-toggle="pill"
-                                                data-bs-target="#nav-large-file" type="button" role="tab" aria-controls="nav-large-file"
-                                                aria-selected="false">Fichier plus de 250 Mo
-                                            </button>
-                                        </div>
-                                    </nav>
-                                    <div className="tab-content" id="pills-tabContent">
-                                        <div className="tab-pane fade mb-4 show active" id="nav-large-file" role="tabpanel"
-                                            aria-labelledby="nav-large-file-tab">
-                                            <div className="form-group required">
-                                                <label className="form-label">Lien vers le fichier</label>
-                                                <input value={this.state.linkFile} onChange={this.handleChange} type="text" name="linkFile" className="form-control"
-                                                    placeholder="https://-----/dossier/file.extension ou XX.XX.XX.XXX/dossier/file.extension" />
-                                            </div>
-                                        </div>
+                                <div className="main-download mt-4 mb-5">
+                                    <div className="form-group required">
+                                        <label className="form-label">Lien vers le fichier</label>
+                                        <input value={this.state.linkFile} onChange={this.handleChange} type="text" name="linkFile" className="form-control"
+                                            placeholder="https://-----/dossier/file.extension ou XX.XX.XX.XXX/dossier/file.extension" />
                                     </div>
                                 </div>
                             }
