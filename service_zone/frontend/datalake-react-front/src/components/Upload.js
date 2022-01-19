@@ -178,8 +178,8 @@ export class Upload extends React.Component {
             }
             const types = [config.types];
             types.forEach((type) => (
-                type.forEach((t) => {
-                    if (t.id === parseInt(value)) {
+                type.forEach((t, key) => {
+                    if (key === parseInt(value)) {
                         this.setState({
                             type_file_accepted: t.type_file_accepted
                         });
@@ -554,8 +554,8 @@ export class Upload extends React.Component {
         const SelectDatatype = () => {
             const types = [config.types];
             const listTypes = types.map((type) => (
-                type.map((t) =>
-                    <option value={t.id}>{t.label}</option>
+                type.map((t, key) =>
+                    <option value={key}>{t.label}</option>
                 )
             ));
             return (
