@@ -9,8 +9,8 @@ export const config_processed_data = {
         },
         {
             "id": 1,
-            "label": "Texte / CSV / Dump SQL",
-            "type_file_accepted": ["text/plain", "application/csv", "application/vnd.ms-excel", "application/sql"],
+            "label": "Texte",
+            "type_file_accepted": ["text/plain"],
             "metadonnees": [
                 {
                     "id": 1,
@@ -30,6 +30,48 @@ export const config_processed_data = {
         },
         {
             "id": 2,
+            "label": "CSV",
+            "type_file_accepted": ["application/csv", "application/vnd.ms-excel"],
+            "metadonnees": [
+                {
+                    "id": 1,
+                    "label": "Métadonnée Texte 1",
+                    "type": "text",
+                    "name": "meta1",
+                    "value": "",
+                },
+                {
+                    "id": 2,
+                    "label": "Métadonnée Texte 2",
+                    "type": "text",
+                    "name": "meta2",
+                    "value": "",
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "label": "Dump SQL",
+            "type_file_accepted": ["application/sql"],
+            "metadonnees": [
+                {
+                    "id": 1,
+                    "label": "Métadonnée Texte 1",
+                    "type": "text",
+                    "name": "meta1",
+                    "value": "",
+                },
+                {
+                    "id": 2,
+                    "label": "Métadonnée Texte 2",
+                    "type": "text",
+                    "name": "meta2",
+                    "value": "",
+                }
+            ]
+        },
+        {
+            "id": 4,
             "label": "Image",
             "type_file_accepted": ["image/png", "image/jpeg"],
             "metadonnees": [
@@ -50,7 +92,7 @@ export const config_processed_data = {
             ]
         },
         {
-            "id": 3,
+            "id": 5,
             "label": "Son",
             "type_file_accepted": [],
             "metadonnees": [
@@ -71,7 +113,7 @@ export const config_processed_data = {
             ]
         },
         {
-            "id": 4,
+            "id": 6,
             "label": "Vidéo",
             "type_file_accepted": [],
             "metadonnees": [
@@ -92,8 +134,8 @@ export const config_processed_data = {
             ]
         },
         {
-            "id": 5,
-            "label": "Arbre(JSON)",
+            "id": 7,
+            "label": "Arbre (JSON)",
             "type_file_accepted": ["application/json"],
             "metadonnees": [
                 {
@@ -113,7 +155,7 @@ export const config_processed_data = {
             ]
         },
         {
-            "id": 6,
+            "id": 8,
             "label": "Archive",
             "type_file_accepted": ["application/x-zip-compressed", "application/x-gzip"],
             "metadonnees": [
@@ -134,7 +176,7 @@ export const config_processed_data = {
             ]
         },
         {
-            "id": 7,
+            "id": 9,
             "label": "Fichier données SGE",
             "type_file_accepted": ["application/octet-stream"],
             "metadonnees": [
