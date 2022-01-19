@@ -49,7 +49,8 @@ def restore_diff(data, filename):
     scp.put(name_file_temp, name_file_temp_after_split)
     
     #Recovery container id of ms sql server
-    command_id_docker = 'sudo docker ps -aqf "name=ms_sql_server_sqlserver1"'
+    container_name = config.container_name_mssql_server
+    command_id_docker = 'sudo docker ps -aqf "name= ' + container_name + '"'
     stdin, stdout, stderr = ssh.exec_command(command_id_docker)
     container_id = stdout.read().decode("utf-8").strip()
     
