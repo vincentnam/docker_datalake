@@ -165,7 +165,7 @@ export class Upload extends React.Component {
 
         let type_file_accepted = [];
         if (name === "type") {
-            if (value === "7") {
+            if (value === "9") {
                 this.setState({
                     type: value,
                     uploadLink: false,

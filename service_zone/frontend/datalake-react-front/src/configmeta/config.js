@@ -9,36 +9,46 @@ export const config = {
         },
         {
             "id": 1,
-            "label": "Texte / CSV / Dump SQL",
-            "type_file_accepted": ["text/plain", "application/csv", "application/vnd.ms-excel", "application/sql"],
+            "label": "Texte",
+            "type_file_accepted": ["text/plain"],
         },
         {
             "id": 2,
+            "label": "CSV",
+            "type_file_accepted": ["application/csv", "application/vnd.ms-excel"],
+        },
+        {
+            "id": 3,
+            "label": "Dump SQL",
+            "type_file_accepted": ["application/sql"],
+        },
+        {
+            "id": 4,
             "label": "Image",
             "type_file_accepted": ["image/png", "image/jpeg"],
         },
         {
-            "id": 3,
+            "id": 5,
             "label": "Son",
             "type_file_accepted": [],
         },
         {
-            "id": 4,
+            "id": 6,
             "label": "Vidéo",
             "type_file_accepted": [],
         },
         {
-            "id": 5,
+            "id": 7,
             "label": "Arbre (JSON)",
             "type_file_accepted": ["application/json"],
         },
         {
-            "id": 6,
+            "id": 8,
             "label": "Archive",
             "type_file_accepted": ["application/x-zip-compressed", "application/x-gzip"],
         },
         {
-            "id": 7,
+            "id": 9,
             "label": "Fichier données SGE",
             "type_file_accepted": ["application/octet-stream"],
         }
