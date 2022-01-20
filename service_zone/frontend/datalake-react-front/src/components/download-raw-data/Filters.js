@@ -1,7 +1,6 @@
 import React from "react";
 import { FormGroup, FormLabel, Form, Button } from "react-bootstrap";
 import { config } from '../../configmeta/config';
-import { config_processed_data } from '../../configmeta/config_processed_data';
 
 export class Filters extends React.Component {
 
@@ -79,9 +78,6 @@ export class Filters extends React.Component {
         // data type field
         const SelectDatatype = () => {
             let types = [config.types];
-            // if (this.props.title === "Affichage des données traitées") {
-            //     types = [config_processed_data.types];
-            // }
             // loop into conf to get all data types
             const listTypes = types.map((type) => (
                 type.map((t, key) =>

@@ -156,7 +156,7 @@ def get_handled_data_list():
     nb_lines_influxDB = len(list(influxDB))
 
     # If there is Influx data (> 1 because Header is present at minimum in csv file) and filter "Time series" is selected
-    if number_of_rows_influxdb > 1 and "csv" in params.get('filetype'):
+    if number_of_rows_influxdb > 1 and (("csv" or "text/plain") in params.get('filetype')):
         metadata_influx_file = {
             'filename': 'donnees-serie-temporelle-influxdb.csv',
             'filesize': sys.getsizeof(influxdb_result)
