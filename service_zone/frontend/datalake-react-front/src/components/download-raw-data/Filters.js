@@ -1,7 +1,6 @@
 import React from "react";
 import { FormGroup, FormLabel, Form, Button } from "react-bootstrap";
 import { config } from '../../configmeta/config';
-import { config_processed_data } from '../../configmeta/config_processed_data';
 
 export class Filters extends React.Component {
 
@@ -50,9 +49,9 @@ export class Filters extends React.Component {
 
         datatypeConf.map((type) => (
             // loop in config file
-            type.forEach((t) => {
+            type.forEach((t, key) => {
                 // if selected data type corresponds with current data type
-                if (t.id === parseInt(id)) {
+                if (key === parseInt(id)) {
                     filetypesResult = t.type_file_accepted
                 }
             })
@@ -79,13 +78,10 @@ export class Filters extends React.Component {
         // data type field
         const SelectDatatype = () => {
             let types = [config.types];
-            if (this.props.title === "Affichage des données traitées") {
-                types = [config_processed_data.types];
-            }
             // loop into conf to get all data types
             const listTypes = types.map((type) => (
-                type.map((t) =>
-                    <option key={t.id} value={t.id}>{t.label}</option>
+                type.map((t, key) =>
+                    <option key={key} value={key}>{t.label}</option>
                 )
             ));
             return (
