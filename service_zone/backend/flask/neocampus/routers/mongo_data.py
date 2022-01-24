@@ -155,8 +155,20 @@ def get_handled_data_list():
         influxDB)
     nb_lines_influxDB = len(list(influxDB))
 
-    # If there is Influx data (> 1 because Header is present at minimum in csv file) and filter "Time series" is selected
-    if number_of_rows_influxdb > 1 and "csv" in params.get('filetype'):
+    # Mimetypes arrays which are configured in frontend and where we compare input parameter "filetype" 
+
+    mimetypes_time_series = [
+        "application/csv,application/vnd.ms-excel",
+        "text/plain"
+    ]
+
+    mimetypes_metadata = [
+        "image/png,image/jpeg"
+    ]
+
+    # If there is Influx data (> 1 because Header row is present at the first line in csv file) 
+    # and filter related to time series is selected
+    if number_of_rows_influxdb > 1 and params.get('filetype') in mimetypes_time_series:
         metadata_influx_file = {
             'filename': 'donnees-serie-temporelle-influxdb.csv',
             'filesize': sys.getsizeof(influxdb_result)
@@ -164,7 +176,7 @@ def get_handled_data_list():
         result['influxDB'] = metadata_influx_file
 
     # If there is Mongo data and filter "Images" or "Time series" are selected
-    if mongo_nb_results > 0 and "image" in params.get('filetype'):
+    if mongo_nb_results > 0 and params.get('filetype') in mimetypes_metadata:
         metadata_mongo_file = {
             'filename': 'metadonnees-images-mongodb.json',
             'filesize': sys.getsizeof(mongoDB)
