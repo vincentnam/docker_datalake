@@ -1,5 +1,4 @@
 import React from "react";
-import { Header } from "./Header";
 import '../home.css';
 import $ from 'jquery';
 import { config } from '../configmeta/config';
@@ -374,7 +373,6 @@ export class Home extends React.Component {
 
         return (
             <div>
-                <Header />
                 <div className="container main-download">
                     <div className="title">Home</div>
                     <Filters

@@ -1,5 +1,4 @@
 import React from "react";
-import { Header } from './Header';
 import Dropzone from 'react-dropzone';
 import { InputMeta } from './upload-child/InputMeta';
 import { TextAreaMeta } from './upload-child/TextAreaMeta';
@@ -645,7 +644,6 @@ export class Upload extends React.Component {
 
         return (
             <div>
-                <Header />
                 <div className="container main-upload">
                     <div className="title">Upload de données</div>
                     <div className="jumbotron">

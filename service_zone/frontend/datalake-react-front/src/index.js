@@ -20,13 +20,20 @@ import {Download} from './components/Download';
 import {DownloadRaw} from './components/download-raw-data/DownloadRaw';
 import {DownloadHandleData} from './components/download-handled-data/DownloadHandleData';
 import {Models} from './components/Models';
-import { DetectionAnomalies } from './components/DetectionAnomalies';
-import { Traceability } from './components/Traceability';
+import {DetectionAnomalies} from './components/DetectionAnomalies';
+import {Traceability} from './components/Traceability';
+import {Header} from "./components/Header";
+import {Provider} from "react-redux";
+import {createStore} from "redux";
+import { reducer, initialState} from "./store";
+
+const store = createStore(reducer, initialState);
 
 ReactDOM.render(
     <React.StrictMode>
         <Router>
-            <div>
+            <Provider store={store}>
+                <Header />
                 <Switch>
                     <Route path="/upload">
                         <Upload/>
@@ -46,17 +53,17 @@ ReactDOM.render(
                     <Route path="/models">
                         <Models/>
                     </Route>
-                    <Route path="/detection-anomalies" >
-                        <DetectionAnomalies />
+                    <Route path="/detection-anomalies">
+                        <DetectionAnomalies/>
                     </Route>
-                    <Route path="/traceability" >
-                        <Traceability />
+                    <Route path="/traceability">
+                        <Traceability/>
                     </Route>
                     <Route path="/">
                         <Home/>
                     </Route>
                 </Switch>
-            </div>
+            </Provider>
         </Router>
     </React.StrictMode>,
     document.getElementById('root')

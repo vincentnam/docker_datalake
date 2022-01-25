@@ -1,5 +1,4 @@
 import React from "react";
-import { Header } from "./Header";
 import { DataAnomalyVisiualisation } from './anomaly-data/anomaly-visualisation';
 import { Filters } from "./anomaly-data/Filters";
 import api from '../api/api';
@@ -70,7 +69,6 @@ export class DetectionAnomalies extends React.Component {
     render() {
         return (
             <div>
-                <Header />
                 <div className="container main-download mt-4">
                     <Filters
                         data={this.handleCallbackData} 
