@@ -2,7 +2,7 @@ export const initialState = {
     nameContainer: "neOCampus",
 };
 
-export function reducer(state, action) {
+export function reducer(state = initialState, action) {
     // si l'action est de type changeNameContainer...
     if (action.type === "changeNameContainer") {
         return {
@@ -13,5 +13,3 @@ export function reducer(state, action) {
     // sinon on retourne le state sans le changer
     return state;
 }
-
-

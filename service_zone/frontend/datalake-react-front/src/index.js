@@ -25,9 +25,9 @@ import {Traceability} from './components/Traceability';
 import {Header} from "./components/Header";
 import {Provider} from "react-redux";
 import {createStore} from "redux";
-import { reducer, initialState} from "./store";
+import { reducer } from "./store";
 
-const store = createStore(reducer, initialState);
+const store = createStore(reducer);
 
 ReactDOM.render(
     <React.StrictMode>

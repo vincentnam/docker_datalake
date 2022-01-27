@@ -13,8 +13,6 @@ export function SelectProjects() {
     function changeProject(event) {
         dispatch({ type: "changeNameContainer", payload: {nameContainer: event.target.value} })
     }
-    console.log(useSelector((state) => state.nameContainer))
-
     return (
         <>
             <select value={useSelector((state) => state.nameContainer)} onChange={event => changeProject(event)} name="project" className="form-select" >
