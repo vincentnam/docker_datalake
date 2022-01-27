@@ -172,7 +172,7 @@ def get_handled_data(params):
 
     # if certain filetype is selected, query will be ran on different MongoDB database
     # Example : Image -> data_conso database
-    if("image" in params.get('filetype')):
+    if("metadata" in params.get('dataType')):
         # Database "data_historique"
         mongo_database = mongo_client.data_conso
 
