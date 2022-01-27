@@ -37,7 +37,8 @@ def ssh_file(
     password,
     remote_path,
     filename,
-    type_file
+    type_file,
+    container_name
     ):
     try:
         ssh = paramiko.SSHClient()
@@ -81,6 +82,7 @@ def ssh_file(
                     "total_bytes": toBeTransferred,
                     "created_at": datetime.datetime.now(),
                     "update_at": datetime.datetime.now(),
+                    "container_name": container_name,
                 }
                 id_file_upload = mongo_collection.insert_one(data).inserted_id
                 new_value = False
@@ -106,7 +108,6 @@ def ssh_file(
         
         # All variables to put informations in MongoDB
         # and in OpenstackSwift
-        container_name = "neOCampus"
         mongodb_url = current_app.config['MONGO_URL']
         user = current_app.config['SWIFT_USER']
         key = current_app.config['SWIFT_KEY']

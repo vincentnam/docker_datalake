@@ -36,7 +36,7 @@ def get_handled_data(params):
     All informations above have been copied from InfluxDB UI : Telegraf 
     """
     csv_result = query_api.query_csv(
-        f'''from(bucket:"{current_app.config['INFLUXDB_BUCKET']}")  
+        f'''from(bucket:"{params['container_name']}")
         |> range(start: begin_date, stop: end_date)''',
         dialect=Dialect(
             header=True, 
@@ -91,7 +91,7 @@ def get_all_measurements(bucket):
     
     return measurements
 
-def get_data_anomaly(Jour_1, Jour_2) :
+def get_data_anomaly(Jour_1, Jour_2, container_name) :
     """
     get_data_anomaly from influxdb between 2 dates 
     :param Jour_1:  
@@ -100,7 +100,7 @@ def get_data_anomaly(Jour_1, Jour_2) :
     """
     client, org = influxdb.connection_inflxdb()
 
-    bucket = "neOCampus"
+    bucket = container_name
     startDate = (datetime.now() - timedelta(days = Jour_2) ).isoformat() + "Z"
     endDate = (datetime.now() - timedelta(days=Jour_1) ).isoformat() + "Z"
     
@@ -214,7 +214,5 @@ def get_data_anomaly(Jour_1, Jour_2) :
         "anomaly" : last_anomaly
     }
 
-    result = mongo.insert_anomaly(anomaly,endDate)
-    #print("for influx db")
-    #print(anomaly)
+    result = mongo.insert_anomaly(anomaly,endDate, container_name)
     return anomaly

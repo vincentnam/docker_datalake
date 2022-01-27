@@ -102,6 +102,7 @@ def storage():
     type_file = request.get_json()["typeFile"]
     link_file = request.get_json()["linkFile"]
     link_type = request.get_json()["linkType"]
+    container_name = request.get_json()["container_name"]
 
     if link_file != "":
 
@@ -124,7 +125,8 @@ def storage():
             password,
             path,
             filename,
-            type_file
+            type_file,
+            container_name
         ))
         upload_processing.start()
 
@@ -140,8 +142,6 @@ def storage():
         #file_content = ''.join(map(str.capitalize, data_file[1:]))
 
         file_content = data_file
-
-        container_name = "neOCampus"
         mongodb_url = current_app.config['MONGO_URL']
         user = current_app.config['SWIFT_USER']
         key = current_app.config['SWIFT_KEY']

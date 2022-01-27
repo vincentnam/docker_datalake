@@ -36,8 +36,8 @@ def get_last_raw_data():
     if("sort_field" in request.get_json() and "sort_value" in request.get_json()):
         params['sort_field'] = request.get_json()['sort_field']
         params['sort_value'] = request.get_json()['sort_value']
-
-    nb_objects, mongo_collections = mongo.get_last_metadata("neOCampus", params)
+    container_name = request.get_json()['container_name']
+    nb_objects, mongo_collections = mongo.get_last_metadata(container_name, params)
     mongo_collections = list(mongo_collections)
 
     output = {'objects': []}
@@ -138,8 +138,8 @@ def get_metadata():
 
     params['beginDate'] = convertedBeginDate
     params['endDate'] = convertedEndDate
-
-    nb_objects, mongo_collections = mongo.get_metadata("neOCampus", params)
+    container_name = request.get_json()['container_name']
+    nb_objects, mongo_collections = mongo.get_metadata(container_name, params)
     mongo_collections = list(mongo_collections)
 
     output = {'objects': []}
@@ -179,7 +179,9 @@ def get_handled_data_list():
     result = {}
 
     try:
+
         params = {
+            'container_name': request.get_json(force=True)['container_name'],
             'dataType': request.get_json(force=True)['dataType'],
             'beginDate': request.get_json(force=True)['beginDate'],
             'endDate': request.get_json(force=True)['endDate']
@@ -241,6 +243,7 @@ def get_handled_data_zipped_file():
 
     try:
         params = {
+            'container_name': request.get_json()['container_name'],
             'filetype': data_request['filetype'],
             'beginDate': data_request['beginDate'],
             'endDate': data_request['endDate']
@@ -328,7 +331,8 @@ def get_models():
         tags:
             - mongodb_router
     """
-    models = mongo.get_models_all()
+    container_name = request.get_json()['container_name']
+    models = mongo.get_models_all(container_name)
     models_list = list(models)
 
     output = {'data': []}
@@ -360,7 +364,8 @@ def get_models_show():
         tags:
             - mongodb_router
     """
-    models = mongo.get_models_show_all()
+    container_name = request.get_json()['container_name']
+    models = mongo.get_models_show_all(container_name)
     models_list = list(models)
 
     output = {'data': []}
@@ -392,6 +397,7 @@ def get_models_cache():
         tags:
             - mongodb_router
     """
+    container_name = request.get_json()['container_name']
     models = mongo.get_models_all_cache()
     models_list = list(models)
     #Data formatting for output
@@ -413,9 +419,10 @@ def get_models_params():
     data_request = request.get_json()
     types_files = data_request['types_files']
     models_list = []
+    container_name = request.get_json()['container_name']
     #Recovery of all templates for each file type
     for type_file in types_files:
-        models = mongo.get_models_params(type_file)
+        models = mongo.get_models_params(type_file, container_name)
         models_list.append(models)
         
     #Liste des différents modèles sans doublon
@@ -492,6 +499,7 @@ def add_models():
         'type_file_accepted': data_request['type_file_accepted'],
         'metadonnees': data_request['metadonnees'],
         'status': data_request['status'],
+        'container_name' = data_request['container_name'],
     }
     model = mongo.add_model(param)
 
@@ -517,7 +525,8 @@ def edit_models():
         'label': data_request['label'],
         'type_file_accepted': data_request['type_file_accepted'],
         'metadonnees': data_request['metadonnees'],
-        'status': data_request['status']
+        'status': data_request['status'],
+        'container_name' = data_request['container_name'],
     }
     model = mongo.update_model(param)
 
@@ -535,6 +544,7 @@ def get_anomalies():
         tags:
             - mongodb_router
     """
+    container_name = request.get_json()['container_name']
     measurement = request.get_json()["measurement"]
     topic = request.get_json()["topic"]
     
@@ -547,12 +557,9 @@ def get_anomalies():
     except:
         return jsonify({'error': 'Missing required fields.'})
 
-    x = influxdb.get_data_anomaly(50, 150)
-    print("insert")    
-    print(params['beginDate'])
-    print(params['endDate'])
+    x = influxdb.get_data_anomaly(50, 150, container_name)
 
-    mongo_collections = mongo.get_anomaly(params,measurement,topic)
+    mongo_collections = mongo.get_anomaly(params,measurement,topic, container_name)
     mongo_collections = list(mongo_collections)
 
     output = {'objects': []}
@@ -581,8 +588,8 @@ def get_anomalies_all():
         tags:
             - mongodb_router
     """
-    
-    nbr_metadata, metadata = mongo.get_anomaly_all()
+    container_name = request.get_json()['container_name']
+    nbr_metadata, metadata = mongo.get_anomaly_all(container_name)
 
     mongo_collections = list(metadata)
     output = {'objects': []}
@@ -614,8 +621,8 @@ def count_anomalies_all():
     """
     mongodb_url = current_app.config['MONGO_URL']
     collection = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
-
-    metadata = collection.find()
+    container_name = request.get_json()['container_name']
+    metadata = collection.find({'container_name': container_name})
     nbrAnomaly = str(metadata.count())
 
     #output = {"msg": "I'm the test endpoint from blueprint_x."}
@@ -637,12 +644,12 @@ def list_upload_ssh():
         - mongodb_router
 
     """
-    
+    container_name = request.get_json()['container_name']
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.upload
     collection = mongo_db["file_upload"]
     
-    files_upload = collection.find({},{ "_id": 0})
+    files_upload = collection.find({'container_name': container_name},{ "_id": 0})
     models_list = list(files_upload)
     return jsonify({'file_upload': models_list})
