@@ -8,3 +8,8 @@ pynacl
 pyOpenSSL
 paramiko
 uwsgi
+flask_swagger_ui
+Werkzeug==0.16.1
+apispec 
+apispec_webframeworks 
+marshmallow

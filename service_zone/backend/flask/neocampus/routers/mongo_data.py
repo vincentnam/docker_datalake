@@ -13,6 +13,21 @@ mongo_data_bp = Blueprint('mongo_data_bp', __name__)
 
 @mongo_data_bp.route('/last-raw-data', methods=['POST'])
 def get_last_raw_data():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get last raw data
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
     params = request.get_json()
 
     if(("limit" in request.get_json() and "offset" not in request.get_json()) or ("limit" not in request.get_json() and "offset" in request.get_json())):
@@ -45,6 +60,21 @@ def get_last_raw_data():
 
 @mongo_data_bp.route('/raw-data', methods=['POST'])
 def get_metadata():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get raw data
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
     try:
         params = {
             'filetype': request.get_json()['filetype'],
@@ -131,6 +161,21 @@ def get_metadata():
 
 @mongo_data_bp.route('/handled-data-list', methods=['POST'])
 def get_handled_data_list():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get handled data list
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
     result = {}
 
     try:
@@ -188,6 +233,21 @@ def get_handled_data_list():
 
 @mongo_data_bp.route('/handled-data-file', methods=['POST'])
 def get_handled_data_zipped_file():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get handled data file
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
     data_request = request.get_json(force=True)[0]
 
     try:
@@ -264,6 +324,21 @@ def get_handled_data_zipped_file():
 
 @mongo_data_bp.route('/models/all', methods=['GET'])
 def get_models():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get all models
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
     models = mongo.get_models_all()
     models_list = list(models)
 
@@ -281,6 +356,21 @@ def get_models():
 
 @mongo_data_bp.route('/models/show/all', methods=['GET'])
 def get_models_show():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get models with status true
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
     models = mongo.get_models_show_all()
     models_list = list(models)
 
@@ -298,6 +388,21 @@ def get_models_show():
 
 @mongo_data_bp.route('/models/cache/all', methods=['GET'])
 def get_models_cache():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description:  get models with status false
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
     models = mongo.get_models_all_cache()
     models_list = list(models)
     #Data formatting for output
@@ -345,6 +450,21 @@ def get_models_params():
 
 @mongo_data_bp.route('/models/id', methods=['GET', 'POST'])
 def get_model_id():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get model
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
     data_request = request.get_json()
     id = data_request['id']
     models = mongo.get_model_id(id)
@@ -359,11 +479,24 @@ def get_model_id():
             "metadonnees": obj['metadonnees'],
             "status": obj['status'],
         })
+
+    output = str(output)
         
     return jsonify({'model': output})
 
 @mongo_data_bp.route('/models/add', methods=['POST'])
 def add_models():
+    """
+    ---
+    get:
+        description: edit model
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
+    
     data_request = request.get_json()
     param = {
         'label': data_request['label'],
@@ -378,6 +511,17 @@ def add_models():
 
 @mongo_data_bp.route('/models/edit', methods=['POST'])
 def edit_models():
+    """
+    ---
+    get:
+        description: edit model
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
+    
     data_request = request.get_json()
     param = {
         'id': data_request['id'],
@@ -393,10 +537,14 @@ def edit_models():
 @mongo_data_bp.route('/getDataAnomaly', methods=['GET','POST'])
 def get_anomalies():
     """
-    insert_anomaly from influx db to mongodb 
-    :param anomaly:
-    :param mongodb_url:
-    :return: done
+    ---
+    get:
+        description:  get anomalies from influx db to mongodb 
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
     """
     measurement = request.get_json()["measurement"]
     topic = request.get_json()["topic"]
@@ -435,10 +583,14 @@ def get_anomalies():
 @mongo_data_bp.route('/getDataAnomalyAll', methods=['GET'])
 def get_anomalies_all():
     """
-    insert_anomaly from influx db to mongodb 
-    :param anomaly:
-    :param mongodb_url:
-    :return: done
+    ---
+    get:
+        description: insert_anomaly from influx db to mongodb 
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
     """
     
     nbr_metadata, metadata = mongo.get_anomaly_all()
@@ -462,24 +614,39 @@ def get_anomalies_all():
 @mongo_data_bp.route('/countDataAnomalyAll', methods=['GET'])
 def count_anomalies_all():
     """
-    insert_anomaly from influx db to mongodb 
-    :param anomaly:
-    :param mongodb_url:
-    :return: done
+    ---
+    get:
+        description: get anomaly amount
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
     """
     mongodb_url = current_app.config['MONGO_URL']
     collection = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
 
     metadata = collection.find()
     nbrAnomaly = str(metadata.count())
+
+    #output = {"msg": "I'm the test endpoint from blueprint_x."}
+    #return jsonify(output)
+
     return nbrAnomaly
 
 
 @mongo_data_bp.route('/uploadssh', methods=['GET'])
 def list_upload_ssh():
     """
-    get all upload large file no finished upload process
-    :return: list all files in upload
+    ---
+    get:
+        description: get all upload large file no finished upload process
+        responses:
+            '200':
+                description: call successful
+        tags:
+        - mongodb_router
+
     """
     
     mongodb_url = current_app.config['MONGO_URL']
