@@ -12,6 +12,21 @@ swift_file_bp = Blueprint('swift_file_bp', __name__)
 
 @swift_file_bp.route('/swift-files', methods=['POST'])
 def swift_files():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get Openstack Swift files
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - openstack_swift_router
+    """
     swift_files = []
     zip_file_name = f'{str(uuid.uuid4().hex)}.zip'
     zip_path = os.path.join(
@@ -40,6 +55,25 @@ def swift_files():
 
 @swift_file_bp.route('/cache-swift-files/<path:filename>')
 def download(filename):
+    """
+    ---
+    get:
+        parameters:
+            - in: query
+              name: path
+              schema:
+                type: string
+            - in: query
+              name: filename
+              schema:
+                type: string
+        description: download file
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - openstack_swift_router
+    """
     swift_files_directory = os.path.join(
         current_app.root_path, current_app.config['SWIFT_FILES_DIRECTORY'])
     return send_from_directory(directory=swift_files_directory, filename=filename)
@@ -47,12 +81,28 @@ def download(filename):
 
 @swift_file_bp.route('/storage', methods=['POST'])
 def storage():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: Upload file
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - openstack_swift_router
+    """
     file = request.get_json()["file"]
     filename = request.get_json()["filename"]
     other_meta = request.get_json()["othermeta"]
     type_file = request.get_json()["typeFile"]
     link_file = request.get_json()["linkFile"]
     link_type = request.get_json()["linkType"]
+    container_name = request.get_json()["container_name"]
 
     if link_file != "":
 
@@ -75,7 +125,8 @@ def storage():
             password,
             path,
             filename,
-            type_file
+            type_file,
+            container_name
         ))
         upload_processing.start()
 
@@ -91,8 +142,6 @@ def storage():
         #file_content = ''.join(map(str.capitalize, data_file[1:]))
 
         file_content = data_file
-
-        container_name = "neOCampus"
         mongodb_url = current_app.config['MONGO_URL']
         user = current_app.config['SWIFT_USER']
         key = current_app.config['SWIFT_KEY']

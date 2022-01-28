@@ -172,7 +172,7 @@ def get_handled_data(params):
 
     # if certain filetype is selected, query will be ran on different MongoDB database
     # Example : Image -> data_conso database
-    if("image" in params.get('filetype')):
+    if("metadata" in params.get('dataType')):
         # Database "data_historique"
         mongo_database = mongo_client.data_conso
 
@@ -187,7 +187,7 @@ def get_handled_data(params):
 
         # Query result (Cursor object)
         result_query = collection_traitement_historique.find(
-            {'creation_date': {'$gte': start, '$lt': end}}, {"content_image": False})
+            {'creation_date': {'$gte': start, '$lt': end}, "container_name": params['container_name']}, {"content_image": False})
 
     if(collection_name == ""):
         return {}, 0
@@ -202,7 +202,7 @@ def get_handled_data(params):
     return json_result, count
 
 
-def get_models_all():
+def get_models_all(container_name):
     """
     get models with status true
     :return: all models
@@ -211,10 +211,10 @@ def get_models_all():
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
-    metadata_models = models.find()
+    metadata_models = models.find({"container_name": container_name})
     return metadata_models
 
-def get_models_show_all():
+def get_models_show_all(container_name):
     """
     get models with status true
     :return: all models
@@ -223,10 +223,10 @@ def get_models_show_all():
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
-    metadata_models = models.find({"status": True})
+    metadata_models = models.find({"status": True, "container_name": container_name})
     return metadata_models
 
-def get_models_all_cache():
+def get_models_all_cache(container_name):
     """
     get models with status false
     :return: all models
@@ -235,7 +235,7 @@ def get_models_all_cache():
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
-    metadata_models = models.find({"status": False})
+    metadata_models = models.find({"status": False, "container_name": container_name})
     return metadata_models
 
 def get_model_id(id):
@@ -253,7 +253,7 @@ def get_model_id(id):
 
     return metadata_models_param
 
-def get_models_params(param):
+def get_models_params(param, container_name):
     """
     get models with param string
     :param 
@@ -263,7 +263,7 @@ def get_models_params(param):
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
-    query = {"type_file_accepted": param, "status": True}
+    query = {"type_file_accepted": param, "status": True, "container_name": container_name}
     metadata_models_param = models.find(query)
 
     return metadata_models_param
@@ -299,7 +299,8 @@ def update_model(param):
         "label": param['label'],
         "type_file_accepted": param['type_file_accepted'],
         "metadonnees": param['metadonnees'],
-        "status": param['status']
+        "status": param['status'],
+        "container_name": param['container_name']
     }}
     
     models.update_one(query, updatevalues, upsert=False)
@@ -307,7 +308,7 @@ def update_model(param):
     return result
 
 
-def insert_anomaly(anomaly,endDate):
+def insert_anomaly(anomaly,endDate,container_name):
     """
     insert_anomaly from influx db to mongodb 
     :param anomaly:
@@ -332,14 +333,16 @@ def insert_anomaly(anomaly,endDate):
             "topic": row['topic'],
             "value": row['value'],
             "unit": row['unit'],
-            'datetime': row['datetime']
+            'datetime': row['datetime'],
+            'container_name': container_name,
         })
     for ano in anomalie["anomaly"] :
         anomaly_without_id.append({
             "topic": ano['topic'],
             "value": ano['value'],
             "unit": ano['unit'],
-            'datetime': ano['datetime']
+            'datetime': ano['datetime'],
+            'container_name': container_name
         })
     new_anomaly = {'objects': []}
     data = mongo_client.find()
@@ -348,8 +351,7 @@ def insert_anomaly(anomaly,endDate):
             data = mongo_client.find()
             for row in data:
                 if ano in data_without_id['objects'] :
-                    if ano['datetime'] == row['datetime'] and ano['topic'] == row ['topic'] and ano['unit'] == row ['unit'] :
-                        print("update ici ")
+                    if ano['datetime'] == row['datetime'] and ano['topic'] == row ['topic'] and ano['unit'] == row ['unit'] and ano['container_name'] == row ['container_name'] :
                         mongo_client.update_one({"_id":row ['_id']},{"$set":{"endDate_detection": datetime.datetime.strptime(str(new_date), "%Y-%m-%dT%H:%M:%S.%fZ")}})
                 else :
                     for ano_add in anomalie["anomaly"] :
@@ -362,11 +364,11 @@ def insert_anomaly(anomaly,endDate):
                                     "unit": ano_add['unit'],
                                     'datetime': ano_add['datetime'],
                                     'endDate_detection': ano_add['endDate_detection'],
-                                    'startDate_detection': ano_add['startDate_detection']
+                                    'startDate_detection': ano_add['startDate_detection'],
+                                    'container_name': container_name
                                 })
 
         for ano in new_anomaly['objects'] :
-            print("new anomaly ")
             mongo_client.insert_one(ano)  
     else :
         for ano in anomalie["anomaly"] :
@@ -375,7 +377,7 @@ def insert_anomaly(anomaly,endDate):
     return result
 
 
-def get_anomaly(params,measurement,topic):
+def get_anomaly(params,measurement,topic, container_name):
     """
     get_anomaly from 
     :param params: start date & end date 
@@ -408,12 +410,15 @@ def get_anomaly(params,measurement,topic):
         for item in [dates_query]:
             dict_query['$and'].append(item)
 
+        dates_query = {'container_name': container_name}
+        for item in [dates_query]:
+            dict_query['$and'].append(item)
+
     metadata = collection.find(dict_query)
-    #print(metadata)
     return metadata
 
 
-def get_anomaly_all():
+def get_anomaly_all(container_name):
     """
     get all anomaly from mongodb
 
@@ -422,6 +427,6 @@ def get_anomaly_all():
     mongodb_url = current_app.config['MONGO_URL']
     collection = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
 
-    metadata = collection.find()
+    metadata = collection.find({'container_name': container_name})
     nbr_metadata = metadata.count()
     return nbr_metadata, metadata

@@ -13,6 +13,21 @@ mongo_data_bp = Blueprint('mongo_data_bp', __name__)
 
 @mongo_data_bp.route('/last-raw-data', methods=['POST'])
 def get_last_raw_data():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get last raw data
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
     params = request.get_json()
 
     if(("limit" in request.get_json() and "offset" not in request.get_json()) or ("limit" not in request.get_json() and "offset" in request.get_json())):
@@ -21,8 +36,8 @@ def get_last_raw_data():
     if("sort_field" in request.get_json() and "sort_value" in request.get_json()):
         params['sort_field'] = request.get_json()['sort_field']
         params['sort_value'] = request.get_json()['sort_value']
-
-    nb_objects, mongo_collections = mongo.get_last_metadata("neOCampus", params)
+    container_name = request.get_json()['container_name']
+    nb_objects, mongo_collections = mongo.get_last_metadata(container_name, params)
     mongo_collections = list(mongo_collections)
 
     output = {'objects': []}
@@ -45,6 +60,21 @@ def get_last_raw_data():
 
 @mongo_data_bp.route('/raw-data', methods=['POST'])
 def get_metadata():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get raw data
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
     try:
         params = {
             'filetype': request.get_json()['filetype'],
@@ -108,8 +138,8 @@ def get_metadata():
 
     params['beginDate'] = convertedBeginDate
     params['endDate'] = convertedEndDate
-
-    nb_objects, mongo_collections = mongo.get_metadata("neOCampus", params)
+    container_name = request.get_json()['container_name']
+    nb_objects, mongo_collections = mongo.get_metadata(container_name, params)
     mongo_collections = list(mongo_collections)
 
     output = {'objects': []}
@@ -131,11 +161,28 @@ def get_metadata():
 
 @mongo_data_bp.route('/handled-data-list', methods=['POST'])
 def get_handled_data_list():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get handled data list
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
     result = {}
 
     try:
+
         params = {
-            'filetype': request.get_json(force=True)['filetype'],
+            'container_name': request.get_json(force=True)['container_name'],
+            'dataType': request.get_json(force=True)['dataType'],
             'beginDate': request.get_json(force=True)['beginDate'],
             'endDate': request.get_json(force=True)['endDate']
         }
@@ -155,20 +202,9 @@ def get_handled_data_list():
         influxDB)
     nb_lines_influxDB = len(list(influxDB))
 
-    # Mimetypes arrays which are configured in frontend and where we compare input parameter "filetype" 
-
-    mimetypes_time_series = [
-        "application/csv,application/vnd.ms-excel",
-        "text/plain"
-    ]
-
-    mimetypes_metadata = [
-        "image/png,image/jpeg"
-    ]
-
     # If there is Influx data (> 1 because Header row is present at the first line in csv file) 
     # and filter related to time series is selected
-    if number_of_rows_influxdb > 1 and params.get('filetype') in mimetypes_time_series:
+    if number_of_rows_influxdb > 1 and params.get('dataType') == 'timeseries':
         metadata_influx_file = {
             'filename': 'donnees-serie-temporelle-influxdb.csv',
             'filesize': sys.getsizeof(influxdb_result)
@@ -176,7 +212,7 @@ def get_handled_data_list():
         result['influxDB'] = metadata_influx_file
 
     # If there is Mongo data and filter "Images" or "Time series" are selected
-    if mongo_nb_results > 0 and params.get('filetype') in mimetypes_metadata:
+    if mongo_nb_results > 0 and params.get('dataType') == 'metadata':
         metadata_mongo_file = {
             'filename': 'metadonnees-images-mongodb.json',
             'filesize': sys.getsizeof(mongoDB)
@@ -188,10 +224,26 @@ def get_handled_data_list():
 
 @mongo_data_bp.route('/handled-data-file', methods=['POST'])
 def get_handled_data_zipped_file():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get handled data file
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
     data_request = request.get_json(force=True)[0]
 
     try:
         params = {
+            'container_name': request.get_json()['container_name'],
             'filetype': data_request['filetype'],
             'beginDate': data_request['beginDate'],
             'endDate': data_request['endDate']
@@ -262,9 +314,25 @@ def get_handled_data_zipped_file():
     else:
         return jsonify({'msg': "No content available."})
 
-@mongo_data_bp.route('/models/all', methods=['GET'])
+@mongo_data_bp.route('/models/all', methods=['GET', 'POST'])
 def get_models():
-    models = mongo.get_models_all()
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get all models
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
+    container_name = request.get_json()['container_name']
+    models = mongo.get_models_all(container_name)
     models_list = list(models)
 
     output = {'data': []}
@@ -279,9 +347,25 @@ def get_models():
         
     return jsonify({'models': output})
 
-@mongo_data_bp.route('/models/show/all', methods=['GET'])
+@mongo_data_bp.route('/models/show/all', methods=['GET', 'POST'])
 def get_models_show():
-    models = mongo.get_models_show_all()
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get models with status true
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
+    container_name = request.get_json()['container_name']
+    models = mongo.get_models_show_all(container_name)
     models_list = list(models)
 
     output = {'data': []}
@@ -296,8 +380,24 @@ def get_models_show():
         
     return jsonify({'models': output})
 
-@mongo_data_bp.route('/models/cache/all', methods=['GET'])
+@mongo_data_bp.route('/models/cache/all', methods=['GET', 'POST'])
 def get_models_cache():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description:  get models with status false
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
+    container_name = request.get_json()['container_name']
     models = mongo.get_models_all_cache()
     models_list = list(models)
     #Data formatting for output
@@ -319,9 +419,10 @@ def get_models_params():
     data_request = request.get_json()
     types_files = data_request['types_files']
     models_list = []
+    container_name = request.get_json()['container_name']
     #Recovery of all templates for each file type
     for type_file in types_files:
-        models = mongo.get_models_params(type_file)
+        models = mongo.get_models_params(type_file, container_name)
         models_list.append(models)
         
     #Liste des différents modèles sans doublon
@@ -345,6 +446,21 @@ def get_models_params():
 
 @mongo_data_bp.route('/models/id', methods=['GET', 'POST'])
 def get_model_id():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get model
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
     data_request = request.get_json()
     id = data_request['id']
     models = mongo.get_model_id(id)
@@ -359,17 +475,31 @@ def get_model_id():
             "metadonnees": obj['metadonnees'],
             "status": obj['status'],
         })
+
+    output = str(output)
         
     return jsonify({'model': output})
 
 @mongo_data_bp.route('/models/add', methods=['POST'])
 def add_models():
+    """
+    ---
+    get:
+        description: edit model
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
+    
     data_request = request.get_json()
     param = {
         'label': data_request['label'],
         'type_file_accepted': data_request['type_file_accepted'],
         'metadonnees': data_request['metadonnees'],
         'status': data_request['status'],
+        'container_name': data_request['container_name'],
     }
     model = mongo.add_model(param)
 
@@ -378,13 +508,25 @@ def add_models():
 
 @mongo_data_bp.route('/models/edit', methods=['POST'])
 def edit_models():
+    """
+    ---
+    get:
+        description: edit model
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
+    
     data_request = request.get_json()
     param = {
         'id': data_request['id'],
         'label': data_request['label'],
         'type_file_accepted': data_request['type_file_accepted'],
         'metadonnees': data_request['metadonnees'],
-        'status': data_request['status']
+        'status': data_request['status'],
+        'container_name': data_request['container_name'],
     }
     model = mongo.update_model(param)
 
@@ -393,11 +535,16 @@ def edit_models():
 @mongo_data_bp.route('/getDataAnomaly', methods=['GET','POST'])
 def get_anomalies():
     """
-    insert_anomaly from influx db to mongodb 
-    :param anomaly:
-    :param mongodb_url:
-    :return: done
+    ---
+    get:
+        description:  get anomalies from influx db to mongodb 
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
     """
+    container_name = request.get_json()['container_name']
     measurement = request.get_json()["measurement"]
     topic = request.get_json()["topic"]
     
@@ -410,12 +557,9 @@ def get_anomalies():
     except:
         return jsonify({'error': 'Missing required fields.'})
 
-    x = influxdb.get_data_anomaly(50, 150)
-    print("insert")    
-    print(params['beginDate'])
-    print(params['endDate'])
+    x = influxdb.get_data_anomaly(50, 150, container_name)
 
-    mongo_collections = mongo.get_anomaly(params,measurement,topic)
+    mongo_collections = mongo.get_anomaly(params,measurement,topic, container_name)
     mongo_collections = list(mongo_collections)
 
     output = {'objects': []}
@@ -432,16 +576,20 @@ def get_anomalies():
 
     return jsonify({'anomly': output})
 
-@mongo_data_bp.route('/getDataAnomalyAll', methods=['GET'])
+@mongo_data_bp.route('/getDataAnomalyAll', methods=['GET', 'POST'])
 def get_anomalies_all():
     """
-    insert_anomaly from influx db to mongodb 
-    :param anomaly:
-    :param mongodb_url:
-    :return: done
+    ---
+    get:
+        description: insert_anomaly from influx db to mongodb 
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
     """
-    
-    nbr_metadata, metadata = mongo.get_anomaly_all()
+    container_name = request.get_json()['container_name']
+    nbr_metadata, metadata = mongo.get_anomaly_all(container_name)
 
     mongo_collections = list(metadata)
     output = {'objects': []}
@@ -459,34 +607,49 @@ def get_anomalies_all():
     
     return jsonify({'anomaly': output})
 
-@mongo_data_bp.route('/countDataAnomalyAll', methods=['GET'])
+@mongo_data_bp.route('/countDataAnomalyAll', methods=['GET', 'POST'])
 def count_anomalies_all():
     """
-    insert_anomaly from influx db to mongodb 
-    :param anomaly:
-    :param mongodb_url:
-    :return: done
+    ---
+    get:
+        description: get anomaly amount
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
     """
     mongodb_url = current_app.config['MONGO_URL']
     collection = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
-
-    metadata = collection.find()
+    container_name = request.get_json()['container_name']
+    metadata = collection.find({'container_name': container_name})
     nbrAnomaly = str(metadata.count())
+
+    #output = {"msg": "I'm the test endpoint from blueprint_x."}
+    #return jsonify(output)
+
     return nbrAnomaly
 
 
-@mongo_data_bp.route('/uploadssh', methods=['GET'])
+@mongo_data_bp.route('/uploadssh', methods=['GET', 'POST'])
 def list_upload_ssh():
     """
-    get all upload large file no finished upload process
-    :return: list all files in upload
+    ---
+    get:
+        description: get all upload large file no finished upload process
+        responses:
+            '200':
+                description: call successful
+        tags:
+        - mongodb_router
+
     """
-    
+    container_name = request.get_json()['container_name']
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.upload
     collection = mongo_db["file_upload"]
     
-    files_upload = collection.find({},{ "_id": 0})
+    files_upload = collection.find({'container_name': container_name},{ "_id": 0})
     models_list = list(files_upload)
     return jsonify({'file_upload': models_list})
