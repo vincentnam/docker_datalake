@@ -10,7 +10,6 @@ import { toast } from 'react-toastify';
 
 export class DownloadHandleData extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
-    title = 'Affichage des données traitées'
     selectedElementsOnActualPage = []
 
     constructor(props) {
@@ -321,7 +320,7 @@ export class DownloadHandleData extends React.Component {
                     setEndDate={setEndDate}
                     validateFilters={validateFilters}
                     data={filterData}
-                    title={this.title}
+                    filterDataType={'processed-data'}
                 />
                 <div className="download-detail">
                     <div className="row">

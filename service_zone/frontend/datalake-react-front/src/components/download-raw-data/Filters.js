@@ -1,6 +1,7 @@
 import React from "react";
 import { FormGroup, FormLabel, Form, Button } from "react-bootstrap";
 import { config } from '../../configmeta/config';
+import { config_processed_data } from '../../configmeta/config_processed_data';
 
 export class Filters extends React.Component {
 
@@ -13,6 +14,7 @@ export class Filters extends React.Component {
         this.setBeginDate = this.setBeginDate.bind(this);
         this.setEndDate = this.setEndDate.bind(this);
         this.handleChange = this.handleChange.bind(this);
+        this.getConfiguration = this.getConfiguration.bind(this);
 
         this.state = {
             type: 0
@@ -60,13 +62,21 @@ export class Filters extends React.Component {
         return filetypesResult
     }
 
+    getConfiguration() {
+        if(this.props.filterDataType) {
+            return [config_processed_data.types] 
+        } else {
+            return [config.types] 
+        }
+    }
+
     // when data type has changed
     handleChange(event) {
         const target = event.target;
         const value = target.type === 'checkbox' ? target.checked : target.value;
         const name = target.name;
 
-        let filetypesResult = this.getFiletypeById([config.types], value)
+        let filetypesResult = this.getFiletypeById(this.getConfiguration(), value)
         this.props.setFiletype(filetypesResult)
 
         this.setState({
@@ -75,9 +85,10 @@ export class Filters extends React.Component {
     }
 
     render() {
+        let getConfiguration = this.getConfiguration
         // data type field
         const SelectDatatype = () => {
-            let types = [config.types];
+            let types = getConfiguration();
             // loop into conf to get all data types
             const listTypes = types.map((type) => (
                 type.map((t, key) =>
