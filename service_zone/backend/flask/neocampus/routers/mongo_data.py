@@ -314,7 +314,7 @@ def get_handled_data_zipped_file():
     else:
         return jsonify({'msg': "No content available."})
 
-@mongo_data_bp.route('/models/all', methods=['GET'])
+@mongo_data_bp.route('/models/all', methods=['GET', 'POST'])
 def get_models():
     """
     ---
@@ -347,7 +347,7 @@ def get_models():
         
     return jsonify({'models': output})
 
-@mongo_data_bp.route('/models/show/all', methods=['GET'])
+@mongo_data_bp.route('/models/show/all', methods=['GET', 'POST'])
 def get_models_show():
     """
     ---
@@ -380,7 +380,7 @@ def get_models_show():
         
     return jsonify({'models': output})
 
-@mongo_data_bp.route('/models/cache/all', methods=['GET'])
+@mongo_data_bp.route('/models/cache/all', methods=['GET', 'POST'])
 def get_models_cache():
     """
     ---
@@ -576,7 +576,7 @@ def get_anomalies():
 
     return jsonify({'anomly': output})
 
-@mongo_data_bp.route('/getDataAnomalyAll', methods=['GET'])
+@mongo_data_bp.route('/getDataAnomalyAll', methods=['GET', 'POST'])
 def get_anomalies_all():
     """
     ---
@@ -607,7 +607,7 @@ def get_anomalies_all():
     
     return jsonify({'anomaly': output})
 
-@mongo_data_bp.route('/countDataAnomalyAll', methods=['GET'])
+@mongo_data_bp.route('/countDataAnomalyAll', methods=['GET', 'POST'])
 def count_anomalies_all():
     """
     ---
@@ -631,7 +631,7 @@ def count_anomalies_all():
     return nbrAnomaly
 
 
-@mongo_data_bp.route('/uploadssh', methods=['GET'])
+@mongo_data_bp.route('/uploadssh', methods=['GET', 'POST'])
 def list_upload_ssh():
     """
     ---
