@@ -499,7 +499,7 @@ def add_models():
         'type_file_accepted': data_request['type_file_accepted'],
         'metadonnees': data_request['metadonnees'],
         'status': data_request['status'],
-        'container_name' = data_request['container_name'],
+        'container_name': data_request['container_name'],
     }
     model = mongo.add_model(param)
 
@@ -526,7 +526,7 @@ def edit_models():
         'type_file_accepted': data_request['type_file_accepted'],
         'metadonnees': data_request['metadonnees'],
         'status': data_request['status'],
-        'container_name' = data_request['container_name'],
+        'container_name': data_request['container_name'],
     }
     model = mongo.update_model(param)
 
