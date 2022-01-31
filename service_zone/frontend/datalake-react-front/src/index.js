@@ -8,20 +8,18 @@ import './style.css';
 import 'react-toastify/dist/ReactToastify.css';
 
 
-import {Home} from './components/Home';
+import Home from './components/Home';
 import {ProcessedDataVisualisationTimeSeries} from './components/Processed-data-visualisation-time-series';
-import {Upload} from './components/Upload';
+import Upload from './components/Upload';
 import {
     BrowserRouter as Router,
     Switch,
     Route
 } from 'react-router-dom';
 import {Download} from './components/Download';
-import {DownloadRaw} from './components/download-raw-data/DownloadRaw';
-import {DownloadHandleData} from './components/download-handled-data/DownloadHandleData';
-import {Models} from './components/Models';
-import {DetectionAnomalies} from './components/DetectionAnomalies';
-import {Traceability} from './components/Traceability';
+import Models from './components/Models';
+import DetectionAnomalies from './components/DetectionAnomalies';
+import Traceability from './components/Traceability';
 import Header from "./components/Header";
 import {Provider} from "react-redux";
 import {createStore} from "redux";
@@ -40,12 +38,6 @@ ReactDOM.render(
                     </Route>
                     <Route path="/download">
                         <Download/>
-                    </Route>
-                    <Route path="/download-raw">
-                        <DownloadRaw/>
-                    </Route>
-                    <Route path="/download-handled-data">
-                        <DownloadHandleData/>
                     </Route>
                     <Route path="/data-processed-visualization">
                         <ProcessedDataVisualisationTimeSeries/>

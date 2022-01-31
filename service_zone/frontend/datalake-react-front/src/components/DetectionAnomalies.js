@@ -1,24 +1,29 @@
 import React from "react";
-import { DataAnomalyVisiualisation } from './anomaly-data/anomaly-visualisation';
-import { Filters } from "./anomaly-data/Filters";
+import {DataAnomalyVisiualisation} from './anomaly-data/anomaly-visualisation';
+import Filters from "./anomaly-data/Filters";
 import api from '../api/api';
+import {connect} from "react-redux";
 
-export class DetectionAnomalies extends React.Component {
+class DetectionAnomalies extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             dataFilters: [],
             selectMeasurement: "",
             selectTopic: "",
-            all_data : [],
-            nbr_anomaly : ""
+            all_data: [],
+            nbr_anomaly: ""
         };
     }
-    componentDidMount(){
+
+    componentDidMount() {
         this.loadData();
     }
+
     loadData() {
-        api.get('getDataAnomalyAll')
+        api.post('getDataAnomalyAll', {
+            container_name: this.props.nameContainer.nameContainer
+        })
             .then((response) => {
                 let result = [];
                 for (const value of Object.entries(response.data.anomaly.objects)) {
@@ -32,7 +37,7 @@ export class DetectionAnomalies extends React.Component {
                         _topic: dt.topic,
                         _value: dt.value,
                         _unit: dt.unit,
-                        _datetime : dt.datetime,
+                        _datetime: dt.datetime,
                         _startDate_detection: dt.startDate_detection,
                         _endDate_detection: dt.endDate_detection,
                     })
@@ -45,8 +50,8 @@ export class DetectionAnomalies extends React.Component {
             .catch(function (error) {
                 console.log(error);
             });
-        }
-    
+    }
+
 
     handleChange(event) {
         const target = event.target;
@@ -56,22 +61,23 @@ export class DetectionAnomalies extends React.Component {
             [name]: value,
         });
     }
-    handleCallbackData = (childData) =>{
+
+    handleCallbackData = (childData) => {
         this.setState({dataFilters: childData})
     }
-    handleCallbackMeasurement = (childData) =>{
+    handleCallbackMeasurement = (childData) => {
         this.setState({selectMeasurement: childData})
     }
-    handleCallbackTopic = (childData) =>{
+    handleCallbackTopic = (childData) => {
         this.setState({selectTopic: childData})
     }
-    
+
     render() {
         return (
             <div>
                 <div className="container main-download mt-4">
                     <Filters
-                        data={this.handleCallbackData} 
+                        data={this.handleCallbackData}
                         selectMeasurement={this.handleCallbackMeasurement}
                         selectTopic={this.handleCallbackTopic}
                     />
@@ -86,3 +92,11 @@ export class DetectionAnomalies extends React.Component {
     }
 
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(DetectionAnomalies)

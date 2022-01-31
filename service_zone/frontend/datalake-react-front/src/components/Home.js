@@ -7,8 +7,9 @@ import { Filters } from "./download-raw-data/Filters";
 import Moment from "moment";
 import DataTable from 'react-data-table-component';
 import { LoadingSpinner } from "./utils/LoadingSpinner";
+import {connect} from "react-redux";
 
-export class Home extends React.Component {
+class Home extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
     selectedElementsOnActualPage = []
 
@@ -61,6 +62,7 @@ export class Home extends React.Component {
                 this.state.beginDate === undefined)) {
             routeName = '/last-raw-data'
             data = JSON.stringify({
+                container_name: this.props.nameContainer.nameContainer,
                 limit: this.state.perPage,
                 offset: this.state.offset,
                 sort_field: this.state.sort_field,
@@ -73,6 +75,7 @@ export class Home extends React.Component {
             this.state.sort_value === undefined &&
             this.state.beginDate !== undefined) {
             data = JSON.stringify({
+                container_name: this.props.nameContainer.nameContainer,
                 limit: this.state.perPage,
                 offset: this.state.offset,
                 filetype: this.state.filetype,
@@ -86,13 +89,15 @@ export class Home extends React.Component {
             this.state.sort_value !== undefined &&
             this.state.beginDate !== undefined) {
             data = JSON.stringify({
+                container_name: this.props.nameContainer.nameContainer,
                 limit: this.state.perPage,
                 offset: this.state.offset,
                 filetype: this.state.filetype,
                 beginDate: this.state.beginDate,
                 endDate: this.state.endDate,
                 sort_field: this.state.sort_field,
-                sort_value: this.state.sort_value
+                sort_value: this.state.sort_value,
+
             })
         }
 
@@ -418,3 +423,11 @@ export class Home extends React.Component {
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(Home)

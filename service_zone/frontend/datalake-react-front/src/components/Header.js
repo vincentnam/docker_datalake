@@ -19,7 +19,9 @@ class Header extends React.Component {
     }
 
     countData() {
-        api.get('getDataAnomalyAll')
+        api.post('getDataAnomalyAll', {
+            container_name: this.props.nameContainer.nameContainer
+        })
             .then((response) => {
                 this.setState({
                     anomalies: response.data.anomaly
@@ -35,18 +37,18 @@ class Header extends React.Component {
             let projects = [config.projects];
             const listProjects = projects.map((project) => (
                 project.map((p, key) =>
-                    <option value={p.name_container}>{p.label}</option>
+                    <option key={key} value={p.name_container}>{p.label}</option>
                 )
             ));
 
             return (
                 <>
-                    <select value={this.props.nameContainer.nameContainer} onChange={(event) => this.props.editNameContainer(event.target.value)}
+                    <select value={this.props.nameContainer.nameContainer}
+                            onChange={(event) => this.props.editNameContainer(event.target.value)}
                             name="project" className="form-select">
                         {listProjects}
                     </select>
                 </>
-
             );
         }
 

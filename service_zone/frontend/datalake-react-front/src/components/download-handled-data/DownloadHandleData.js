@@ -7,8 +7,9 @@ import {LoadingSpinner} from "../utils/LoadingSpinner";
 import {Paginate} from "../download-raw-data/Paginate";
 import DataTable from 'react-data-table-component';
 import { toast } from 'react-toastify';
+import {connect} from "react-redux";
 
-export class DownloadHandleData extends React.Component {
+class DownloadHandleData extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
     selectedElementsOnActualPage = []
 
@@ -66,7 +67,8 @@ export class DownloadHandleData extends React.Component {
         if (selectedElements.length) {
             this.handleShow();
             api.post('handled-data-file', body, {
-                responseType: 'arraybuffer'
+                responseType: 'arraybuffer',
+                container_name: this.props.nameContainer.nameContainer
             })
                 .then(function (result) {
                     const url = window.URL.createObjectURL(new Blob([result.data], {type: 'application/zip'}));
@@ -155,7 +157,8 @@ export class DownloadHandleData extends React.Component {
                 offset: this.state.offset,
                 filetype: this.state.filetype.toString(),
                 beginDate: this.state.beginDate,
-                endDate: this.state.endDate
+                endDate: this.state.endDate,
+                container_name: this.props.nameContainer.nameContainer
             }),
             xhrFields: {
                 withCredentials: true
@@ -367,3 +370,11 @@ export class DownloadHandleData extends React.Component {
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(DownloadHandleData)

@@ -8,6 +8,7 @@ import {LoadingSpinner} from "../utils/LoadingSpinner";
 import { toast } from 'react-toastify';
 import DataTable from 'react-data-table-component';
 import Moment from 'moment';
+import {connect} from "react-redux";
 
 const columns = [
             {
@@ -52,7 +53,7 @@ const columns = [
             },
         ];
 
-export class DownloadRaw extends React.Component {
+class DownloadRaw extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
     title = 'Affichage des données brutes'
     selectedElementsOnActualPage = []
@@ -233,7 +234,8 @@ export class DownloadRaw extends React.Component {
                 beginDate: this.state.beginDate,
                 endDate: this.state.endDate,
                 sort_field: this.state.sort_field,
-                sort_value: this.state.sort_value
+                sort_value: this.state.sort_value,
+                container_name: this.props.nameContainer.nameContainer
             })
         } else {
             data = JSON.stringify({
@@ -241,7 +243,8 @@ export class DownloadRaw extends React.Component {
                 offset: this.state.offset,
                 filetype: this.state.filetype,
                 beginDate: this.state.beginDate,
-                endDate: this.state.endDate
+                endDate: this.state.endDate,
+                container_name: this.props.nameContainer.nameContainer
             })
         }
 
@@ -449,3 +452,11 @@ export class DownloadRaw extends React.Component {
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(DownloadRaw)

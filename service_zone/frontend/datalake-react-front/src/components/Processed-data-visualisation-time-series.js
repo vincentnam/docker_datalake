@@ -1,5 +1,5 @@
 import React from "react";
-import { Filters } from './processed-data/Filters';
+import Filters from './processed-data/Filters';
 import { DataVisiualisation } from './processed-data/data-visualisation';
 
 export class ProcessedDataVisualisationTimeSeries extends React.Component {

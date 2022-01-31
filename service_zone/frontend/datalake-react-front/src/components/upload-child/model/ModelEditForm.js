@@ -5,8 +5,9 @@ import Select from 'react-select';
 import { types_files } from '../../../configmeta/types_files';
 import { MetadonneesEditForm } from './MetadonneesEditForm';
 import { ToastContainer, toast } from 'react-toastify';
+import {connect} from "react-redux";
 
-export class ModelEditForm extends React.Component {
+class ModelEditForm extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -139,7 +140,8 @@ export class ModelEditForm extends React.Component {
                 label: this.state.label,
                 type_file_accepted: types,
                 metadonnees: this.state.metadonnees,
-                status: this.state.status
+                status: this.state.status,
+                container_name: this.props.nameContainer.nameContainer
             })
                 .then(() => {
                     this.props.reload();
@@ -322,3 +324,10 @@ export class ModelEditForm extends React.Component {
         );
     }
 }
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(ModelEditForm)
