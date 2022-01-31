@@ -40,14 +40,9 @@ const columns = [
                 sortable: true,
             },
             {
-                id: 'meta1',
-                name: "Meta 1",
-                selector: row => row.other_data ? row.other_data['meta1'] : '-'
-            },
-            {
-                id: 'meta2',
-                name: "Meta 2",
-                selector: row => row.other_data ? row.other_data['meta2'] : '-'
+                id: 'other_data',
+                name: "Métadescriptions",
+                selector: row => row.other_data ? JSON.stringify(row.other_data) : '-' 
             },
             {
                 id: 'creation_date',
