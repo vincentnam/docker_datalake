@@ -1,15 +1,8 @@
-export const initialState = {
-    nameContainer: "neOCampus",
-};
+import { combineReducers } from "redux"
+import { containerReducer } from "./containerReducer"
 
-export function reducer(state = initialState, action) {
-    // si l'action est de type changeNameContainer...
-    if (action.type === "changeNameContainer") {
-        return {
-            ...state,
-            nameContainer: action.payload.nameContainer
-        };
-    }
-    // sinon on retourne le state sans le changer
-    return state;
-}
+const allReducers = combineReducers({
+    nameContainer: containerReducer,
+})
+
+export default allReducers

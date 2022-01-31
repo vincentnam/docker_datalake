@@ -1,15 +1,16 @@
 import React from "react";
 import {NavLink} from 'react-router-dom';
 import api from '../api/api';
-import {SelectProjects} from "./header/SelectProjects";
+import {config} from "../configmeta/projects";
+import {connect} from "react-redux";
+import {editNameContainer} from "../store/nameContainerAction";
 
-export class Header extends React.Component {
+class Header extends React.Component {
 
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
         this.state = {
             anomalies: [],
-            project: "",
         }
     }
 
@@ -30,6 +31,25 @@ export class Header extends React.Component {
     }
 
     render() {
+        const SelectProjects = () => {
+            let projects = [config.projects];
+            const listProjects = projects.map((project) => (
+                project.map((p, key) =>
+                    <option value={p.name_container}>{p.label}</option>
+                )
+            ));
+
+            return (
+                <>
+                    <select value={this.props.nameContainer.nameContainer} onChange={(event) => this.props.editNameContainer(event.target.value)}
+                            name="project" className="form-select">
+                        {listProjects}
+                    </select>
+                </>
+
+            );
+        }
+
         const Navbar = () => (
             <nav className="navbar-nav">
                 <NavLink exact
@@ -99,3 +119,11 @@ export class Header extends React.Component {
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, {editNameContainer})(Header)

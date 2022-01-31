@@ -22,12 +22,12 @@ import {DownloadHandleData} from './components/download-handled-data/DownloadHan
 import {Models} from './components/Models';
 import {DetectionAnomalies} from './components/DetectionAnomalies';
 import {Traceability} from './components/Traceability';
-import {Header} from "./components/Header";
+import Header from "./components/Header";
 import {Provider} from "react-redux";
 import {createStore} from "redux";
-import { reducer } from "./store";
+import allReducers from "./store";
 
-const store = createStore(reducer);
+const store = createStore(allReducers);
 
 ReactDOM.render(
     <React.StrictMode>
