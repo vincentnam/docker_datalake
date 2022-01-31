@@ -397,7 +397,7 @@ def get_models_cache():
             - mongodb_router
     """
     container_name = request.get_json()['container_name']
-    models = mongo.get_models_all_cache()
+    models = mongo.get_models_all_cache(container_name)
     models_list = list(models)
     #Data formatting for output
     output = {'data': []}
