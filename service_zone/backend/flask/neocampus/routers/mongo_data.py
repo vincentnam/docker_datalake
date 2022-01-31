@@ -465,17 +465,14 @@ def get_model_id():
     models = mongo.get_model_id(id)
     model = list(models)
 
-    output = {'data': []}
     for obj in model:
-        output['data'].append({
+        output = {
             '_id': str(obj['_id']),
             "label": obj['label'],
             "type_file_accepted": obj['type_file_accepted'],
             "metadonnees": obj['metadonnees'],
             "status": obj['status'],
-        })
-
-    output = str(output)
+        }
         
     return jsonify({'model': output})
 
@@ -621,6 +618,7 @@ def count_anomalies_all():
     mongodb_url = current_app.config['MONGO_URL']
     collection = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
     container_name = request.get_json()['container_name']
+    print(container_name)
     metadata = collection.find({'container_name': container_name})
     nbrAnomaly = str(metadata.count())
 
