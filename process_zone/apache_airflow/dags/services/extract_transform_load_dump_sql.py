@@ -41,7 +41,7 @@ def extract_transform_load_sql_dump(swift_result, swift_container, swift_id, pro
         host=config.mariadb_host,
         user=config.mariadb_user,
         passwd=config.mariadb_passwd,
-        db=config.mariadb_database,
+        db=swift_container,
         port=3306,
     )
 

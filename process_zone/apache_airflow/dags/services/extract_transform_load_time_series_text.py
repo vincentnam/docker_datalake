@@ -105,7 +105,7 @@ def extract_transform_load_time_series_text(swift_result, swift_container, swift
             )
             result.append(dt)
             # Upload in influxdb
-            write_api.write(bucket, org, dt, protocol='json')
+            write_api.write(swift_container, org, dt, protocol='json')
     return result
 
 

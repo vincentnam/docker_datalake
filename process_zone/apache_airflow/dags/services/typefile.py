@@ -23,8 +23,6 @@ def typefile(typef):
         type_file = "application/x-gzip"
     if(typef == "sql"):
         type_file = "application/sql"
-    if(typef == "txt"):
-        type_file = "text/plain"
     
     return type_file
 
