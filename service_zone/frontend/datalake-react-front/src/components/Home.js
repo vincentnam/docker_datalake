@@ -3,7 +3,7 @@ import '../home.css';
 import $ from 'jquery';
 import { config } from '../configmeta/config';
 import api from '../api/api';
-import { Filters } from "./download-raw-data/Filters";
+import Filters from "./download-raw-data/Filters";
 import Moment from "moment";
 import DataTable from 'react-data-table-component';
 import { LoadingSpinner } from "./utils/LoadingSpinner";

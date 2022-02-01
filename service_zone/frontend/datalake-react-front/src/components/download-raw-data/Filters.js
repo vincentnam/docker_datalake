@@ -2,8 +2,10 @@ import React from "react";
 import { FormGroup, FormLabel, Form, Button } from "react-bootstrap";
 import { config } from '../../configmeta/config';
 import { config_processed_data } from '../../configmeta/config_processed_data';
+import {configWithSGE} from "../../configmeta/configWithSGE";
+import {connect} from "react-redux";
 
-export class Filters extends React.Component {
+class Filters extends React.Component {
 
     constructor(props) {
         super(props);
@@ -66,8 +68,13 @@ export class Filters extends React.Component {
         if(this.props.filterDataType) {
             return [config_processed_data.types] 
         } else {
-            return [config.types] 
+            if(this.props.nameContainer.nameContainer === "neOCampus") {
+                return [configWithSGE.types];
+            } else {
+                return [config.types];
+            }
         }
+
     }
 
     // when data type has changed
@@ -137,3 +144,11 @@ export class Filters extends React.Component {
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(Filters)
