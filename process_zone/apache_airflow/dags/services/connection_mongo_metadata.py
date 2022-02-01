@@ -3,9 +3,9 @@ from pymongo import MongoClient
 import config
 
 # Function return metadata from a swift_object_id
-def connection_mongo_metadata(swift_object_id):
+def connection_mongo_metadata(swift_container, swift_object_id):
     mongodb_url = config.mongodb_url
-    container_name = config.container_name_collection_upload
+    container_name = swift_container
 
     # Connection to mongodb metadata
     client = MongoClient(mongodb_url, connect=False)
