@@ -1,19 +1,20 @@
 import React from "react";
-import { Header } from './Header';
 import Dropzone from 'react-dropzone';
 import { InputMeta } from './upload-child/InputMeta';
 import { TextAreaMeta } from './upload-child/TextAreaMeta';
 import { config } from '../configmeta/config';
+import {configWithSGE} from "../configmeta/configWithSGE";
 import { extensions_types_files } from '../configmeta/extensions_types_files';
 import api from '../api/api';
 import { ProgressBarComponent } from "./upload-child/ProgressBarComponent";
 import filesize from "filesize";
 import { ToastContainer, toast } from 'react-toastify';
-import { ModelAddForm } from './upload-child/model/ModelAddForm';
-import { ModelEditForm } from './upload-child/model/ModelEditForm';
+import ModelAddForm from './upload-child/model/ModelAddForm';
+import ModelEditForm from './upload-child/model/ModelEditForm';
 import { Modal } from "react-bootstrap";
+import {connect} from "react-redux";
 
-export class Upload extends React.Component {
+class Upload extends React.Component {
     constructor() {
         super();
         this.onDrop = (files) => {
@@ -56,7 +57,6 @@ export class Upload extends React.Component {
                     this.setState({ files: f });
                 }
             });
-
         };
         this.state = {
             files: [],
@@ -113,7 +113,8 @@ export class Upload extends React.Component {
             othermeta: [],
         });
         api.post("models/params", {
-            types_files: this.state.type_file_accepted
+            types_files: this.state.type_file_accepted,
+            container_name: this.props.nameContainer.nameContainer
         })
             .then((response) => {
                 this.setState({
@@ -185,7 +186,8 @@ export class Upload extends React.Component {
                         });
                         type_file_accepted = t.type_file_accepted
                         api.post("models/params", {
-                            types_files: type_file_accepted
+                            types_files: type_file_accepted,
+                            container_name: this.props.nameContainer.nameContainer
                         })
                             .then((response) => {
                                 this.setState({
@@ -240,13 +242,13 @@ export class Upload extends React.Component {
                 })
                     .then((response) => {
                         this.setState({
-                            othermeta: response.data.model.data[0].metadonnees,
+                            othermeta: response.data.model.metadonnees,
                             editModel: {
-                                id: response.data.model.data[0]._id,
-                                label: response.data.model.data[0].label,
-                                typesFiles: response.data.model.data[0].type_file_accepted,
-                                metadonnees: response.data.model.data[0].metadonnees,
-                                status: response.data.model.data[0].status,
+                                id: response.data.model._id,
+                                label: response.data.model.label,
+                                typesFiles: response.data.model.type_file_accepted,
+                                metadonnees: response.data.model.metadonnees,
+                                status: response.data.model.status,
                             }
                         });
                     })
@@ -480,7 +482,8 @@ export class Upload extends React.Component {
                 file: this.state.file,
                 linkFile: this.state.linkFile.trim(),
                 linkType: type_link,
-                othermeta: other
+                othermeta: other,
+                container_name: this.props.nameContainer.nameContainer
             }, options)
                 .then(function () {
                     toast.success("L'upload a bien été fait !", {
@@ -533,7 +536,7 @@ export class Upload extends React.Component {
 
         const Metadonnees = () => {
             let listMeta = null;
-            const othermeta = this.state.othermeta;
+            let othermeta = this.state.othermeta;
             listMeta = (
                 othermeta.map((meta) => {
                     const index = othermeta.indexOf(meta);
@@ -552,7 +555,14 @@ export class Upload extends React.Component {
             );
         }
         const SelectDatatype = () => {
-            const types = [config.types];
+            let types = [];
+            if(this.props.nameContainer.nameContainer === "neOCampus") {
+                types = [configWithSGE.types];
+            } else {
+                types = [config.types];
+            }
+
+
             const listTypes = types.map((type) => (
                 type.map((t, key) =>
                     <option value={key}>{t.label}</option>
@@ -645,7 +655,6 @@ export class Upload extends React.Component {
 
         return (
             <div>
-                <Header />
                 <div className="container main-upload">
                     <div className="title">Upload de données</div>
                     <div className="jumbotron">
@@ -754,3 +763,11 @@ export class Upload extends React.Component {
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(Upload)

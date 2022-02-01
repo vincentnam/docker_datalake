@@ -1,10 +1,10 @@
 import React from "react";
-import { Header } from './Header';
 import api from '../api/api';
 import Moment from 'moment';
 import { ProgressBar } from 'react-bootstrap';
+import {connect} from "react-redux";
 
-export class Traceability extends React.Component {
+class Traceability extends React.Component {
     constructor(props) {
         super(props);
         // Set some state
@@ -31,7 +31,9 @@ export class Traceability extends React.Component {
     }
 
     loadTraceability() {
-        api.get('uploadssh')
+        api.post('uploadssh', {
+            container_name: this.props.nameContainer.nameContainer
+        })
             .then((response) => {
                 this.setState({
                     elements: response.data.file_upload
@@ -145,7 +147,6 @@ export class Traceability extends React.Component {
         }
         return (
             <div>
-                <Header />
                 <div className="container main-upload">
                     <div className="title">Traçabilité des fichiers upload :</div>
                     <div className="main-download">
@@ -185,3 +186,10 @@ export class Traceability extends React.Component {
         )
     }
 }
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(Traceability)

@@ -1,22 +1,27 @@
 import React from "react";
-
-import { NavLink } from 'react-router-dom';
+import {NavLink} from 'react-router-dom';
 import api from '../api/api';
+import {config} from "../configmeta/projects";
+import {connect} from "react-redux";
+import {editNameContainer} from "../store/nameContainerAction";
 
-export class Header extends React.Component {
+class Header extends React.Component {
 
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
         this.state = {
-            anomalies: []
+            anomalies: [],
         }
     }
 
     componentDidMount() {
         this.countData();
     }
+
     countData() {
-        api.get('getDataAnomalyAll')
+        api.post('getDataAnomalyAll', {
+            container_name: this.props.nameContainer.nameContainer
+        })
             .then((response) => {
                 this.setState({
                     anomalies: response.data.anomaly
@@ -26,71 +31,101 @@ export class Header extends React.Component {
                 console.log(error);
             });
     }
+
     render() {
+        const SelectProjects = () => {
+            let projects = [config.projects];
+            const listProjects = projects.map((project) => (
+                project.map((p, key) =>
+                    <option key={key} value={p.name_container}>{p.label}</option>
+                )
+            ));
+
+            return (
+                <>
+                    <select value={this.props.nameContainer.nameContainer}
+                            onChange={(event) => this.props.editNameContainer(event.target.value)}
+                            name="project" className="form-select">
+                        {listProjects}
+                    </select>
+                </>
+            );
+        }
+
         const Navbar = () => (
             <nav className="navbar-nav">
                 <NavLink exact
-                    activeClassName="active"
-                    className="nav-item nav-link"
-                    to="/">
+                         activeClassName="active"
+                         className="nav-item nav-link"
+                         to="/">
                     Home
                 </NavLink>
                 <NavLink activeClassName="active"
-                    className="nav-item nav-link"
-                    to="/upload">
+                         className="nav-item nav-link"
+                         to="/upload">
                     Upload
                 </NavLink>
                 <NavLink activeClassName="active"
-                    className="nav-item nav-link"
-                    to="/traceability">
+                         className="nav-item nav-link"
+                         to="/traceability">
                     Traçabilité
                 </NavLink>
                 <NavLink activeClassName="active"
-                    className="nav-item nav-link"
-                    to="/download">
+                         className="nav-item nav-link"
+                         to="/download">
                     Download
                 </NavLink>
                 <NavLink activeClassName="active"
-                    className="nav-item nav-link"
-                    to="/data-processed-visualization">
+                         className="nav-item nav-link"
+                         to="/data-processed-visualization">
                     Data Visualization
                 </NavLink>
                 <NavLink activeClassName="active"
-                    className="nav-item nav-link"
-                    to="/models">
+                         className="nav-item nav-link"
+                         to="/models">
                     Gestion
                 </NavLink>
                 <NavLink activeClassName="active"
-                    className="nav-item nav-link"
-                    to="/detection-anomalies">
+                         className="nav-item nav-link"
+                         to="/detection-anomalies">
                     Anomalies
                     {this.state.anomalies.length > 0 &&
-                        <span className="position-absolute translate-small top-0 badge badge-secondary rounded-pill bg-danger" style={{ marginTop: '5px' }}>
+                        <span
+                            className="position-absolute translate-small top-0 badge badge-secondary rounded-pill bg-danger"
+                            style={{marginTop: '5px'}}>
                             {this.state.anomalies.length}
                         </span>
                     }
-
                 </NavLink>
             </nav>
         );
         return (
             <nav className="navbar navbar-expand-lg navbar-dark">
                 <div className="container">
-                    <a className="navbar-brand" href="/"><img src="images/logo-datalake.svg" alt="neOCampus" /></a>
+                    <div className="form-group required col-2">
+                        <SelectProjects/>
+                    </div>
+                    <a className="navbar-brand" href="/"><img src="images/logo-datalake.svg" alt="neOCampus"/></a>
                     <a href="/" className="navbar-brand-text">Datalake</a>
                     <button className="navbar-toggler" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup"
-                        aria-expanded="false"
-                        aria-label="Toggle navigation">
-                        <span className="navbar-toggler-icon" />
+                            data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup"
+                            aria-expanded="false"
+                            aria-label="Toggle navigation">
+                        <span className="navbar-toggler-icon"/>
                     </button>
                     <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
-                        <Navbar />
+                        <Navbar/>
                     </div>
                 </div>
-
             </nav>
-
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, {editNameContainer})(Header)

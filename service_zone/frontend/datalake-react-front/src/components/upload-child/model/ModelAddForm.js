@@ -5,8 +5,9 @@ import Select from 'react-select';
 import { types_files } from '../../../configmeta/types_files';
 import { MetadonneesForm } from './MetadonneesForm';
 import { ToastContainer, toast } from 'react-toastify';
+import {connect} from "react-redux";
 
-export class ModelAddForm extends React.Component {
+class ModelAddForm extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -119,7 +120,8 @@ export class ModelAddForm extends React.Component {
                 label: this.state.label,
                 type_file_accepted: this.state.selectedTypesFiles,
                 metadonnees: this.state.metadonnees,
-                status: this.state.status
+                status: this.state.status,
+                container_name: this.props.nameContainer.nameContainer
             })
                 .then(() => {
                     this.props.reload();
@@ -277,3 +279,10 @@ export class ModelAddForm extends React.Component {
         );
     }
 }
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(ModelAddForm)

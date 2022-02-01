@@ -1,6 +1,5 @@
 import React from "react";
-import { Header } from './Header';
-import { Filters } from './processed-data/Filters';
+import Filters from './processed-data/Filters';
 import { DataVisiualisation } from './processed-data/data-visualisation';
 
 export class ProcessedDataVisualisationTimeSeries extends React.Component {
@@ -42,7 +41,6 @@ export class ProcessedDataVisualisationTimeSeries extends React.Component {
     render() {
         return (
             <div>
-                <Header />
                 <div className="container main-download mt-4">
                     <Filters
                         data={this.handleCallbackData} 

@@ -1,12 +1,12 @@
 import React from "react";
-import { Header } from './Header';
-import { ModelAddForm } from './model/ModelAddForm';
-import { ModelEditForm } from './model/ModelEditForm';
+import ModelAddForm from './model/ModelAddForm';
+import ModelEditForm from './model/ModelEditForm';
 import { Button } from "react-bootstrap";
 import api from '../api/api';
 import { ToastContainer } from 'react-toastify';
+import {connect} from "react-redux";
 
-export class Models extends React.Component {
+class Models extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -26,18 +26,23 @@ export class Models extends React.Component {
     }
 
     loadModel() {
-        api.get('models/show/all')
+        api.post('models/show/all', {
+            container_name: this.props.nameContainer.nameContainer
+        })
             .then((response) => {
                 this.setState({
-                    models: response.data.models.data
+                    models: response.data.models.data,
                 });
             })
             .catch(function (error) {
                 console.log(error);
             });
 
-        api.get('models/cache/all')
+        api.post('models/cache/all', {
+            container_name: this.props.nameContainer.nameContainer
+        })
             .then((response) => {
+                console.log()
                 this.setState({
                     modelsCache: response.data.models.data
                 });
@@ -126,7 +131,6 @@ export class Models extends React.Component {
 
         return (
             <div>
-                <Header />
                 <div className="container mt-4 mb-4">
                     <h3>Gestion des modèles dynamiques de métadonnées
                         <Button className="btn buttonModel btn-sm m-2" onClick={this.formAdd}>Ajouter</Button>
@@ -141,3 +145,10 @@ export class Models extends React.Component {
         );
     }
 }
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(Models)

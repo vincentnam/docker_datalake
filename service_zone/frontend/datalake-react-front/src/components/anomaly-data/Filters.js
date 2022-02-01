@@ -3,8 +3,9 @@ import api from '../../api/api';
 import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
 import moment from 'moment';
 import { ToastContainer, toast } from 'react-toastify';
+import {connect} from "react-redux";
 
-export class Filters extends React.Component {
+class Filters extends React.Component {
     constructor(props) {
         super(props);
         this.props = props
@@ -13,7 +14,6 @@ export class Filters extends React.Component {
             topics: [],
             measurement: "",
             topic: "",
-            bucket: "neOCampus",
             dt: [],
             startDate: moment().format("YYYY-MM-DD"),
             endDate: moment().format("YYYY-MM-DD"),
@@ -66,7 +66,7 @@ export class Filters extends React.Component {
     }
     loadMeasurements() {
         api.post('measurements', {
-            bucket: this.state.bucket
+            bucket: this.props.nameContainer.nameContainer
         })
             .then((response) => {
                 this.setState({
@@ -81,7 +81,7 @@ export class Filters extends React.Component {
     }
     loadTopics(bucket, measurement) {
         api.post('topics', {
-            bucket: bucket,
+            bucket: this.props.nameContainer.nameContainer,
             measurement: measurement
         })
             .then((response) => {
@@ -124,6 +124,7 @@ export class Filters extends React.Component {
                 topic: this.state.topic,
                 startDate: start,
                 endDate: end,
+                container_name: this.props.nameContainer.nameContainer
             })
                 .then((response) => {
                     let result = [];
@@ -144,7 +145,6 @@ export class Filters extends React.Component {
                         })
                     });
                     this.props.data(data);
-                    console.log(data)
                 })
                 .catch(function (error) {
                     console.log(error);
@@ -217,3 +217,11 @@ export class Filters extends React.Component {
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(Filters)
