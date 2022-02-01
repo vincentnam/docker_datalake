@@ -1,5 +1,5 @@
 import React from "react";
-import {Filters} from "../download-raw-data/Filters";
+import Filters from "../download-raw-data/Filters";
 import moment from "moment";
 import api from '../../api/api';
 import $ from 'jquery';
