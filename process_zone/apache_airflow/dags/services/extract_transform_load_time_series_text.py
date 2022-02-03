@@ -68,7 +68,6 @@ def extract_transform_load_time_series_text(swift_result, swift_container, swift
     # Récupération du token, organisation, bucket et url pour Influxdb
     token = config.token_influxdb
     org = config.org_influxdb
-    bucket = config.bucket_influxdb
     url = config.url_influxdb
 
     # Connection Influxdb
