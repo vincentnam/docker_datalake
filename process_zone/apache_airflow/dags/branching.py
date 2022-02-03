@@ -400,9 +400,8 @@ def default_check_type(**kwargs):
 
     group = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
-    
     #Return data from the swift_object_id in mongodb metadata
-    metadata_doc = connection_mongo_metadata(swift_id)
+    metadata_doc = connection_mongo_metadata(group, swift_id)
     
     content_type = metadata_doc['content_type']
     
@@ -493,8 +492,9 @@ def custom_user_workflow(**kwargs):
 
 def neocampus_branching(**kwargs):
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+    swift_container = str(kwargs["dag_run"].conf["swift_container"])
     #Return data from the swift_object_id in mongodb metadata
-    metadata_doc = connection_mongo_metadata(swift_id)
+    metadata_doc = connection_mongo_metadata(swift_container, swift_id)
     
     content_type = metadata_doc['content_type']
 
@@ -545,8 +545,9 @@ def neocampus_get_swift_object(**kwargs):
         if i[0] == "X-Storage-Url":
             url = i
     print(url[1])
+    swift_container = str(kwargs["dag_run"].conf["swift_container"])
     #Return data from the swift_object_id in mongodb metadata
-    metadata_doc = connection_mongo_metadata(swift_id)
+    metadata_doc = connection_mongo_metadata(swift_container, swift_id)
     
     path = config.airflow_tmp + metadata_doc["original_object_name"]
     
@@ -561,7 +562,7 @@ def neocampus_get_swift_object(**kwargs):
 def neocampus_mongoimport(**kwargs):
     swift_container = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
-    metadata_doc = connection_mongo_metadata(swift_id)
+    metadata_doc = connection_mongo_metadata(swift_container, swift_id)
     
     file_name = kwargs["dag_run"].dag_id
     # TODO : 13/10/2020 FIND A SOLUTION TO CHOSE DATABASE AND COLLECTION

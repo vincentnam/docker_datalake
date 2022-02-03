@@ -73,7 +73,7 @@ def extract_transform_load_time_series_json(swift_result, swift_container, swift
 
         points += m_points
 
-    write_api.write(config.bucket_influxdb, config.org_influxdb, points)
+    write_api.write(swift_container, config.org_influxdb, points)
 
 
 sys.modules[__name__] = extract_transform_load_time_series_json
