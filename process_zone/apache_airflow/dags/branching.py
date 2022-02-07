@@ -556,10 +556,10 @@ def neocampus_get_swift_object(**kwargs):
     
     path = config.airflow_tmp + metadata_doc["original_object_name"]
     
-    urllib.request.install_opener(opener)
-    urllib.request.urlretrieve(url[1] + "/" + swift_container + "/" + swift_id, path)
-
-    print(os.path.dirname(os.path.abspath(__file__)))
+    # urllib.request.install_opener(opener)
+    # urllib.request.urlretrieve(url[1] + "/" + swift_container + "/" + swift_id, path)
+    #
+    # print(os.path.dirname(os.path.abspath(__file__)))
 
     print(kwargs["dag_run"].dag_id)
 
