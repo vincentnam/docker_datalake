@@ -38,3 +38,6 @@ host_server_ms_sql_user = ""
 host_server_ms_sql_password = ""
 path_server_ms_sql_file = ""
 container_name_mssql_server = ""
+
+#List of projects in datalake
+list_projects = []
