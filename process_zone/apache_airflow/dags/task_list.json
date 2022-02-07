@@ -7,6 +7,34 @@
         "python_callable": "default_image"
       }
     ],
+    "neOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "NeOCampus_image",
+        "python_callable": "default_image"
+      }
+    ],
+    "autOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "AutOCampus_image",
+        "python_callable": "default_image"
+      }
+    ],
+    "Villagil": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "Villagil_image",
+        "python_callable": "default_image"
+      }
+    ],
+    "eCOnect": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "ECOnect_image",
+        "python_callable": "default_image"
+      }
+    ],
     "mygates": [
       {
         "operator": "PythonOperator",
@@ -29,6 +57,34 @@
         "task_id": "Json_log_to_timeserie_influxdb",
         "python_callable": "from_mongodb_to_influx"
       }
+    ],
+    "neOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "NeOCampus_JSON",
+        "python_callable": "default_application_json"
+      }
+    ],
+    "autOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "AutOCampus_JSON",
+        "python_callable": "default_application_json"
+      }
+    ],
+    "Villagil": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "Villagil_JSON",
+        "python_callable": "default_application_json"
+      }
+    ],
+    "eCOnect": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "ECOnect_JSON",
+        "python_callable": "default_application_json"
+      }
     ]
   },
   "text/plain": {
@@ -36,6 +92,34 @@
       {
         "operator": "PythonOperator",
         "task_id": "Default_Text",
+        "python_callable": "default_text_plain"
+      }
+    ],
+    "neOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "NeOCampus_Text",
+        "python_callable": "default_text_plain"
+      }
+    ],
+    "autOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "AutOCampus_Text",
+        "python_callable": "default_text_plain"
+      }
+    ],
+    "Villagil": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "Villagil_Text",
+        "python_callable": "default_text_plain"
+      }
+    ],
+    "eCOnect": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "ECOnect_Text",
         "python_callable": "default_text_plain"
       }
     ]
@@ -47,6 +131,34 @@
         "task_id": "Default_SQL",
         "python_callable": "default_application_sql"
       }
+    ],
+    "neOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "NeOCampus_SQL",
+        "python_callable": "default_application_sql"
+      }
+    ],
+    "autOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "AutOCampus_SQL",
+        "python_callable": "default_application_sql"
+      }
+    ],
+    "Villagil": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "Villagil_SQL",
+        "python_callable": "default_application_sql"
+      }
+    ],
+    "eCOnect": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "ECOnect_SQL",
+        "python_callable": "default_application_sql"
+      }
     ]
   },
   "application/vnd.ms-excel": {
@@ -54,6 +166,34 @@
       {
         "operator": "PythonOperator",
         "task_id": "Default_excel",
+        "python_callable": "default_application_vnd_ms_excel"
+      }
+    ],
+    "neOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "NeOCampus_excel",
+        "python_callable": "default_application_vnd_ms_excel"
+      }
+    ],
+    "autOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "AutOCampus_excel",
+        "python_callable": "default_application_vnd_ms_excel"
+      }
+    ],
+    "Villagil": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "Villagil_excel",
+        "python_callable": "default_application_vnd_ms_excel"
+      }
+    ],
+    "eCOnect": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "ECOnect_excel",
         "python_callable": "default_application_vnd_ms_excel"
       }
     ]
@@ -65,6 +205,34 @@
         "task_id": "Default_ZIP",
         "python_callable": "default_zip"
       }
+    ],
+    "neOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "NeOCampus_ZIP",
+        "python_callable": "default_zip"
+      }
+    ],
+    "autOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "AutOCampus_ZIP",
+        "python_callable": "default_zip"
+      }
+    ],
+    "Villagil": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "Villagil_ZIP",
+        "python_callable": "default_zip"
+      }
+    ],
+    "eCOnect": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "ECOnect_ZIP",
+        "python_callable": "default_zip"
+      }
     ]
   },
   "application/octet-stream": {
@@ -74,6 +242,13 @@
         "task_id": "Default_SGE",
         "python_callable": "default_sge"
       }
+    ],
+    "neOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "NeOCampus_SGE",
+        "python_callable": "default_sge"
+      }
     ]
   },
   "not_handled": {
@@ -81,6 +256,34 @@
       {
         "operator": "PythonOperator",
         "task_id": "Not_handled",
+        "python_callable": "not_handled_call"
+      }
+    ],
+    "neOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "NeOCampus_not_handled",
+        "python_callable": "not_handled_call"
+      }
+    ],
+    "autOCampus": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "AutOCampus_not_handled",
+        "python_callable": "not_handled_call"
+      }
+    ],
+    "Villagil": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "Villagil_not_handled",
+        "python_callable": "not_handled_call"
+      }
+    ],
+    "eCOnect": [
+      {
+        "operator": "PythonOperator",
+        "task_id": "ECOnect_not_handled",
         "python_callable": "not_handled_call"
       }
     ]

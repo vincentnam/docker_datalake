@@ -410,25 +410,25 @@ def default_check_type(**kwargs):
     
     with open(cwd + "/task_list.json", "r") as f:
         task_dict = json.load(f)
-        
+
+    list_projects = config.list_projects
+    if group not in list_projects:
+        group = "default"
 
     if content_type in task_dict:
         if group in task_dict[content_type]:
-            return task_dict[content_type]["default"][0]["task_id"]
+            return task_dict[content_type][group][0]["task_id"]
         else:
-            return task_dict[content_type]["default"][0]["task_id"]
+            return task_dict[content_type][group][0]["task_id"]
     else:
         if group in task_dict[content_type]:
-            return task_dict[content_type]["default"][0]["task_id"]
+            return task_dict[content_type][group][0]["task_id"]
         else:
-            return task_dict[content_type]["default"][0]["task_id"]
+            return task_dict[content_type][group][0]["task_id"]
 
 
 def workflow_selection(**kwargs):
     # GET AUTH TOKEN
-    # user, password = 'test:tester', 'testing'
-    # # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
-    # url = 'http://141.115.103.30:8080/auth/v1.0'
     url = "http://" + config.url_swift + "/auth/v1.0"
     user = config.user_swift
     key = config.key_swift
@@ -471,11 +471,16 @@ def workflow_selection(**kwargs):
     # WAIT THE OBJECT HAS BEEN INSERTED
     print("kwargs['dag_run'].conf")
     print(kwargs["dag_run"].conf)
-    metadata_doc = meta_base.swift.neocampus.find_one({
-        "swift_object_id": str(swift_id)})
-    kwargs["ti"].xcom_push(key="metadata_doc", value=metadata_doc)
+    metadata_doc = meta_base.swift[container].find_one({
+        "swift_object_id": str(swift_id)}, {"_id": 0})
+    # kwargs["ti"].xcom_push(key="metadata_doc", value=metadata_doc)
     print(metadata_doc)
-    return "default"
+
+    list_projects = config.list_projects
+    if container not in list_projects:
+        container = "default"
+
+    return container
 
 
 # import configurations of different services needed :
@@ -551,10 +556,10 @@ def neocampus_get_swift_object(**kwargs):
     
     path = config.airflow_tmp + metadata_doc["original_object_name"]
     
-    urllib.request.install_opener(opener)
-    urllib.request.urlretrieve(url[1] + "/" + swift_container + "/" + swift_id, path)
-
-    print(os.path.dirname(os.path.abspath(__file__)))
+    # urllib.request.install_opener(opener)
+    # urllib.request.urlretrieve(url[1] + "/" + swift_container + "/" + swift_id, path)
+    #
+    # print(os.path.dirname(os.path.abspath(__file__)))
 
     print(kwargs["dag_run"].dag_id)
 
@@ -619,6 +624,26 @@ default = BranchPythonOperator(
     python_callable=default_check_type,
     dag=dag)
 
+neOCampus = BranchPythonOperator(
+    task_id='neOCampus',
+    python_callable=default_check_type,
+    dag=dag)
+
+autOCampus = BranchPythonOperator(
+    task_id='autOCampus',
+    python_callable=default_check_type,
+    dag=dag)
+
+Villagil = BranchPythonOperator(
+    task_id='Villagil',
+    python_callable=default_check_type,
+    dag=dag)
+
+eCOnect = BranchPythonOperator(
+    task_id='eCOnect',
+    python_callable=default_check_type,
+    dag=dag)
+
 '''
 Custom operator
 '''
@@ -627,12 +652,12 @@ custom = BranchPythonOperator(
     # provide_context=True,
     python_callable=custom_user_workflow,
     dag=dag)
-neocampus = BranchPythonOperator(
-    task_id='neocampus',
-    # provide_context=True,
-    python_callable=neocampus_branching,
-    dag=dag
-)
+# neocampus = BranchPythonOperator(
+#     task_id='neocampus',
+#     # provide_context=True,
+#     python_callable=neocampus_branching,
+#     dag=dag
+# )
 neocampus_bson_get = PythonOperator(
     task_id='neocampus_bson_get',
     python_callable=neocampus_get_swift_object,
@@ -681,16 +706,56 @@ callable_dict = {"content_neo4j_node_creation": content_neo4j_node_creation,
                  }
 custom_pipeline = []
 default_pipeline = []
+neOCampus_pipeline = []
+autOCampus_pipeline = []
+Villagil_pipeline = []
+eCOnect_pipeline = []
 for data_type in task_dict:
 
     for owner_group in task_dict[data_type]:
         custom_sub_pipe = []
         default_sub_pipe = []
+        neOCampus_sub_pipe = []
+        autOCampus_sub_pipe = []
+        Villagil_sub_pipe = []
+        eCOnect_sub_pipe = []
         for task in task_dict[data_type][owner_group]:
             # raise(Exception(task["operator"]))
             if task["operator"] == "PythonOperator":
                 if owner_group == "default":
                     default_sub_pipe.append(PythonOperator(task_id=task["task_id"],
+                                                           python_callable=callable_dict[task["python_callable"]],
+                                                           on_failure_callback=failed_data_processing,
+                                                           on_success_callback=successful_data_processing,
+                                                           start_date=days_ago(
+                                                               0)
+                                                           ))
+                elif owner_group == "neOCampus":
+                    neOCampus_sub_pipe.append(PythonOperator(task_id=task["task_id"],
+                                                           python_callable=callable_dict[task["python_callable"]],
+                                                           on_failure_callback=failed_data_processing,
+                                                           on_success_callback=successful_data_processing,
+                                                           start_date=days_ago(
+                                                               0)
+                                                           ))
+                elif owner_group == "autOCampus":
+                    autOCampus_sub_pipe.append(PythonOperator(task_id=task["task_id"],
+                                                           python_callable=callable_dict[task["python_callable"]],
+                                                           on_failure_callback=failed_data_processing,
+                                                           on_success_callback=successful_data_processing,
+                                                           start_date=days_ago(
+                                                               0)
+                                                           ))
+                elif owner_group == "Villagil":
+                    Villagil_sub_pipe.append(PythonOperator(task_id=task["task_id"],
+                                                           python_callable=callable_dict[task["python_callable"]],
+                                                           on_failure_callback=failed_data_processing,
+                                                           on_success_callback=successful_data_processing,
+                                                           start_date=days_ago(
+                                                               0)
+                                                           ))
+                elif owner_group == "eCOnect":
+                    eCOnect_sub_pipe.append(PythonOperator(task_id=task["task_id"],
                                                            python_callable=callable_dict[task["python_callable"]],
                                                            on_failure_callback=failed_data_processing,
                                                            on_success_callback=successful_data_processing,
@@ -707,9 +772,22 @@ for data_type in task_dict:
                                                           ))
         custom_pipeline.append([*custom_sub_pipe, ])
         default_pipeline.append([*default_sub_pipe, ])
+        neOCampus_pipeline.append([*neOCampus_sub_pipe, ])
+        autOCampus_pipeline.append([*autOCampus_sub_pipe, ])
+        Villagil_pipeline.append([*Villagil_sub_pipe, ])
+        eCOnect_pipeline.append([*eCOnect_sub_pipe, ])
 
 for default_task_list in default_pipeline:
     chain(default, *default_task_list, join)
+
+for neOCampus_task_list in neOCampus_pipeline:
+    chain(neOCampus, *neOCampus_task_list, join)
+for autOCampus_task_list in autOCampus_pipeline:
+    chain(autOCampus, *autOCampus_task_list, join)
+for Villagil_task_list in Villagil_pipeline:
+    chain(Villagil, *Villagil_task_list, join)
+for eCOnect_task_list in eCOnect_pipeline:
+    chain(eCOnect, *eCOnect_task_list, join)
 
 for custom_task_list in custom_pipeline:
     if len(custom_task_list) != 0:
@@ -717,4 +795,4 @@ for custom_task_list in custom_pipeline:
 
 # Airflow user / data_processing password
 run_this_first >> branch_op
-branch_op >> [default, custom]
+branch_op >> [default, custom, neOCampus, autOCampus, Villagil, eCOnect]
