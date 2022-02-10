@@ -12,7 +12,7 @@ def get_handled_data(params):
     org = current_app.config['INFLUXDB_ORG']
 
     # Connection to InfluxDB database
-    client = InfluxDBClient(url=current_app.config['INFLUXDB_URL'], token=token, debug=True)
+    client = InfluxDBClient(url=current_app.config['INFLUXDB_URL'], token=token, debug=True, verify_ssl=False)
 
     # Query
     query_api = client.query_api()
@@ -70,7 +70,7 @@ def connection_inflxdb():
     token = current_app.config['INFLUXDB_TOKEN']
     url = current_app.config['INFLUXDB_URL']
     org = current_app.config['INFLUXDB_ORG']
-    client = InfluxDBClient(url=url, token=token, debug=True)
+    client = InfluxDBClient(url=url, token=token, debug=True, verify_ssl=False)
     return client, org
 
 def get_all_measurements(bucket):
