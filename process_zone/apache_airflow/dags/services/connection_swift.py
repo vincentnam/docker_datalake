@@ -7,7 +7,7 @@ import config
 # Function return swift_object of a swift_id 
 def connection_swift(swift_container, swift_id):
     # Openstack Swift
-    authurl = "http://" + config.url_swift + "/auth/v1.0"
+    authurl = "https://" + config.url_swift + "/auth/v1.0"
     user = config.user_swift
     key = config.key_swift
     # Connction à Swift
