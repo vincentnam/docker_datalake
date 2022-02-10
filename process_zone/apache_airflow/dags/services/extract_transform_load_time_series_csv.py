@@ -50,7 +50,7 @@ def extract_transform_load_time_series_csv(swift_result, swift_container, swift_
     url = config.url_influxdb
 
     #Connection Influxdb
-    client = InfluxDBClient(url=url, token=token, debug=True)
+    client = InfluxDBClient(url=url, token=token, debug=True, verify_ssl=False)
     write_api = client.write_api(write_options=SYNCHRONOUS)
     
     for index, line in df.iterrows():
