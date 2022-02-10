@@ -167,17 +167,25 @@ class Upload extends React.Component {
         let type_file_accepted = [];
         if (name === "type") {
             if (value === "9") {
+                console.log("passer SGE")
                 this.setState({
                     type: value,
                     uploadLink: false,
                 });
             } else {
+                console.log("no SGE")
                 this.setState({
                     type: value,
                     uploadLink: true,
                 });
             }
-            const types = [config.types];
+            let types = [];
+            if(this.props.nameContainer.nameContainer === "neOCampus") {
+                types = [configWithSGE.types];
+            } else {
+                types = [config.types];
+            }
+            console.log(types);
             types.forEach((type) => (
                 type.forEach((t, key) => {
                     if (key === parseInt(value)) {
@@ -361,6 +369,8 @@ class Upload extends React.Component {
                             content_type = "application/octet-stream";
                         }
                         type_file = content_type;
+                        console.log(type_file);
+                        console.log(this.state.type_file_accepted);
                         if (this.state.type_file_accepted.includes(content_type) === false) {
                             toast.error("Le type de fichier dans le lien n'est pas identique au type sélectionné !", {
                                 theme: "colored",
@@ -436,6 +446,8 @@ class Upload extends React.Component {
                             content_type = "application/octet-stream";
                         }
                         type_file = content_type;
+                        console.log(type_file);
+                        console.log(this.state.type_file_accepted);
                         if (this.state.type_file_accepted.includes(content_type) === false) {
                             toast.error("Le type de fichier dans le lien n'est pas identique au type sélectionné !", {
                                 theme: "colored",
