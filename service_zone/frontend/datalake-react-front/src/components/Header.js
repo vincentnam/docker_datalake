@@ -11,16 +11,17 @@ class Header extends React.Component {
         super(props);
         this.state = {
             anomalies: [],
-        }
+            container: this.props.nameContainer.nameContainer
+        };
     }
 
     componentDidMount() {
-        this.countData();
+        this.countData(this.state.container);
     }
 
-    countData() {
+    countData(container_name) {
         api.post('getDataAnomalyAll', {
-            container_name: this.props.nameContainer.nameContainer
+            container_name: container_name
         })
             .then((response) => {
                 this.setState({
@@ -44,7 +45,7 @@ class Header extends React.Component {
             return (
                 <>
                     <select value={this.props.nameContainer.nameContainer}
-                            onChange={(event) => this.props.editNameContainer(event.target.value)}
+                            onChange={(event) => {this.props.editNameContainer(event.target.value); this.countData(event.target.value)}}
                             name="project" className="form-select">
                         {listProjects}
                     </select>
