@@ -9,7 +9,7 @@ def insert_anomaly(anomaly,endDate,container_name):
     mongodb_url = config.mongodb_url
     anomalie = anomaly
     mongo_client = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
-    data_histor = mongo_client.find()
+    data_histor = mongo_client.find({ "container_name": container_name })
     new_date = endDate #datetime.datetime.now().isoformat() + "Z"
 
     for ano in anomalie["anomaly"] :
@@ -36,10 +36,10 @@ def insert_anomaly(anomaly,endDate,container_name):
             'container_name': container_name
         })
     new_anomaly = {'objects': []}
-    data = mongo_client.find()
+    data = mongo_client.find({ "container_name": container_name })
     if data_histor.count() != 0:
         for ano in anomaly_without_id :
-            data = mongo_client.find()
+            data = mongo_client.find({ "container_name": container_name })
             for row in data:
                 if ano in data_without_id['objects'] :
                     if ano['datetime'] == row['datetime'] and ano['topic'] == row ['topic'] and ano['unit'] == row ['unit'] and ano['container_name'] == row ['container_name'] :
