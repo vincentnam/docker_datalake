@@ -648,5 +648,126 @@ def list_upload_ssh():
     collection = mongo_db["file_upload"]
     
     files_upload = collection.find({'container_name': container_name},{ "_id": 0})
-    models_list = list(files_upload)
-    return jsonify({'file_upload': models_list})
+    files_upload_list = list(files_upload)
+    return jsonify({'file_upload': files_upload_list})
+
+@mongo_data_bp.route('/mqtt/add', methods=['GET', 'POST'])
+def create_mqtt_flux():
+    """
+    ---
+    get:
+        description: create config of a flux mqtt
+        responses:
+            '200':
+                description: call successful
+        tags:
+        - mongodb_router
+
+    """
+    flux = {
+        "name": request.get_json()['name'],
+        "description": request.get_json()['description'],
+        "brokerUrl": request.get_json()['brokerUrl'],
+        "user": request.get_json()['user'],
+        "password": request.get_json()['password'],
+        "batchDuration": request.get_json()['batchDuration'],
+        "container_name": request.get_json()['container_name'],
+        "status": True
+    }
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.mqtt
+    collection = mongo_db["flux"]
+    collection.insert_one(flux)
+    return None
+
+@mongo_data_bp.route('/mqtt/edit', methods=['GET', 'POST'])
+def edit_mqtt_flux():
+    """
+    ---
+    get:
+        description: Edit config of a flux mqtt
+        responses:
+            '200':
+                description: call successful
+        tags:
+        - mongodb_router
+
+    """
+    query = {"_id": ObjectId(request.get_json()['id'])}
+    update_values = {"$set": {
+        "name": request.get_json()['name'],
+        "description": request.get_json()['description'],
+        "brokerUrl": request.get_json()['brokerUrl'],
+        "user": request.get_json()['user'],
+        "password": request.get_json()['password'],
+        "batchDuration": request.get_json()['batchDuration'],
+        "container_name": request.get_json()['container_name'],
+        "status": request.get_json()['status']
+    }}
+
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.mqtt
+    collection = mongo_db["flux"]
+    collection.update_one(query, update_values, upsert=False)
+    return None
+
+@mongo_data_bp.route('/mqtt/status/change', methods=['GET', 'POST'])
+def change_status_mqtt_flux():
+    """
+    ---
+    get:
+        description: Change status of config flux mqtt
+        responses:
+            '200':
+                description: call successful
+        tags:
+        - mongodb_router
+
+    """
+    query = {"_id": ObjectId(request.get_json()['id'])}
+    status_change = { "$set": { "status": request.get_json()['status'] } }
+
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.mqtt
+    collection = mongo_db["flux"]
+    collection.update_one(query, status_change, upsert=False)
+    return None
+
+@mongo_data_bp.route('/mqtt/all', methods=['GET', 'POST'])
+def show_mqtt_flux():
+    """
+    ---
+    get:
+        description: Change status of config flux mqtt
+        responses:
+            '200':
+                description: call successful
+        tags:
+        - mongodb_router
+
+    """
+    container_name = request.get_json()['container_name']
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.mqtt
+    collection = mongo_db["flux"]
+
+    flux = collection.find({'container_name': container_name})
+    list_flux = list(flux)
+    output = {'data': []}
+    for obj in list_flux:
+        output['data'].append({
+            '_id': str(obj['_id']),
+            "name": obj['name'],
+            "description": obj['description'],
+            "brokerUrl": obj['brokerUrl'],
+            "user": obj['user'],
+            "password": obj['password'],
+            "batchDuration": obj['batchDuration'],
+            "container_name": obj['container_name'],
+            "status": obj['status']
+        })
+    return jsonify({'list_flux': output})
