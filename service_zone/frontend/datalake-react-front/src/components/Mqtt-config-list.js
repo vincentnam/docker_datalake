@@ -4,6 +4,7 @@ import {Button, Modal, ProgressBar} from 'react-bootstrap';
 import {connect} from "react-redux";
 import ConfigMqttAdd from "./mqtt-config/ConfigMqttAdd";
 import ConfigMqttEdit from "./mqtt-config/ConfigMqttEdit";
+import ConfigMqttChangeStatus from "./mqtt-config/ConfigMqttChangeStatus";
 
 class MqttConfigList extends React.Component {
     constructor(props) {
@@ -17,11 +18,15 @@ class MqttConfigList extends React.Component {
             sort_field: '',
             modalAdd: false,
             modalEdit: false,
-            selectElement: {}
+            modalStatus: false,
+            selectElement: {
+                name: ""
+            }
         };
         this.loadMqttConfig = this.loadMqttConfig.bind(this);
         this.onChangeModalAdd = this.onChangeModalAdd.bind(this);
         this.onChangeModalEdit = this.onChangeModalEdit.bind(this);
+        this.onChangeModalElementStatus = this.onChangeModalElementStatus.bind(this);
     }
 
     componentDidMount() {
@@ -55,22 +60,29 @@ class MqttConfigList extends React.Component {
         });
     }
 
+    onChangeModalElementStatus(element) {
+        this.setState({
+            selectElement: element,
+            modalStatus: !this.state.modalStatus,
+        });
+    }
+
     render() {
         const TableMqttConfig = () => {
             let dataMqttConfig = "";
             if (this.state.elements.length === 0) {
                 dataMqttConfig = (
                     <tr>
-                        <td colSpan="5" align="center"><p>Il n'y a aucun fichier qui est en cours d'upload !</p></td>
+                        <td colSpan="5" align="center"><p>Il n'y a aucune configuration de flux MQTT !</p></td>
                     </tr>
                 );
             } else {
                 const StatusButton = (props) => {
-                    const status = props.status;
+                    const status = props.element.status;
                     if (status) {
-                        return <button type="button" className="btn btn-success">En cours</button>;
+                        return <button type="button" className="btn btn-success" onClick={() => this.onChangeModalElementStatus(props.element)}>En cours</button>;
                     }
-                    return <button type="button" className="btn btn-danger">Arrêter</button>;
+                    return <button type="button" className="btn btn-danger" onClick={() => this.onChangeModalElementStatus(props.element)}>Arrêter</button>;
                 }
 
                 dataMqttConfig = this.state.elements.map((element, index) => (
@@ -78,11 +90,12 @@ class MqttConfigList extends React.Component {
                         <td>{element.name}</td>
                         <td><span className="text-break">{element.description}</span></td>
                         <td>{element.brokerUrl}</td>
+                        <td>{element.topic}</td>
                         <td>
                             <button type="button" className="btn btn-primary buttonModel" onClick={() => this.onChangeModalEdit(element)}>Modifier</button>
                         </td>
                         <td>
-                            <StatusButton status={element.status}/>
+                            <StatusButton element={element}/>
                         </td>
                     </tr>
                 ));
@@ -94,6 +107,7 @@ class MqttConfigList extends React.Component {
                         <th>Nom du flux</th>
                         <th>Description</th>
                         <th>Url</th>
+                        <th>Topic</th>
                         <th>Modifier</th>
                         <th>Status</th>
                     </tr>
@@ -122,7 +136,7 @@ class MqttConfigList extends React.Component {
                         <ConfigMqttAdd
                             containerName={this.props.nameContainer.nameContainer}
                             listElements={this.state.elements}
-                            close={this.onChangeModalEdit}
+                            close={this.onChangeModalAdd}
                             reload={this.loadMqttConfig}
                         />
                     </Modal.Body>
@@ -155,6 +169,30 @@ class MqttConfigList extends React.Component {
             )
         }
 
+        const ModalChangeStatus = () => {
+            return (
+                <Modal
+                    size="lg"
+                    show={this.state.modalStatus}
+                    onHide={() => this.onChangeModalElementStatus()}
+                    aria-labelledby="model-change"
+                >
+                    <Modal.Header>
+                        <Modal.Title id="model-change">
+                            Voulez-vous changer le status du flux {this.state.selectElement.name} ?
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <ConfigMqttChangeStatus
+                            selectElement={this.state.selectElement}
+                            close={this.onChangeModalElementStatus}
+                            reload={this.loadMqttConfig}
+                        />
+                    </Modal.Body>
+                </Modal>
+            )
+        }
+
         return (
             <div>
                 <div className="container main-upload">
@@ -166,6 +204,7 @@ class MqttConfigList extends React.Component {
                                 <TableMqttConfig/>
                                 <ModalAdd/>
                                 <ModalEdit/>
+                                <ModalChangeStatus/>
                             </div>
                         </div>
                     </div>

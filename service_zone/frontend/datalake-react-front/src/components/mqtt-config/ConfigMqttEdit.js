@@ -9,11 +9,13 @@ class ConfigMqttEdit extends React.Component {
         super(props);
         this.state = {
             name: "",
+            oldName: "",
             description: "",
             url: "",
             user: "",
             password: "",
             batchDuration: 0,
+            topic: "",
         };
         this.handleChange = this.handleChange.bind(this);
         this.submitConfig = this.submitConfig.bind(this);
@@ -35,11 +37,13 @@ class ConfigMqttEdit extends React.Component {
     componentDidMount() {
         this.setState({
             name: this.props.selectElement.name,
+            oldName: this.props.selectElement.name,
             description: this.props.selectElement.description,
             url: this.props.selectElement.brokerUrl,
             user: this.props.selectElement.user,
             password: this.props.selectElement.password,
             batchDuration: this.props.selectElement.batchDuration,
+            topic: this.props.selectElement.topic,
         });
     }
 
@@ -48,12 +52,14 @@ class ConfigMqttEdit extends React.Component {
 
         let nbErrors = 0;
 
-        this.props.listElements.forEach((config) => {
-            if (this.state.name.trim() === config.name.trim()) {
-                this.toastError("Veuillez renseigner un nom de flux mqtt n'est pas déjà utilisé !");
-                nbErrors += 1;
-            }
-        });
+        if (this.state.oldName !== this.state.name){
+            this.props.listElements.forEach((config) => {
+                if (this.state.name.trim() === config.name.trim()) {
+                    this.toastError("Veuillez renseigner un nom de flux mqtt n'est pas déjà utilisé !");
+                    nbErrors += 1;
+                }
+            });
+        }
 
         if (this.state.name.trim() === '') {
             this.toastError("Veuillez renseigner un nom de flux !");
@@ -75,23 +81,28 @@ class ConfigMqttEdit extends React.Component {
             this.toastError("Veuillez renseigner un batch duration supérieur à 0 !");
             nbErrors += 1;
         }
+        if (this.state.topic.trim() === '') {
+            this.toastError("Veuillez renseigner un topic valide !");
+            nbErrors += 1;
+        }
 
         if (nbErrors === 0) {
             api.post('mqtt/edit', {
-                id: this.props.selectElement.id,
+                id: this.props.selectElement._id,
                 name: this.state.name,
                 description: this.state.description,
                 brokerUrl: this.state.url,
                 user: this.state.user,
                 password: this.state.password,
                 batchDuration: this.state.batchDuration,
+                topic: this.state.topic,
                 container_name: this.props.containerName,
                 status: this.props.selectElement.status,
             })
                 .then(() => {
                     this.props.reload();
                     this.props.close();
-                    toast.success(`Le flux ${this.state.name} à bien été enregistré !`, {
+                    toast.success(`Le flux ${this.state.name} à bien été modifié !`, {
                         theme: "colored",
                         position: "top-right",
                         autoClose: 5000,
@@ -106,15 +117,6 @@ class ConfigMqttEdit extends React.Component {
                     console.log(error);
                 });
         }
-    }
-
-    handleChangeType(event) {
-        let types = [];
-        event.forEach(type => types.push(type.value));
-        const name = "selectedTypesFiles";
-        this.setState({
-            [name]: types,
-        });
     }
 
     handleChange(event) {
@@ -191,6 +193,16 @@ class ConfigMqttEdit extends React.Component {
                             value={this.state.batchDuration}
                             onChange={this.handleChange}
                             min={0}
+                        />
+                    </FormGroup>
+                    <FormGroup>
+                        <FormLabel>Topic</FormLabel>
+                        <Form.Control
+                            type="text"
+                            placeholder="Topic"
+                            name="topic"
+                            value={this.state.topic}
+                            onChange={this.handleChange}
                         />
                     </FormGroup>
                     <div className="d-flex justify-content-between mt-4">
