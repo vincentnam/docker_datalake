@@ -672,6 +672,7 @@ def create_mqtt_flux():
         "user": request.get_json()['user'],
         "password": request.get_json()['password'],
         "batchDuration": request.get_json()['batchDuration'],
+        "topic": request.get_json()['topic'],
         "container_name": request.get_json()['container_name'],
         "status": True
     }
@@ -703,6 +704,7 @@ def edit_mqtt_flux():
         "user": request.get_json()['user'],
         "password": request.get_json()['password'],
         "batchDuration": request.get_json()['batchDuration'],
+        "topic": request.get_json()['topic'],
         "container_name": request.get_json()['container_name'],
         "status": request.get_json()['status']
     }}
@@ -768,6 +770,7 @@ def show_mqtt_flux():
             "user": obj['user'],
             "password": obj['password'],
             "batchDuration": obj['batchDuration'],
+            "topic": obj['topic'],
             "container_name": obj['container_name'],
             "status": obj['status']
         })
