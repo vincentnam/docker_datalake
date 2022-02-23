@@ -101,7 +101,7 @@ class ConfigMqttEdit extends React.Component {
             })
                 .then(() => {
                     this.props.reload();
-                    this.props.close();
+                    this.props.close(this.props.selectElement);
                     toast.success(`Le flux ${this.state.name} à bien été modifié !`, {
                         theme: "colored",
                         position: "top-right",
