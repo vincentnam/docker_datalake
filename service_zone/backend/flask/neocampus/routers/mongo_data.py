@@ -8,6 +8,7 @@ import time
 import pandas as pd
 from ..utils.size_conversion import convert_unit, SIZE_UNIT
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 mongo_data_bp = Blueprint('mongo_data_bp', __name__)
 
@@ -656,7 +657,7 @@ def create_mqtt_flux():
     """
     ---
     get:
-        description: create config of a flux mqtt
+        description: Create config of a flux mqtt
         responses:
             '200':
                 description: call successful
@@ -679,7 +680,7 @@ def create_mqtt_flux():
     mongo_db = mongo_client.mqtt
     collection = mongo_db["flux"]
     collection.insert_one(flux)
-    return None
+    return jsonify({'Result': "Done"})
 
 @mongo_data_bp.route('/mqtt/edit', methods=['GET', 'POST'])
 def edit_mqtt_flux():
@@ -711,7 +712,7 @@ def edit_mqtt_flux():
     mongo_db = mongo_client.mqtt
     collection = mongo_db["flux"]
     collection.update_one(query, update_values, upsert=False)
-    return None
+    return jsonify({'Result': "Done"})
 
 @mongo_data_bp.route('/mqtt/status/change', methods=['GET', 'POST'])
 def change_status_mqtt_flux():
@@ -734,7 +735,7 @@ def change_status_mqtt_flux():
     mongo_db = mongo_client.mqtt
     collection = mongo_db["flux"]
     collection.update_one(query, status_change, upsert=False)
-    return None
+    return jsonify({'Result': "Done"})
 
 @mongo_data_bp.route('/mqtt/all', methods=['GET', 'POST'])
 def show_mqtt_flux():
