@@ -4,6 +4,9 @@
     color: rgba(255, 255, 255, 1) !important;
     text-decoration: none !important;
 }
+.nav-item > .dropdown-menu a {
+    color: black !important;
+}
 
 .navbar a:hover {
     color: #EA973B !important;
