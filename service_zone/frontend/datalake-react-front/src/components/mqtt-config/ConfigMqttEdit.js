@@ -16,9 +16,11 @@ class ConfigMqttEdit extends React.Component {
             password: "",
             batchDuration: 0,
             topic: "",
+            passwordShown: false,
         };
         this.handleChange = this.handleChange.bind(this);
         this.submitConfig = this.submitConfig.bind(this);
+        this.togglePassword = this.togglePassword.bind(this);
     }
 
     toastError(message) {
@@ -129,6 +131,12 @@ class ConfigMqttEdit extends React.Component {
         });
     }
 
+    togglePassword() {
+        this.setState({
+            passwordShown: !this.state.passwordShown,
+        });
+    };
+
     render() {
         return (
             <div>
@@ -177,12 +185,13 @@ class ConfigMqttEdit extends React.Component {
                     <FormGroup>
                         <FormLabel>Password</FormLabel>
                         <Form.Control
-                            type="password"
+                            type={this.state.passwordShown ? "text" : "password"}
                             placeholder="Password"
                             name="password"
                             value={this.state.password}
                             onChange={this.handleChange}
                         />
+                        <Button className="btn btn-primary buttonModel" onClick={this.togglePassword}>Show Password</Button>
                     </FormGroup>
                     <FormGroup>
                         <FormLabel>Batch duration</FormLabel>

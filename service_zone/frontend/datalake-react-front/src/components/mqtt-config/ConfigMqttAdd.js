@@ -1,7 +1,7 @@
 import React from "react";
 import api from '../../api/api';
-import { FormGroup, FormLabel, Form, Button } from "react-bootstrap";
-import { ToastContainer, toast } from 'react-toastify';
+import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
+import {ToastContainer, toast} from 'react-toastify';
 import {connect} from "react-redux";
 
 class ConfigMqttAdd extends React.Component {
@@ -15,9 +15,11 @@ class ConfigMqttAdd extends React.Component {
             password: "",
             batchDuration: 0,
             topic: "",
+            passwordShown: false,
         };
         this.handleChange = this.handleChange.bind(this);
         this.submitConfig = this.submitConfig.bind(this);
+        this.togglePassword = this.togglePassword.bind(this);
     }
 
     toastError(message) {
@@ -111,6 +113,12 @@ class ConfigMqttAdd extends React.Component {
         });
     }
 
+    togglePassword() {
+        this.setState({
+            passwordShown: !this.state.passwordShown,
+        });
+    };
+
     render() {
         return (
             <div>
@@ -159,12 +167,13 @@ class ConfigMqttAdd extends React.Component {
                     <FormGroup>
                         <FormLabel>Password</FormLabel>
                         <Form.Control
-                            type="password"
+                            type={this.state.passwordShown ? "text" : "password"}
                             placeholder="Password"
                             name="password"
                             value={this.state.password}
                             onChange={this.handleChange}
                         />
+                        <Button className="btn btn-primary buttonModel" onClick={this.togglePassword}>Show Password</Button>
                     </FormGroup>
                     <FormGroup>
                         <FormLabel>Batch duration</FormLabel>
@@ -197,11 +206,12 @@ class ConfigMqttAdd extends React.Component {
                         </Button>
                     </div>
                 </Form>
-                <ToastContainer />
-            </div >
+                <ToastContainer/>
+            </div>
         );
     }
 }
+
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,

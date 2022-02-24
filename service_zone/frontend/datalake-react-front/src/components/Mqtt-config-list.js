@@ -20,8 +20,8 @@ class MqttConfigList extends React.Component {
             modalEdit: false,
             modalStatus: false,
             selectElement: {
-                name: ""
-            }
+                name: "",
+            },
         };
         this.loadMqttConfig = this.loadMqttConfig.bind(this);
         this.onChangeModalAdd = this.onChangeModalAdd.bind(this);
@@ -80,9 +80,11 @@ class MqttConfigList extends React.Component {
                 const StatusButton = (props) => {
                     const status = props.element.status;
                     if (status) {
-                        return <button type="button" className="btn btn-success" onClick={() => this.onChangeModalElementStatus(props.element)}>En cours</button>;
+                        return <button type="button" className="btn btn-success"
+                                       onClick={() => this.onChangeModalElementStatus(props.element)}>En cours</button>;
                     }
-                    return <button type="button" className="btn btn-danger" onClick={() => this.onChangeModalElementStatus(props.element)}>Arrêter</button>;
+                    return <button type="button" className="btn btn-danger"
+                                   onClick={() => this.onChangeModalElementStatus(props.element)}>Arrêter</button>;
                 }
 
                 dataMqttConfig = this.state.elements.map((element, index) => (
@@ -92,7 +94,9 @@ class MqttConfigList extends React.Component {
                         <td>{element.brokerUrl}</td>
                         <td>{element.topic}</td>
                         <td>
-                            <button type="button" className="btn btn-primary buttonModel" onClick={() => this.onChangeModalEdit(element)}>Modifier</button>
+                            <button type="button" className="btn btn-primary buttonModel"
+                                    onClick={() => this.onChangeModalEdit(element)}>Modifier
+                            </button>
                         </td>
                         <td>
                             <StatusButton element={element}/>
@@ -148,12 +152,12 @@ class MqttConfigList extends React.Component {
                 <Modal
                     size="lg"
                     show={this.state.modalEdit}
-                    onHide={() => this.onChangeModalEdit()}
+                    onHide={() => this.onChangeModalEdit({name: "",})}
                     aria-labelledby="model-edit"
                 >
                     <Modal.Header>
                         <Modal.Title id="model-edit">
-                            Modifier un flux MQTT
+                            Modifier un flux MQTT : "{this.state.selectElement.name}"
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
@@ -174,12 +178,12 @@ class MqttConfigList extends React.Component {
                 <Modal
                     size="lg"
                     show={this.state.modalStatus}
-                    onHide={() => this.onChangeModalElementStatus()}
+                    onHide={() => this.onChangeModalElementStatus({name: "",})}
                     aria-labelledby="model-change"
                 >
                     <Modal.Header>
                         <Modal.Title id="model-change">
-                            Voulez-vous changer le status du flux {this.state.selectElement.name} ?
+                            Voulez-vous changer le status du flux MQTT : "{this.state.selectElement.name}" ?
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
@@ -197,7 +201,9 @@ class MqttConfigList extends React.Component {
             <div>
                 <div className="container main-upload">
                     <div className="title">Liste des différents flux MQTT :</div>
-                    <button type="button" className="btn btn-primary buttonModel" onClick={() => this.onChangeModalAdd()}>Créer un modèle</button>
+                    <button type="button" className="btn btn-primary buttonModel"
+                            onClick={() => this.onChangeModalAdd()}>Créer un modèle
+                    </button>
                     <div className="main-download">
                         <div className="mt-4">
                             <div className="data-table">
