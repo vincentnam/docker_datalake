@@ -5,6 +5,7 @@ import {connect} from "react-redux";
 import ConfigMqttAdd from "./mqtt-config/ConfigMqttAdd";
 import ConfigMqttEdit from "./mqtt-config/ConfigMqttEdit";
 import ConfigMqttChangeStatus from "./mqtt-config/ConfigMqttChangeStatus";
+import {ToastContainer} from 'react-toastify';
 
 class MqttConfigList extends React.Component {
     constructor(props) {
@@ -84,7 +85,7 @@ class MqttConfigList extends React.Component {
                                        onClick={() => this.onChangeModalElementStatus(props.element)}>En cours</button>;
                     }
                     return <button type="button" className="btn btn-danger"
-                                   onClick={() => this.onChangeModalElementStatus(props.element)}>Arrêter</button>;
+                                   onClick={() => this.onChangeModalElementStatus(props.element)}>Arrêté</button>;
                 }
 
                 dataMqttConfig = this.state.elements.map((element, index) => (
@@ -198,23 +199,37 @@ class MqttConfigList extends React.Component {
         }
 
         return (
-            <div>
-                <div className="container main-upload">
-                    <div className="title">Liste des différents flux MQTT :</div>
-                    <button type="button" className="btn btn-primary buttonModel"
-                            onClick={() => this.onChangeModalAdd()}>Créer un modèle
-                    </button>
-                    <div className="main-download">
-                        <div className="mt-4">
-                            <div className="data-table">
-                                <TableMqttConfig/>
-                                <ModalAdd/>
-                                <ModalEdit/>
-                                <ModalChangeStatus/>
+            <div className="container main-download mt-4">
+                <nav className="tab-show">
+                    <div className="nav nav-pills" id="pills-tab" role="tablist">
+                        <button className="nav-link active" id="nav-flux-mqtt" data-bs-toggle="pill"
+                                data-bs-target="#nav-raw" type="button" role="tab" aria-controls="nav-raw"
+                                aria-selected="true">Configuration des flux MQTT
+                        </button>
+                    </div>
+                </nav>
+                <div className="tab-content mt-2" id="pills-tabContent">
+                    <div className="tab-pane fade show active" id="nav-raw" role="tabpanel"
+                         aria-labelledby="nav-flux-mqtt">
+                        <div className="container main-upload">
+                            <div className="title">Liste des flux MQTT :</div>
+                            <button type="button" className="btn btn-primary buttonModel"
+                                    onClick={() => this.onChangeModalAdd()}>Créer un modèle
+                            </button>
+                            <div className="main-download">
+                                <div className="mt-4">
+                                    <div className="data-table">
+                                        <TableMqttConfig/>
+                                        <ModalAdd/>
+                                        <ModalEdit/>
+                                        <ModalChangeStatus/>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <ToastContainer/>
             </div>
         )
     }

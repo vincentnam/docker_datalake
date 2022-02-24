@@ -95,14 +95,14 @@ class Header extends React.Component {
                             <NavLink activeClassName="active"
                                      className="nav-item nav-link"
                                      to="/models">
-                                Models
+                                <span>Models</span>
                             </NavLink>
                         </li>
                         <li>
                             <NavLink activeClassName="active"
                                      className="nav-item nav-link"
                                      to="/mqtt-config">
-                                Flux MQTT Configuration
+                                <span>Flux MQTT</span>
                             </NavLink>
                         </li>
                     </ul>
