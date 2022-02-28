@@ -41,3 +41,6 @@ container_name_mssql_server = ""
 
 #List of projects in datalake
 list_projects = []
+
+#Anomaly detection
+schedule_interval = ""
