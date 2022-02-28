@@ -90,7 +90,7 @@ def get_metadata(db_name, params):
 
 def get_id():
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url)
+    mongo_client = MongoClient(mongodb_url, connect=False)
     return mongo_client.stats.swift.find_one_and_update({"type": "object_id_file"}, {"$inc": {"object_id": 1}})[
         "object_id"]
 
@@ -98,7 +98,7 @@ def get_id():
 def init_id():
     id_doc = {"type": "object_id_file", "object_id": 0}
     mongodb_url = current_app.config['MONGO_URL']
-    client = MongoClient(mongodb_url).stats.swift
+    client = MongoClient(mongodb_url, connect=False).stats.swift
     if MongoClient(mongodb_url).stats.swift.find_one(
             {"type": "object_id_file"}) is None:
         client.insert_one(id_doc)
@@ -317,7 +317,7 @@ def insert_anomaly(anomaly,endDate,container_name):
     """
     mongodb_url = current_app.config['MONGO_URL']
     anomalie = anomaly
-    mongo_client = MongoClient(mongodb_url).data_anomaly.influxdb_anomaly
+    mongo_client = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
     data_histor = mongo_client.find()
     new_date = endDate #datetime.datetime.now().isoformat() + "Z"
         
