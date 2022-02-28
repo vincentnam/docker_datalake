@@ -45,7 +45,10 @@ class Header extends React.Component {
             return (
                 <>
                     <select value={this.props.nameContainer.nameContainer}
-                            onChange={(event) => {this.props.editNameContainer(event.target.value); this.countData(event.target.value)}}
+                            onChange={(event) => {
+                                this.props.editNameContainer(event.target.value);
+                                this.countData(event.target.value)
+                            }}
                             name="project" className="form-select">
                         {listProjects}
                     </select>
@@ -81,11 +84,30 @@ class Header extends React.Component {
                          to="/data-processed-visualization">
                     Data Visualization
                 </NavLink>
-                <NavLink activeClassName="active"
-                         className="nav-item nav-link"
-                         to="/models">
-                    Gestion
-                </NavLink>
+                <div className="nav-item dropdown">
+                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                    <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        Gestion
+                    </a>
+                    <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <li>
+                            <NavLink activeClassName="active"
+                                     className="nav-item nav-link"
+                                     to="/models">
+                                <span>Models</span>
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink activeClassName="active"
+                                     className="nav-item nav-link"
+                                     to="/mqtt-config">
+                                <span>Flux MQTT</span>
+                            </NavLink>
+                        </li>
+                    </ul>
+                </div>
+
                 <NavLink activeClassName="active"
                          className="nav-item nav-link"
                          to="/detection-anomalies">

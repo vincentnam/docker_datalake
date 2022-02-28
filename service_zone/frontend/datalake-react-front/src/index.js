@@ -20,6 +20,7 @@ import {Download} from './components/Download';
 import Models from './components/Models';
 import DetectionAnomalies from './components/DetectionAnomalies';
 import Traceability from './components/Traceability';
+import MqttConfigList from "./components/Mqtt-config-list";
 import Header from "./components/Header";
 import {Provider} from "react-redux";
 import {createStore} from "redux";
@@ -50,6 +51,9 @@ ReactDOM.render(
                     </Route>
                     <Route path="/traceability">
                         <Traceability/>
+                    </Route>
+                    <Route path="/mqtt-config">
+                        <MqttConfigList/>
                     </Route>
                     <Route path="/">
                         <Home/>
