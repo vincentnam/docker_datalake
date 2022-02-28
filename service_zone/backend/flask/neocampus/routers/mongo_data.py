@@ -652,7 +652,7 @@ def list_upload_ssh():
     files_upload_list = list(files_upload)
     return jsonify({'file_upload': files_upload_list})
 
-@mongo_data_bp.route('/mqtt/add', methods=['GET', 'POST'])
+@mongo_data_bp.route('/mqtt/add', methods=['POST'])
 def create_mqtt_flux():
     """
     ---
@@ -683,7 +683,7 @@ def create_mqtt_flux():
     collection.insert_one(flux)
     return jsonify({'Result': "Done"})
 
-@mongo_data_bp.route('/mqtt/edit', methods=['GET', 'POST'])
+@mongo_data_bp.route('/mqtt/edit', methods=['POST'])
 def edit_mqtt_flux():
     """
     ---
@@ -716,7 +716,7 @@ def edit_mqtt_flux():
     collection.update_one(query, update_values, upsert=False)
     return jsonify({'Result': "Done"})
 
-@mongo_data_bp.route('/mqtt/status/change', methods=['GET', 'POST'])
+@mongo_data_bp.route('/mqtt/status/change', methods=['POST'])
 def change_status_mqtt_flux():
     """
     ---
