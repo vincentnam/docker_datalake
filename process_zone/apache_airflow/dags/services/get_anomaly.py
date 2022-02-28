@@ -8,8 +8,6 @@ import json
 
 #Fonction de récupération des anomalies dans influxdb
 def get_anomaly(Jour_1, Jour_2, container_name):
-    print('Get anomaly')
-
     # Récupération du token, organisation, bucket et url pour Influxdb
     token = config.token_influxdb
     org = config.org_influxdb
@@ -115,7 +113,6 @@ def get_anomaly(Jour_1, Jour_2, container_name):
                                 "endDate_detection": endDate,
                                 "nbr" : 1
                             })
-    print(anomalies)
     last_anomaly =[]
     for ano in anomalies :
         if ano['nbr'] == 3 :
@@ -129,7 +126,6 @@ def get_anomaly(Jour_1, Jour_2, container_name):
                                 "endDate_detection": endDate,
                             }
             )
-    print(last_anomaly)
     anomaly = {
         "anomaly" : last_anomaly
     }

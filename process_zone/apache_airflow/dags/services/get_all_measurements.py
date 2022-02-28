@@ -5,7 +5,6 @@ import config
 
 #Fonction de récupération des measurements d'un bucket
 def get_all_measurements(bucket):
-    print('get_all_measurements')
     # Récupération du token, organisation, bucket et url pour Influxdb
     token = config.token_influxdb
     org = config.org_influxdb

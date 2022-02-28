@@ -5,7 +5,6 @@ import datetime
 
 #Fonction de d'insertion dans mongo des anomaly
 def insert_anomaly(anomaly,endDate,container_name):
-    print('Insert')
     mongodb_url = config.mongodb_url
     anomalie = anomaly
     mongo_client = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
@@ -48,7 +47,6 @@ def insert_anomaly(anomaly,endDate,container_name):
                     for ano_add in anomalie["anomaly"] :
                         if ano_add not in new_anomaly['objects'] :
                             if ano['datetime'] == ano_add['datetime'] and ano['topic'] == ano_add ['topic'] and ano['unit'] == ano_add ['unit'] :
-                                print("insert ici ")
                                 new_anomaly['objects'].append({
                                     "topic": ano_add['topic'],
                                     "value": ano_add['value'],

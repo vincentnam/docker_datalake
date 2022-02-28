@@ -27,36 +27,30 @@ default_args = {
 
 
 def data_anomaly_detection(*args, **kwargs):
-    print('anomaly detection start')
     return None
 
 def data_anomaly_detection_neOCampus(*args, **kwargs):
-    print('anomaly detection neOCampus')
     container_name = "neOCampus"
     get_anomaly(50, 150, container_name)
 
     return None
 
 def data_anomaly_detection_autOCampus(*args, **kwargs):
-    print('anomaly detection autOCampus')
     container_name = "autOCampus"
     get_anomaly(50, 150, container_name)
     return None
 
 def data_anomaly_detection_Villagil(*args, **kwargs):
-    print('anomaly detection Villagil')
     container_name = "Villagil"
     get_anomaly(50, 150, container_name)
     return None
 
 def data_anomaly_detection_eCOnect(*args, **kwargs):
-    print('anomaly detection eCOnect')
     container_name = "eCOnect"
     get_anomaly(50, 150, container_name)
     return None
 
 def data_anomaly_detection_done(*args, **kwargs):
-    print('Done')
     return None
 
 dag = DAG(
