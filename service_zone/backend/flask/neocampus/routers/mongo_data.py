@@ -793,7 +793,7 @@ def show_mqtt_flux():
     """
     try:
         params = {
-            "container_name": params['container_name'],
+            "container_name": request.get_json()['container_name'],
         }
     except:
         return jsonify({'error': 'Missing required fields.'})
