@@ -665,15 +665,29 @@ def create_mqtt_flux():
         - mongodb_router
 
     """
+    try:
+        params = {
+            "name": request.get_json()['name'],
+            "description": request.get_json()['description'],
+            "brokerUrl": request.get_json()['brokerUrl'],
+            "user": request.get_json()['user'],
+            "password": request.get_json()['password'],
+            "batchDuration": request.get_json()['batchDuration'],
+            "topic": request.get_json()['topic'],
+            "container_name": request.get_json()['container_name'],
+        }
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
     flux = {
-        "name": request.get_json()['name'],
-        "description": request.get_json()['description'],
-        "brokerUrl": request.get_json()['brokerUrl'],
-        "user": request.get_json()['user'],
-        "password": request.get_json()['password'],
-        "batchDuration": request.get_json()['batchDuration'],
-        "topic": request.get_json()['topic'],
-        "container_name": request.get_json()['container_name'],
+        "name": params['name'],
+        "description": params['description'],
+        "brokerUrl": params['brokerUrl'],
+        "user": params['user'],
+        "password": params['password'],
+        "batchDuration": params['batchDuration'],
+        "topic": params['topic'],
+        "container_name": params['container_name'],
         "status": True
     }
     mongodb_url = current_app.config['MONGO_URL']
@@ -696,17 +710,34 @@ def edit_mqtt_flux():
         - mongodb_router
 
     """
-    query = {"_id": ObjectId(request.get_json()['id'])}
+    try:
+        params = {
+            "id": request.get_json()['id'],
+            "name": request.get_json()['name'],
+            "description": request.get_json()['description'],
+            "brokerUrl": request.get_json()['brokerUrl'],
+            "user": request.get_json()['user'],
+            "password": request.get_json()['password'],
+            "batchDuration": request.get_json()['batchDuration'],
+            "topic": request.get_json()['topic'],
+            "container_name": request.get_json()['container_name'],
+            "status": request.get_json()['status']
+        }
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+
+    query = {"_id": ObjectId(params['id'])}
     update_values = {"$set": {
-        "name": request.get_json()['name'],
-        "description": request.get_json()['description'],
-        "brokerUrl": request.get_json()['brokerUrl'],
-        "user": request.get_json()['user'],
-        "password": request.get_json()['password'],
-        "batchDuration": request.get_json()['batchDuration'],
-        "topic": request.get_json()['topic'],
-        "container_name": request.get_json()['container_name'],
-        "status": request.get_json()['status']
+        "name": params['name'],
+        "description": params['description'],
+        "brokerUrl": params['brokerUrl'],
+        "user": params['user'],
+        "password": params['password'],
+        "batchDuration": params['batchDuration'],
+        "topic": params['topic'],
+        "container_name": params['container_name'],
+        "status": params['status']
     }}
 
     mongodb_url = current_app.config['MONGO_URL']
@@ -729,8 +760,16 @@ def change_status_mqtt_flux():
         - mongodb_router
 
     """
-    query = {"_id": ObjectId(request.get_json()['id'])}
-    status_change = { "$set": { "status": request.get_json()['status'] } }
+    try:
+        params = {
+            "id": request.get_json()['id'],
+            "status": request.get_json()['status']
+        }
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+    query = {"_id": ObjectId(params['id'])}
+    status_change = { "$set": { "status": params['status'] } }
 
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url, connect=False)
@@ -752,7 +791,14 @@ def show_mqtt_flux():
         - mongodb_router
 
     """
-    container_name = request.get_json()['container_name']
+    try:
+        params = {
+            "container_name": params['container_name'],
+        }
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+    container_name = params['container_name']
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url, connect=False)
     mongo_db = mongo_client.mqtt
