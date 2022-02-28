@@ -8,6 +8,7 @@ import time
 import pandas as pd
 from ..utils.size_conversion import convert_unit, SIZE_UNIT
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 mongo_data_bp = Blueprint('mongo_data_bp', __name__)
 
@@ -646,5 +647,175 @@ def list_upload_ssh():
     collection = mongo_db["file_upload"]
     
     files_upload = collection.find({'container_name': container_name},{ "_id": 0})
-    models_list = list(files_upload)
-    return jsonify({'file_upload': models_list})
+    files_upload_list = list(files_upload)
+    return jsonify({'file_upload': files_upload_list})
+
+@mongo_data_bp.route('/mqtt/add', methods=['POST'])
+def create_mqtt_flux():
+    """
+    ---
+    get:
+        description: Create config of a flux mqtt
+        responses:
+            '200':
+                description: call successful
+        tags:
+        - mongodb_router
+
+    """
+    try:
+        params = {
+            "name": request.get_json()['name'],
+            "description": request.get_json()['description'],
+            "brokerUrl": request.get_json()['brokerUrl'],
+            "user": request.get_json()['user'],
+            "password": request.get_json()['password'],
+            "batchDuration": request.get_json()['batchDuration'],
+            "topic": request.get_json()['topic'],
+            "container_name": request.get_json()['container_name'],
+        }
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+    flux = {
+        "name": params['name'],
+        "description": params['description'],
+        "brokerUrl": params['brokerUrl'],
+        "user": params['user'],
+        "password": params['password'],
+        "batchDuration": params['batchDuration'],
+        "topic": params['topic'],
+        "container_name": params['container_name'],
+        "status": True
+    }
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.mqtt
+    collection = mongo_db["flux"]
+    collection.insert_one(flux)
+    return jsonify({'Result': "Done"})
+
+@mongo_data_bp.route('/mqtt/edit', methods=['POST'])
+def edit_mqtt_flux():
+    """
+    ---
+    get:
+        description: Edit config of a flux mqtt
+        responses:
+            '200':
+                description: call successful
+        tags:
+        - mongodb_router
+
+    """
+    try:
+        params = {
+            "id": request.get_json()['id'],
+            "name": request.get_json()['name'],
+            "description": request.get_json()['description'],
+            "brokerUrl": request.get_json()['brokerUrl'],
+            "user": request.get_json()['user'],
+            "password": request.get_json()['password'],
+            "batchDuration": request.get_json()['batchDuration'],
+            "topic": request.get_json()['topic'],
+            "container_name": request.get_json()['container_name'],
+            "status": request.get_json()['status']
+        }
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+
+    query = {"_id": ObjectId(params['id'])}
+    update_values = {"$set": {
+        "name": params['name'],
+        "description": params['description'],
+        "brokerUrl": params['brokerUrl'],
+        "user": params['user'],
+        "password": params['password'],
+        "batchDuration": params['batchDuration'],
+        "topic": params['topic'],
+        "container_name": params['container_name'],
+        "status": params['status']
+    }}
+
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.mqtt
+    collection = mongo_db["flux"]
+    collection.update_one(query, update_values, upsert=False)
+    return jsonify({'Result': "Done"})
+
+@mongo_data_bp.route('/mqtt/status/change', methods=['POST'])
+def change_status_mqtt_flux():
+    """
+    ---
+    get:
+        description: Change status of config flux mqtt
+        responses:
+            '200':
+                description: call successful
+        tags:
+        - mongodb_router
+
+    """
+    try:
+        params = {
+            "id": request.get_json()['id'],
+            "status": request.get_json()['status']
+        }
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+    query = {"_id": ObjectId(params['id'])}
+    status_change = { "$set": { "status": params['status'] } }
+
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.mqtt
+    collection = mongo_db["flux"]
+    collection.update_one(query, status_change, upsert=False)
+    return jsonify({'Result': "Done"})
+
+@mongo_data_bp.route('/mqtt/all', methods=['GET', 'POST'])
+def show_mqtt_flux():
+    """
+    ---
+    get:
+        description: Change status of config flux mqtt
+        responses:
+            '200':
+                description: call successful
+        tags:
+        - mongodb_router
+
+    """
+    try:
+        params = {
+            "container_name": request.get_json()['container_name'],
+        }
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+    container_name = params['container_name']
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.mqtt
+    collection = mongo_db["flux"]
+
+    flux = collection.find({'container_name': container_name})
+    list_flux = list(flux)
+    output = {'data': []}
+    for obj in list_flux:
+        output['data'].append({
+            '_id': str(obj['_id']),
+            "name": obj['name'],
+            "description": obj['description'],
+            "brokerUrl": obj['brokerUrl'],
+            "user": obj['user'],
+            "password": obj['password'],
+            "batchDuration": obj['batchDuration'],
+            "topic": obj['topic'],
+            "container_name": obj['container_name'],
+            "status": obj['status']
+        })
+    return jsonify({'list_flux': output})
