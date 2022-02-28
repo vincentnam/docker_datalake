@@ -553,8 +553,6 @@ def get_anomalies():
     except:
         return jsonify({'error': 'Missing required fields.'})
 
-    x = influxdb.get_data_anomaly(50, 150, container_name)
-
     mongo_collections = mongo.get_anomaly(params,measurement,topic, container_name)
     mongo_collections = list(mongo_collections)
 
