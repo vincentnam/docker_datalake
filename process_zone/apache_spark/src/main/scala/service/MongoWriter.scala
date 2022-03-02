@@ -8,7 +8,7 @@ import org.apache.spark.sql.types._
 
 class MongoWriter(config: Config) {
 
-  @transient lazy val log = org.apache.log4j.LogManager.getLogger(getClass.getName)
+//  @transient lazy val log = org.apache.log4j.LogManager.getLogger(getClass.getName)
 
   val mongodbUri = s"mongodb://${config.getString("mongo.host")}:${config.getString("mongo.port")}/"
 
@@ -39,7 +39,7 @@ class MongoWriter(config: Config) {
                      dataProcess: String, application: String, originalObjectName: String, mqtt_topic: String = null,
                      successfulOperations: Array[String] = null, failedOperations: Array[String] = null, otherData: String = null) = {
 
-    log.info("Writing metadata to Swift database")
+//    log.info("Writing metadata to Swift database")
 
     val historicalMetaData = HistoricalMetaData(contentType, dataProcess, swiftUser, containerName, id, application, originalObjectName,
       mqtt_topic, successfulOperations, failedOperations, processedDataAreaService, otherData)
@@ -65,7 +65,7 @@ class MongoWriter(config: Config) {
    */
   def putIntoStatsAndGetSwiftId(): Int = {
 
-    log.info("Getting last swift ID for new object")
+//    log.info("Getting last swift ID for new object")
 
     val swiftCollection = spark.read.format("com.mongodb.spark.sql.DefaultSource")
       .options(Map("uri" -> mongodbUri, "database" -> "stats", "collection" -> "swift")).load()
@@ -107,7 +107,7 @@ class MongoWriter(config: Config) {
    */
   def resetLastSwiftId(): Unit = {
 
-    log.info("Reseting last swift ID")
+//    log.info("Reseting last swift ID")
 
     val swiftCollection = spark.read.format("com.mongodb.spark.sql.DefaultSource")
       .options(Map("uri" -> mongodbUri, "database" -> "stats", "collection" -> "swift")).load()
@@ -140,7 +140,7 @@ class MongoWriter(config: Config) {
                        old_data: String,
                        new_data: String): Unit = {
 
-    log.info("Writing Operation History")
+//    log.info("Writing Operation History")
 
     val OperationHistoryData = OperationHistory(creation_date, swift_container, swift_user, swift_object_id, task_type,
       old_data, new_data)

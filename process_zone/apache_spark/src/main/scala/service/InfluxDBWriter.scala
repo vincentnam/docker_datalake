@@ -6,7 +6,7 @@ import com.influxdb.client.write.Point
 import com.influxdb.client.{InfluxDBClient, InfluxDBClientFactory, WriteApi}
 import com.typesafe.config.Config
 import model.{MessageMultiValues, MessageSingleValue}
-import org.apache.log4j.Logger
+//import org.apache.log4j.Logger
 import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.streaming.Time
 
@@ -17,7 +17,7 @@ import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success, Try}
 
 class InfluxDBWriter(config: Config) {
-  @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
+//  @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
   val influxdbToken: String = config.getString("influxdb.token")
   val influxdbOrg: String = config.getString("influxdb.org")
   val influxdbBucket: String = config.getString("influxdb.bucket")
@@ -135,7 +135,7 @@ class InfluxDBWriter(config: Config) {
       Success(points)
     } catch {
       case e: Exception =>
-        log.error("Error Occurred while inserting mqtt into influxdb: " + e.getMessage)
+//        log.error("Error Occurred while inserting mqtt into influxdb: " + e.getMessage)
         Failure(e)
     }
   }

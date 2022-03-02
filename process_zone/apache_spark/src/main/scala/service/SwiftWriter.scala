@@ -1,7 +1,7 @@
 package service
 
 import com.typesafe.config.Config
-import org.apache.log4j.Logger
+//import org.apache.log4j.Logger
 import org.apache.spark.streaming.Time
 import org.javaswift.joss.client.factory.{AccountFactory, AuthenticationMethod}
 import org.javaswift.joss.model.{Account, StoredObject}
@@ -12,7 +12,7 @@ import scala.jdk.CollectionConverters.mapAsJavaMapConverter
 import scala.util.{Failure, Success, Try}
 
 class SwiftWriter(config: Config) {
-  @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
+//  @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
 
   val swiftAccount: Account = new AccountFactory()
     .setAuthenticationMethod(AuthenticationMethod.BASIC)
@@ -23,7 +23,7 @@ class SwiftWriter(config: Config) {
 
 
   def put(containerName: String, id: String, text: String, contentType: String): Try[StoredObject] = {
-    log.info(s"Inserting object into Openstack Swift Container: $containerName")
+    // log.info(s"Inserting object into Openstack Swift Container: $containerName")
 
     // get or create container
     val container = swiftAccount.getContainer(containerName)

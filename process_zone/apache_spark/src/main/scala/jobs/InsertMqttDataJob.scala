@@ -2,7 +2,8 @@ package jobs
 
 import com.google.gson.Gson
 import com.typesafe.config.{Config, ConfigFactory}
-import org.apache.log4j.Logger
+import org.apache.spark.sql.Row
+//import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.api.java.JavaStreamingContext
@@ -15,18 +16,18 @@ import scala.util.{Failure, Success}
 
 
 object InsertMqttDataJob {
-  @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
+  //  @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
 
-  def start(): Unit = {
+  def start(configFlux: Object): Unit = {
     val config: Config = ConfigFactory.load()
     val swiftWriter = new SwiftWriter(config)
     val influxDDWriter = new InfluxDBWriter(config)
 
-    val brokerUrl = config.getString("mqtt.brokerUrl")
-    val username = config.getString("mqtt.username")
-    val password = config.getString("mqtt.password")
-    val topic = config.getString("mqtt.topic")
-    val batchDuration = config.getInt("mqtt.batchDuration")
+    val brokerUrl = configFlux.brokerUrl
+    val username = configFlux.user
+    val password = configFlux.password
+    val topic = configFlux.topic
+    val batchDuration = configFlux.batchDuration
 
     val sparkConf: SparkConf = new SparkConf().setMaster("local[*]").setAppName("StreamingMQTT")
     val jssc = new JavaStreamingContext(sparkConf, Seconds(batchDuration))
@@ -55,7 +56,7 @@ object InsertMqttDataJob {
               data.toString, influxDbPoints)
             println("new influxDB data points: " + influxDbPoints)
           case Failure(exception) =>
-            log.error(s"Insert into InfluxDB Error : $exception")
+//            log.error(s"Insert into InfluxDB Error : $exception")
         }
       }
     })
