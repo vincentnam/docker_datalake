@@ -2,11 +2,11 @@ package service
 
 import com.google.gson.Gson
 import com.typesafe.config.Config
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
-class MongoWriter(config: Config) {
+class MongoWriter(config: Config, configFlux: Row) {
 
 //  @transient lazy val log = org.apache.log4j.LogManager.getLogger(getClass.getName)
 

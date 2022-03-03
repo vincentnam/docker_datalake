@@ -2,6 +2,7 @@ package jobs
 
 import com.typesafe.config.{Config, ConfigFactory}
 import config.Configuration
+import org.apache.spark.sql.Row
 import service.{DataWriter, HistoricalDataImporter, MongoWriter}
 import util.Serialization
 
@@ -24,7 +25,7 @@ object InsertHistoricalDataJob {
     //var data = importer.importData(args(0))
     val data = importer.importData()
 
-    val metadataWriter = new MongoWriter(configuration)
+    val metadataWriter = new MongoWriter(configuration, null)
     // Get the Swift ID counter and increase it
     val id = metadataWriter.putIntoStatsAndGetSwiftId()
 

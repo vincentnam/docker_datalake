@@ -16,11 +16,11 @@ import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success, Try}
 
-class InfluxDBWriter(config: Config) {
+class InfluxDBWriter(config: Config, container_name: String) {
 //  @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
   val influxdbToken: String = config.getString("influxdb.token")
   val influxdbOrg: String = config.getString("influxdb.org")
-  val influxdbBucket: String = config.getString("influxdb.bucket")
+  val influxdbBucket: String = container_name
   val influxdbUrl: String = config.getString("influxdb.url")
   val influxdbMeasurement: String = config.getString("influxdb.measurement")
 

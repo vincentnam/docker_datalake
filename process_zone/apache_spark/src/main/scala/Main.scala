@@ -1,6 +1,6 @@
 import com.typesafe.config.{Config, ConfigFactory}
 import jobs.InsertMqttDataJob
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Row, SparkSession}
 
 object Main {
   //  System.setProperty("hadoop.home.dir", "C:/hadoop")
@@ -18,9 +18,9 @@ object Main {
     val configCollection = spark.read.format("com.mongodb.spark.sql.DefaultSource")
       .options(Map("uri" -> mongodbUri, "database" -> "mqtt", "collection" -> "flux")).load()
 
-    val collection = configCollection.collect().toList
-    collection = collection.filter(_.status==true)
-    for (configFlux <- collection) {
+    val configCollectionStatus = configCollection.where("status == true")
+
+    for (configFlux <- configCollectionStatus) {
       InsertMqttDataJob.start(configFlux)
     }
 
