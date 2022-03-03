@@ -110,7 +110,7 @@ def insert_datalake(file_content, user, key, authurl, container_name,
                     application, content_type,
                     mongodb_url, other_data):
     conn = swiftclient.Connection(user=user, key=key,
-                                  authurl=authurl)
+                                  authurl=authurl, insecure=True)
     client = MongoClient(mongodb_url, connect=False)
     db = client.swift
     coll = db[container_name]

@@ -18,7 +18,7 @@ def download_object_file(container_name, object_id):
     :return: saved file path in flask
     """
     swift_conn = swiftclient.Connection(user=current_app.config['SWIFT_USER'], key=current_app.config['SWIFT_KEY'],
-                                        authurl=current_app.config['SWIFT_AUTHURL'])
+                                        authurl=current_app.config['SWIFT_AUTHURL'], insecure=True)
     swift_object_raw = swift_conn.get_object(container_name, object_id)
 
     original_object_name = get_swift_original_object_name(container_name, object_id)
