@@ -3,7 +3,8 @@ package jobs
 import com.google.gson.Gson
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.SparkContext
-import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{Dataset, Encoder, Row, SparkSession}
 import org.apache.spark.streaming.Durations
 import service.StreamGetter
 //import org.apache.log4j.Logger
@@ -33,9 +34,9 @@ object InsertMqttDataJob {
     val clientId = MqttClient.generateClientId()
 
     val streamGetter : StreamGetter = new StreamGetter(config)
-    val configCollectionStatus = streamGetter.getAllStreams()
+    val configCollectionStatus : Dataset[Row] = streamGetter.getAllStreams()
 
-    for (configFlux <- configCollectionStatus) {
+    for(configFlux <- configCollectionStatus.rdd.collect()){
 
       // ConfigFlux : [_id, batchDuration, brokerUrl, container_name, description, name, password, status, topic, user ]
       val brokerUrl: String = configFlux(2).asInstanceOf[String]

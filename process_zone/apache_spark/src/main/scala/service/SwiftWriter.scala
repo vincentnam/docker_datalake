@@ -18,9 +18,11 @@ class SwiftWriter(config: Config) {
   configAccount.setUsername(config.getString("swift.user"))
   configAccount.setPassword(config.getString("swift.pass"))
   configAccount.setAuthUrl(config.getString("swift.authUrl"))
-  configAccount.setDisableSslValidation(true)
+  //configAccount.setDisableSslValidation(true)
 
-  val swiftAccount: Account = new AccountFactory(configAccount).createAccount()
+  val swiftAccount: Account = new AccountFactory(configAccount)
+    .setAuthenticationMethod(AuthenticationMethod.BASIC)
+    .createAccount()
 
   def put(containerName: String, id: String, text: String, contentType: String): Try[StoredObject] = {
     // log.info(s"Inserting object into Openstack Swift Container: $containerName")

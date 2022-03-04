@@ -2,11 +2,11 @@ package service
 
 import com.google.gson.Gson
 import com.typesafe.config.Config
-import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
-class MongoWriter(config: Config, configFlux: Row) {
+class MongoWriter(config: Config) {
 
 //  @transient lazy val log = org.apache.log4j.LogManager.getLogger(getClass.getName)
 
@@ -170,4 +170,5 @@ class MongoWriter(config: Config, configFlux: Row) {
                                 swift_object_id: String, application: String, original_object_name: String,
                                 mqtt_topic: String, successful_operations: Array[String], failed_operations: Array[String],
                                 processed_data_area_service: String, other_data: String)
+
 }
