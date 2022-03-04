@@ -25,7 +25,7 @@ object InsertHistoricalDataJob {
     //var data = importer.importData(args(0))
     val data = importer.importData()
 
-    val metadataWriter = new MongoWriter(configuration, null)
+    val metadataWriter = new MongoWriter(configuration)
     // Get the Swift ID counter and increase it
     val id = metadataWriter.putIntoStatsAndGetSwiftId()
 
