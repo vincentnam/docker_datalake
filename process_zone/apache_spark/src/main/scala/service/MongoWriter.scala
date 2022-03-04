@@ -6,7 +6,7 @@ import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
-class MongoWriter(config: Config, configFlux: Row) {
+class MongoWriter(config: Config) {
 
 //  @transient lazy val log = org.apache.log4j.LogManager.getLogger(getClass.getName)
 
