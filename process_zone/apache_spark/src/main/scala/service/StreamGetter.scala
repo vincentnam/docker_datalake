@@ -13,17 +13,4 @@ class StreamGetter(config: Config) {
     .master("local[*]")
     .getOrCreate()
 
-  def getAllStreams(): Dataset[Row] ={
-    val configCollection = spark.read.format("com.mongodb.spark.sql.DefaultSource")
-      .options(Map("uri" -> mongodbUri, "database" -> "mqtt", "collection" -> "flux")).load()
-
-    println("spark")
-    println(spark)
-
-    import spark.implicits._
-
-    val configCollectionStatus = configCollection.where("status == true")
-
-    return configCollectionStatus
-  }
 }
