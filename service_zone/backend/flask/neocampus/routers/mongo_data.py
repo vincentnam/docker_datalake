@@ -670,7 +670,7 @@ def create_mqtt_flux():
             "brokerUrl": request.get_json()['brokerUrl'],
             "user": request.get_json()['user'],
             "password": request.get_json()['password'],
-            "batchDuration": request.get_json()['batchDuration'],
+            "batchDuration":  int(request.get_json()['batchDuration']),
             "topic": request.get_json()['topic'],
             "container_name": request.get_json()['container_name'],
         }
@@ -716,7 +716,7 @@ def edit_mqtt_flux():
             "brokerUrl": request.get_json()['brokerUrl'],
             "user": request.get_json()['user'],
             "password": request.get_json()['password'],
-            "batchDuration": request.get_json()['batchDuration'],
+            "batchDuration":  int(request.get_json()['batchDuration']),
             "topic": request.get_json()['topic'],
             "container_name": request.get_json()['container_name'],
             "status": request.get_json()['status']
