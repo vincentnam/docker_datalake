@@ -115,6 +115,7 @@ class InfluxDBWriter(config: Config, container_name: String) {
    */
   def writePoints(points: util.List[Point]): Unit = {
     if (points.size() > 0) {
+      println(influxdbBucket)
       // write into influx
       writeApi.writePoints(influxdbBucket, influxdbOrg, points)
     }
