@@ -670,9 +670,9 @@ def create_mqtt_flux():
             "brokerUrl": request.get_json()['brokerUrl'],
             "user": request.get_json()['user'],
             "password": request.get_json()['password'],
-            "batchDuration":  int(request.get_json()['batchDuration']),
             "topic": request.get_json()['topic'],
             "container_name": request.get_json()['container_name'],
+            "status": request.get_json()['status']
         }
     except:
         return jsonify({'error': 'Missing required fields.'})
@@ -683,10 +683,9 @@ def create_mqtt_flux():
         "brokerUrl": params['brokerUrl'],
         "user": params['user'],
         "password": params['password'],
-        "batchDuration": params['batchDuration'],
         "topic": params['topic'],
         "container_name": params['container_name'],
-        "status": True
+        "status": params['status']
     }
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url, connect=False)
@@ -716,7 +715,6 @@ def edit_mqtt_flux():
             "brokerUrl": request.get_json()['brokerUrl'],
             "user": request.get_json()['user'],
             "password": request.get_json()['password'],
-            "batchDuration":  int(request.get_json()['batchDuration']),
             "topic": request.get_json()['topic'],
             "container_name": request.get_json()['container_name'],
             "status": request.get_json()['status']
@@ -732,7 +730,6 @@ def edit_mqtt_flux():
         "brokerUrl": params['brokerUrl'],
         "user": params['user'],
         "password": params['password'],
-        "batchDuration": params['batchDuration'],
         "topic": params['topic'],
         "container_name": params['container_name'],
         "status": params['status']
@@ -813,7 +810,6 @@ def show_mqtt_flux():
             "brokerUrl": obj['brokerUrl'],
             "user": obj['user'],
             "password": obj['password'],
-            "batchDuration": obj['batchDuration'],
             "topic": obj['topic'],
             "container_name": obj['container_name'],
             "status": obj['status']
