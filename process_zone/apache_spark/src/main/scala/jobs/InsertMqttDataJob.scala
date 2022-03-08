@@ -2,14 +2,8 @@ package jobs
 
 import com.google.gson.Gson
 import com.typesafe.config.{Config, ConfigFactory}
-import org.apache.spark.SparkContext
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{Dataset, Encoder, Row, SparkSession}
-import org.apache.spark.streaming.Durations
-import service.StreamGetter
+import org.apache.spark.sql.{Row}
 //import org.apache.log4j.Logger
-import org.apache.spark.SparkConf
-import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.api.java.JavaStreamingContext
 import org.apache.spark.streaming.mqtt.MQTTUtils
 import org.eclipse.paho.client.mqttv3.MqttClient
@@ -27,13 +21,12 @@ object InsertMqttDataJob {
     val swiftWriter = new SwiftWriter(config)
 
     val clientId = MqttClient.generateClientId()
-    // ConfigFlux : [_id, batchDuration, brokerUrl, container_name, description, name, password, status, topic, user ]
-    val brokerUrl: String = configFlux(2).asInstanceOf[String]
-    val username: String = configFlux(9).asInstanceOf[String]
-    val password: String = configFlux(6).asInstanceOf[String]
-    val topic: String = configFlux(8).asInstanceOf[String]
-    val batchDuration: Long = configFlux(1).asInstanceOf[Integer].longValue()
-    val container_name: String = configFlux(3).asInstanceOf[String]
+    // ConfigFlux : [_id, brokerUrl, container_name, description, name, password, status, topic, user ]
+    val brokerUrl: String = configFlux(1).asInstanceOf[String]
+    val username: String = configFlux(8).asInstanceOf[String]
+    val password: String = configFlux(5).asInstanceOf[String]
+    val topic: String = configFlux(7).asInstanceOf[String]
+    val container_name: String = configFlux(2).asInstanceOf[String]
 
     val influxDDWriter = new InfluxDBWriter(config, container_name)
     println("brokerUrl: " + brokerUrl)

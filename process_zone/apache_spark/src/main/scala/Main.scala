@@ -1,14 +1,15 @@
 import com.typesafe.config.{Config, ConfigFactory}
 import jobs.InsertMqttDataJob
-import jobs.InsertMqttDataJob.config
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.streaming.Durations
 import org.apache.spark.streaming.api.java.JavaStreamingContext
 import service.StreamGetter
+import org.apache.spark.streaming.Seconds
 
 object Main {
   //  System.setProperty("hadoop.home.dir", "C:/hadoop")
+  val config: Config = ConfigFactory.load()
 
   def main(args: Array[String]): Unit = {
     //    InsertHistoricalDataJob.start()
@@ -18,7 +19,8 @@ object Main {
       .setAppName("StreamingMQTT")
       .set("spark.driver.allowMultipleContexts", "true")
 
-    val jssc = new JavaStreamingContext(sparkConf, Durations.seconds(2))
+    val batchDuration = config.getInt("mqtt.batchDuration")
+    val jssc = new JavaStreamingContext(sparkConf, Seconds(batchDuration))
 
     val streamGetter: StreamGetter = new StreamGetter(config)
     val configCollectionStatus: Dataset[Row] = streamGetter.getAllStreams()
