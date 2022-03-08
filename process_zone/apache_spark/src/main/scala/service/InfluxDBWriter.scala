@@ -6,7 +6,7 @@ import com.influxdb.client.write.Point
 import com.influxdb.client.{InfluxDBClient, InfluxDBClientFactory, WriteApi}
 import com.typesafe.config.Config
 import model.{MessageMultiValues, MessageSingleValue}
-import org.apache.log4j.Logger
+//import org.apache.log4j.Logger
 import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.streaming.Time
 
@@ -16,11 +16,11 @@ import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success, Try}
 
-class InfluxDBWriter(config: Config) {
-  @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
+class InfluxDBWriter(config: Config, container_name: String) {
+//  @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
   val influxdbToken: String = config.getString("influxdb.token")
   val influxdbOrg: String = config.getString("influxdb.org")
-  val influxdbBucket: String = config.getString("influxdb.bucket")
+  val influxdbBucket: String = container_name
   val influxdbUrl: String = config.getString("influxdb.url")
   val influxdbMeasurement: String = config.getString("influxdb.measurement")
 
@@ -115,6 +115,7 @@ class InfluxDBWriter(config: Config) {
    */
   def writePoints(points: util.List[Point]): Unit = {
     if (points.size() > 0) {
+      println(influxdbBucket)
       // write into influx
       writeApi.writePoints(influxdbBucket, influxdbOrg, points)
     }
@@ -135,7 +136,7 @@ class InfluxDBWriter(config: Config) {
       Success(points)
     } catch {
       case e: Exception =>
-        log.error("Error Occurred while inserting mqtt into influxdb: " + e.getMessage)
+//        log.error("Error Occurred while inserting mqtt into influxdb: " + e.getMessage)
         Failure(e)
     }
   }

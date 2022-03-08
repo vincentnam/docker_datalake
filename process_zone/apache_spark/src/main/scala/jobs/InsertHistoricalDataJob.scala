@@ -2,6 +2,7 @@ package jobs
 
 import com.typesafe.config.{Config, ConfigFactory}
 import config.Configuration
+import org.apache.spark.sql.Row
 import service.{DataWriter, HistoricalDataImporter, MongoWriter}
 import util.Serialization
 
@@ -9,12 +10,12 @@ import scala.util.{Failure, Success}
 
 object InsertHistoricalDataJob {
 
-  @transient lazy val log = org.apache.log4j.LogManager.getLogger(getClass.getName)
+//  @transient lazy val log = org.apache.log4j.LogManager.getLogger(getClass.getName)
 
   val projectName = "neOCampus"
 
   def start(): Unit = {
-    log.info("Launching historical neOCampus data insertion into Data Lake")
+//    log.info("Launching historical neOCampus data insertion into Data Lake")
 
     val configuration: Config = ConfigFactory.load()
     val conf: Configuration = new Configuration(configuration)
@@ -41,7 +42,7 @@ object InsertHistoricalDataJob {
           "sensors.csv")
       }
       case Failure(exception) => {
-        log.error(s"Execption Occured while inserting data into data lake. Reseting swift Id : $exception")
+//        log.error(s"Execption Occured while inserting data into data lake. Reseting swift Id : $exception")
         metadataWriter.resetLastSwiftId()
       }
     }

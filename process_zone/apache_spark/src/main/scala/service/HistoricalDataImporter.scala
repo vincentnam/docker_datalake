@@ -6,7 +6,7 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 
 class HistoricalDataImporter(conf: Configuration) {
 
-  @transient lazy val log = org.apache.log4j.LogManager.getLogger(getClass.getName)
+//  @transient lazy val log = org.apache.log4j.LogManager.getLogger(getClass.getName)
 
   val spark = SparkSession
     .builder
@@ -20,7 +20,7 @@ class HistoricalDataImporter(conf: Configuration) {
    * @return
    */
   def importData(): DataFrame = {
-    log.info("Importing csv file")
+//    log.info("Importing csv file")
 
     val inputCSV = spark
       .read
