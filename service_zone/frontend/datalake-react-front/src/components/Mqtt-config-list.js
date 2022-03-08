@@ -214,7 +214,7 @@ class MqttConfigList extends React.Component {
                         <div className="container main-upload">
                             <div className="title">Liste des flux MQTT :</div>
                             <button type="button" className="btn btn-primary buttonModel"
-                                    onClick={() => this.onChangeModalAdd()}>Créer un modèle
+                                    onClick={() => this.onChangeModalAdd()}>Créer un flux MQTT
                             </button>
                             <div className="main-download">
                                 <div className="mt-4">
