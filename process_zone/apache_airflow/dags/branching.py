@@ -114,7 +114,7 @@ def from_mongodb_to_influx(token=None, nb_retry=10, **kwargs):
                                   token=token)
     swift_co = swiftclient.Connection(user=globals()["SWIFT_USER"],
                                       key=globals()["SWIFT_KEY"],
-                                      authurl=globals()["SWIFT_AUTHURL"])
+                                      authurl=globals()["SWIFT_AUTHURL"], insecure=True)
     # Pull data from XCom instance : come from "check_type" task
     metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
 
@@ -428,53 +428,12 @@ def default_check_type(**kwargs):
 
 
 def workflow_selection(**kwargs):
-    # GET AUTH TOKEN
-    url = "http://" + config.url_swift + "/auth/v1.0"
-    user = config.user_swift
-    key = config.key_swift
-    headers = {'X-Storage-User': user,
-               'X-Storage-Pass': key
-               }
-
-    token_response = urlopen(Request(url, headers=headers)).getheaders()
-
-    opener = urllib.request.build_opener()
-    opener.addheaders = []
-
-    for i in token_response:
-        if i[0] == "X-Auth-Token":
-            token = i[1]
-        if i[0] == "X-Storage-Url":
-            url = i
-
     container = kwargs["dag_run"].conf["swift_container"]
     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
-
-    urllib.request.install_opener(opener)
-    # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
-    while (True):
-        req = Request(url[1] + "/" + container + "/" + swift_id, method="HEAD")
-        req.add_header("X-Auth-Token", token)
-
-        try:
-            urllib.request.urlopen(req)
-            break
-        except HTTPError as e404:
-            print(e404)
-            sleep(10)
-
-    meta_base = MongoClient(config.mongodb_url)
-    meta_base.server_info()
-
-    # print(group)
     print(swift_id)
     # WAIT THE OBJECT HAS BEEN INSERTED
     print("kwargs['dag_run'].conf")
     print(kwargs["dag_run"].conf)
-    metadata_doc = meta_base.swift[container].find_one({
-        "swift_object_id": str(swift_id)}, {"_id": 0})
-    # kwargs["ti"].xcom_push(key="metadata_doc", value=metadata_doc)
-    print(metadata_doc)
 
     list_projects = config.list_projects
     if container not in list_projects:
@@ -532,13 +491,13 @@ def neocampus_get_swift_object(**kwargs):
     print("kwargs['dag_run'].conf")
     print(kwargs["dag_run"].conf)
     
-    url = "http://" + config.url_swift + "/auth/v1.0"
+    url = config.url_swift
     user = config.user_swift
     key = config.key_swift
     headers = {'X-Storage-User': user,
                'X-Storage-Pass': key
                }
-    
+
     token_response = urlopen(Request(url, headers=headers)).getheaders()
 
     opener = urllib.request.build_opener()
