@@ -670,9 +670,9 @@ def create_mqtt_flux():
             "brokerUrl": request.get_json()['brokerUrl'],
             "user": request.get_json()['user'],
             "password": request.get_json()['password'],
-            "batchDuration":  int(request.get_json()['batchDuration']),
             "topic": request.get_json()['topic'],
             "container_name": request.get_json()['container_name'],
+            "status": request.get_json()['status']
         }
     except:
         return jsonify({'error': 'Missing required fields.'})
@@ -683,10 +683,9 @@ def create_mqtt_flux():
         "brokerUrl": params['brokerUrl'],
         "user": params['user'],
         "password": params['password'],
-        "batchDuration": params['batchDuration'],
         "topic": params['topic'],
         "container_name": params['container_name'],
-        "status": True
+        "status": params['status']
     }
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url, connect=False)
@@ -716,7 +715,6 @@ def edit_mqtt_flux():
             "brokerUrl": request.get_json()['brokerUrl'],
             "user": request.get_json()['user'],
             "password": request.get_json()['password'],
-            "batchDuration":  int(request.get_json()['batchDuration']),
             "topic": request.get_json()['topic'],
             "container_name": request.get_json()['container_name'],
             "status": request.get_json()['status']
@@ -732,7 +730,6 @@ def edit_mqtt_flux():
         "brokerUrl": params['brokerUrl'],
         "user": params['user'],
         "password": params['password'],
-        "batchDuration": params['batchDuration'],
         "topic": params['topic'],
         "container_name": params['container_name'],
         "status": params['status']
@@ -813,7 +810,49 @@ def show_mqtt_flux():
             "brokerUrl": obj['brokerUrl'],
             "user": obj['user'],
             "password": obj['password'],
-            "batchDuration": obj['batchDuration'],
+            "topic": obj['topic'],
+            "container_name": obj['container_name'],
+            "status": obj['status']
+        })
+    return jsonify({'list_flux': output})
+
+@mongo_data_bp.route('/mqtt/status/actif', methods=['GET', 'POST'])
+def show_mqtt_flux_actifs():
+    """
+    ---
+    get:
+        description: Change status of config flux mqtt actifs
+        responses:
+            '200':
+                description: call successful
+        tags:
+        - mongodb_router
+
+    """
+    try:
+        params = {
+            "container_name": request.get_json()['container_name'],
+        }
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+    container_name = params['container_name']
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_db = mongo_client.mqtt
+    collection = mongo_db["flux"]
+
+    flux = collection.find({'container_name': container_name, 'status': True})
+    list_flux = list(flux)
+    output = {'data': []}
+    for obj in list_flux:
+        output['data'].append({
+            '_id': str(obj['_id']),
+            "name": obj['name'],
+            "description": obj['description'],
+            "brokerUrl": obj['brokerUrl'],
+            "user": obj['user'],
+            "password": obj['password'],
             "topic": obj['topic'],
             "container_name": obj['container_name'],
             "status": obj['status']

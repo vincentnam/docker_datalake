@@ -23,11 +23,14 @@ class MqttConfigList extends React.Component {
             selectElement: {
                 name: "",
             },
+            statusFluxAll: true,
         };
         this.loadMqttConfig = this.loadMqttConfig.bind(this);
         this.onChangeModalAdd = this.onChangeModalAdd.bind(this);
         this.onChangeModalEdit = this.onChangeModalEdit.bind(this);
+        this.loadMqttConfigStatus = this.loadMqttConfigStatus.bind(this);
         this.onChangeModalElementStatus = this.onChangeModalElementStatus.bind(this);
+        this.loadFlux = this.loadFlux.bind(this);
     }
 
     componentDidMount() {
@@ -48,6 +51,28 @@ class MqttConfigList extends React.Component {
             });
     }
 
+    loadMqttConfigStatus() {
+        api.post('mqtt/status/actif', {
+            container_name: this.props.nameContainer.nameContainer
+        })
+            .then((response) => {
+                this.setState({
+                    elements: response.data.list_flux.data,
+                });
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
+
+    loadFlux() {
+        if (this.state.statusFluxAll === true){
+            this.loadMqttConfig();
+        } else {
+            this.loadMqttConfigStatus();
+        }
+    }
+
     onChangeModalAdd() {
         this.setState({
             modalAdd: !this.state.modalAdd,
@@ -66,6 +91,20 @@ class MqttConfigList extends React.Component {
             selectElement: element,
             modalStatus: !this.state.modalStatus,
         });
+    }
+
+    onChangeStatusFlux() {
+        if (this.state.statusFluxAll === true){
+            this.setState({
+                statusFluxAll: !this.state.statusFluxAll,
+            });
+            this.loadMqttConfigStatus();
+        } else {
+            this.setState({
+                statusFluxAll: !this.state.statusFluxAll,
+            });
+            this.loadMqttConfig();
+        }
     }
 
     render() {
@@ -142,7 +181,7 @@ class MqttConfigList extends React.Component {
                             containerName={this.props.nameContainer.nameContainer}
                             listElements={this.state.elements}
                             close={this.onChangeModalAdd}
-                            reload={this.loadMqttConfig}
+                            reload={this.loadFlux}
                         />
                     </Modal.Body>
                 </Modal>
@@ -167,7 +206,7 @@ class MqttConfigList extends React.Component {
                             listElements={this.state.elements}
                             selectElement={this.state.selectElement}
                             close={this.onChangeModalEdit}
-                            reload={this.loadMqttConfig}
+                            reload={this.loadFlux}
                         />
                     </Modal.Body>
                 </Modal>
@@ -191,11 +230,27 @@ class MqttConfigList extends React.Component {
                         <ConfigMqttChangeStatus
                             selectElement={this.state.selectElement}
                             close={this.onChangeModalElementStatus}
-                            reload={this.loadMqttConfig}
+                            reload={this.loadFlux}
                         />
                     </Modal.Body>
                 </Modal>
             )
+        }
+
+        const ButtonStatus = () => {
+            if(this.state.statusFluxAll === true) {
+                return (
+                    <button type="button" className="btn btn-primary buttonModel"
+                            onClick={() => this.onChangeStatusFlux()}>Afficher les flux actifs
+                    </button>
+                );
+            } else {
+                return (
+                    <button type="button" className="btn btn-success"
+                            onClick={() => this.onChangeStatusFlux()}>Afficher tous les flux
+                    </button>
+                );
+            }
         }
 
         return (
@@ -209,13 +264,15 @@ class MqttConfigList extends React.Component {
                     </div>
                 </nav>
                 <div className="tab-content mt-2" id="pills-tabContent">
-                    <div className="tab-pane fade show active" id="nav-raw" role="tabpanel"
+                    <div className="tab-pane fade show active mt-4" id="nav-raw" role="tabpanel"
                          aria-labelledby="nav-flux-mqtt">
                         <div className="container main-upload">
-                            <div className="title">Liste des flux MQTT :</div>
-                            <button type="button" className="btn btn-primary buttonModel"
-                                    onClick={() => this.onChangeModalAdd()}>Créer un modèle
-                            </button>
+                            <div className="d-flex justify-content-between">
+                                <button type="button" className="btn btn-primary buttonModel"
+                                        onClick={() => this.onChangeModalAdd()}>Ajouter un flux MQTT
+                                </button>
+                                <ButtonStatus />
+                            </div>
                             <div className="main-download">
                                 <div className="mt-4">
                                     <div className="data-table">
