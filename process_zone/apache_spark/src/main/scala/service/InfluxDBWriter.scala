@@ -17,7 +17,7 @@ import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success, Try}
 
 class InfluxDBWriter(config: Config, container_name: String) {
-//  @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
+  //  @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
   val influxdbToken: String = config.getString("influxdb.token")
   val influxdbOrg: String = config.getString("influxdb.org")
   val influxdbBucket: String = container_name
@@ -115,7 +115,7 @@ class InfluxDBWriter(config: Config, container_name: String) {
    */
   def writePoints(points: util.List[Point]): Unit = {
     if (points.size() > 0) {
-      println(influxdbBucket)
+      //      println(influxdbBucket)
       // write into influx
       writeApi.writePoints(influxdbBucket, influxdbOrg, points)
     }
@@ -132,11 +132,11 @@ class InfluxDBWriter(config: Config, container_name: String) {
     try {
       val points = getPoints(rdd, time)
       writePoints(points)
-      println((new Gson).toJson(points))
+      //      println((new Gson).toJson(points))
       Success(points)
     } catch {
       case e: Exception =>
-//        log.error("Error Occurred while inserting mqtt into influxdb: " + e.getMessage)
+        //        log.error("Error Occurred while inserting mqtt into influxdb: " + e.getMessage)
         Failure(e)
     }
   }
