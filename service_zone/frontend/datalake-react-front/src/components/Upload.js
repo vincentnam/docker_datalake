@@ -13,6 +13,7 @@ import ModelAddForm from './upload-child/model/ModelAddForm';
 import ModelEditForm from './upload-child/model/ModelEditForm';
 import { Modal } from "react-bootstrap";
 import {connect} from "react-redux";
+import UploadBigFile from './upload-big-file/UploadBigFile'
 
 class Upload extends React.Component {
     constructor() {
@@ -737,11 +738,15 @@ class Upload extends React.Component {
                                             </div>
                                             <div className="tab-pane fade mb-4" id="nav-large-file" role="tabpanel"
                                                 aria-labelledby="nav-large-file-tab">
+
+                                              <UploadBigFile></UploadBigFile>
+
+                                                {/*
                                                 <div className="form-group required">
                                                     <label className="form-label">Lien vers le fichier</label>
                                                     <input value={this.state.linkFile} onChange={this.handleChange} type="text" name="linkFile" className="form-control"
                                                         placeholder="https://-----/dossier/file.extension ou XX.XX.XX.XXX/dossier/file.extension" />
-                                                </div>
+                                                </div> */}
                                             </div>
                                         </div>
                                     </div>

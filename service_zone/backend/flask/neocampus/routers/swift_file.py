@@ -2,7 +2,7 @@ import os
 import uuid
 from zipfile import ZipFile
 import base64
-from flask import Blueprint, jsonify, current_app, request, send_from_directory
+from flask import Blueprint, jsonify, current_app, request, send_from_directory, make_response
 from ..services import swift, mongo
 import os
 from multiprocessing import Process
@@ -48,7 +48,7 @@ def swift_files():
 
     result = {
         'swift_files': swift_files,
-        'swift_zip': os.path.join(request.host_url, zip_path),
+        'swift_zip': os.path.join(request.host_url, 'api', zip_path),
     }
     return jsonify(result)
 
@@ -157,3 +157,49 @@ def storage():
                               content_type, mongodb_url, other_data)
 
     return jsonify({"response": "Done !"})
+
+@swift_file_bp.route('/upload-big-file', methods=['POST'])
+def upload():
+    print(request.files)
+    file = request.files['file']
+    print(file)
+
+    save_path = os.path.join(
+        current_app.root_path, current_app.config['SWIFT_FILES_DIRECTORY'], file.filename)
+    print(save_path)
+    current_chunk = int(request.form['dzchunkindex'])
+
+    # If the file already exists it's ok if we are appending to it,
+    # but not if it's new file that would overwrite the existing one
+    if os.path.exists(save_path) and current_chunk == 0:
+        # 400 and 500s will tell dropzone that an error occurred and show an error
+        print('file already exists')
+        return make_response(('File already exists', 400))
+
+    try:
+        with open(save_path, 'ab') as f:
+            f.seek(int(request.form['dzchunkbyteoffset']))
+            f.write(file.stream.read())
+    except OSError:
+        # log.exception will include the traceback so we can see what's wrong 
+        print('Could not write to file')
+        return make_response(("Not sure why,"
+                              " but we couldn't write the file to disk", 500))
+
+    total_chunks = int(request.form['dztotalchunkcount'])
+
+    if current_chunk + 1 == total_chunks:
+        # This was the last chunk, the file should be complete and the size we expect
+        if os.path.getsize(save_path) != int(request.form['dztotalfilesize']):
+            print(f"File {file.filename} was completed, "
+                      f"but has a size mismatch."
+                      f"Was {os.path.getsize(save_path)} but we"
+                      f" expected {request.form['dztotalfilesize']} ")
+            return make_response(('Size mismatch', 500))
+        else:
+            print(f'File {file.filename} has been uploaded successfully')
+    else:
+        print(f'Chunk {current_chunk + 1} of {total_chunks} '
+                  f'for file {file.filename} complete')
+
+    return make_response(("Chunk upload successful", 200))

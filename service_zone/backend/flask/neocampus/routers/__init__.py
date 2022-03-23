@@ -12,9 +12,9 @@ def init_app(app):
     app.register_blueprint(swagger_ui_blueprint, url_prefix=SWAGGER_URL)
 
     # Routers Blueprints
-    app.register_blueprint(swift_file_bp)
-    app.register_blueprint(mongo_data_bp)
-    app.register_blueprint(influxdb_data_bp)
+    app.register_blueprint(swift_file_bp, url_prefix="/api")
+    app.register_blueprint(mongo_data_bp, url_prefix="/api")
+    app.register_blueprint(influxdb_data_bp, url_prefix="/api")
 
     # Loading all functions of each Blueprint in JSON OpenAPI specifications
     with app.test_request_context():
