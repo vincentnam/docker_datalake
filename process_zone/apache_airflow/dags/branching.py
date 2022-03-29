@@ -452,7 +452,6 @@ def mqtt_verify_task(**kwargs):
     else:
         task = "data_workflow_selection"
 
-    print(task)
     return task
 
 
