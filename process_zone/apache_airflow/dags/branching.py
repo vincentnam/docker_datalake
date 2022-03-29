@@ -24,6 +24,7 @@ from services import extract_transform_load_sge
 from services import typefile
 from services import connection_mongo_metadata
 from services import connection_swift
+from services import mqtt_verify
 import tempfile
 import base64
 from zipfile import ZipFile
@@ -253,7 +254,6 @@ def default_application_json(**kwargs):
 
     #Function return swift_object
     swift_object = connection_swift(swift_container, swift_id)
-    
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -441,6 +441,20 @@ def workflow_selection(**kwargs):
 
     return container
 
+def mqtt_verify_task(**kwargs):
+    container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+
+    task = ""
+    result = mqtt_verify(container, swift_id)
+    if result == True:
+        task = "dag_end"
+    else:
+        task = "data_workflow_selection"
+
+    return task
+
+
 
 # import configurations of different services needed :
 # IP and port of Swift, MongoDB, etc..
@@ -472,7 +486,6 @@ def neocampus_branching(**kwargs):
 def neocampus_bson(**kwargs):
     pass
 
-
 callable_dict = {"PythonOperator": PythonOperator,
                  "DummyOperator": DummyOperator,
                  "BranchPythonOperator": BranchPythonOperator
@@ -482,62 +495,62 @@ callable_dict = {"PythonOperator": PythonOperator,
 # TODO : recursive funct to create the pipeline (for n sublevel in dict)
 
 
-def neocampus_get_swift_object(**kwargs):
-    # TODO : 13/10/2020 DIRECT READ FILE IF LOOPBACK DEVICE ARE REMOVED (if swift can directly write on storage servers)
-    # metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    swift_container = kwargs["dag_run"].conf["swift_container"]
-    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+# def neocampus_get_swift_object(**kwargs):
+#     # TODO : 13/10/2020 DIRECT READ FILE IF LOOPBACK DEVICE ARE REMOVED (if swift can directly write on storage servers)
+#     # metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+#     swift_container = kwargs["dag_run"].conf["swift_container"]
+#     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+#
+#     print("kwargs['dag_run'].conf")
+#     print(kwargs["dag_run"].conf)
+#
+#     url = config.url_swift
+#     user = config.user_swift
+#     key = config.key_swift
+#     headers = {'X-Storage-User': user,
+#                'X-Storage-Pass': key
+#                }
+#
+#     token_response = urlopen(Request(url, headers=headers)).getheaders()
+#
+#     opener = urllib.request.build_opener()
+#     opener.addheaders = []
+#
+#     for i in token_response:
+#         if i[0] == "X-Auth-Token":
+#             opener.addheaders.append(i)
+#         if i[0] == "X-Storage-Url":
+#             url = i
+#     print(url[1])
+#     swift_container = str(kwargs["dag_run"].conf["swift_container"])
+#     #Return data from the swift_object_id in mongodb metadata
+#     metadata_doc = connection_mongo_metadata(swift_container, swift_id)
+#
+#     path = config.airflow_tmp + metadata_doc["original_object_name"]
+#
+#     # urllib.request.install_opener(opener)
+#     # urllib.request.urlretrieve(url[1] + "/" + swift_container + "/" + swift_id, path)
+#     #
+#     # print(os.path.dirname(os.path.abspath(__file__)))
+#
+#     print(kwargs["dag_run"].dag_id)
 
-    print("kwargs['dag_run'].conf")
-    print(kwargs["dag_run"].conf)
-    
-    url = config.url_swift
-    user = config.user_swift
-    key = config.key_swift
-    headers = {'X-Storage-User': user,
-               'X-Storage-Pass': key
-               }
 
-    token_response = urlopen(Request(url, headers=headers)).getheaders()
-
-    opener = urllib.request.build_opener()
-    opener.addheaders = []
-
-    for i in token_response:
-        if i[0] == "X-Auth-Token":
-            opener.addheaders.append(i)
-        if i[0] == "X-Storage-Url":
-            url = i
-    print(url[1])
-    swift_container = str(kwargs["dag_run"].conf["swift_container"])
-    #Return data from the swift_object_id in mongodb metadata
-    metadata_doc = connection_mongo_metadata(swift_container, swift_id)
-    
-    path = config.airflow_tmp + metadata_doc["original_object_name"]
-    
-    # urllib.request.install_opener(opener)
-    # urllib.request.urlretrieve(url[1] + "/" + swift_container + "/" + swift_id, path)
-    #
-    # print(os.path.dirname(os.path.abspath(__file__)))
-
-    print(kwargs["dag_run"].dag_id)
-
-
-def neocampus_mongoimport(**kwargs):
-    swift_container = kwargs["dag_run"].conf["swift_container"]
-    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
-    metadata_doc = connection_mongo_metadata(swift_container, swift_id)
-    
-    file_name = kwargs["dag_run"].dag_id
-    # TODO : 13/10/2020 FIND A SOLUTION TO CHOSE DATABASE AND COLLECTION
-    print("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d " +
-          swift_container + " -c " +
-          metadata_doc["original_object_name"]
-          + config.airflow_tmp + metadata_doc["original_object_name"] + "'")
-    os.system("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d " +
-              swift_container + " -c " +
-              metadata_doc["original_object_name"] + " " +
-              config.airflow_tmp + metadata_doc["original_object_name"] + "'")
+# def neocampus_mongoimport(**kwargs):
+#     swift_container = kwargs["dag_run"].conf["swift_container"]
+#     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+#     metadata_doc = connection_mongo_metadata(swift_container, swift_id)
+#
+#     file_name = kwargs["dag_run"].dag_id
+#     # TODO : 13/10/2020 FIND A SOLUTION TO CHOSE DATABASE AND COLLECTION
+#     print("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d " +
+#           swift_container + " -c " +
+#           metadata_doc["original_object_name"]
+#           + config.airflow_tmp + metadata_doc["original_object_name"] + "'")
+#     os.system("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d " +
+#               swift_container + " -c " +
+#               metadata_doc["original_object_name"] + " " +
+#               config.airflow_tmp + metadata_doc["original_object_name"] + "'")
 
 
 def construct_operator(**kwargs):
@@ -573,6 +586,13 @@ join = DummyOperator(
 ''' 
 Default operator 
 '''
+
+mqtt_verify_branch = BranchPythonOperator(
+    task_id='mqtt_verify',
+    python_callable=mqtt_verify_task,
+    dag=dag
+)
+
 branch_op = BranchPythonOperator(
     task_id='data_workflow_selection',
     python_callable=workflow_selection,
@@ -617,27 +637,25 @@ custom = BranchPythonOperator(
 #     python_callable=neocampus_branching,
 #     dag=dag
 # )
-neocampus_bson_get = PythonOperator(
-    task_id='neocampus_bson_get',
-    python_callable=neocampus_get_swift_object,
-    # provide_context=True,
-    dag=dag,
-)
-
-neocampus_bson_mongorestore = PythonOperator(
-    task_id='neocampus_bson_mongorestore',
-    python_callable=neocampus_mongoimport,
-    # bash_command='ls /datalake  && cp /datalake/co2-dl-bd',
-    # provide_context=True,
-    dag=dag,
-)
+# neocampus_bson_get = PythonOperator(
+#     task_id='neocampus_bson_get',
+#     python_callable=neocampus_get_swift_object,
+#     # provide_context=True,
+#     dag=dag,
+# )
+#
+# neocampus_bson_mongorestore = PythonOperator(
+#     task_id='neocampus_bson_mongorestore',
+#     python_callable=neocampus_mongoimport,
+#     # bash_command='ls /datalake  && cp /datalake/co2-dl-bd',
+#     # provide_context=True,
+#     dag=dag,
+# )
 '''
 ===============================================
 '''
 with open(cwd + "/task_list.json", "r") as f:
     task_dict = json.load(f)
-
-run_this_first >> branch_op
 
 callable_dict = {"content_neo4j_node_creation": content_neo4j_node_creation,
                  "from_mongodb_to_influx": from_mongodb_to_influx,
@@ -647,7 +665,6 @@ callable_dict = {"content_neo4j_node_creation": content_neo4j_node_creation,
                  "failed_data_processing": failed_data_processing,
                  "successful_data_processing": successful_data_processing,
                  "construct_operator": construct_operator,
-                 "neocampus_get_swift_object": neocampus_get_swift_object,
                  "neocampus_bson": neocampus_bson,
                  "neocampus_branching": neocampus_branching,
                  "custom_user_workflow": custom_user_workflow,
@@ -663,6 +680,7 @@ callable_dict = {"content_neo4j_node_creation": content_neo4j_node_creation,
                  "DummyOperator": DummyOperator,
                  "BranchPythonOperator": BranchPythonOperator
                  }
+#"neocampus_get_swift_object": neocampus_get_swift_object,
 custom_pipeline = []
 default_pipeline = []
 neOCampus_pipeline = []
@@ -753,5 +771,5 @@ for custom_task_list in custom_pipeline:
         chain(custom, *custom_task_list, join)
 
 # Airflow user / data_processing password
-run_this_first >> branch_op
+run_this_first >> mqtt_verify_branch >> [branch_op, join]
 branch_op >> [default, custom, neOCampus, autOCampus, Villagil, eCOnect]
