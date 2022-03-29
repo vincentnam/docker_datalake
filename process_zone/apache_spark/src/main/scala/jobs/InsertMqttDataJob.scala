@@ -37,7 +37,6 @@ object InsertMqttDataJob {
       val mongoWriter = new MongoWriter(config)
       val data = rdd.map(r => (r._1, r._2)).collect.toList
       if (data.nonEmpty) {
-        println("raw data: " + data)
         // insert mqtt into swift
         val inserted_swift_ids = swiftWriter.writeMqtt(data, time, mongoWriter, container_name)
 
@@ -51,7 +50,6 @@ object InsertMqttDataJob {
               config.getString("swift.user"), inserted_swift_ids.mkString(","),
               "mqtt json to influxdb data points",
               data.toString, influxDbPoints)
-            println("new influxDB data points: " + influxDbPoints)
           case Failure(exception) =>
           //            log.error(s"Insert into InfluxDB Error : $exception")
         }
