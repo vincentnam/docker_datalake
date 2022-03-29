@@ -197,9 +197,56 @@ def upload():
                       f" expected {request.form['dztotalfilesize']} ")
             return make_response(('Size mismatch', 500))
         else:
+            # File upload completely finished (end of chunks)
             print(f'File {file.filename} has been uploaded successfully')
+
+            filename = file.filename
+
+            # Get content file totally
+            filepath = os.path.join(
+                current_app.root_path, 
+                current_app.config['SWIFT_FILES_DIRECTORY'], 
+                file.filename
+            )
+
+            file = open(filepath, 'rb')
+            data_file = file.read()
+
+            # For MIME types
+            #import magic
+            #mime = magic.Magic(mime=True)
+            #type_file = mime.from_file(filepath)
+
+            file_content = data_file
+            mongodb_url = current_app.config['MONGO_URL']
+            user = current_app.config['SWIFT_USER']
+            key = current_app.config['SWIFT_KEY']
+            authurl = current_app.config['SWIFT_AUTHURL']
+            content_type = "application/octet-stream"
+            application = None
+            data_process = "custom"
+            processed_data_area_service = ["MongoDB"]
+            other_data = ""
+
+            # TODO - Replace values by form frontend
+            container_name = "neOCampus"
+
+            # Multithreading for upload file from backend to Openstack Swift in background
+            upload_processing = Process(
+                target=mongo.insert_datalake, 
+                name="Upload_Openstack_Swift", 
+                args=(
+                    file_content, user, key, authurl, 
+                    container_name, filename, processed_data_area_service, data_process, 
+                    application, content_type, mongodb_url, other_data
+                )
+            )
+
+            upload_processing.start()
     else:
         print(f'Chunk {current_chunk + 1} of {total_chunks} '
                   f'for file {file.filename} complete')
+
+        
 
     return make_response(("Chunk upload successful", 200))

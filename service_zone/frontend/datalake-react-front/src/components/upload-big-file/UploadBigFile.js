@@ -13,8 +13,8 @@ class UploadBigFile extends React.Component {
             paramName: 'file',
             chunking: true,
             forceChunking: true,
-            url: 'http://localhost/api/upload-big-file',
-            maxFilesize: 1025, // megabytes
+            url: process.env.REACT_APP_SERVER_NAME + '/upload-big-file',
+            maxFilesize: 3096, // megabytes
             chunkSize: 10000000 // bytes (10 MB)
         }
 
