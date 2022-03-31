@@ -13,11 +13,12 @@ import ModelAddForm from './upload-child/model/ModelAddForm';
 import ModelEditForm from './upload-child/model/ModelEditForm';
 import { Modal } from "react-bootstrap";
 import {connect} from "react-redux";
-import UploadBigFile from './upload-big-file/UploadBigFile'
+import { Dropzone as DropzoneBigData } from "dropzone";
 
 class Upload extends React.Component {
     constructor() {
         super();
+
         this.onDrop = (files) => {
             if (files.length < 1) {
                 toast.error('Format de fichier non accepté ou trop grand !', {
@@ -59,7 +60,9 @@ class Upload extends React.Component {
                 }
             });
         };
+
         this.state = {
+            downloadMode: 'ssh',
             files: [],
             meta: '',
             typeFile: '',
@@ -88,6 +91,7 @@ class Upload extends React.Component {
                 status: true,
             }
         };
+        this.toggleDownloadMode = this.toggleDownloadMode.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.changeType = this.changeType.bind(this);
@@ -96,6 +100,40 @@ class Upload extends React.Component {
         this.onChangeModalEdit = this.onChangeModalEdit.bind(this);
         this.reload = this.reload.bind(this);
         this.reloadEdit = this.reloadEdit.bind(this);
+        this.handleSubmitChunking = this.handleSubmitChunking.bind(this)
+        this.setDropper = this.setDropper.bind(this)
+    }
+
+    componentDidMount(){
+        /* Dropzone.js - Upload big data configuration */
+        DropzoneBigData.options.dropper = {
+            paramName: 'file',
+            chunking: true,
+            forceChunking: true,
+            url: process.env.REACT_APP_SERVER_NAME + '/upload-big-file',
+            //acceptedFiles: ,
+            maxFilesize: 1000000, // megabytes (1 000 000 MB = 1 To, for now but changer after)
+            chunkSize: 10000000, // bytes (10 MB),
+            autoProcessQueue: false, // disable upload automatically
+            dictDefaultMessage: " Veuillez glisser un fichier ici<br /> \
+            ou<br /> \
+            <u>cliquer pour ajouter un fichier</u><br /> \
+            Formats suivants acceptés (.jpg, .jpeg, .png, .svg, .csv, .json, .zip, .sql et .txt)",
+            addRemoveLinks: true,
+            acceptedFiles: "image/*,application/JSON,.csv,text/plain,.sql,application/x-gzip,application/x-zip-compressed,application/octet-stream"
+        }
+
+        const myDropzone = new DropzoneBigData("#dropper");
+
+        this.setState({'dropper': myDropzone})
+
+        myDropzone.on("addedfile", file => {
+            console.log("A file has been added");
+        });
+    }
+
+    toggleDownloadMode(event) {
+        event.target.id != 'nav-chunking-tab' ? this.setState({'downloadMode': 'ssh'}) : this.setState({'downloadMode': 'chunking'})
     }
 
     reload() {
@@ -167,17 +205,6 @@ class Upload extends React.Component {
 
         let type_file_accepted = [];
         if (name === "type") {
-            if (value === "9") {
-                this.setState({
-                    type: value,
-                    uploadLink: false,
-                });
-            } else {
-                this.setState({
-                    type: value,
-                    uploadLink: true,
-                });
-            }
             let types = [];
             if(this.props.nameContainer.nameContainer === "neOCampus") {
                 types = [configWithSGE.types];
@@ -521,6 +548,33 @@ class Upload extends React.Component {
         }
     }
 
+    handleSubmitChunking(event){
+        event.preventDefault();
+
+        // Upload files by chunking (file is divized into chunks which are sent sucessively)
+       let dropper = this.state.dropper
+
+       dropper.on("sending", function (file, xhr, formData) {
+           let othermeta = this.state.othermeta
+           let typeFile = this.state.typeFile
+            formData.append('othermeta', othermeta.toString());
+            formData.append('typeFile', typeFile.toString());
+            formData.append('container_name', this.props.nameContainer.nameContainer);
+        }.bind(this));
+
+       dropper.processQueue()
+    }
+
+    getDropper(){
+        return this.state.dropper
+    }
+
+    setDropper(dropper){
+        console.log('chunk drop')
+        console.log(dropper)
+        this.setState({'dropper': dropper})
+    }
+
     // remove selected file on upload page
     removeSelectedFile() {
         this.setState({ file: '' });
@@ -664,7 +718,7 @@ class Upload extends React.Component {
                 <div className="container main-upload">
                     <div className="title">Upload de données</div>
                     <div className="jumbotron">
-                        <form onSubmit={this.handleSubmit}>
+                        <form onSubmit={this.state.downloadMode == 'ssh' ? this.handleSubmit : this.handleSubmitChunking}>
                             <div className="row">
                                 <div className="form-group required col-6">
                                     <label className="control-label file-type">Type de fichier</label>
@@ -680,7 +734,7 @@ class Upload extends React.Component {
                                 <button type="button" className="btn btn-primary buttonModel" onClick={() => this.onChangeModalAdd()}>Créer un modèle</button>
                                 <EditButton />
                             </div>
-                            {this.state.uploadLink === false &&
+                            {/*this.state.uploadLink === false &&
                                 <div className="main-download mt-4 mb-5">
                                     <div className="form-group required">
                                         <label className="form-label">Lien vers le fichier</label>
@@ -688,28 +742,31 @@ class Upload extends React.Component {
                                             placeholder="https://-----/dossier/file.extension ou XX.XX.XX.XXX/dossier/file.extension" />
                                     </div>
                                 </div>
-                            }
+                            */}
                             {this.state.uploadLink === true &&
                                 <div className="main-download">
                                     <div className="main-download">
                                         <nav className="tab-download">
                                             <div className="nav nav-pills " id="pills-tab" role="tablist">
-                                                <button className="nav-link active" id="nav-raw-tab" data-bs-toggle="pill"
-                                                    data-bs-target="#nav-small-file" type="button" role="tab" aria-controls="nav-small-file"
-                                                    aria-selected="true">Fichier moins de 250 Mo
+                                                <button className="nav-link active" id="nav-ssh-tab" data-bs-toggle="pill"
+                                                    data-bs-target="#nav-ssh-file" type="button" role="tab" onClick={this.toggleDownloadMode} aria-controls="nav-ssh-file"
+                                                    aria-selected="true">Par SSH
                                                 </button>
-                                                <button className="nav-link" id="nav-handled-tab" data-bs-toggle="pill"
-                                                    data-bs-target="#nav-large-file" type="button" role="tab" aria-controls="nav-large-file"
-                                                    aria-selected="false">Fichier plus de 250 Mo
+                                                <button className="nav-link" id="nav-chunking-tab" data-bs-toggle="pill"
+                                                    data-bs-target="#nav-chunking-file" type="button" role="tab" onClick={this.toggleDownloadMode} aria-controls="nav-chunking-file"
+                                                    aria-selected="false">Par morcelage (chunking)
                                                 </button>
                                             </div>
                                         </nav>
                                         <div className="tab-content" id="pills-tabContent">
-                                            <div className="tab-pane fade show active" id="nav-small-file" role="tabpanel"
+                                            <div className="tab-pane fade" id="nav-small-file" role="tabpanel"
                                                 aria-labelledby="nav-small-file-tab">
                                                 <div className="form-group required">
                                                     <label>Fichiers</label>
-                                                    <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} maxSize={250000000}
+
+                                                    {/* Dropzone JS */}
+
+                                                   {/* <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} maxSize={250000000}
                                                         accept="image/*,application/JSON,.csv,text/plain,.sql,application/x-gzip,application/x-zip-compressed,application/octet-stream">
                                                         {({ getRootProps, getInputProps }) => (
                                                             <section>
@@ -733,20 +790,29 @@ class Upload extends React.Component {
                                                                 </aside>
                                                             </section>
                                                         )}
-                                                    </Dropzone>
+                                                                    </Dropzone> */}
                                                 </div>
                                             </div>
-                                            <div className="tab-pane fade mb-4" id="nav-large-file" role="tabpanel"
+
+                                            { /* Upload volumineux - Chunking */ }
+                                            <div className="tab-pane fade mb-4" id="nav-chunking-file" role="tabpanel"
                                                 aria-labelledby="nav-large-file-tab">
 
-                                              <UploadBigFile></UploadBigFile>
+                                                <form method="POST" action='/upload-big-file' class="dropzone dz-clickable" 
+                                                    id="dropper" enctype="multipart/form-data">
+                                                </form>
 
-                                                {/*
+                                            </div>
+
+                                            { /* Transfert par SSH */ }
+                                            <div className="tab-pane fade mb-4 show active" id="nav-ssh-file" role="tabpanel"
+                                                aria-labelledby="nav-large-file-tab">
+                                                
                                                 <div className="form-group required">
                                                     <label className="form-label">Lien vers le fichier</label>
                                                     <input value={this.state.linkFile} onChange={this.handleChange} type="text" name="linkFile" className="form-control"
                                                         placeholder="https://-----/dossier/file.extension ou XX.XX.XX.XXX/dossier/file.extension" />
-                                                </div> */}
+                                                </div> 
                                             </div>
                                         </div>
                                     </div>
