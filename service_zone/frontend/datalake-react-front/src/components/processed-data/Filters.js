@@ -3,8 +3,9 @@ import api from '../../api/api';
 import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
 import moment from 'moment';
 import { ToastContainer, toast } from 'react-toastify';
+import {connect} from "react-redux";
 
-export class Filters extends React.Component {
+class Filters extends React.Component {
     constructor(props) {
         super(props);
         this.props = props
@@ -19,7 +20,7 @@ export class Filters extends React.Component {
             startDate: moment().format("YYYY-MM-DD"),
             endDate: moment().format("YYYY-MM-DD"),
         };
-        this.loadBuckets();
+        this.loadMeasurements();
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
@@ -33,7 +34,7 @@ export class Filters extends React.Component {
         const name = target.name;
         if (name === "startDate") {
             if (moment(this.state.endDate).format('X') < moment(value).format('X')) {
-                alert('La date de début doit être inférieure à la date de fin !');
+                this.toastError('La date de début doit être inférieure à la date de fin !');
             } else {
                 this.setState({
                     [name]: value,
@@ -42,7 +43,7 @@ export class Filters extends React.Component {
             }
         } else if (name === "endDate") {
             if (moment(this.state.startDate).format('X') > moment(value).format('X')) {
-                alert('La date de fin doit être supérieure à la date de début !');
+                this.toastError('La date de fin doit être supérieure à la date de début !');
             } else {
                 this.setState({
                     [name]: value,
@@ -57,14 +58,14 @@ export class Filters extends React.Component {
 
         if (name === "bucket") {
             this.props.selectBucket(value);
-            this.loadMeasurements(value);
+            this.loadMeasurements();
             this.props.selectMeasurement("");
             this.props.selectTopic("");
             this.updateData();
         }
         if (name === "measurement") {
             this.props.selectMeasurement(value);
-            this.loadTopics(this.state.bucket, value);
+            this.loadTopics(value);
 
             this.props.selectTopic("");
             this.updateData();
@@ -85,9 +86,9 @@ export class Filters extends React.Component {
                 console.log(error);
             });
     }
-    loadMeasurements(bucket) {
+    loadMeasurements() {
         api.post('measurements', {
-            bucket: bucket
+            bucket: this.props.nameContainer.nameContainer
         })
             .then((response) => {
                 this.setState({
@@ -100,9 +101,9 @@ export class Filters extends React.Component {
                 console.log(error);
             });
     }
-    loadTopics(bucket, measurement) {
+    loadTopics(measurement) {
         api.post('topics', {
-            bucket: bucket,
+            bucket: this.props.nameContainer.nameContainer,
             measurement: measurement
         })
             .then((response) => {
@@ -136,15 +137,15 @@ export class Filters extends React.Component {
 
         if (moment(start).format('X') === moment(end).format('X')) {
             this.toastError("Veuillez modifier l'espacement entre la date de début et la date de fin !");
-        } else if (this.state.bucket === null  || this.state.bucket === "") {
-            this.toastError("Veuillez selectionner un bucket !")
+        // } else if (this.state.bucket === null  || this.state.bucket === "") {
+        //     this.toastError("Veuillez selectionner un bucket !")
         } else if (this.state.measurement === null || this.state.measurement === "") {
             this.toastError("Veuillez selectionner un measurement !")
         } else if (this.state.topic === null || this.state.topic === "") {
             this.toastError("Veuillez selectionner un topic !")
         } else {
             api.post('dataTimeSeries', {
-                bucket: this.state.bucket,
+                bucket: this.props.nameContainer.nameContainer,
                 measurement: this.state.measurement,
                 topic: this.state.topic,
                 startDate: moment(start).format('X'),
@@ -213,7 +214,7 @@ export class Filters extends React.Component {
                 <div className="jumbotron shadow-sm">
                     <Form onSubmit={this.handleSubmit}>
                         <div className="row align-items-center">
-                            <div className="form-group col-md-2 border-right">
+                            <div className="form-group col-md-2 border-right" hidden>
                                 <FormGroup>
                                     <FormLabel>Bucket</FormLabel>
                                     <SelectBucket />
@@ -256,3 +257,11 @@ export class Filters extends React.Component {
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(Filters)

@@ -1,18 +1,16 @@
 import React from "react";
-import {Filters} from "../download-raw-data/Filters";
+import Filters from "../download-raw-data/Filters";
 import moment from "moment";
 import api from '../../api/api';
 import $ from 'jquery';
-import {RowItem} from "./RowItem";
 import {LoadingSpinner} from "../utils/LoadingSpinner";
 import {Paginate} from "../download-raw-data/Paginate";
 import DataTable from 'react-data-table-component';
-import Moment from 'moment';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
+import {connect} from "react-redux";
 
-export class DownloadHandleData extends React.Component {
+class DownloadHandleData extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
-    title = 'Affichage des données traitées'
     selectedElementsOnActualPage = []
 
     constructor(props) {
@@ -69,7 +67,8 @@ export class DownloadHandleData extends React.Component {
         if (selectedElements.length) {
             this.handleShow();
             api.post('handled-data-file', body, {
-                responseType: 'arraybuffer'
+                responseType: 'arraybuffer',
+                container_name: this.props.nameContainer.nameContainer
             })
                 .then(function (result) {
                     const url = window.URL.createObjectURL(new Blob([result.data], {type: 'application/zip'}));
@@ -141,42 +140,9 @@ export class DownloadHandleData extends React.Component {
     };
 
     handler(event) {
-        //console.log(event)
-
-        // selected elements on all pages
-        let selectedElements = this.getSelectedElements()
-
         // selected elements on actual page (component React DataTable send selected elements only on actual page)
 
         // in actual page, if elements have been selected, add selected ones into selected elements global array
-        if(event.selectedRows !== undefined) {
-            // loop into selected rows in actual page
-            event.selectedRows.map((element) => {
-                // if selected rowx in actual page is not in global selected elements
-                console.log('page actuelle')
-                console.log(this.selectedElementsOnActualPage)
-                if(!this.selectedElementsOnActualPage.includes(element)){
-                    console.log('AJOUTE')
-                    //selectedElements.push(element)
-                } 
-            })
-        }
-
-       /* if(this.selectedElementsOnActualPage.length > 0) {
-            this.selectedElementsOnActualPage.map((selectedElement) => {
-                console.log('SELECTION')
-                console.log(event.selectedRows)
-                if(!event.selectedRows.includes(selectedElement)) {
-                    var index = selectedElements.indexOf(selectedElement)
-                    if(index != -1) {
-                        console.log('INDEX')
-                        console.log(index)
-                        selectedElements.splice(index, 1)
-                    }
-                }
-            })
-        }*/
-
         this.setState({
             selectedElements: event.selectedRows
         })
@@ -191,7 +157,8 @@ export class DownloadHandleData extends React.Component {
                 offset: this.state.offset,
                 filetype: this.state.filetype.toString(),
                 beginDate: this.state.beginDate,
-                endDate: this.state.endDate
+                endDate: this.state.endDate,
+                container_name: this.props.nameContainer.nameContainer
             }),
             xhrFields: {
                 withCredentials: true
@@ -262,8 +229,6 @@ export class DownloadHandleData extends React.Component {
         if (this.state.elements) {
             elts = this.state.elements
         }
-        //console.log(elts)
-        let selectedElements = this.getSelectedElements()
         let setFiletype = this.setFiletype
         let setBeginDate = this.setBeginDate
         let setEndDate = this.setEndDate
@@ -273,9 +238,6 @@ export class DownloadHandleData extends React.Component {
             'beginDate': this.state.beginDate,
             'endDate': this.state.endDate
         }
-        let beginDate = this.state.beginDate
-        let endDate = this.state.endDate
-        //let loading = this.state.loading
 
         const columns = [
             {
@@ -361,7 +323,7 @@ export class DownloadHandleData extends React.Component {
                     setEndDate={setEndDate}
                     validateFilters={validateFilters}
                     data={filterData}
-                    title={this.title}
+                    filterDataType={'processed-data'}
                 />
                 <div className="download-detail">
                     <div className="row">
@@ -403,10 +365,16 @@ export class DownloadHandleData extends React.Component {
                         />
                     </div>
                 </div>
-
                 <LoadingSpinner loading={this.state.loading}/>
-                <ToastContainer />
             </div>
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(DownloadHandleData)

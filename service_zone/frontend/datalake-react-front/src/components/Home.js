@@ -1,17 +1,15 @@
 import React from "react";
-import { Header } from "./Header";
 import '../home.css';
 import $ from 'jquery';
 import { config } from '../configmeta/config';
 import api from '../api/api';
-import { config_processed_data } from '../configmeta/config_processed_data';
-import { Filters } from "./download-raw-data/Filters";
-import {RowItem} from './download-raw-data/RowItem';
+import Filters from "./download-raw-data/Filters";
 import Moment from "moment";
 import DataTable from 'react-data-table-component';
 import { LoadingSpinner } from "./utils/LoadingSpinner";
+import {connect} from "react-redux";
 
-export class Home extends React.Component {
+class Home extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
     selectedElementsOnActualPage = []
 
@@ -44,20 +42,40 @@ export class Home extends React.Component {
         })
     }
 
+    componentDidMount() {
+        this.loadObjectsFromServer()
+    }
+
+    // TODO : To refactor later
     loadObjectsFromServer() {
         let data = null
-        if(this.state.sort_field && this.state.sort_value) {
+        let routeName = '/raw-data'
+
+        // when homepage finished to load, load last 10 uploaded raw data
+        // OR there is sorting data less filters
+        if ((this.state.sort_field === undefined &&
+            this.state.sort_value === undefined &&
+            this.state.beginDate === undefined)
+            ||
+            (this.state.sort_field !== undefined &&
+                this.state.sort_value !== undefined &&
+                this.state.beginDate === undefined)) {
+            routeName = '/last-raw-data'
             data = JSON.stringify({
+                container_name: this.props.nameContainer.nameContainer,
                 limit: this.state.perPage,
                 offset: this.state.offset,
-                filetype: this.state.filetype,
-                beginDate: this.state.beginDate,
-                endDate: this.state.endDate,
                 sort_field: this.state.sort_field,
                 sort_value: this.state.sort_value
             })
-        } else {
+        }
+
+        // when filters button has been clicked less sorting data
+        if (this.state.sort_field === undefined &&
+            this.state.sort_value === undefined &&
+            this.state.beginDate !== undefined) {
             data = JSON.stringify({
+                container_name: this.props.nameContainer.nameContainer,
                 limit: this.state.perPage,
                 offset: this.state.offset,
                 filetype: this.state.filetype,
@@ -66,9 +84,26 @@ export class Home extends React.Component {
             })
         }
 
+        // when filters button has been clicked with sorting data
+        if (this.state.sort_field !== undefined &&
+            this.state.sort_value !== undefined &&
+            this.state.beginDate !== undefined) {
+            data = JSON.stringify({
+                container_name: this.props.nameContainer.nameContainer,
+                limit: this.state.perPage,
+                offset: this.state.offset,
+                filetype: this.state.filetype,
+                beginDate: this.state.beginDate,
+                endDate: this.state.endDate,
+                sort_field: this.state.sort_field,
+                sort_value: this.state.sort_value,
+
+            })
+        }
+
         this.handleShow()
         $.ajax({
-            url: this.url + '/raw-data',
+            url: this.url + routeName,
             data: data,
             xhrFields: {
                 withCredentials: true
@@ -116,7 +151,7 @@ export class Home extends React.Component {
 
         datatypeConf.map((type) => (
             // loop in config file
-            type.map((t) => {
+            type.forEach((t) => {
                 // if selected data type corresponds with current data type
                 if (t.id === parseInt(id)) {
                     filetypesResult = t.type_file_accepted
@@ -133,8 +168,8 @@ export class Home extends React.Component {
         const value = target.type === 'checkbox' ? target.checked : target.value;
         const name = target.name;
 
-        let filetypesResult = this.getFiletypeById( [config.types], value)
-        this.setFiletype(filetypesResult) 
+        let filetypesResult = this.getFiletypeById([config.types], value)
+        this.setFiletype(filetypesResult)
 
         this.setState({
             [name]: value
@@ -166,44 +201,11 @@ export class Home extends React.Component {
         })
     }
 
-    
+
     handler(event) {
-        //console.log(event)
-
-        // selected elements on all pages
-        let selectedElements = this.getSelectedElements()
-
         // selected elements on actual page (component React DataTable send selected elements only on actual page)
 
         // in actual page, if elements have been selected, add selected ones into selected elements global array
-        if(event.selectedRows !== undefined) {
-            // loop into selected rows in actual page
-            event.selectedRows.map((element) => {
-                // if selected rowx in actual page is not in global selected elements
-                console.log('page actuelle')
-                console.log(this.selectedElementsOnActualPage)
-                if(!this.selectedElementsOnActualPage.includes(element)){
-                    console.log('AJOUTE')
-                    //selectedElements.push(element)
-                } 
-            })
-        }
-
-       /* if(this.selectedElementsOnActualPage.length > 0) {
-            this.selectedElementsOnActualPage.map((selectedElement) => {
-                console.log('SELECTION')
-                console.log(event.selectedRows)
-                if(!event.selectedRows.includes(selectedElement)) {
-                    var index = selectedElements.indexOf(selectedElement)
-                    if(index != -1) {
-                        console.log('INDEX')
-                        console.log(index)
-                        selectedElements.splice(index, 1)
-                    }
-                }
-            })
-        }*/
-
         this.setState({
             selectedElements: event.selectedRows
         })
@@ -212,7 +214,7 @@ export class Home extends React.Component {
     validate() {
         let selectedElements = this.getSelectedElements()
         let body = []
-        selectedElements.map(element => {
+        selectedElements.forEach(element => {
             body.push({
                 'object_id': element.swift_object_id,
                 'container_name': element.swift_container
@@ -233,8 +235,8 @@ export class Home extends React.Component {
                 .catch(function (error, status) {
                     console.error(status, error.toString()); // eslint-disable-line
                 }).finally(function () {
-                this.handleClose()
-            }.bind(this))
+                    this.handleClose()
+                }.bind(this))
 
             // empty selected elements
             this.emptySelectedlements()
@@ -245,41 +247,18 @@ export class Home extends React.Component {
 
 
     render() {
-         // data type field
-         const SelectDatatype = () => {
-            let types = [config.types];
-            if(this.props.title == "Affichage des données traitées"){
-                types = [config_processed_data.types];
-            }
-            // loop into conf to get all data types
-            const listTypes = types.map((type) => (
-                type.map((t) => 
-                    <option key={t.id} value={t.id}>{t.label}</option>
-                )
-            ));
-            return (
-                <select value={this.state.type} onChange={this.handleChange} name="type" className="form-control">
-                    {listTypes}
-                </select>
-            );
-        }
-        let handler = this.handler
-        let selectedElements = this.getSelectedElements()
-        
         let elts = []
         if (this.state.elements) {
             elts = this.state.elements
         }
 
-         // sort columns
-         const handleSort = async (column, sortDirection) => {
+        // sort columns
+        const handleSort = async (column, sortDirection) => {
             /// reach out to some API and get new data using or sortField and sortDirection
-        
-            console.log(column)
-            console.log(sortDirection)
+
             // for desc
             let sort = 1
-            if(this.state.sort_value == 1) {
+            if (this.state.sort_value === 1) {
                 sort = -1
             }
             this.setState({
@@ -296,8 +275,8 @@ export class Home extends React.Component {
             'endDate': this.state.endDate
         }
 
-         //  Internally, customStyles will deep merges your customStyles with the default styling.
-         const customStyles = {
+        //  Internally, customStyles will deep merges your customStyles with the default styling.
+        const customStyles = {
             table: {
                 style: {
                     padding: '0.5rem 0.5rem',
@@ -325,14 +304,14 @@ export class Home extends React.Component {
                     '&:hover': {
                         cursor: 'pointer',
                         backgroundColor: '#ea973b'
-                      },
+                    },
                 },
             },
             headCells: {
                 style: {
                     paddingLeft: '8px', // override the cell padding for head cells
                     paddingRight: '8px',
-                    color: '#ea973b' ,
+                    color: '#ea973b',
                     borderColor: 'inherit',
                     borderStyle: 'solid',
                     borderWidth: '0',
@@ -380,26 +359,20 @@ export class Home extends React.Component {
                 sortable: true,
             },
             {
-                id: 'meta1',
-                name: "Meta 1",
-                selector: row => row.other_data ? row.other_data['meta1'] : '-'
-            },
-            {
-                id: 'meta2',
-                name: "Meta 2",
-                selector: row => row.other_data ? row.other_data['meta2'] : '-'
+                id: 'other_data',
+                name: "Métadescriptions",
+                selector: row => row.other_data ? JSON.stringify(row.other_data) : '-' 
             },
             {
                 id: 'creation_date',
                 name: "Date de création",
-                selector: row => Moment(row.creation_date).format('YYYY-MM-DD hh:mm:ss'),
+                selector: row => Moment(row.creation_date).format('YYYY-MM-DD HH:mm:ss'),
                 sortable: true
             },
         ];
 
         return (
             <div>
-                <Header/>
                 <div className="container main-download">
                     <div className="title">Home</div>
                     <Filters
@@ -431,7 +404,7 @@ export class Home extends React.Component {
                                 {elts.length ?
                                     <div className="col-12 text-center">
                                         <button className="btn btn-darkblue" onClick={this.validate}
-                                                type="submit">Télécharger
+                                            type="submit">Télécharger
                                         </button>
                                     </div>
                                     : ''}
@@ -440,8 +413,16 @@ export class Home extends React.Component {
                     </div>
                 </div>
 
-                <LoadingSpinner loading={this.state.loading}/>
+                <LoadingSpinner loading={this.state.loading} />
             </div>
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(Home)

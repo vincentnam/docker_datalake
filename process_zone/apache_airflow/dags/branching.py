@@ -1,4 +1,6 @@
 # The DAG object; we'll need this to instantiate a DAG
+import json
+import yaml
 import urllib.request
 from urllib.error import HTTPError
 from urllib.request import Request
@@ -15,9 +17,14 @@ from swiftclient.service import SwiftService
 import config
 from services import extract_transform_load_time_series_csv
 from services import extract_transform_load_time_series_json
+from services import extract_transform_load_time_series_text
 from services import extract_transform_load_images
 from services import extract_transform_load_dump_sql
+from services import extract_transform_load_sge
 from services import typefile
+from services import connection_mongo_metadata
+from services import connection_swift
+from services import mqtt_verify
 import tempfile
 import base64
 from zipfile import ZipFile
@@ -37,8 +44,6 @@ import os
 from airflow.operators.bash_operator import BashOperator
 
 cwd = os.path.dirname(os.path.abspath(__file__))
-import yaml
-import json
 
 # TODO : Restructure DAG architecture
 
@@ -104,13 +109,13 @@ def from_mongodb_to_influx(token=None, nb_retry=10, **kwargs):
     import json
     # InfluxDB Token to access
     if token is None:
-        token = "SutSmr4uKZ9DxALVa5O7CucjxWMPkccLIn9MAAvgzCxZOSgV6UUfgr3bflIc9YcetB4F3cNohsqJFqiyEXxVwA=="
+        token = config.token_influxdb
     integrator = InfluxIntegrator(influx_host=globals()["GOLD_INFLUX_IP"],
                                   influx_port=globals()["INFLUXDB_PORT"],
                                   token=token)
     swift_co = swiftclient.Connection(user=globals()["SWIFT_USER"],
                                       key=globals()["SWIFT_KEY"],
-                                      authurl=globals()["SWIFT_AUTHURL"])
+                                      authurl=globals()["SWIFT_AUTHURL"], insecure=True)
     # Pull data from XCom instance : come from "check_type" task
     metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
 
@@ -121,7 +126,7 @@ def from_mongodb_to_influx(token=None, nb_retry=10, **kwargs):
             # swift_json is a tuple : (meta_data, data)
             swift_json = swift_co.get_object(
                 kwargs["dag_run"].conf["swift_container"],
-                kwargs["dag_run"].conf["swift_id"])
+                kwargs["dag_run"].conf["swift_obj_id"])
         except Exception as e:
             # If swift is
             retry += 1
@@ -168,12 +173,9 @@ def failed_data_processing(*args, **kwargs):
     print(args[0]["execution_date"])
     print(args[0])
     group = args[0]["dag_run"].conf["swift_container"]
-    swift_id = str(args[0]["dag_run"].conf["swift_id"])
-
-    meta_base = MongoClient(
-        "mongodb://" + globals()["META_MONGO_IP"] + ":" + globals()[
-            "MONGO_PORT"] + "/"
-    )
+    swift_id = str(args[0]["dag_run"].conf["swift_obj_id"])
+    mongodb_url = config.mongodb_url
+    meta_base = MongoClient(mongodb_url, connect=False)
     print(meta_base.swift[group].find_one_and_update(
         {
             "swift_object_id": swift_id,
@@ -201,12 +203,9 @@ def successful_data_processing(*args, **kwargs):
     print(args[0]["execution_date"])
     print(args[0])
     group = args[0]["dag_run"].conf["swift_container"]
-    swift_id = str(args[0]["dag_run"].conf["swift_id"])
-
-    meta_base = MongoClient(
-        "mongodb://" + globals()["META_MONGO_IP"] + ":" + globals()[
-            "MONGO_PORT"] + "/"
-    )
+    swift_id = str(args[0]["dag_run"].conf["swift_obj_id"])
+    mongodb_url = config.mongodb_url
+    meta_base = MongoClient(mongodb_url, connect=False)
     print(meta_base.swift[group].find_one_and_update(
         {
             "swift_object_id": swift_id,
@@ -228,165 +227,104 @@ def successful_data_processing(*args, **kwargs):
     )
 
 
-# task_dict = False
-
-
 # TODO : Create 1 task to get Swift object and use intern communication to share it
 def default_image(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    swift_container = metadata_doc["swift_container"]
-    swift_id = metadata_doc["swift_obj_id"]
+    # metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
-    # Openstack Swift
-    ip_address = config.ip_address_swift
-    address_name = config.address_name_swift
-    authurl = "http://" + config.url_swift + "/auth/v1.0"
-    user = config.user_swift
-    key = config.key_swift
-    # Connction à Swift
-    conn = swiftclient.Connection(
-        user=user,
-        key=key,
-        authurl=authurl
-    )
-    # Récupération de l'object Swift
-    swift_object = conn.get_object(swift_container, swift_id)
-    print('----------- OBJET SWIFT -------------')
-    print(swift_object)
-    # Content type récupéré de l'object swift
-    content_type = metadata_doc["content_type"]
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
+    
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
     # Compare filetype
-    if "image/" in metadata_doc[content_type]:
+    if "image/" in swift_object[0]['content-type']:
         process_type = "images"
-        processed_data = extract_transform_load_images(swift_result, swift_container, swift_id, process_type)
+        processed_data = extract_transform_load_images(
+            swift_result, swift_container, swift_id, process_type)
     return processed_data
 
 
 def default_application_json(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    swift_container = metadata_doc["swift_container"]
-    swift_id = metadata_doc["swift_obj_id"]
+    
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
-    # Openstack Swift
-    ip_address = config.ip_address_swift
-    address_name = config.address_name_swift
-    authurl = "http://" + config.url_swift + "/auth/v1.0"
-    user = config.user_swift
-    key = config.key_swift
-    # Connction à Swift
-    conn = swiftclient.Connection(
-        user=user,
-        key=key,
-        authurl=authurl
-    )
-    # Récupération de l'object Swift
-    swift_object = conn.get_object(swift_container, swift_id)
-    print('----------- OBJET SWIFT -------------')
-    print(swift_object)
-    # Content type récupéré de l'object swift
-    content_type = metadata_doc["content_type"]
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
-    if "application/json" in metadata_doc[content_type]:
-        process_type = "time_series_json"
-        # Json parsing
-        processed_data = extract_transform_load_time_series_json(swift_result, swift_container, swift_id, process_type)
+    if "x-object-meta-source" not in swift_object[0]:
+        if "application/json" in swift_object[0]['content-type']:
+            process_type = "time_series_json"
+            # Json parsing
+            processed_data = extract_transform_load_time_series_json(
+                swift_result, swift_container, swift_id, process_type)
     return processed_data
 
 
 def default_application_vnd_ms_excel(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    swift_container = metadata_doc["swift_container"]
-    swift_id = metadata_doc["swift_obj_id"]
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
-    # Openstack Swift
-    ip_address = config.ip_address_swift
-    address_name = config.address_name_swift
-    authurl = "http://" + config.url_swift + "/auth/v1.0"
-    user = config.user_swift
-    key = config.key_swift
-    # Connction à Swift
-    conn = swiftclient.Connection(
-        user=user,
-        key=key,
-        authurl=authurl
-    )
-    # Récupération de l'object Swift
-    swift_object = conn.get_object(swift_container, swift_id)
-    print('----------- OBJET SWIFT -------------')
-    print(swift_object)
-    # Content type récupéré de l'object swift
-    content_type = metadata_doc["content_type"]
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
+    
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
 
     process_type = "time_series_csv"
     # Json parsing
-    processed_data = extract_transform_load_time_series_csv(swift_result, swift_container, swift_id, process_type)
+    processed_data = extract_transform_load_time_series_csv(
+        swift_result, swift_container, swift_id, process_type)
     return processed_data
 
 
 def default_application_sql(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    swift_container = metadata_doc["swift_container"]
-    swift_id = metadata_doc["swift_obj_id"]
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
-    # Openstack Swift
-    ip_address = config.ip_address_swift
-    address_name = config.address_name_swift
-    authurl = "http://" + config.url_swift + "/auth/v1.0"
-    user = config.user_swift
-    key = config.key_swift
-    # Connction à Swift
-    conn = swiftclient.Connection(
-        user=user,
-        key=key,
-        authurl=authurl
-    )
-    # Récupération de l'object Swift
-    swift_object = conn.get_object(swift_container, swift_id)
-    print('----------- OBJET SWIFT -------------')
-    print(swift_object)
-    # Content type récupéré de l'object swift
-    content_type = metadata_doc["content_type"]
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
+    
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
     process_type = "sql_dump"
     # Json parsing
-    processed_data = extract_transform_load_dump_sql(swift_result, swift_container, swift_id, process_type)
+    processed_data = extract_transform_load_dump_sql(
+        swift_result, swift_container, swift_id, process_type)
+    return processed_data
+
+
+def default_text_plain(**kwargs):
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
+    
+    # Récupération du fichier encoder dans l'object swift
+    swift_result = swift_object[1]
+    processed_data = {}
+    process_type = "time_series_txt"
+    # Text parsing
+    processed_data = extract_transform_load_time_series_text(
+        swift_result, swift_container, swift_id, process_type)
     return processed_data
 
 
 def default_zip(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    swift_container = metadata_doc["swift_container"]
-    swift_id = metadata_doc["swift_obj_id"]
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
 
-    # Openstack Swift
-    ip_address = config.ip_address_swift
-    address_name = config.address_name_swift
-    authurl = "http://" + config.url_swift + "/auth/v1.0"
-    user = config.user_swift
-    key = config.key_swift
-    # Connction à Swift
-    conn = swiftclient.Connection(
-        user=user,
-        key=key,
-        authurl=authurl
-    )
-    # Récupération de l'object Swift
-    swift_object = conn.get_object(swift_container, swift_id)
-    print('----------- OBJET SWIFT -------------')
-    print(swift_object)
-    # Content type récupéré de l'object swift
-    content_type = metadata_doc["content_type"]
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
+    
     # Récupération du fichier encoder dans l'object swift
     swift_result = swift_object[1]
     processed_data = {}
@@ -409,17 +347,46 @@ def default_zip(**kwargs):
         # Compare filetype
         if "image/" in type_file:
             process_type = "images"
-            processed_data = extract_transform_load_images(data_file, swift_container, swift_id, process_type)
+            processed_data = extract_transform_load_images(
+                data_file, swift_container, swift_id, process_type)
         if "application/json" in type_file:
             process_type = "time_series_json"
             # Json parsing
-            processed_data = extract_transform_load_time_series_json(data_file, swift_container, swift_id, process_type)
+            processed_data = extract_transform_load_time_series_json(
+                data_file, swift_container, swift_id, process_type)
         if "application/vnd.ms-excel" in type_file:
             process_type = "time_series_csv"
+            # CSV parsing
+            processed_data = extract_transform_load_time_series_csv(
+                data_file, swift_container, swift_id, process_type)
+        if "application/sql" in type_file:
+            process_type = "sql_dump"
             # Json parsing
-            processed_data = extract_transform_load_time_series_csv(data_file, swift_container, swift_id, process_type)
+            processed_data = extract_transform_load_dump_sql(
+                swift_result, swift_container, swift_id, process_type)
+        if "text/plain" in type_file:
+            process_type = "time_series_txt"
+            # Text parsing
+            processed_data = extract_transform_load_time_series_text(
+                swift_result, swift_container, swift_id, process_type)
     return processed_data
 
+def default_sge(**kwargs):
+    swift_container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+
+    #Function return swift_object
+    swift_object = connection_swift(swift_container, swift_id)
+    
+    # Récupération du fichier encoder dans l'object swift
+    swift_result = swift_object[1]
+    processed_data = {}
+    process_type = "sge_dump"
+    # Text parsing
+    processed_data = extract_transform_load_sge(
+        swift_result, swift_container, swift_id, process_type)
+    
+    return processed_data
 
 
 def default_check_type(**kwargs):
@@ -430,90 +397,70 @@ def default_check_type(**kwargs):
     :param kwargs: Airflow context
     :return:
     """
-    meta_base = MongoClient(
-        "mongodb://" + globals()["META_MONGO_IP"] + ":" + globals()[
-            "MONGO_PORT"] + "/"
-    )
 
     group = kwargs["dag_run"].conf["swift_container"]
-    swift_id = str(kwargs["dag_run"].conf["swift_id"])
-    print(group)
-    print(swift_id)
-    metadata_doc = meta_base.swift[group].find_one({
-        "swift_object_id": swift_id})
-    print(metadata_doc)
-    kwargs["ti"].xcom_push(key="metadata_doc", value=metadata_doc)
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+    #Return data from the swift_object_id in mongodb metadata
+    metadata_doc = connection_mongo_metadata(group, swift_id)
+    
+    content_type = metadata_doc['content_type']
+    
+    if "image/" in content_type:
+        content_type = "image/"
+    
+    with open(cwd + "/task_list.json", "r") as f:
+        task_dict = json.load(f)
 
-    if metadata_doc["content_type"] in task_dict:
-        if group in task_dict[metadata_doc["content_type"]]:
-            return task_dict[metadata_doc["content_type"]].task_id
+    list_projects = config.list_projects
+    if group not in list_projects:
+        group = "default"
+
+    if content_type in task_dict:
+        if group in task_dict[content_type]:
+            return task_dict[content_type][group][0]["task_id"]
         else:
-            return task_dict[metadata_doc["content_type"]].task_id
+            return task_dict[content_type][group][0]["task_id"]
     else:
-        if group in task_dict[metadata_doc["not_handled"]]:
-            return task_dict[metadata_doc["not_handled"]].task_id
+        if group in task_dict[content_type]:
+            return task_dict[content_type][group][0]["task_id"]
         else:
-            return task_dict[metadata_doc["not_handled"]].task_id
+            return task_dict[content_type][group][0]["task_id"]
 
 
 def workflow_selection(**kwargs):
-    # GET AUTH TOKEN
-    user, password = 'test:tester', 'testing'
-    # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
-    url = 'http://141.115.103.30:8080/auth/v1.0'
-    headers = {'X-Storage-User': user,
-               'X-Storage-Pass': password
-               }
-    token_response = urlopen(Request(url, headers=headers)).getheaders()
-
-    opener = urllib.request.build_opener()
-    opener.addheaders = []
-
-    for i in token_response:
-        if i[0] == "X-Auth-Token":
-            token = i[1]
-        if i[0] == "X-Storage-Url":
-            url = i
-
     container = kwargs["dag_run"].conf["swift_container"]
-    swift_id = str(kwargs["dag_run"].conf["swift_id"])
-
-    urllib.request.install_opener(opener)
-    # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
-    while (True):
-        req = Request(url[1] + "/" + container + "/" + swift_id, method="HEAD")
-        req.add_header("X-Auth-Token", token)
-
-        try:
-            urllib.request.urlopen(req)
-            break
-        except HTTPError as e404:
-            print(e404)
-            sleep(10)
-
-    meta_base = MongoClient(
-        "mongodb://" + globals()["META_MONGO_IP"] + ":" + globals()[
-            "MONGO_PORT"] + "/"
-    )
-    meta_base.server_info()
-
-    # print(group)
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
     print(swift_id)
     # WAIT THE OBJECT HAS BEEN INSERTED
     print("kwargs['dag_run'].conf")
     print(kwargs["dag_run"].conf)
-    metadata_doc = meta_base.swift.neocampus.find_one({
-        "swift_object_id": str(swift_id)})
-    kwargs["ti"].xcom_push(key="metadata_doc", value=metadata_doc)
-    print(metadata_doc)
-    return metadata_doc["data_processing"]
+
+    list_projects = config.list_projects
+    if container not in list_projects:
+        container = "default"
+
+    return container
+
+def mqtt_verify_task(**kwargs):
+    container = kwargs["dag_run"].conf["swift_container"]
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+
+    task = ""
+    result = mqtt_verify(container, swift_id)
+    if result == True:
+        task = "dag_end"
+    else:
+        task = "data_workflow_selection"
+
+    return task
+
 
 
 # import configurations of different services needed :
 # IP and port of Swift, MongoDB, etc..
-with open(cwd + "/config.yml", "r") as config:
-    y = yaml.safe_load(config)
-globals().update(y)
+# with open(cwd + "/config.yml", "r") as config:
+#     y = yaml.safe_load(config)
+# globals().update(y)
 
 
 def custom_user_workflow(**kwargs):
@@ -522,15 +469,22 @@ def custom_user_workflow(**kwargs):
 
 
 def neocampus_branching(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+    swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+    swift_container = str(kwargs["dag_run"].conf["swift_container"])
+    #Return data from the swift_object_id in mongodb metadata
+    metadata_doc = connection_mongo_metadata(swift_container, swift_id)
+    
+    content_type = metadata_doc['content_type']
+
     # TODO : 14/10/2020 REFACTOR DICT_TASK
     type_to_task = {"bson": "neocampus_bson_get"}
-    return type_to_task[metadata_doc["content_type"]]
+    
+    type_to_task["content_type"] = content_type
+    return type_to_task
 
 
 def neocampus_bson(**kwargs):
     pass
-
 
 callable_dict = {"PythonOperator": PythonOperator,
                  "DummyOperator": DummyOperator,
@@ -541,55 +495,62 @@ callable_dict = {"PythonOperator": PythonOperator,
 # TODO : recursive funct to create the pipeline (for n sublevel in dict)
 
 
-def neocampus_get_swift_object(**kwargs):
-    # TODO : 13/10/2020 DIRECT READ FILE IF LOOPBACK DEVICE ARE REMOVED (if swift can directly write on storage servers)
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+# def neocampus_get_swift_object(**kwargs):
+#     # TODO : 13/10/2020 DIRECT READ FILE IF LOOPBACK DEVICE ARE REMOVED (if swift can directly write on storage servers)
+#     # metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
+#     swift_container = kwargs["dag_run"].conf["swift_container"]
+#     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+#
+#     print("kwargs['dag_run'].conf")
+#     print(kwargs["dag_run"].conf)
+#
+#     url = config.url_swift
+#     user = config.user_swift
+#     key = config.key_swift
+#     headers = {'X-Storage-User': user,
+#                'X-Storage-Pass': key
+#                }
+#
+#     token_response = urlopen(Request(url, headers=headers)).getheaders()
+#
+#     opener = urllib.request.build_opener()
+#     opener.addheaders = []
+#
+#     for i in token_response:
+#         if i[0] == "X-Auth-Token":
+#             opener.addheaders.append(i)
+#         if i[0] == "X-Storage-Url":
+#             url = i
+#     print(url[1])
+#     swift_container = str(kwargs["dag_run"].conf["swift_container"])
+#     #Return data from the swift_object_id in mongodb metadata
+#     metadata_doc = connection_mongo_metadata(swift_container, swift_id)
+#
+#     path = config.airflow_tmp + metadata_doc["original_object_name"]
+#
+#     # urllib.request.install_opener(opener)
+#     # urllib.request.urlretrieve(url[1] + "/" + swift_container + "/" + swift_id, path)
+#     #
+#     # print(os.path.dirname(os.path.abspath(__file__)))
+#
+#     print(kwargs["dag_run"].dag_id)
 
-    print("kwargs['dag_run'].conf")
-    print(kwargs["dag_run"].conf)
-    # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
 
-    # TODO : 13/10/2020 CHANGE USERS / PASS
-    user, password = 'test:tester', 'testing'
-    # TODO: 13/10/2020 CHANGE IP WITH GLOBAL VAR
-    url = 'http://141.115.103.30:8080/auth/v1.0'
-    headers = {'X-Storage-User': user,
-               'X-Storage-Pass': password
-               }
-    token_response = urlopen(Request(url, headers=headers)).getheaders()
-
-    opener = urllib.request.build_opener()
-    opener.addheaders = []
-
-    for i in token_response:
-        if i[0] == "X-Auth-Token":
-            opener.addheaders.append(i)
-        if i[0] == "X-Storage-Url":
-            url = i
-    print(url[1])
-
-    urllib.request.install_opener(opener)
-    # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
-    urllib.request.urlretrieve(url[1] + "/" + metadata_doc["swift_container"] + "/" + metadata_doc["swift_object_id"],
-                               "/datalake/airflow/airflow_tmp/" + metadata_doc["original_object_name"])
-
-    print(os.path.dirname(os.path.abspath(__file__)))
-
-    print(kwargs["dag_run"].dag_id)
-
-
-def neocampus_mongoimport(**kwargs):
-    metadata_doc = kwargs["ti"].xcom_pull(key="metadata_doc")
-    file_name = kwargs["dag_run"].dag_id
-    # TODO : 13/10/2020 MAKE AIRFLOW_TMP AS ENV VAR
-    # TODO : 13/10/2020 FIND A SOLUTION TO CHOSE DATABASE AND COLLECTION
-    print("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d " +
-          metadata_doc["swift_container"] + " -c " + metadata_doc["original_object_name"]
-          + " /datalake/airflow/airflow_tmp/" + metadata_doc["original_object_name"] + "'")
-    os.system("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d " +
-              metadata_doc["swift_container"] + " -c " + metadata_doc["original_object_name"]
-              + " /datalake/airflow/airflow_tmp/" + metadata_doc["original_object_name"] + "'")
-
+# def neocampus_mongoimport(**kwargs):
+#     swift_container = kwargs["dag_run"].conf["swift_container"]
+#     swift_id = str(kwargs["dag_run"].conf["swift_obj_id"])
+#     metadata_doc = connection_mongo_metadata(swift_container, swift_id)
+#
+#     file_name = kwargs["dag_run"].dag_id
+#     # TODO : 13/10/2020 FIND A SOLUTION TO CHOSE DATABASE AND COLLECTION
+#     print("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d " +
+#           swift_container + " -c " +
+#           metadata_doc["original_object_name"]
+#           + config.airflow_tmp + metadata_doc["original_object_name"] + "'")
+#     os.system("ssh -i /home/airflow/.ssh/airflow airflow@co2-dl-bd 'mongorestore -d " +
+#               swift_container + " -c " +
+#               metadata_doc["original_object_name"] + " " +
+#               config.airflow_tmp + metadata_doc["original_object_name"] + "'")
 
 
 def construct_operator(**kwargs):
@@ -605,6 +566,7 @@ def construct_operator(**kwargs):
                                   )
     except Exception as e:
         pass
+
 
 '''
 Base operator : Dummy operators
@@ -624,6 +586,13 @@ join = DummyOperator(
 ''' 
 Default operator 
 '''
+
+mqtt_verify_branch = BranchPythonOperator(
+    task_id='mqtt_verify',
+    python_callable=mqtt_verify_task,
+    dag=dag
+)
+
 branch_op = BranchPythonOperator(
     task_id='data_workflow_selection',
     python_callable=workflow_selection,
@@ -631,6 +600,26 @@ branch_op = BranchPythonOperator(
 )
 default = BranchPythonOperator(
     task_id='default',
+    python_callable=default_check_type,
+    dag=dag)
+
+neOCampus = BranchPythonOperator(
+    task_id='neOCampus',
+    python_callable=default_check_type,
+    dag=dag)
+
+autOCampus = BranchPythonOperator(
+    task_id='autOCampus',
+    python_callable=default_check_type,
+    dag=dag)
+
+Villagil = BranchPythonOperator(
+    task_id='Villagil',
+    python_callable=default_check_type,
+    dag=dag)
+
+eCOnect = BranchPythonOperator(
+    task_id='eCOnect',
     python_callable=default_check_type,
     dag=dag)
 
@@ -642,33 +631,31 @@ custom = BranchPythonOperator(
     # provide_context=True,
     python_callable=custom_user_workflow,
     dag=dag)
-neocampus = BranchPythonOperator(
-    task_id='neocampus',
-    # provide_context=True,
-    python_callable=neocampus_branching,
-    dag=dag
-)
-neocampus_bson_get = PythonOperator(
-    task_id='neocampus_bson_get',
-    python_callable=neocampus_get_swift_object,
-    # provide_context=True,
-    dag=dag,
-)
-
-neocampus_bson_mongorestore = PythonOperator(
-    task_id='neocampus_bson_mongorestore',
-    python_callable=neocampus_mongoimport,
-    # bash_command='ls /datalake  && cp /datalake/co2-dl-bd',
-    # provide_context=True,
-    dag=dag,
-)
+# neocampus = BranchPythonOperator(
+#     task_id='neocampus',
+#     # provide_context=True,
+#     python_callable=neocampus_branching,
+#     dag=dag
+# )
+# neocampus_bson_get = PythonOperator(
+#     task_id='neocampus_bson_get',
+#     python_callable=neocampus_get_swift_object,
+#     # provide_context=True,
+#     dag=dag,
+# )
+#
+# neocampus_bson_mongorestore = PythonOperator(
+#     task_id='neocampus_bson_mongorestore',
+#     python_callable=neocampus_mongoimport,
+#     # bash_command='ls /datalake  && cp /datalake/co2-dl-bd',
+#     # provide_context=True,
+#     dag=dag,
+# )
 '''
 ===============================================
 '''
 with open(cwd + "/task_list.json", "r") as f:
     task_dict = json.load(f)
-
-run_this_first >> branch_op
 
 callable_dict = {"content_neo4j_node_creation": content_neo4j_node_creation,
                  "from_mongodb_to_influx": from_mongodb_to_influx,
@@ -678,53 +665,111 @@ callable_dict = {"content_neo4j_node_creation": content_neo4j_node_creation,
                  "failed_data_processing": failed_data_processing,
                  "successful_data_processing": successful_data_processing,
                  "construct_operator": construct_operator,
-                 "neocampus_get_swift_object": neocampus_get_swift_object,
                  "neocampus_bson": neocampus_bson,
                  "neocampus_branching": neocampus_branching,
                  "custom_user_workflow": custom_user_workflow,
                  "workflow_selection": workflow_selection,
-                 "default_image":default_image,
-                 "default_application_json":default_application_json,
-                 "default_application_vnd_ms_excel":default_application_vnd_ms_excel,
-                 "default_zip":default_zip,
+                 "default_image": default_image,
+                 "default_application_json": default_application_json,
+                 "default_application_vnd_ms_excel": default_application_vnd_ms_excel,
+                 "default_application_sql": default_application_sql,
+                 "default_text_plain": default_text_plain,
+                 "default_zip": default_zip,
+                 "default_sge": default_sge,
                  "PythonOperator": PythonOperator,
                  "DummyOperator": DummyOperator,
                  "BranchPythonOperator": BranchPythonOperator
                  }
+#"neocampus_get_swift_object": neocampus_get_swift_object,
 custom_pipeline = []
 default_pipeline = []
+neOCampus_pipeline = []
+autOCampus_pipeline = []
+Villagil_pipeline = []
+eCOnect_pipeline = []
 for data_type in task_dict:
 
     for owner_group in task_dict[data_type]:
         custom_sub_pipe = []
         default_sub_pipe = []
+        neOCampus_sub_pipe = []
+        autOCampus_sub_pipe = []
+        Villagil_sub_pipe = []
+        eCOnect_sub_pipe = []
         for task in task_dict[data_type][owner_group]:
-                # raise(Exception(task["operator"]))
-                if task["operator"] == "PythonOperator":
-                    if owner_group == "default":
-                        default_sub_pipe.append(PythonOperator(task_id=task["task_id"],
-                                          python_callable=callable_dict[task["python_callable"]],
-                                          on_failure_callback=failed_data_processing,
-                                          on_success_callback=successful_data_processing,
-                                          start_date=days_ago(0)
-                                          ) )
-                    else :
-                        custom_sub_pipe.append(PythonOperator(task_id=task["task_id"],
-                                          python_callable=callable_dict[task["python_callable"]],
-                                          on_failure_callback=failed_data_processing,
-                                          on_success_callback=successful_data_processing,
-                                          start_date=days_ago(0)
-                                          ) )
+            # raise(Exception(task["operator"]))
+            if task["operator"] == "PythonOperator":
+                if owner_group == "default":
+                    default_sub_pipe.append(PythonOperator(task_id=task["task_id"],
+                                                           python_callable=callable_dict[task["python_callable"]],
+                                                           on_failure_callback=failed_data_processing,
+                                                           on_success_callback=successful_data_processing,
+                                                           start_date=days_ago(
+                                                               0)
+                                                           ))
+                elif owner_group == "neOCampus":
+                    neOCampus_sub_pipe.append(PythonOperator(task_id=task["task_id"],
+                                                           python_callable=callable_dict[task["python_callable"]],
+                                                           on_failure_callback=failed_data_processing,
+                                                           on_success_callback=successful_data_processing,
+                                                           start_date=days_ago(
+                                                               0)
+                                                           ))
+                elif owner_group == "autOCampus":
+                    autOCampus_sub_pipe.append(PythonOperator(task_id=task["task_id"],
+                                                           python_callable=callable_dict[task["python_callable"]],
+                                                           on_failure_callback=failed_data_processing,
+                                                           on_success_callback=successful_data_processing,
+                                                           start_date=days_ago(
+                                                               0)
+                                                           ))
+                elif owner_group == "Villagil":
+                    Villagil_sub_pipe.append(PythonOperator(task_id=task["task_id"],
+                                                           python_callable=callable_dict[task["python_callable"]],
+                                                           on_failure_callback=failed_data_processing,
+                                                           on_success_callback=successful_data_processing,
+                                                           start_date=days_ago(
+                                                               0)
+                                                           ))
+                elif owner_group == "eCOnect":
+                    eCOnect_sub_pipe.append(PythonOperator(task_id=task["task_id"],
+                                                           python_callable=callable_dict[task["python_callable"]],
+                                                           on_failure_callback=failed_data_processing,
+                                                           on_success_callback=successful_data_processing,
+                                                           start_date=days_ago(
+                                                               0)
+                                                           ))
+                else:
+                    custom_sub_pipe.append(PythonOperator(task_id=task["task_id"],
+                                                          python_callable=callable_dict[task["python_callable"]],
+                                                          on_failure_callback=failed_data_processing,
+                                                          on_success_callback=successful_data_processing,
+                                                          start_date=days_ago(
+                                                              0)
+                                                          ))
         custom_pipeline.append([*custom_sub_pipe, ])
         default_pipeline.append([*default_sub_pipe, ])
+        neOCampus_pipeline.append([*neOCampus_sub_pipe, ])
+        autOCampus_pipeline.append([*autOCampus_sub_pipe, ])
+        Villagil_pipeline.append([*Villagil_sub_pipe, ])
+        eCOnect_pipeline.append([*eCOnect_sub_pipe, ])
 
 for default_task_list in default_pipeline:
     chain(default, *default_task_list, join)
+
+for neOCampus_task_list in neOCampus_pipeline:
+    chain(neOCampus, *neOCampus_task_list, join)
+for autOCampus_task_list in autOCampus_pipeline:
+    chain(autOCampus, *autOCampus_task_list, join)
+for Villagil_task_list in Villagil_pipeline:
+    chain(Villagil, *Villagil_task_list, join)
+for eCOnect_task_list in eCOnect_pipeline:
+    chain(eCOnect, *eCOnect_task_list, join)
 
 for custom_task_list in custom_pipeline:
     if len(custom_task_list) != 0:
         chain(custom, *custom_task_list, join)
 
 # Airflow user / data_processing password
-run_this_first >> branch_op
-branch_op >> [default, custom]
+run_this_first >> mqtt_verify_branch >> [branch_op, join]
+branch_op >> [default, custom, neOCampus, autOCampus, Villagil, eCOnect]

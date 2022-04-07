@@ -1,17 +1,16 @@
-import React, { isValidElement, useState } from "react";
-import {Header} from '../Header';
-import {RowItem} from './RowItem';
+import React from "react";
 import api from '../../api/api';
 import $ from 'jquery';
-import {Filters} from "./Filters";
+import Filters from "./Filters";
 import moment from "moment";
 import {Paginate} from "./Paginate";
 import {LoadingSpinner} from "../utils/LoadingSpinner";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import DataTable from 'react-data-table-component';
 import Moment from 'moment';
+import {connect} from "react-redux";
 
- const columns = [
+const columns = [
             {
                 id: 'swift_object_id',
                 name: "Id objet Swift",
@@ -42,24 +41,19 @@ import Moment from 'moment';
                 sortable: true,
             },
             {
-                id: 'meta1',
-                name: "Meta 1",
-                selector: row => row.other_data ? row.other_data['meta1'] : '-'
-            },
-            {
-                id: 'meta2',
-                name: "Meta 2",
-                selector: row => row.other_data ? row.other_data['meta2'] : '-'
+                id: 'other_data',
+                name: "Métadescriptions",
+                selector: row => row.other_data ? JSON.stringify(row.other_data) : '-' 
             },
             {
                 id: 'creation_date',
                 name: "Date de création",
-                selector: row => Moment(row.creation_date).format('YYYY-MM-DD hh:mm:ss'),
+                selector: row => Moment(row.creation_date).format('YYYY-MM-DD HH:mm:ss'),
                 sortable: true
             },
         ];
 
-export class DownloadRaw extends React.Component {
+class DownloadRaw extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
     title = 'Affichage des données brutes'
     selectedElementsOnActualPage = []
@@ -101,8 +95,8 @@ export class DownloadRaw extends React.Component {
         let checked = null
         let selectedElements = this.state.selectedElements
         if (selectedElements) {
-            selectedElements.map(s => {
-                if (JSON.stringify(s) == JSON.stringify(row)) {
+            selectedElements.forEach(s => {
+                if (JSON.stringify(s) === JSON.stringify(row)) {
                     this.selectedElementsOnActualPage.push(s)
                     checked = true
                 }
@@ -123,25 +117,19 @@ export class DownloadRaw extends React.Component {
         // in actual page, if elements have been selected, add selected ones into selected elements global array
         if(event.selectedRows !== undefined) {
             // loop into selected rows in actual page
-            event.selectedRows.map((element) => {
+            event.selectedRows.forEach((element) => {
                 // if selected rows in actual page are not in global selected elements
-                console.log('page actuelle')
-                console.log(this.selectedElementsOnActualPage)
                 if(!this.selectedElementsOnActualPage.includes(element) && !selectedElements.includes(element)){
-                    console.log('AJOUTE')
                     selectedElements.push(element)
                 } 
             })
 
-            selectedElements.map((selectedElement) => {
+            selectedElements.forEach((selectedElement) => {
                 // for deleting one row
                 if(!event.selectedRows.includes(selectedElement) && this.selectedElementsOnActualPage.includes(selectedElement)){
-                    console.log('SUPPRIME')
 
                     var index = selectedElements.indexOf(selectedElement)
-                    if(index != -1) {
-                        console.log('INDEX')
-                        console.log(index)
+                    if(index !== -1) {
                         selectedElementsTemp.splice(index, 1)
                     }
                 }
@@ -246,7 +234,8 @@ export class DownloadRaw extends React.Component {
                 beginDate: this.state.beginDate,
                 endDate: this.state.endDate,
                 sort_field: this.state.sort_field,
-                sort_value: this.state.sort_value
+                sort_value: this.state.sort_value,
+                container_name: this.props.nameContainer.nameContainer
             })
         } else {
             data = JSON.stringify({
@@ -254,7 +243,8 @@ export class DownloadRaw extends React.Component {
                 offset: this.state.offset,
                 filetype: this.state.filetype,
                 beginDate: this.state.beginDate,
-                endDate: this.state.endDate
+                endDate: this.state.endDate,
+                container_name: this.props.nameContainer.nameContainer
             })
         }
 
@@ -320,8 +310,6 @@ export class DownloadRaw extends React.Component {
         if (this.state.elements) {
             elts = this.state.elements
         }
-        let selectedElements = this.getSelectedElements()
-        let handler = this.handler
         let setFiletype = this.setFiletype
         let setBeginDate = this.setBeginDate
         let setEndDate = this.setEndDate
@@ -342,7 +330,7 @@ export class DownloadRaw extends React.Component {
             console.log(sortDirection)
             // for desc
             let sort = 1
-            if(this.state.sort_value == 1) {
+            if(this.state.sort_value === 1) {
                 sort = -1
             }
             this.setState({
@@ -459,10 +447,16 @@ export class DownloadRaw extends React.Component {
                         />
                     </div>
                 </div>
-
                 <LoadingSpinner loading={this.state.loading}/>
-                <ToastContainer />
             </div>
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(DownloadRaw)

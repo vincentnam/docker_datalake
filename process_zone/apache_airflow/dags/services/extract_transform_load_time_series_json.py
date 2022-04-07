@@ -11,7 +11,7 @@ def extract_transform_load_time_series_json(swift_result, swift_container, swift
     """
     Fonction de traitement d'un fichier Json Time Series
     """
-    client = InfluxDBClient(url=config.url_influxdb, token=config.token_influxdb)
+    client = InfluxDBClient(url=config.url_influxdb, token=config.token_influxdb, verify_ssl=False)
     write_api = client.write_api(write_options=SYNCHRONOUS)
 
     time_format = "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -73,7 +73,7 @@ def extract_transform_load_time_series_json(swift_result, swift_container, swift
 
         points += m_points
 
-    write_api.write(config.bucket_influxdb, config.org_influxdb, points)
+    write_api.write(swift_container, config.org_influxdb, points)
 
 
 sys.modules[__name__] = extract_transform_load_time_series_json

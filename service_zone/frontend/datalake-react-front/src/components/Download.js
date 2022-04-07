@@ -1,13 +1,11 @@
 import React from "react";
-import {Header} from './Header';
-import {DownloadRaw} from "./download-raw-data/DownloadRaw";
-import {DownloadHandleData} from "./download-handled-data/DownloadHandleData";
-
+import DownloadRaw from "./download-raw-data/DownloadRaw";
+import DownloadHandleData from "./download-handled-data/DownloadHandleData";
+import { ToastContainer } from 'react-toastify';
 export class Download extends React.Component {
     render() {
         return (
             <div>
-                <Header/>
                 <div className="container main-download">
                     <nav className="tab-download">
                         <div className="nav nav-pills " id="pills-tab" role="tablist">
@@ -31,6 +29,7 @@ export class Download extends React.Component {
                             <DownloadHandleData/>
                         </div>
                     </div>
+                    <ToastContainer />
                 </div>
             </div>
         )

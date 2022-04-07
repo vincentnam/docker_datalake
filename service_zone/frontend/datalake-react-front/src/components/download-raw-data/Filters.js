@@ -2,8 +2,10 @@ import React from "react";
 import { FormGroup, FormLabel, Form, Button } from "react-bootstrap";
 import { config } from '../../configmeta/config';
 import { config_processed_data } from '../../configmeta/config_processed_data';
+import {configWithSGE} from "../../configmeta/configWithSGE";
+import {connect} from "react-redux";
 
-export class Filters extends React.Component {
+class Filters extends React.Component {
 
     constructor(props) {
         super(props);
@@ -14,6 +16,7 @@ export class Filters extends React.Component {
         this.setBeginDate = this.setBeginDate.bind(this);
         this.setEndDate = this.setEndDate.bind(this);
         this.handleChange = this.handleChange.bind(this);
+        this.getConfiguration = this.getConfiguration.bind(this);
 
         this.state = {
             type: 0
@@ -50,9 +53,9 @@ export class Filters extends React.Component {
 
         datatypeConf.map((type) => (
             // loop in config file
-            type.forEach((t) => {
+            type.forEach((t, key) => {
                 // if selected data type corresponds with current data type
-                if (t.id === parseInt(id)) {
+                if (key === parseInt(id)) {
                     filetypesResult = t.type_file_accepted
                 }
             })
@@ -61,13 +64,26 @@ export class Filters extends React.Component {
         return filetypesResult
     }
 
+    getConfiguration() {
+        if(this.props.filterDataType) {
+            return [config_processed_data.types] 
+        } else {
+            if(this.props.nameContainer.nameContainer === "neOCampus") {
+                return [configWithSGE.types];
+            } else {
+                return [config.types];
+            }
+        }
+
+    }
+
     // when data type has changed
     handleChange(event) {
         const target = event.target;
         const value = target.type === 'checkbox' ? target.checked : target.value;
         const name = target.name;
 
-        let filetypesResult = this.getFiletypeById([config.types], value)
+        let filetypesResult = this.getFiletypeById(this.getConfiguration(), value)
         this.props.setFiletype(filetypesResult)
 
         this.setState({
@@ -76,16 +92,14 @@ export class Filters extends React.Component {
     }
 
     render() {
+        let getConfiguration = this.getConfiguration
         // data type field
         const SelectDatatype = () => {
-            let types = [config.types];
-            if (this.props.title === "Affichage des données traitées") {
-                types = [config_processed_data.types];
-            }
+            let types = getConfiguration();
             // loop into conf to get all data types
             const listTypes = types.map((type) => (
-                type.map((t) =>
-                    <option key={t.id} value={t.id}>{t.label}</option>
+                type.map((t, key) =>
+                    <option key={key} value={key}>{t.label}</option>
                 )
             ));
             return (
@@ -130,3 +144,11 @@ export class Filters extends React.Component {
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+    }
+}
+
+export default connect(mapStateToProps, null)(Filters)
