@@ -10,3 +10,4 @@ venv
 __pycache__/
 reference.conf
 datalake-airflow/config.py
+raw_data_zone/Openstack/swift/dev

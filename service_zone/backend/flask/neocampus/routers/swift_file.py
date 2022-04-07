@@ -198,7 +198,7 @@ def upload():
             return make_response(('Size mismatch', 500))
         else:
             other_meta = request.form["othermeta"]
-            type_file = request.form["typefile"]
+            type_file = request.form["typeFile"]
 
             # File upload completely finished (end of chunks)
             print(f'File {file.filename} has been uploaded successfully')
