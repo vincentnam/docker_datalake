@@ -20,8 +20,7 @@ The development of this architecture will integrate a semantic dimension in the 
 
 
 - [Datalake concept](#DatalakeConcept)
-    * [State of art](#Stateofart)
-    * [Scientific contribution](#ScientificContribution)
+    * [Scientific paper](#ScientificPaper)
 - [The project : context](#TheProjectContext)
 - [The project : design](#TheProjectDesign)
     * [Architecture : Zone-based service-oriented datalake](#CurrentArchitecture)
@@ -122,25 +121,11 @@ It reduces costs for **high volumetry** and a **high variety** of data project o
 This solution has been designed to integrate solutions that has already been deployed, as authentication systems, database solutions or data analysis solutions. 
 The initial resource investment is higher than simple database solution but it is reduced for new other solutions. 
 
-## State of art <a name="Stateofart"></a>
+## Scientific paper <a name="ScientificPaper"></a>
 [Return to the table of content](#Tableofcontent)
 
-
-A theoritical approach of datalake is based on a zone based architecture. This approach is the approach used in this datalake architecture.
-See : Franck Ravat and Yan Zhao. 2019.   Data Lakes: Trends and Perspectives. InDatabase and Expert Systems Applications (Lecture Notes in Computer Science),
-Sven Hartmann, Josef Küng, Sharma Chakravarthy, Gabriele Anderst-Kotsis,A Min Tjoa, and Ismail Khalil (Eds.). Springer International Publishing, Cham,304–313.   
-https://doi.org/10.1007/978-3-030-27615-7_23
-
-##### **COMING SOON**
-
-
-## Scientific contribution <a name="ScientificContribution"></a>
-[Return to the table of content](#Tableofcontent)
-
-This architecture has been presented in a scientific paper for IDEAS 2021 conference (IDEAS 2021: the 25th anniversary).
 See : 
-DANG, ZHAO, MEGDICHE, RAVAT (2021), A Zone-Based Data Lake Architecture for IoT, Small and Big Data. IDEAS 2021, **to appear**. 
-(DOI: 10.1145/3472163.3472185 / ISBN : 978-1-4503-8991-4/21/07)
+- "A Zone-Based Data Lake Architecture for IoT, Small and Big Data", Dang, V.N., Zhao, Y., Megdiche, I., Ravat, F., IDEAS 2021 (2021)
 
 # The project : context <a name="TheProjectContext"></a>
 [Return to the table of content](#Tableofcontent)
@@ -563,84 +548,93 @@ TODO
 ### Automatic deployment with Ansible <a name="AutomaticDeployment"></a>
 [Return to the table of content](#Tableofcontent)
 
+The automatic deployment of the architecture is done via Ansible playbooks. For now, only the Docker version installed on Linux servers (Centos 7) has been implemented. It remains to implement the version with containers deployed on a Kubernetes cluster.
 
-TODO 
+To automatically install the architecture, several steps are required: 
+- Configure the installation: Configuration files in the folder "./deployment_scripts/ansible/" are to be modified: 
+  - "./deployment_scripts/ansible/inventories/" contains 2 folders. If it is a production deployment, you have to modify the files in "production", if it is a test deployment, you have to modify the files in "staging".
+    - "hosts.yml" contains all the host machines specifications of the services. It is necessary to set up either a password for a user with root access, or an SSH key to put in the "host_vars/.ssh" folder. WARNING: It is better to use SSH keys for security reasons. However, the functionality has not been tested yet.
+      - "ansible_ssh_private_key_file" and the path to the corresponding key
+      - ansible_sudo_pass" for the root password
+  - ./deployment_scripts/ansible/roles" contains the services configuration files. They can be customized as needed.    
+- Once the configuration files are updated, the installation is done via this command
 
+
+    ansible-playbook -i ./deployment_scripts/ansible/inventories/staging/hosts.yml /deployment_scripts/ansible/roles/global/tasks/install_datalake.yml 
 
 
 ## Security management <a name="Security"></a>
 [Return to the table of content](#Tableofcontent)
 
-TODO 
-
 
 ### Security : by design <a name="Securitybydesign"></a>
 [Return to the table of content](#Tableofcontent)
 
-TODO 
+The access to the datalake services is done through 1 single point: the REST API. The only entry is here. 
+Warning: Data streams are done directly by Apache Spark Streaming. However, the implementation of the data streams are done via the REST API. (To work on)
 
 
 #### Flow control and networks <a name="FlowControlAndNetworks"></a>
 [Return to the table of content](#Tableofcontent)
 
 
-TODO 
+Still not handled
 
 
 ### Security : by tools <a name="Securitybytools"></a>
 [Return to the table of content](#Tableofcontent)
 
-TODO 
-
+Section to reformat
 
 #### Identification : Openstack Keystone <a name="Keystone"></a>
 [Return to the table of content](#Tableofcontent)
 
-TODO 
+
+
+Authentication is handled by Openstack Keystone and an LDAP directory. An LDAP directory is deployed by default, but it is possible to configure Openstack Keystone to use a pre-existing authentication base. Calls to the various services require token authentication delivered by Openstack Keystone.  
 
 
 #### Authentication : Server Kerberos <a name="Kerberos"></a>
 [Return to the table of content](#Tableofcontent)
 
 
-TODO 
+Still not implemented
 
 
 ## Monitoring <a name="Monitoring"></a>
 [Return to the table of content](#Tableofcontent)
 
-TODO 
+Still not implemented
 
 
 ### Monitoring : Kubernetes monitoring tools <a name="MonitoringKubernetes"></a>
 [Return to the table of content](#Tableofcontent)
 
-TODO 
+Still not implemented
 
 
 ### Monitoring : low level monitoring : SNMP  <a name="SNMP"></a>
 [Return to the table of content](#Tableofcontent)
 
-TODO 
+Still not implemented
 
 
 ### Monitoring : Openstack Ceilometer <a name="Ceilometer"></a>
 [Return to the table of content](#Tableofcontent)
 
-TODO 
+Still not implemented
 
 
 ## User spaces compartmentalization <a name="UserSpaceCompartmentalization"></a>
 [Return to the table of content](#Tableofcontent)
 
-TODO 
+Still not implemented
 
 
 ### User spaces compartmentalization : Virtualization, Docker and Kubernetes <a name="UserSpaceCompartmentalizationVirtualisation"></a>
 [Return to the table of content](#Tableofcontent)
 
-TODO 
-
+Partially implemented
 
 
 ### User spaces compartmentalization : Openstack Keystone <a name="UserSpaceCompartmentalizationKeystone"></a>
@@ -658,7 +652,7 @@ TODO
 ### Automation, tests, builds : CI/CD Pipeline, builds servers <a name="AutomationTestBuildsCICD"></a>
 [Return to the table of content](#Tableofcontent)
 
-TODO 
+Still not implemented
 
 
 
@@ -670,7 +664,7 @@ TODO
 
 
 
-TODO 
+Still not implemented
 
 
 
@@ -727,7 +721,8 @@ At this point (23/11/2020), the POC is not adapted for this platform and wont be
 
 ![alt text](./git_image/v0.0.3-Network_architecture.png)
 
-TODO : Explnanation - 6 differents networks : 1 for each need 
+Still not implemented 
+TODO : Explanation - 6 differents networks : 1 for each need 
 
 
 ![alt text](./git_image/v0.0.3-Networks_groups.png)
@@ -1064,6 +1059,8 @@ It will be easy and fast to integrate the new pipeline.
 # What's coming up - Roadmap <a name="Incoming"></a>
 [Return to the table of content](#Tableofcontent)
 
+## Incoming : Interoperable datalake federation + distributed metadata management systems 
+
 ## TODO : Implementation <a name="TODOImplementation"></a>
 [Return to the table of content](#Tableofcontent)
 
@@ -1088,11 +1085,11 @@ TODO : Update TODO list
             - [x] Create middleware for swift proxy (Webhook trigger to launch Airflow jobs)
             - [ ] Use X-Webhook in Swift (secure way)
             - [ ] Optimizations
-- [ ] Metadata management zone
+- [x] Metadata management zone
      - [x] MongoDb database for metadata
             - [ ] Replication for single point of failure problem (REALLY IMPORTANT ! -> if MongoDB datas are corrupted, all data in the datalake are useless)
-     - [ ] Test other database as metadata management system
-     - [ ] Implement metadata metamodel 
+     - [x] Test other database as metadata management system
+     - [x] Implement metadata metamodel 
 - [x] Process area
     - [x] Upgrade to version 2.0 (stable) if possible
     - [x] Airflow deployment (docker image) 
@@ -1106,7 +1103,7 @@ TODO : Update TODO list
         - [x] Set up jobs 
     - [ ] Find a proper way to add new task / pipeline ( dag from JSON file ?) 
 - [x] The processed data area / the gold zone : 
-    - [ ] Relational database (default)
+    - [x] Relational database (default)
     - [x] Time serie oriented database (visualisation)
         - [x] Json data :
             - [x] Based on templates given (as an input in metadatabase) 
@@ -1115,7 +1112,8 @@ TODO : Update TODO list
         - [x] Image files : 
             - [x] Jpeg 
                 - [x] Nodes creation for objects in the file
-                - [ ] Automatic object detection / segmentation 
+                - [x] ~~Automatic object detection / segmentation~~
+                - [ ] Automatic image analysis with descriptors
         - [ ] Recommendation tool
     
 - [x] The services area : 
@@ -1125,7 +1123,7 @@ TODO : Update TODO list
             - [x] Download data from database in processed data area
             - [x] Download data from raw data management area
         - [ ] Rework with platform update (see [Modis](#) branch, projects and issues)
-    - [ ] Web GUI for data insertion and data visualization
+    - [x] Web GUI for data insertion and data visualization
         - [x] Dashboard creation
         - [x] Data download with React + Express backend server
             - [x] Drag'n'drop insertion 
@@ -1135,26 +1133,26 @@ TODO : Update TODO list
             - [x] Basic time series visualization
             - [x] Basic graph visualization
             - [ ] Complex visualization from several different databases
-        - [ ] Beautiful dashboard development
+        - [x] Beautiful dashboard development
     - [ ] Real-time data consumption
-    - [ ] Streaming data consumption
+    - [x] Streaming data consumption
 
 - [x] Set up a "log" database to log operations on data done
     - [x] Operations are logged in MongoDB MetaDataBase : successful and failed operation (Airflow task + id ) + operations per day
 
 - [ ] Security, Authentication and Monitoring zone
-      - [ ] Add Keystone as authentication service
-  - [ ] Integrate LDAP
+      - [x] Add Keystone as authentication service
+  - [x] Integrate LDAP
   - [ ] Integrate NIS
     
 - [ ] Stream mode : 
-    - [ ] Deploy Apache Spark
-    - [ ] Deploy Apache Spark Stream
+    - [x] Deploy Apache Spark
+    - [x] Deploy Apache Spark Stream
     - [ ] Add stream creation in REST API
 - [ ] [AutomaticDeployment](#TODO:AutomaticDeployment) : Docker + Kubernetes + Ansible
-    - [ ] Docker
+    - [x] Docker
         - [x] MongoDB enterprise container
-        - [ ] Openstack Swift container
+        - [x] Openstack Swift container
         - [x] Apache Airflow container (Official container)
         - [ ] Apache Spark
         - [x] Processed data zone container (InfluxDB, SQL database)
@@ -1163,22 +1161,26 @@ TODO : Update TODO list
     - [ ] Kubernetes
         - [ ] Apache Spark cluster on kubernetes design  
         - [ ] ...
-    - [ ] Ansible
-        - [ ] Create first playbook for ansible 
+    - [x] Ansible
+        - [x] Create first playbook for ansible 
 
 ## TODO : Design <a name="TODOImplementation"></a>
 [Return to the table of content](#Tableofcontent)
 
 - [ ] Add metadata over transformed data in the goldzone (and be able to find the list of process done to create this processed data)
 
-- [ ] Design metadata model
-    - [ ] Data lifecycle metadata 
-    - [ ] Design metadata model for data
-        - [ ] Data type
-    - [ ] Redesign logs data
-    - [ ] Stream metamodel 
+
+- [ ] ~~Design metadata model~~
+    - [ ] ~~Data lifecycle metadata~~ 
+    - [ ] ~~Design metadata model for data~~
+        - [ ] ~~Data type~~
+    - [ ] ~~Redesign logs data~~
+    - [ ] ~~Stream metamodel~~
+
+Another approach to metadata management will be adopted with distributed metadata management.
+
 - [ ] Security and monitoring area (REQUIRED : [AutomaticDeployment](#TODO:AutomaticDeployment) ) 
-    - [ ] Design security services  
+    - [x] Design security services  
     - [ ] Design monitoring services :
         - [ ] Low level monitoring (network)
         - [ ] Mid level monitoring (process)
@@ -1192,7 +1194,7 @@ TODO : Update TODO list
 ## TODO : Documentation <a name="TODOImplementation"></a>
 [Return to the table of content](#Tableofcontent)
 
-- [ ] Set SSPL license
+- [x] Set SSPL license
 - [ ] Fill empty sections 
 
 # Other information <a name="OtherInformation"></a>
@@ -1263,14 +1265,14 @@ a : Patches (letter)
 08/06/2021 : 
 Major : 1.0.0 will be released with a production-ready solution with tests : 
 - [ ] Security is enabled with Openstack Keystone 
-- [ ] Automatic deployment, Docker and Kubernetes 
-- [ ] First version of web GUI 
-- [ ] Minimum service with processes and Apache Spark are deployed
-- [ ] Stream data handled
-- [ ] Metadata management system with neo4J ready for a better metamodel 
+- [x] Automatic deployment, Docker 
+- [x] First version of web GUI 
+- [x] Minimum service with processes and Apache Spark are deployed
+- [x] Stream data handled
+- [x] Metadata management system with MongoDB
 - [ ] Monitoring tools deployed for administration at least (optional)
 
-2.0.0 will be focused on metadata management. (TODO)
+2.0.0 will be focused on metadata management and Kubernetes. (TODO)
 
 
 Minor : each minor are released when a project is ended :
@@ -1303,7 +1305,7 @@ is licensed under the SSPL, see `https://www.mongodb.com/licensing/server-side-p
 
 -------------------
 
-(Future) scientific interest group neOCampus (funder of the internship at the initiative of the project): 
+Scientific interest group neOCampus (funder of the internship at the initiative of the project): 
 
 A group of laboratories, organizations and industrialists to build the campus of the future 
 
@@ -1355,7 +1357,7 @@ worked on this project in a patronage project with Université Toulouse 3 Paul-S
 
 04/01/2021 : 
 
-**DANG Vincent-Nam* (Repository basis code owner, intern and engineer working on the project)
+**DANG Vincent-Nam* (Repository basis code owner, intern and project main maintainer)
 
 Vincent-Nam.Dang@irit.fr / dang.vincentnam@gmail.com 
 
