@@ -13,3 +13,8 @@ Werkzeug==0.16.1
 apispec 
 apispec_webframeworks 
 marshmallow
+flask_keystone
+keystoneauth1
+flask_oslolog
+oslo_config
+oslo_context
