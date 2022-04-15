@@ -9,7 +9,7 @@ from . import routers
 
 key = FlaskKeystone()
 log = OsloLog()
-cfg.CONF(default_config_files=['config.ini'])
+cfg.CONF(default_config_files=['neocampus/config.ini'])
 
 def create_app():
     app = Flask(__name__)

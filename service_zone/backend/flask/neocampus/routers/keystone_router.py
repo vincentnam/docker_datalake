@@ -8,7 +8,7 @@ from keystoneauth1 import session as keystone_session
 from keystoneauth1.identity import v3
 from keystoneclient.v3 import client
 
-swift_file_bp = Blueprint('keystone_router_bp', __name__)
+keystone_router_bp = Blueprint('keystone_router_bp', __name__)
 
 @keystone_router_bp.route("/hello", methods=['GET'])
 def hello():
@@ -48,7 +48,6 @@ def login():
     client = client.Client(
         session=session(),
         interface='public',
-        timeout=5,
     )
 
     service = client.services.list(type='some-keystone-service-type')[0]
