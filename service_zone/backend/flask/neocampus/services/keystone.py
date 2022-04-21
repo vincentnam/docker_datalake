@@ -1,14 +1,11 @@
 import flask
-from flask_keystone import FlaskKeystone
-from flask_oslolog import OsloLog
-from oslo_config import cfg
-from oslo_context import context
+from keystoneauth1 import session as keystone_session
+from keystoneauth1.identity import v3
 
-def get_oslo_context(rule, project_id):
-    # headers in a specific format that oslo.context wants
-    headers = {
-        f'HTTP_{name.upper().replace("-", "_")}': value
-        for name, value in flask.request.headers.items()
-    }
-
-    return context.RequestContext.from_environ(headers)
+def login_token(token, url_keystone):
+    auth = v3.token.Token(url_keystone,token=token)
+    sess = keystone_session.Session(auth=auth)
+    if sess.get_user_id() == None:
+        return False
+    else:
+        return True
