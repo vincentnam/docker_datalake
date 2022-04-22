@@ -23,8 +23,17 @@ def login():
         tags:
             - keystone_router
     """
-    user = request.get_json()['user']
-    password = request.get_json()['password']
+
+    try:
+        params = {
+            'user': request.get_json()['user'],
+            'password': request.get_json()['password']
+        }
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+    user = params['user']
+    password = params['password']
     auth = v3.Password(
         auth_url=current_app.config['KEYSTONE_URL'],
         username=user,
