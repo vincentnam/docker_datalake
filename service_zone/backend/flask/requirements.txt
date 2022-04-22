@@ -14,3 +14,4 @@ apispec
 apispec_webframeworks 
 marshmallow
 keystoneauth1
+python-keystoneclient
