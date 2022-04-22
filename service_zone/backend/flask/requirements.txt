@@ -13,3 +13,5 @@ Werkzeug==0.16.1
 apispec 
 apispec_webframeworks 
 marshmallow
+keystoneauth1
+python-keystoneclient

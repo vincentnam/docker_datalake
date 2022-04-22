@@ -1,8 +1,6 @@
 import os
-
 from flask import Flask
 from . import routers
-
 
 def create_app():
     app = Flask(__name__)
