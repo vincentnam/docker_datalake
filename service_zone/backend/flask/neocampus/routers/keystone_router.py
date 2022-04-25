@@ -34,6 +34,7 @@ def login():
 
     user = params['user']
     password = params['password']
+    # Connection with login and password
     auth = v3.Password(
         auth_url=current_app.config['KEYSTONE_URL'],
         username=user,
@@ -52,4 +53,25 @@ def login():
             'id': obj.id,
             'name': obj.name
         })
-    return jsonify({'token': token, 'projects': list_projects})
+
+    # Connection with admin for return roles of user
+    admin_auth = v3.Password(
+        auth_url=current_app.config['KEYSTONE_URL'],
+        username=current_app.config['USER_ADMIN'],
+        password=current_app.config['USER_ADMIN_PWD'],
+        project_id=current_app.config['PROJECT_ID'],
+        user_domain_id=current_app.config['USER_DOMAIN_ID']
+    )
+    admin_sess = keystone_session.Session(auth=admin_auth)
+    admin_ks = client.Client(session=admin_sess)
+    list_roles = []
+    for project in list_projects:
+        roles = admin_ks.roles.list(user=user_id, project=project['id'])
+        for obj in roles:
+            list_roles.append({
+                'id': obj.id,
+                'name': obj.name,
+                'project': project["name"]
+            })
+
+    return jsonify({'token': token, 'projects': list_projects, 'roles': list_roles})
