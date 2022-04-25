@@ -24,6 +24,14 @@ def get_all_buckets():
         tags:
             - influxdb_router
     """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     client, org = influxdb.connection_inflxdb()
     buckets_api = client.buckets_api()
     buckets = buckets_api.find_buckets().buckets
@@ -55,6 +63,15 @@ def get_all_measurements():
         tags:
             - influxdb_router
     """
+
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     client, org = influxdb.connection_inflxdb()
     bucket = request.get_json()["bucket"]
     # Query for show all measurements in a bucket
@@ -93,6 +110,14 @@ def get_all_topics():
         tags:
             - influxdb_router
     """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     client, org = influxdb.connection_inflxdb()
     bucket = request.get_json()["bucket"]
     measurement = request.get_json()["measurement"]
@@ -135,6 +160,14 @@ def get_data_time_series():
         tags:
             - influxdb_router
     """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     client, org = influxdb.connection_inflxdb()
     bucket = request.get_json()["bucket"]
     measurement = request.get_json()["measurement"]

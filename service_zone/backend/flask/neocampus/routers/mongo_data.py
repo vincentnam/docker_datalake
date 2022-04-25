@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, send_file, escape, current_app
-from ..services import mongo, influxdb
+from ..services import mongo, influxdb, keystone
 from datetime import datetime
 import json
 import io
@@ -29,6 +29,15 @@ def get_last_raw_data():
         tags:
             - mongodb_router
     """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
+
     params = request.get_json()
 
     if(("limit" in request.get_json() and "offset" not in request.get_json()) or ("limit" not in request.get_json() and "offset" in request.get_json())):
@@ -80,10 +89,14 @@ def get_metadata():
         params = {
             'filetype': request.get_json()['filetype'],
             'beginDate': request.get_json()['beginDate'],
-            'endDate': request.get_json()['endDate']
+            'endDate': request.get_json()['endDate'],
+            'token': request.get_json()['token']
         }
     except:
         return jsonify({'error': 'Missing required fields.'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], params['token']) == False:
+        return jsonify({'error': 'Wrong Token'})
 
     if(params.get('filetype') == ""):
         return jsonify({'error': 'Missing required fields.'})
@@ -184,10 +197,14 @@ def get_handled_data_list():
             'container_name': request.get_json(force=True)['container_name'],
             'filetype': request.get_json(force=True)['filetype'],
             'beginDate': request.get_json(force=True)['beginDate'],
-            'endDate': request.get_json(force=True)['endDate']
+            'endDate': request.get_json(force=True)['endDate'],
+            'token': request.get_json(force=True)['token']
         }
     except:
         return jsonify({'error': 'Missing required fields.'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], params['token']) == False:
+        return jsonify({'error': 'Wrong Token'})
 
     # InfluxDB data
     result = {}
@@ -243,14 +260,17 @@ def get_handled_data_zipped_file():
 
     try:
         params = {
-            'container_name': request.get_json()['container_name'],
+            'container_name': data_request['container_name'],
             'filetype': data_request['filetype'],
             'beginDate': data_request['beginDate'],
-            'endDate': data_request['endDate']
+            'endDate': data_request['endDate'],
+            'token': data_request['token']
         }
     except:
         return jsonify({'error': 'Missing required fields.'})
 
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], params['token']) == False:
+        return jsonify({'error': 'Wrong Token'})
     # Result
     result = {
         'MongoDB': {},
@@ -331,6 +351,14 @@ def get_models():
         tags:
             - mongodb_router
     """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     container_name = request.get_json()['container_name']
     models = mongo.get_models_all(container_name)
     models_list = list(models)
@@ -364,6 +392,15 @@ def get_models_show():
         tags:
             - mongodb_router
     """
+
+    try:
+            token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     container_name = request.get_json()['container_name']
     models = mongo.get_models_show_all(container_name)
     models_list = list(models)
@@ -397,6 +434,14 @@ def get_models_cache():
         tags:
             - mongodb_router
     """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     container_name = request.get_json()['container_name']
     models = mongo.get_models_all_cache(container_name)
     models_list = list(models)
@@ -416,6 +461,29 @@ def get_models_cache():
 
 @mongo_data_bp.route('/models/params', methods=['GET', 'POST'])
 def get_models_params():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description:  get models with params
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - mongodb_router
+    """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     data_request = request.get_json()
     types_files = data_request['types_files']
     models_list = []
@@ -461,6 +529,14 @@ def get_model_id():
         tags:
             - mongodb_router
     """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     data_request = request.get_json()
     id = data_request['id']
     models = mongo.get_model_id(id)
@@ -489,7 +565,14 @@ def add_models():
         tags:
             - mongodb_router
     """
-    
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     data_request = request.get_json()
     param = {
         'label': data_request['label'],
@@ -515,7 +598,14 @@ def edit_models():
         tags:
             - mongodb_router
     """
-    
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     data_request = request.get_json()
     param = {
         'id': data_request['id'],
@@ -541,6 +631,14 @@ def get_anomalies():
         tags:
             - mongodb_router
     """
+    try:
+            token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     container_name = request.get_json()['container_name']
     measurement = request.get_json()["measurement"]
     topic = request.get_json()["topic"]
@@ -583,6 +681,14 @@ def get_anomalies_all():
         tags:
             - mongodb_router
     """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     container_name = request.get_json()['container_name']
     nbr_metadata, metadata = mongo.get_anomaly_all(container_name)
 
@@ -614,6 +720,14 @@ def count_anomalies_all():
         tags:
             - mongodb_router
     """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     mongodb_url = current_app.config['MONGO_URL']
     collection = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
     container_name = request.get_json()['container_name']
@@ -640,6 +754,14 @@ def list_upload_ssh():
         - mongodb_router
 
     """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     container_name = request.get_json()['container_name']
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url, connect=False)
@@ -672,10 +794,14 @@ def create_mqtt_flux():
             "password": request.get_json()['password'],
             "topic": request.get_json()['topic'],
             "container_name": request.get_json()['container_name'],
-            "status": request.get_json()['status']
+            "status": request.get_json()['status'],
+            "token": request.get_json()['token']
         }
     except:
         return jsonify({'error': 'Missing required fields.'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], params['token']) == False:
+        return jsonify({'error': 'Wrong Token'})
 
     flux = {
         "name": params['name'],
@@ -717,11 +843,14 @@ def edit_mqtt_flux():
             "password": request.get_json()['password'],
             "topic": request.get_json()['topic'],
             "container_name": request.get_json()['container_name'],
-            "status": request.get_json()['status']
+            "status": request.get_json()['status'],
+            "token": request.get_json()['token']
         }
     except:
         return jsonify({'error': 'Missing required fields.'})
 
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], params['token']) == False:
+        return jsonify({'error': 'Wrong Token'})
 
     query = {"_id": ObjectId(params['id'])}
     update_values = {"$set": {
@@ -758,10 +887,14 @@ def change_status_mqtt_flux():
     try:
         params = {
             "id": request.get_json()['id'],
-            "status": request.get_json()['status']
+            "status": request.get_json()['status'],
+            "token": request.get_json()['token']
         }
     except:
         return jsonify({'error': 'Missing required fields.'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], params['token']) == False:
+        return jsonify({'error': 'Wrong Token'})
 
     query = {"_id": ObjectId(params['id'])}
     status_change = { "$set": { "status": params['status'] } }
@@ -789,9 +922,13 @@ def show_mqtt_flux():
     try:
         params = {
             "container_name": request.get_json()['container_name'],
+            "token": request.get_json()['token'],
         }
     except:
         return jsonify({'error': 'Missing required fields.'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], params['token']) == False:
+        return jsonify({'error': 'Wrong Token'})
 
     container_name = params['container_name']
     mongodb_url = current_app.config['MONGO_URL']
@@ -832,9 +969,13 @@ def show_mqtt_flux_actifs():
     try:
         params = {
             "container_name": request.get_json()['container_name'],
+            "token": request.get_json()['token'],
         }
     except:
         return jsonify({'error': 'Missing required fields.'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], params['token']) == False:
+        return jsonify({'error': 'Wrong Token'})
 
     container_name = params['container_name']
     mongodb_url = current_app.config['MONGO_URL']
