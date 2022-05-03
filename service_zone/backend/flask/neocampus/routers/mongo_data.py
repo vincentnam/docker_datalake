@@ -483,7 +483,6 @@ def get_models_params():
 
     if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
         return jsonify({'error': 'Wrong Token'})
-
     data_request = request.get_json()
     types_files = data_request['types_files']
     models_list = []

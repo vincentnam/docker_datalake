@@ -75,3 +75,26 @@ def login():
             })
 
     return jsonify({'token': token, 'projects': list_projects, 'roles': list_roles})
+
+
+@keystone_router_bp.route('/auth-token', methods=['POST'])
+def login_token():
+    """
+    ---
+    get:
+        description: login with token
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - keystone_router
+    """
+    try:
+        token = request.get_json()['token']
+        print(token)
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+    return "OK"
