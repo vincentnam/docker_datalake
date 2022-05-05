@@ -4,6 +4,8 @@ import {toast, ToastContainer} from "react-toastify";
 import {connect} from "react-redux";
 import '../login.css';
 import {Button, Card, Form, FormGroup, FormLabel} from "react-bootstrap";
+import {editAuthToken, editAuthRoles, editAuthProjects} from "../store/authAction";
+import { useHistory } from 'react-router-dom';
 
 class Login extends React.Component {
     constructor(props) {
@@ -15,6 +17,7 @@ class Login extends React.Component {
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+
     }
 
     handleChange(event) {
@@ -29,10 +32,9 @@ class Login extends React.Component {
 
     handleSubmit(event) {
         event.preventDefault();
-
         let nbErrors = 0;
 
-        if (this.state.user === 0) {
+        if (this.state.user.trim() === '') {
             toast.error("Veuillez renseigner votre pseudo !", {
                 theme: "colored",
                 position: "top-right",
@@ -64,7 +66,7 @@ class Login extends React.Component {
                 user: this.state.user,
                 password: this.state.password,
             })
-                .then(function () {
+                .then((response) =>{
                     toast.success("Vous êtes connecté !", {
                         theme: "colored",
                         position: "top-right",
@@ -75,9 +77,11 @@ class Login extends React.Component {
                         draggable: true,
                         progress: undefined,
                     });
-                    setTimeout(function () {
-                        window.location.reload()
-                    }, 1500);
+                    this.props.editAuthRoles(response.data.roles);
+                    this.props.editAuthProjects(response.data.projects);
+                    this.props.editAuthToken(response.data.token);
+                    this.props.history.push('/');
+
                 })
                 .catch(function (error) {
                     toast.error("La connexion n'a pas réussi ! : " + error, {
@@ -143,7 +147,14 @@ class Login extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 
-export default connect(mapStateToProps, null)(Login)
+function WithNavigate(props) {
+    let history = useHistory();
+    return <Login {...props} history={history} />
+}
+
+export default connect(mapStateToProps, {editAuthRoles, editAuthToken, editAuthProjects})(WithNavigate)
+
