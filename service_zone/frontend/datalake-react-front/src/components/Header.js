@@ -21,7 +21,8 @@ class Header extends React.Component {
 
     countData(container_name) {
         api.post('getDataAnomalyAll', {
-            container_name: container_name
+            container_name: container_name,
+            token: this.props.auth.token
         })
             .then((response) => {
                 this.setState({
@@ -148,6 +149,7 @@ class Header extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

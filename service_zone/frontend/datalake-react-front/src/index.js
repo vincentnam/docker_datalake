@@ -25,6 +25,7 @@ import Header from "./components/Header";
 import {Provider} from "react-redux";
 import {createStore} from "redux";
 import allReducers from "./store";
+import Login from "./components/Login";
 
 const store = createStore(allReducers);
 
@@ -54,6 +55,9 @@ ReactDOM.render(
                     </Route>
                     <Route path="/mqtt-config">
                         <MqttConfigList/>
+                    </Route>
+                    <Route path="/login">
+                        <Login/>
                     </Route>
                     <Route path="/">
                         <Home/>
