@@ -30,7 +30,8 @@ class Home extends React.Component {
             selectedElements: [],
             type: 0,
             offset: 0,
-            perPage: 10
+            perPage: 10,
+            token: this.props.auth.token
         }
     }
 
@@ -422,6 +423,7 @@ class Home extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

@@ -4,7 +4,7 @@ import {toast, ToastContainer} from "react-toastify";
 import {connect} from "react-redux";
 import '../login.css';
 import {Button, Card, Form, FormGroup, FormLabel} from "react-bootstrap";
-import {editAuthToken, editAuthRoles, editAuthProjects} from "../store/authAction";
+import {editAuthToken, editAuthRoles, editAuthProjects, editAuthLogin} from "../store/authAction";
 import { useHistory } from 'react-router-dom';
 
 class Login extends React.Component {
@@ -80,7 +80,8 @@ class Login extends React.Component {
                     this.props.editAuthRoles(response.data.roles);
                     this.props.editAuthProjects(response.data.projects);
                     this.props.editAuthToken(response.data.token);
-                    this.props.history.push('/');
+                    this.props.editAuthLogin(true);
+                    this.props.history.push('/home');
 
                 })
                 .catch(function (error) {
@@ -136,7 +137,6 @@ class Login extends React.Component {
                             </Form>
                         </Card.Body>
                     </Card>
-
                 </div>
                 <ToastContainer/>
             </div>
@@ -156,5 +156,5 @@ function WithNavigate(props) {
     return <Login {...props} history={history} />
 }
 
-export default connect(mapStateToProps, {editAuthRoles, editAuthToken, editAuthProjects})(WithNavigate)
+export default connect(mapStateToProps, {editAuthRoles, editAuthToken, editAuthProjects, editAuthLogin})(WithNavigate)
 

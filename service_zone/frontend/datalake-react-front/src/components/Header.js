@@ -62,7 +62,7 @@ class Header extends React.Component {
                 <NavLink exact
                          activeClassName="active"
                          className="nav-item nav-link"
-                         to="/">
+                         to="/home">
                     Home
                 </NavLink>
                 <NavLink activeClassName="active"
@@ -129,8 +129,8 @@ class Header extends React.Component {
                     <div className="form-group required col-2">
                         <SelectProjects/>
                     </div>
-                    <a className="navbar-brand" href="/"><img src="images/logo-datalake.svg" alt="neOCampus"/></a>
-                    <a href="/" className="navbar-brand-text">Datalake</a>
+                    <a className="navbar-brand" href="/home"><img src="images/logo-datalake.svg" alt="neOCampus"/></a>
+                    <a href="/home" className="navbar-brand-text">Datalake</a>
                     <button className="navbar-toggler" type="button" data-bs-toggle="collapse"
                             data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup"
                             aria-expanded="false"
