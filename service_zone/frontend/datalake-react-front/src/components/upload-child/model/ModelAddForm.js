@@ -35,7 +35,9 @@ class ModelAddForm extends React.Component {
     }
 
     componentDidMount() {
-        api.get('models/all')
+        api.get('models/all', {
+            token: this.props.auth.token
+        })
             .then((response) => {
                 this.setState({
                     verifModels: response.data.models.data
@@ -121,7 +123,8 @@ class ModelAddForm extends React.Component {
                 type_file_accepted: this.state.selectedTypesFiles,
                 metadonnees: this.state.metadonnees,
                 status: this.state.status,
-                container_name: this.props.nameContainer.nameContainer
+                container_name: this.props.nameContainer.nameContainer,
+                token: this.props.auth.token
             })
                 .then(() => {
                     this.props.reload();
@@ -282,6 +285,7 @@ class ModelAddForm extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

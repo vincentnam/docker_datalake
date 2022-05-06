@@ -60,6 +60,7 @@ class DownloadHandleData extends React.Component {
         json_object.filetype = this.state.filetype.toString()
         json_object.beginDate = this.state.beginDate
         json_object.endDate = this.state.endDate
+        json_object.token = this.props.auth.token
 
         body1.push(json_object)
         var body = JSON.stringify(body1)
@@ -68,7 +69,8 @@ class DownloadHandleData extends React.Component {
             this.handleShow();
             api.post('handled-data-file', body, {
                 responseType: 'arraybuffer',
-                container_name: this.props.nameContainer.nameContainer
+                container_name: this.props.nameContainer.nameContainer,
+                token: this.props.auth.token
             })
                 .then(function (result) {
                     const url = window.URL.createObjectURL(new Blob([result.data], {type: 'application/zip'}));
@@ -374,6 +376,7 @@ class DownloadHandleData extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

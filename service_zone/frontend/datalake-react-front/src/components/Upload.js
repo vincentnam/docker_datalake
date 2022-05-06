@@ -153,7 +153,8 @@ class Upload extends React.Component {
         });
         api.post("models/params", {
             types_files: this.state.type_file_accepted,
-            container_name: this.props.nameContainer.nameContainer
+            container_name: this.props.nameContainer.nameContainer,
+            token: this.props.auth.token
         })
             .then((response) => {
                 this.setState({
@@ -220,7 +221,8 @@ class Upload extends React.Component {
                         type_file_accepted = t.type_file_accepted
                         api.post("models/params", {
                             types_files: type_file_accepted,
-                            container_name: this.props.nameContainer.nameContainer
+                            container_name: this.props.nameContainer.nameContainer,
+                            token: this.props.auth.token
                         })
                             .then((response) => {
                                 this.setState({
@@ -271,7 +273,8 @@ class Upload extends React.Component {
         if (name === "model") {
             if (value !== "") {
                 api.post("models/id", {
-                    id: value
+                    id: value,
+                    token: this.props.auth.token
                 })
                     .then((response) => {
                         this.setState({
@@ -516,7 +519,8 @@ class Upload extends React.Component {
                 linkFile: this.state.linkFile.trim(),
                 linkType: type_link,
                 othermeta: other,
-                container_name: this.props.nameContainer.nameContainer
+                container_name: this.props.nameContainer.nameContainer,
+                token: this.props.auth.token
             }, options)
                 .then(function () {
                     toast.success("L'upload a bien été fait !", {
@@ -529,7 +533,7 @@ class Upload extends React.Component {
                         draggable: true,
                         progress: undefined,
                     });
-                    setTimeout(function () { window.location.reload() }, 1500);
+                    // setTimeout(function () { window.location.reload() }, 1500);
                 })
                 .catch(function (error) {
                     toast.error("L'upload n'a pas réussi ! : " + error, {
@@ -843,6 +847,7 @@ class Upload extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

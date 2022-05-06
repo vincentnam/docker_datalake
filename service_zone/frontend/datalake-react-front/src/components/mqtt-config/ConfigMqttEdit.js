@@ -98,6 +98,7 @@ class ConfigMqttEdit extends React.Component {
                 topic: this.state.topic,
                 container_name: this.props.containerName,
                 status: this.state.status,
+                token: this.props.auth.token
             })
                 .then(() => {
                     this.props.reload();
@@ -233,6 +234,7 @@ class ConfigMqttEdit extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

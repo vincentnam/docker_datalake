@@ -22,7 +22,8 @@ class DetectionAnomalies extends React.Component {
 
     loadData() {
         api.post('getDataAnomalyAll', {
-            container_name: this.props.nameContainer.nameContainer
+            container_name: this.props.nameContainer.nameContainer,
+            token: this.props.auth.token
         })
             .then((response) => {
                 let result = [];
@@ -96,6 +97,7 @@ class DetectionAnomalies extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

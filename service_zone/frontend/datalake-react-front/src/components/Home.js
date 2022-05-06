@@ -218,7 +218,8 @@ class Home extends React.Component {
         selectedElements.forEach(element => {
             body.push({
                 'object_id': element.swift_object_id,
-                'container_name': element.swift_container
+                'container_name': element.swift_container,
+                'token': this.props.auth.token
             })
         })
 

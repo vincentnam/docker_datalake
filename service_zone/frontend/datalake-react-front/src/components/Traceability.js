@@ -32,7 +32,8 @@ class Traceability extends React.Component {
 
     loadTraceability() {
         api.post('uploadssh', {
-            container_name: this.props.nameContainer.nameContainer
+            container_name: this.props.nameContainer.nameContainer,
+            token: this.props.auth.token
         })
             .then((response) => {
                 this.setState({
@@ -189,6 +190,7 @@ class Traceability extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 
