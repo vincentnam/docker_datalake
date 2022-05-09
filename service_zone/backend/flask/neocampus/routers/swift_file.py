@@ -27,13 +27,14 @@ def swift_files():
         tags:
             - openstack_swift_router
     """
-    #     try:
-    #         token = request.get_json()['token']
-    #     except:
-    #         return jsonify({'error': 'Missing token'})
-    #
-    #     if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
-    #         return jsonify({'error': 'Wrong Token'})
+    request_result = request.get_json()[0]
+    try:
+        token = request_result['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
 
     swift_files = []
     zip_file_name = f'{str(uuid.uuid4().hex)}.zip'
