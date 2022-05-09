@@ -372,23 +372,23 @@ def typefile(typef):
     #Research the type file in function of the extension file
     if(typef == "txt"):
         type_file = "text/plain"
-    else if(typef == "xls" or typef == "xlsx" or typef == "csv"):
+    elif(typef == "xls" or typef == "xlsx" or typef == "csv"):
         type_file = "application/vnd.ms-excel"
-    else if(typef == "png"):
+    elif(typef == "png"):
         type_file = "image/png"
-    else if(typef == "jpg" or typef == "jpeg"):
+    elif(typef == "jpg" or typef == "jpeg"):
         type_file = "image/jpeg"
-    else if(typef == "json"):
+    elif(typef == "json"):
         type_file = "application/json"
-    else if(typef == "json"):
+    elif(typef == "json"):
         type_file = "application/json"
-    else if(typef == "json"):
+    elif(typef == "json"):
         type_file = "application/json"
-    else if(typef == "zip"):
+    elif(typef == "zip"):
         type_file = "application/x-zip-compressed"
-    else if(typef == "tar"):
+    elif(typef == "tar"):
         type_file = "application/x-gzip"
-    else if(typef == "sql"):
+    elif(typef == "sql"):
         type_file = "application/sql"
     else:
         type_file = "application/octet-stream"

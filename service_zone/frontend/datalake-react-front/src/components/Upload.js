@@ -585,7 +585,7 @@ class Upload extends React.Component {
        dropper.on("sending", function (file, xhr, formData) {
             let othermeta = this.state.othermeta
             let token = localStorage.getItem('token')
-            formData.append('othermeta', othermeta.toString());
+            formData.append('othermeta', othermeta);
             formData.append('token', token);
             formData.append('container_name', this.props.nameContainer.nameContainer);
         }.bind(this));

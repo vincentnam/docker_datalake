@@ -29,7 +29,13 @@ def get_last_raw_data():
         tags:
             - mongodb_router
     """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
 
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
     params = request.get_json()
 
     if(("limit" in request.get_json() and "offset" not in request.get_json()) or ("limit" not in request.get_json() and "offset" in request.get_json())):
@@ -82,9 +88,13 @@ def get_metadata():
             'filetype': request.get_json()['filetype'],
             'beginDate': request.get_json()['beginDate'],
             'endDate': request.get_json()['endDate'],
+            'token' : request.get_json()['token'],
         }
     except:
         return jsonify({'error': 'Missing required fields.'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], params['token']) == False:
+        return jsonify({'error': 'Wrong Token'})
 
     if(params.get('filetype') == ""):
         return jsonify({'error': 'Missing required fields.'})
