@@ -28,7 +28,7 @@ class Models extends React.Component {
     loadModel() {
         api.post('models/show/all', {
             container_name: this.props.nameContainer.nameContainer,
-            token: this.props.auth.token
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -41,7 +41,7 @@ class Models extends React.Component {
 
         api.post('models/cache/all', {
             container_name: this.props.nameContainer.nameContainer,
-            token: this.props.auth.token
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 console.log()

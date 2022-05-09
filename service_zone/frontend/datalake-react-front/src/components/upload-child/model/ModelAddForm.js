@@ -36,7 +36,7 @@ class ModelAddForm extends React.Component {
 
     componentDidMount() {
         api.get('models/all', {
-            token: this.props.auth.token
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -124,7 +124,7 @@ class ModelAddForm extends React.Component {
                 metadonnees: this.state.metadonnees,
                 status: this.state.status,
                 container_name: this.props.nameContainer.nameContainer,
-                token: this.props.auth.token
+                token: localStorage.getItem('token')
             })
                 .then(() => {
                     this.props.reload();

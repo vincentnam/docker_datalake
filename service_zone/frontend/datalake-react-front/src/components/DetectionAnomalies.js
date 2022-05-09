@@ -23,7 +23,7 @@ class DetectionAnomalies extends React.Component {
     loadData() {
         api.post('getDataAnomalyAll', {
             container_name: this.props.nameContainer.nameContainer,
-            token: this.props.auth.token
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 let result = [];

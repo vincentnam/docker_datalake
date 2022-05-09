@@ -148,7 +148,7 @@ class DownloadRaw extends React.Component {
             body.push({
                 'object_id': element.swift_object_id,
                 'container_name': element.swift_container,
-                'token': this.props.auth.token
+                'token': localStorage.getItem('token')
             })
         })
 
@@ -246,7 +246,7 @@ class DownloadRaw extends React.Component {
                 sort_field: this.state.sort_field,
                 sort_value: this.state.sort_value,
                 container_name: this.props.nameContainer.nameContainer,
-                token: this.props.auth.token
+                token: localStorage.getItem('token')
             })
         } else {
             data = JSON.stringify({
@@ -256,7 +256,7 @@ class DownloadRaw extends React.Component {
                 beginDate: this.state.beginDate,
                 endDate: this.state.endDate,
                 container_name: this.props.nameContainer.nameContainer,
-                token: this.props.auth.token
+                token: localStorage.getItem('token')
             })
         }
 

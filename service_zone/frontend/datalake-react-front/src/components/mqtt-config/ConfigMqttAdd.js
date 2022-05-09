@@ -79,7 +79,7 @@ class ConfigMqttAdd extends React.Component {
                 topic: this.state.topic,
                 container_name: this.props.containerName,
                 status: this.state.status,
-                token: this.props.auth.token
+                token: localStorage.getItem('token')
             })
                 .then(() => {
                     this.props.reload();

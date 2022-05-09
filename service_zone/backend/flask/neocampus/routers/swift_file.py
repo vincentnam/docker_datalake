@@ -82,14 +82,6 @@ def download(filename):
         tags:
             - openstack_swift_router
     """
-    #     try:
-    #         token = request.get_json()['token']
-    #     except:
-    #         return jsonify({'error': 'Missing token'})
-    #
-    #     if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
-    #         return jsonify({'error': 'Wrong Token'})
-
     swift_files_directory = os.path.join(
         current_app.root_path, current_app.config['SWIFT_FILES_DIRECTORY'])
     return send_from_directory(directory=swift_files_directory, filename=filename)
@@ -112,13 +104,13 @@ def storage():
         tags:
             - openstack_swift_router
     """
-    #     try:
-    #         token = request.get_json()['token']
-    #     except:
-    #         return jsonify({'error': 'Missing token'})
-    #
-    #     if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
-    #         return jsonify({'error': 'Wrong Token'})
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
 
     file = request.get_json()["file"]
     filename = request.get_json()["filename"]
@@ -200,16 +192,14 @@ def upload():
             - openstack_swift_router
     """
     try:
-        token = request.get_json()['token']
+        token = request.form["token"]
     except:
         return jsonify({'error': 'Missing token'})
 
     if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
         return jsonify({'error': 'Wrong Token'})
 
-    print(request.files)
     file = request.files['file']
-    print(file)
 
     save_path = os.path.join(
         current_app.root_path, current_app.config['SWIFT_FILES_DIRECTORY'], file.filename)
@@ -245,7 +235,11 @@ def upload():
             return make_response(('Size mismatch', 500))
         else:
             other_meta = request.form["othermeta"]
-            type_file = request.form["typeFile"]
+
+
+            extension = file.filename.split(".")
+            extension = extension.pop()
+            type_file = mongo.typefile(extension)
 
             # File upload completely finished (end of chunks)
             print(f'File {file.filename} has been uploaded successfully')
@@ -278,7 +272,7 @@ def upload():
             # Multithreading for upload file from backend to Openstack Swift in background
             upload_processing = Process(
                 target=mongo.insert_datalake, 
-                name="Upload_Openstack_Swift", 
+                name="Upload_Openstack_Swift",
                 args=(
                     file_content, user, key, authurl, 
                     container_name, filename, processed_data_area_service, data_process, 

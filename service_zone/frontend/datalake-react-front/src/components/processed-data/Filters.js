@@ -77,7 +77,7 @@ class Filters extends React.Component {
     }
     loadBuckets() {
         api.get('bucket', {
-            token: this.props.auth.token
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -91,7 +91,7 @@ class Filters extends React.Component {
     loadMeasurements() {
         api.post('measurements', {
             bucket: this.props.nameContainer.nameContainer,
-            token: this.props.auth.token
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -108,7 +108,7 @@ class Filters extends React.Component {
         api.post('topics', {
             bucket: this.props.nameContainer.nameContainer,
             measurement: measurement,
-            token: this.props.auth.token
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -154,7 +154,7 @@ class Filters extends React.Component {
                 topic: this.state.topic,
                 startDate: moment(start).format('X'),
                 endDate: moment(end).format('X'),
-                token: this.props.auth.token
+                token: localStorage.getItem('token')
             })
                 .then((response) => {
                     let result = [];

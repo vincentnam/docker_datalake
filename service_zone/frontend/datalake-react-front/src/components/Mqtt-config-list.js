@@ -40,7 +40,7 @@ class MqttConfigList extends React.Component {
     loadMqttConfig() {
         api.post('mqtt/all', {
             container_name: this.props.nameContainer.nameContainer,
-            token: this.props.auth.token
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -55,7 +55,7 @@ class MqttConfigList extends React.Component {
     loadMqttConfigStatus() {
         api.post('mqtt/status/actif', {
             container_name: this.props.nameContainer.nameContainer,
-            token: this.props.auth.token
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({

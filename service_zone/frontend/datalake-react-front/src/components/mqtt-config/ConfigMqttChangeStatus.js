@@ -28,7 +28,7 @@ class ConfigMqttChangeStatus extends React.Component {
         api.post('mqtt/status/change', {
             id: this.props.selectElement._id,
             status: !this.props.selectElement.status,
-            token: this.props.auth.token
+            token: localStorage.getItem('token')
         })
             .then(() => {
                 this.props.reload();

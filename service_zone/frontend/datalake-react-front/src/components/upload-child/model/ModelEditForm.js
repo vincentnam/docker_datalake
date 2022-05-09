@@ -51,7 +51,7 @@ class ModelEditForm extends React.Component {
         });
 
         api.get('models/all',{
-            token: this.props.auth.token
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -144,7 +144,7 @@ class ModelEditForm extends React.Component {
                 metadonnees: this.state.metadonnees,
                 status: this.state.status,
                 container_name: this.props.nameContainer.nameContainer,
-                token: this.props.auth.token
+                token: localStorage.getItem('token')
             })
                 .then(() => {
                     this.props.reload();

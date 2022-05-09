@@ -175,7 +175,7 @@ class Upload extends React.Component {
         api.post("models/params", {
             types_files: this.state.type_file_accepted,
             container_name: this.props.nameContainer.nameContainer,
-            token: this.props.auth.token
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -246,7 +246,7 @@ class Upload extends React.Component {
                         api.post("models/params", {
                             types_files: type_file_accepted,
                             container_name: this.props.nameContainer.nameContainer,
-                            token: this.props.auth.token
+                            token: localStorage.getItem('token')
                         })
                             .then((response) => {
                                 this.setState({
@@ -298,7 +298,7 @@ class Upload extends React.Component {
             if (value !== "") {
                 api.post("models/id", {
                     id: value,
-                    token: this.props.auth.token
+                    token: localStorage.getItem('token')
                 })
                     .then((response) => {
                         this.setState({
@@ -544,7 +544,7 @@ class Upload extends React.Component {
                 linkType: type_link,
                 othermeta: other,
                 container_name: this.props.nameContainer.nameContainer,
-                token: this.props.auth.token
+                token: localStorage.getItem('token')
             }, options)
                 .then( () => {
                     toast.success("L'upload a bien été fait !", {
@@ -583,10 +583,10 @@ class Upload extends React.Component {
        let dropper = this.state.dropper
 
        dropper.on("sending", function (file, xhr, formData) {
-           let othermeta = this.state.othermeta
-           let typeFile = this.state.typeFile
+            let othermeta = this.state.othermeta
+            let token = localStorage.getItem('token')
             formData.append('othermeta', othermeta.toString());
-            formData.append('typeFile', typeFile.toString());
+            formData.append('token', token);
             formData.append('container_name', this.props.nameContainer.nameContainer);
         }.bind(this));
 
