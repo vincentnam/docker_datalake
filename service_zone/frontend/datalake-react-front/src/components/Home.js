@@ -64,6 +64,7 @@ class Home extends React.Component {
             routeName = '/last-raw-data'
             data = JSON.stringify({
                 container_name: this.props.nameContainer.nameContainer,
+                token: this.props.auth.token,
                 limit: this.state.perPage,
                 offset: this.state.offset,
                 sort_field: this.state.sort_field,
@@ -77,6 +78,7 @@ class Home extends React.Component {
             this.state.beginDate !== undefined) {
             data = JSON.stringify({
                 container_name: this.props.nameContainer.nameContainer,
+                token: this.props.auth.token,
                 limit: this.state.perPage,
                 offset: this.state.offset,
                 filetype: this.state.filetype,
@@ -91,6 +93,7 @@ class Home extends React.Component {
             this.state.beginDate !== undefined) {
             data = JSON.stringify({
                 container_name: this.props.nameContainer.nameContainer,
+                token: this.props.auth.token,
                 limit: this.state.perPage,
                 offset: this.state.offset,
                 filetype: this.state.filetype,

@@ -101,44 +101,54 @@ class Login extends React.Component {
 
     render() {
         return (
-            <div className="container">
-                <div className="login-wrapper">
-                    <Card
-                        border="primary"
-                        text={'dark'}
-                        style={{ width: '20rem' }}
-                    >
-                        <Card.Body>
-                            <div className="d-flex justify-content-center">
-                                <h1>Login</h1>
-                            </div>
-                            <Form onSubmit={this.handleSubmit}>
-                                <FormGroup>
-                                    <FormLabel>Pseudo</FormLabel>
-                                    <Form.Control
-                                        type="text"
-                                        name="user"
-                                        onChange={this.handleChange}
-                                        value={this.state.user}
-                                    />
-                                </FormGroup>
-                                <FormGroup>
-                                    <FormLabel>Mot de passe</FormLabel>
-                                    <Form.Control
-                                        type="password"
-                                        name="password"
-                                        onChange={this.handleChange}
-                                        value={this.state.password}
-                                    />
-                                </FormGroup>
-                                <div className="mt-4 d-flex justify-content-center">
-                                    <Button className="btn buttonModel" type="submit">Connexion</Button>
+            <div>
+                <nav className="navbar navbar-expand-lg navbar-dark">
+                    <div className="container">
+                        <div className="d-flex align-content-center">
+                            <a className="navbar-brand mt-1" href="/home"><img src="images/logo-datalake.svg" alt="neOCampus"/></a>
+                            <a href="/home" className="navbar-brand-text">Datalake</a>
+                        </div>
+                    </div>
+                </nav>
+                <div className="container">
+                    <div className="login-wrapper">
+                        <Card
+                            border="primary"
+                            text={'dark'}
+                            style={{ width: '20rem' }}
+                        >
+                            <Card.Body>
+                                <div className="d-flex justify-content-center">
+                                    <h1>Login</h1>
                                 </div>
-                            </Form>
-                        </Card.Body>
-                    </Card>
+                                <Form onSubmit={this.handleSubmit}>
+                                    <FormGroup>
+                                        <FormLabel>Pseudo</FormLabel>
+                                        <Form.Control
+                                            type="text"
+                                            name="user"
+                                            onChange={this.handleChange}
+                                            value={this.state.user}
+                                        />
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <FormLabel>Mot de passe</FormLabel>
+                                        <Form.Control
+                                            type="password"
+                                            name="password"
+                                            onChange={this.handleChange}
+                                            value={this.state.password}
+                                        />
+                                    </FormGroup>
+                                    <div className="mt-4 d-flex justify-content-center">
+                                        <Button className="btn buttonModel" type="submit">Connexion</Button>
+                                    </div>
+                                </Form>
+                            </Card.Body>
+                        </Card>
+                    </div>
+                    <ToastContainer/>
                 </div>
-                <ToastContainer/>
             </div>
         )
     }
