@@ -159,7 +159,16 @@ class DownloadRaw extends React.Component {
                     let url = result.data.swift_zip
                     const link = document.createElement('a');
                     link.href = url;
+                    console.log(link.href);
+
                     link.click();
+
+                    // const url = window.URL.createObjectURL(new Blob([result.data.swift_zip], {type: 'application/zip'}));
+                    // let link = document.createElement('a');
+                    // link.href = url;
+                    // link.setAttribute('download', 'download.zip'); //or any other extension
+                    // document.body.appendChild(link);
+                    // link.click();
                     window.URL.revokeObjectURL(url);
                     toast.success("Le téléchargement a été effectué avec succès !", {
                         theme: "colored",
@@ -236,7 +245,8 @@ class DownloadRaw extends React.Component {
                 endDate: this.state.endDate,
                 sort_field: this.state.sort_field,
                 sort_value: this.state.sort_value,
-                container_name: this.props.nameContainer.nameContainer
+                container_name: this.props.nameContainer.nameContainer,
+                token: this.props.auth.token
             })
         } else {
             data = JSON.stringify({
@@ -245,7 +255,8 @@ class DownloadRaw extends React.Component {
                 filetype: this.state.filetype,
                 beginDate: this.state.beginDate,
                 endDate: this.state.endDate,
-                container_name: this.props.nameContainer.nameContainer
+                container_name: this.props.nameContainer.nameContainer,
+                token: this.props.auth.token
             })
         }
 

@@ -73,8 +73,9 @@ class DownloadHandleData extends React.Component {
                 token: this.props.auth.token
             })
                 .then(function (result) {
+                    console.log(result.data)
                     const url = window.URL.createObjectURL(new Blob([result.data], {type: 'application/zip'}));
-                    const link = document.createElement('a');
+                    let link = document.createElement('a');
                     link.href = url;
                     link.setAttribute('download', 'file.zip'); //or any other extension
                     document.body.appendChild(link);
@@ -160,7 +161,8 @@ class DownloadHandleData extends React.Component {
                 filetype: this.state.filetype.toString(),
                 beginDate: this.state.beginDate,
                 endDate: this.state.endDate,
-                container_name: this.props.nameContainer.nameContainer
+                container_name: this.props.nameContainer.nameContainer,
+                token: this.props.auth.token
             }),
             xhrFields: {
                 withCredentials: true

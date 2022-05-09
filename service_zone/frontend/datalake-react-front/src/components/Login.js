@@ -80,6 +80,8 @@ class Login extends React.Component {
                     this.props.editAuthRoles(response.data.roles);
                     this.props.editAuthProjects(response.data.projects);
                     this.props.editAuthToken(response.data.token);
+                    localStorage.setItem('token', response.data.token);
+                    localStorage.setItem('isLogin', true);
                     this.props.editAuthLogin(true);
                     this.props.history.push('/home');
 

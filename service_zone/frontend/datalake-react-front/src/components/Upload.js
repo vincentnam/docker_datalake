@@ -102,6 +102,7 @@ class Upload extends React.Component {
         this.reloadEdit = this.reloadEdit.bind(this);
         this.handleSubmitChunking = this.handleSubmitChunking.bind(this)
         this.setDropper = this.setDropper.bind(this)
+        this.reloadPage = this.reloadPage.bind(this)
     }
 
     componentDidMount(){
@@ -129,6 +130,26 @@ class Upload extends React.Component {
 
         myDropzone.on("addedfile", file => {
             console.log("A file has been added");
+        });
+    }
+
+    reloadPage(){
+        this.setState({
+            meta: '',
+            typeFile: '',
+            filename: '',
+            type: 0,
+            data: [],
+            file: '',
+            othermeta: [],
+            type_file_accepted: [],
+            loading: false,
+            percentProgressBar: 0,
+            textProgressBar: '',
+            linkFile: "",
+            uploadLink: true,
+            models: [],
+            model: "",
         });
     }
 
@@ -206,6 +227,9 @@ class Upload extends React.Component {
 
         let type_file_accepted = [];
         if (name === "type") {
+            this.setState({
+                type: value
+            });
             let types = [];
             if(this.props.nameContainer.nameContainer === "neOCampus") {
                 types = [configWithSGE.types];
@@ -522,7 +546,7 @@ class Upload extends React.Component {
                 container_name: this.props.nameContainer.nameContainer,
                 token: this.props.auth.token
             }, options)
-                .then(function () {
+                .then( () => {
                     toast.success("L'upload a bien été fait !", {
                         theme: "colored",
                         position: "top-right",
@@ -533,7 +557,7 @@ class Upload extends React.Component {
                         draggable: true,
                         progress: undefined,
                     });
-                    // setTimeout(function () { window.location.reload() }, 1500);
+                    this.reloadPage();
                 })
                 .catch(function (error) {
                     toast.error("L'upload n'a pas réussi ! : " + error, {

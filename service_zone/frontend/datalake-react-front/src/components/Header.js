@@ -1,9 +1,10 @@
 import React from "react";
-import {NavLink} from 'react-router-dom';
+import {NavLink, useHistory} from 'react-router-dom';
 import api from '../api/api';
 import {config} from "../configmeta/projects";
 import {connect} from "react-redux";
 import {editNameContainer} from "../store/nameContainerAction";
+import {editAuthLogin, editAuthProjects, editAuthRoles, editAuthToken} from "../store/authAction";
 
 class Header extends React.Component {
 
@@ -13,16 +14,28 @@ class Header extends React.Component {
             anomalies: [],
             container: this.props.nameContainer.nameContainer
         };
+        this.logout = this.logout.bind(this);
     }
 
     componentDidMount() {
         this.countData(this.state.container);
     }
 
+    logout() {
+        this.props.editAuthRoles([]);
+        this.props.editAuthProjects([]);
+        this.props.editAuthToken("");
+        this.props.editAuthLogin(true);
+        localStorage.removeItem('token');
+        localStorage.removeItem('isLogin');
+        this.props.history.push('/');
+        window.location.reload();
+    }
+
     countData(container_name) {
         api.post('getDataAnomalyAll', {
             container_name: container_name,
-            token: this.props.auth.token
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -121,6 +134,11 @@ class Header extends React.Component {
                         </span>
                     }
                 </NavLink>
+
+                <div className="d-md-flex justify-content-center">
+                    <button type="submit" className="btn btn-oran-header" onClick={this.logout}><b>Déconnexion</b></button>
+                </div>
+
             </nav>
         );
         return (
@@ -153,4 +171,9 @@ const mapStateToProps = (state) => {
     }
 }
 
-export default connect(mapStateToProps, {editNameContainer})(Header)
+function WithNavigate(props) {
+    let history = useHistory();
+    return <Header {...props} history={history} />
+}
+
+export default connect(mapStateToProps, {editNameContainer, editAuthRoles, editAuthToken, editAuthProjects, editAuthLogin})(WithNavigate)

@@ -81,6 +81,18 @@ body {
     color: #ffffff;
 }
 
+.btn-oran-header {
+    background-color: #ea973b;
+    color: #ffffff;
+    border-radius: 10px;
+    border: none;
+}
+
+.btn-oran-header:hover {
+    background-color: #e58419;
+    color: #ffffff;
+}
+
 .main-download .tab-download .nav-link,
 .main-download .tab-download .nav-link.active {
     background-color: transparent;

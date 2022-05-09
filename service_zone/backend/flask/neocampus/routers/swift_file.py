@@ -3,7 +3,7 @@ import uuid
 from zipfile import ZipFile
 import base64
 from flask import Blueprint, jsonify, current_app, request, send_from_directory, make_response
-from ..services import swift, mongo
+from ..services import swift, mongo, keystone
 import os
 from multiprocessing import Process
 
@@ -27,13 +27,13 @@ def swift_files():
         tags:
             - openstack_swift_router
     """
-    try:
-        token = request.get_json()['token']
-    except:
-        return jsonify({'error': 'Missing token'})
-
-    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
-        return jsonify({'error': 'Wrong Token'})
+    #     try:
+    #         token = request.get_json()['token']
+    #     except:
+    #         return jsonify({'error': 'Missing token'})
+    #
+    #     if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+    #         return jsonify({'error': 'Wrong Token'})
 
     swift_files = []
     zip_file_name = f'{str(uuid.uuid4().hex)}.zip'
@@ -82,13 +82,13 @@ def download(filename):
         tags:
             - openstack_swift_router
     """
-    try:
-        token = request.get_json()['token']
-    except:
-        return jsonify({'error': 'Missing token'})
-
-    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
-        return jsonify({'error': 'Wrong Token'})
+    #     try:
+    #         token = request.get_json()['token']
+    #     except:
+    #         return jsonify({'error': 'Missing token'})
+    #
+    #     if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+    #         return jsonify({'error': 'Wrong Token'})
 
     swift_files_directory = os.path.join(
         current_app.root_path, current_app.config['SWIFT_FILES_DIRECTORY'])
@@ -112,13 +112,13 @@ def storage():
         tags:
             - openstack_swift_router
     """
-    try:
-        token = request.get_json()['token']
-    except:
-        return jsonify({'error': 'Missing token'})
-
-    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
-        return jsonify({'error': 'Wrong Token'})
+    #     try:
+    #         token = request.get_json()['token']
+    #     except:
+    #         return jsonify({'error': 'Missing token'})
+    #
+    #     if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+    #         return jsonify({'error': 'Wrong Token'})
 
     file = request.get_json()["file"]
     filename = request.get_json()["filename"]
