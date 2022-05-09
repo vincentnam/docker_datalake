@@ -222,7 +222,7 @@ class Home extends React.Component {
             body.push({
                 'object_id': element.swift_object_id,
                 'container_name': element.swift_container,
-                'token': this.props.auth.token
+                'token': localStorage.getItem('token')
             })
         })
 
@@ -233,7 +233,6 @@ class Home extends React.Component {
                     let url = result.data.swift_zip
                     const link = document.createElement('a');
                     link.href = url;
-
                     link.click();
                     window.URL.revokeObjectURL(url);
                 })
