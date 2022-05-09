@@ -135,8 +135,11 @@ class Header extends React.Component {
                     }
                 </NavLink>
 
-                <div className="d-md-flex justify-content-center">
-                    <button type="submit" className="btn btn-oran-header" onClick={this.logout}><b>Déconnexion</b></button>
+                <div className="d-flex justify-content-center align-content-center mt-1">
+                    <div>
+                        <button type="submit" className="btn btn-oran-header" onClick={this.logout}><b>Déconnexion</b>
+                        </button>
+                    </div>
                 </div>
 
             </nav>
@@ -173,7 +176,13 @@ const mapStateToProps = (state) => {
 
 function WithNavigate(props) {
     let history = useHistory();
-    return <Header {...props} history={history} />
+    return <Header {...props} history={history}/>
 }
 
-export default connect(mapStateToProps, {editNameContainer, editAuthRoles, editAuthToken, editAuthProjects, editAuthLogin})(WithNavigate)
+export default connect(mapStateToProps, {
+    editNameContainer,
+    editAuthRoles,
+    editAuthToken,
+    editAuthProjects,
+    editAuthLogin
+})(WithNavigate)
