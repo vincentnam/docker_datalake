@@ -11,6 +11,9 @@ container_name_history = ""
 container_name_collection_upload = ""
 container_name_processed_data = ""
 mongodb_url = "mongodb://127.0.0.1:27017"
+mongodb_user = ""
+mongodb_pwd = ""
+mongodb_db_auth = ""
 
 #Influxdb
 token_influxdb = ""

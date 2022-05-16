@@ -16,7 +16,7 @@ def history_data(
     container_name = config.container_name_history
 
     # Configuration de mongo for Historique
-    client = MongoClient(mongodb_url, connect=False)
+    client = MongoClient(mongodb_url, username=config.mongodb_user, password=config.mongodb_pwd, authSource=config.mongodb_db_auth, connect=False)
     db = client.data_historique
     coll = db[container_name]
     
