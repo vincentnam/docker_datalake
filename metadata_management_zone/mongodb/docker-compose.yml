@@ -1,0 +1,15 @@
+version: '3'
+services:
+  mongo_datalake:
+    image: mongo:latest
+    volumes:
+      - ./data:/data/db
+      - ./ssl/certification.pem:/data/certs/certification.pem
+      - ./ssl/certification.key:/data/certs/certification.key
+
+    ports:
+      - "27017:27017"
+      - "443:443"
+    restart: always
+    command: --auth --tlsMode allowTLS --tlsCertificateKeyFile /data/certs/neocampus-datalake-mongodb.dev.modiscloud.net.pem --tlsAllowConnectionsWithoutCertificates
+

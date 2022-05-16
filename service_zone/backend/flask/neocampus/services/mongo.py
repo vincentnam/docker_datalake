@@ -18,7 +18,7 @@ def get_swift_original_object_name(swift_container_name, swift_object_id):
     :return: swift original object/file name
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.swift
     mongo_collection = mongo_db[swift_container_name]
     metadata_swift = mongo_collection.find_one(
@@ -28,7 +28,7 @@ def get_swift_original_object_name(swift_container_name, swift_object_id):
 
 def get_last_metadata(db_name, params):
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.swift
     collection = mongo_db[db_name]
 
@@ -51,7 +51,7 @@ def get_last_metadata(db_name, params):
 
 def get_metadata(db_name, params):
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.swift
     collection = mongo_db[db_name]
 
@@ -90,7 +90,7 @@ def get_metadata(db_name, params):
 
 def get_id():
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     return mongo_client.stats.swift.find_one_and_update({"type": "object_id_file"}, {"$inc": {"object_id": 1}})[
         "object_id"]
 
@@ -98,7 +98,7 @@ def get_id():
 def init_id():
     id_doc = {"type": "object_id_file", "object_id": 0}
     mongodb_url = current_app.config['MONGO_URL']
-    client = MongoClient(mongodb_url, connect=False).stats.swift
+    client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False).stats.swift
     if MongoClient(mongodb_url).stats.swift.find_one(
             {"type": "object_id_file"}) is None:
         client.insert_one(id_doc)
@@ -111,7 +111,7 @@ def insert_datalake(file_content, user, key, authurl, container_name,
                     mongodb_url, other_data):
     conn = swiftclient.Connection(user=user, key=key,
                                   authurl=authurl, insecure=True)
-    client = MongoClient(mongodb_url, connect=False)
+    client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     db = client.swift
     coll = db[container_name]
     if content_type is not None:
@@ -162,7 +162,7 @@ def insert_datalake(file_content, user, key, authurl, container_name,
 
 def get_handled_data(params):
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'])
 
     mongo_database = ""
     collection_name = ""
@@ -208,7 +208,7 @@ def get_models_all(container_name):
     :return: all models
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
     metadata_models = models.find({"container_name": container_name})
@@ -220,7 +220,7 @@ def get_models_show_all(container_name):
     :return: all models
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
     metadata_models = models.find({"status": True, "container_name": container_name})
@@ -232,7 +232,7 @@ def get_models_all_cache(container_name):
     :return: all models
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
     metadata_models = models.find({"status": False, "container_name": container_name})
@@ -245,7 +245,7 @@ def get_model_id(id):
     :return: a model
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
     query = {"_id": ObjectId(id)}
@@ -260,7 +260,7 @@ def get_models_params(param, container_name):
     :return: all models
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
     query = {"type_file_accepted": param, "status": True, "container_name": container_name}
@@ -276,7 +276,7 @@ def add_model(param):
     :return: done
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
     models.insert_one(param)
@@ -291,7 +291,7 @@ def update_model(param):
     :return: done
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
     query = {"_id": ObjectId(param['id'])}
@@ -317,7 +317,7 @@ def get_anomaly(params,measurement,topic, container_name):
     :return: metadate
     """
     mongodb_url = current_app.config['MONGO_URL']
-    collection = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
+    collection = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False).data_anomaly.influxdb_anomaly
 
     start_date =  datetime.datetime.strptime(str(params['beginDate']), "%Y-%m-%dT%H:%M:%S.%fZ")
     end_date = datetime.datetime.strptime(str(params['endDate']), "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -356,7 +356,7 @@ def get_anomaly_all(container_name):
     :return: metadate
     """
     mongodb_url = current_app.config['MONGO_URL']
-    collection = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
+    collection = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False).data_anomaly.influxdb_anomaly
 
     metadata = collection.find({'container_name': container_name})
     nbr_metadata = metadata.count()

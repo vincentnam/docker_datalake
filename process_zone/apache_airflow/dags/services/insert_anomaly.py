@@ -7,7 +7,7 @@ import datetime
 def insert_anomaly(anomaly,endDate,container_name):
     mongodb_url = config.mongodb_url
     anomalie = anomaly
-    mongo_client = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
+    mongo_client = MongoClient(mongodb_url, username=config.mongodb_user, password=config.mongodb_pwd, authSource=config.mongodb_db_auth, connect=False).data_anomaly.influxdb_anomaly
     data_histor = mongo_client.find({ "container_name": container_name })
     new_date = endDate #datetime.datetime.now().isoformat() + "Z"
 

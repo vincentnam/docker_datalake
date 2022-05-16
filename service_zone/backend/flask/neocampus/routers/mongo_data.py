@@ -727,7 +727,7 @@ def count_anomalies_all():
         return jsonify({'error': 'Wrong Token'})
 
     mongodb_url = current_app.config['MONGO_URL']
-    collection = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
+    collection = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False).data_anomaly.influxdb_anomaly
     container_name = request.get_json()['container_name']
     print(container_name)
     metadata = collection.find({'container_name': container_name})
@@ -762,7 +762,7 @@ def list_upload_ssh():
 
     container_name = request.get_json()['container_name']
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.upload
     collection = mongo_db["file_upload"]
     
@@ -812,7 +812,7 @@ def create_mqtt_flux():
         "status": params['status']
     }
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.mqtt
     collection = mongo_db["flux"]
     collection.insert_one(flux)
@@ -863,7 +863,7 @@ def edit_mqtt_flux():
     }}
 
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.mqtt
     collection = mongo_db["flux"]
     collection.update_one(query, update_values, upsert=False)
@@ -898,7 +898,7 @@ def change_status_mqtt_flux():
     status_change = { "$set": { "status": params['status'] } }
 
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.mqtt
     collection = mongo_db["flux"]
     collection.update_one(query, status_change, upsert=False)
@@ -930,7 +930,7 @@ def show_mqtt_flux():
 
     container_name = params['container_name']
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.mqtt
     collection = mongo_db["flux"]
 
@@ -977,7 +977,7 @@ def show_mqtt_flux_actifs():
 
     container_name = params['container_name']
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.mqtt
     collection = mongo_db["flux"]
 
