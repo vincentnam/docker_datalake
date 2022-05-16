@@ -21,25 +21,20 @@ object Main {
 
     val batchDuration = config.getInt("mqtt.batchDuration")
 
-    val t = new java.util.Timer()
-    val task = new java.util.TimerTask {
-
-      def run() = {
-        val jssc = new JavaStreamingContext(sparkConf, Seconds(batchDuration))
-        val streamGetter = new StreamGetter(config)
-        val configCollectionStatus = streamGetter.getAllStreams()
-        println(configCollectionStatus)
-        for (configFlux <- configCollectionStatus.rdd.collect()) {
-          val thread = new Thread {
-            InsertMqttDataJob.start(configFlux, jssc)
-          }
-          thread.start()
+    do{
+      val jssc = new JavaStreamingContext(sparkConf, Seconds(batchDuration))
+      val streamGetter = new StreamGetter(config)
+      val configCollectionStatus = streamGetter.getAllStreams()
+      println(configCollectionStatus)
+      for (configFlux <- configCollectionStatus.rdd.collect()) {
+        val thread = new Thread {
+          InsertMqttDataJob.start(configFlux, jssc)
         }
-        jssc.start()
-        jssc.awaitTerminationOrTimeout(config.getLong("jssc.timeout"))
-        jssc.stop(stopSparkContext = true)
+        thread.start()
       }
-    }
-    t.scheduleAtFixedRate(task, 0, config.getLong("time.periode"))
+      jssc.start()
+      jssc.awaitTerminationOrTimeout(config.getLong("jssc.timeout"))
+      jssc.stop(stopSparkContext = true)
+    } while(true)
   }
 }
