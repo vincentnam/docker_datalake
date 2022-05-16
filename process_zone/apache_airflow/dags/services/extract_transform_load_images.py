@@ -33,7 +33,7 @@ def extract_transform_load_images(swift_result, swift_container, swift_id, proce
     
     #Configuration de mongo pour le processed data 
     container_name = config.container_name_processed_data
-    client = MongoClient(mongodb_url, connect=False)
+    client = MongoClient(mongodb_url, username=config.mongodb_user, password=config.mongodb_pwd, authSource=config.mongodb_db_auth, connect=False)
     db = client.data_conso
     collection = db[container_name]
     

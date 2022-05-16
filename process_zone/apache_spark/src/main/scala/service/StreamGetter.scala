@@ -5,7 +5,7 @@ import org.apache.spark.sql.{Dataset, Row, SparkSession}
 
 class StreamGetter(config: Config) {
 
-  val mongodbUri = s"mongodb://${config.getString("mongo.host")}:${config.getString("mongo.port")}/"
+  val mongodbUri = s"mongodb://${config.getString("mongo.user")}:${config.getString("mongo.pwd")}@${config.getString("mongo.host")}:${config.getString("mongo.port")}/?authSource=${config.getString("mongo.db.auth")}"
 
   val spark = SparkSession
     .builder()

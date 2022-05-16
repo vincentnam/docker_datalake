@@ -63,7 +63,7 @@ def ssh_file(
         
         #Connection to mongodb and variable for calback function
         mongodb_url = current_app.config['MONGO_URL']
-        mongo_client = MongoClient(mongodb_url, connect=False)
+        mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
         mongo_db = mongo_client.upload
         mongo_collection = mongo_db["file_upload"]
         new_value = True
