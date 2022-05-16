@@ -361,3 +361,36 @@ def get_anomaly_all(container_name):
     metadata = collection.find({'container_name': container_name})
     nbr_metadata = metadata.count()
     return nbr_metadata, metadata
+
+def typefile(typef):
+    """
+    Return the type_file with the extension in the parameter
+
+    :return: metadate
+    """
+    type_file = ""
+    #Research the type file in function of the extension file
+    if(typef == "txt"):
+        type_file = "text/plain"
+    elif(typef == "xls" or typef == "xlsx" or typef == "csv"):
+        type_file = "application/vnd.ms-excel"
+    elif(typef == "png"):
+        type_file = "image/png"
+    elif(typef == "jpg" or typef == "jpeg"):
+        type_file = "image/jpeg"
+    elif(typef == "json"):
+        type_file = "application/json"
+    elif(typef == "json"):
+        type_file = "application/json"
+    elif(typef == "json"):
+        type_file = "application/json"
+    elif(typef == "zip"):
+        type_file = "application/x-zip-compressed"
+    elif(typef == "tar"):
+        type_file = "application/x-gzip"
+    elif(typef == "sql"):
+        type_file = "application/sql"
+    else:
+        type_file = "application/octet-stream"
+
+    return type_file

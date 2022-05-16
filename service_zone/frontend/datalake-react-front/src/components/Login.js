@@ -4,7 +4,7 @@ import {toast, ToastContainer} from "react-toastify";
 import {connect} from "react-redux";
 import '../login.css';
 import {Button, Card, Form, FormGroup, FormLabel} from "react-bootstrap";
-import {editAuthToken, editAuthRoles, editAuthProjects} from "../store/authAction";
+import {editAuthToken, editAuthRoles, editAuthProjects, editAuthLogin} from "../store/authAction";
 import { useHistory } from 'react-router-dom';
 
 class Login extends React.Component {
@@ -80,7 +80,10 @@ class Login extends React.Component {
                     this.props.editAuthRoles(response.data.roles);
                     this.props.editAuthProjects(response.data.projects);
                     this.props.editAuthToken(response.data.token);
-                    this.props.history.push('/');
+                    localStorage.setItem('token', response.data.token);
+                    localStorage.setItem('isLogin', true);
+                    this.props.editAuthLogin(true);
+                    this.props.history.push('/home');
 
                 })
                 .catch(function (error) {
@@ -100,45 +103,54 @@ class Login extends React.Component {
 
     render() {
         return (
-            <div className="container">
-                <div className="login-wrapper">
-                    <Card
-                        border="primary"
-                        text={'dark'}
-                        style={{ width: '20rem' }}
-                    >
-                        <Card.Body>
-                            <div className="d-flex justify-content-center">
-                                <h1>Login</h1>
-                            </div>
-                            <Form onSubmit={this.handleSubmit}>
-                                <FormGroup>
-                                    <FormLabel>Pseudo</FormLabel>
-                                    <Form.Control
-                                        type="text"
-                                        name="user"
-                                        onChange={this.handleChange}
-                                        value={this.state.user}
-                                    />
-                                </FormGroup>
-                                <FormGroup>
-                                    <FormLabel>Mot de passe</FormLabel>
-                                    <Form.Control
-                                        type="password"
-                                        name="password"
-                                        onChange={this.handleChange}
-                                        value={this.state.password}
-                                    />
-                                </FormGroup>
-                                <div className="mt-4 d-flex justify-content-center">
-                                    <Button className="btn buttonModel" type="submit">Connexion</Button>
+            <div>
+                <nav className="navbar navbar-expand-lg navbar-dark">
+                    <div className="container">
+                        <div className="d-flex align-content-center">
+                            <a className="navbar-brand mt-1" href="/home"><img src="images/logo-datalake.svg" alt="neOCampus"/></a>
+                            <a href="/home" className="navbar-brand-text">Datalake</a>
+                        </div>
+                    </div>
+                </nav>
+                <div className="container">
+                    <div className="login-wrapper">
+                        <Card
+                            border="primary"
+                            text={'dark'}
+                            style={{ width: '20rem' }}
+                        >
+                            <Card.Body>
+                                <div className="d-flex justify-content-center">
+                                    <h1>Login</h1>
                                 </div>
-                            </Form>
-                        </Card.Body>
-                    </Card>
-
+                                <Form onSubmit={this.handleSubmit}>
+                                    <FormGroup>
+                                        <FormLabel>Pseudo</FormLabel>
+                                        <Form.Control
+                                            type="text"
+                                            name="user"
+                                            onChange={this.handleChange}
+                                            value={this.state.user}
+                                        />
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <FormLabel>Mot de passe</FormLabel>
+                                        <Form.Control
+                                            type="password"
+                                            name="password"
+                                            onChange={this.handleChange}
+                                            value={this.state.password}
+                                        />
+                                    </FormGroup>
+                                    <div className="mt-4 d-flex justify-content-center">
+                                        <Button className="btn buttonModel" type="submit">Connexion</Button>
+                                    </div>
+                                </Form>
+                            </Card.Body>
+                        </Card>
+                    </div>
+                    <ToastContainer/>
                 </div>
-                <ToastContainer/>
             </div>
         )
     }
@@ -156,5 +168,5 @@ function WithNavigate(props) {
     return <Login {...props} history={history} />
 }
 
-export default connect(mapStateToProps, {editAuthRoles, editAuthToken, editAuthProjects})(WithNavigate)
+export default connect(mapStateToProps, {editAuthRoles, editAuthToken, editAuthProjects, editAuthLogin})(WithNavigate)
 

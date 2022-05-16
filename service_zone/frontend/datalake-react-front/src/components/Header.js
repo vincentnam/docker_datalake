@@ -1,9 +1,10 @@
 import React from "react";
-import {NavLink} from 'react-router-dom';
+import {NavLink, useHistory} from 'react-router-dom';
 import api from '../api/api';
 import {config} from "../configmeta/projects";
 import {connect} from "react-redux";
 import {editNameContainer} from "../store/nameContainerAction";
+import {editAuthLogin, editAuthProjects, editAuthRoles, editAuthToken} from "../store/authAction";
 
 class Header extends React.Component {
 
@@ -13,16 +14,28 @@ class Header extends React.Component {
             anomalies: [],
             container: this.props.nameContainer.nameContainer
         };
+        this.logout = this.logout.bind(this);
     }
 
     componentDidMount() {
         this.countData(this.state.container);
     }
 
+    logout() {
+        this.props.editAuthRoles([]);
+        this.props.editAuthProjects([]);
+        this.props.editAuthToken("");
+        this.props.editAuthLogin(true);
+        localStorage.removeItem('token');
+        localStorage.removeItem('isLogin');
+        this.props.history.push('/');
+        window.location.reload();
+    }
+
     countData(container_name) {
         api.post('getDataAnomalyAll', {
             container_name: container_name,
-            token: this.props.auth.token
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -62,7 +75,7 @@ class Header extends React.Component {
                 <NavLink exact
                          activeClassName="active"
                          className="nav-item nav-link"
-                         to="/">
+                         to="/home">
                     Home
                 </NavLink>
                 <NavLink activeClassName="active"
@@ -121,6 +134,14 @@ class Header extends React.Component {
                         </span>
                     }
                 </NavLink>
+
+                <div className="d-flex justify-content-center align-content-center mt-1">
+                    <div>
+                        <button type="submit" className="btn btn-oran-header" onClick={this.logout}><b>Déconnexion</b>
+                        </button>
+                    </div>
+                </div>
+
             </nav>
         );
         return (
@@ -129,8 +150,8 @@ class Header extends React.Component {
                     <div className="form-group required col-2">
                         <SelectProjects/>
                     </div>
-                    <a className="navbar-brand" href="/"><img src="images/logo-datalake.svg" alt="neOCampus"/></a>
-                    <a href="/" className="navbar-brand-text">Datalake</a>
+                    <a className="navbar-brand" href="/home"><img src="images/logo-datalake.svg" alt="neOCampus"/></a>
+                    <a href="/home" className="navbar-brand-text">Datalake</a>
                     <button className="navbar-toggler" type="button" data-bs-toggle="collapse"
                             data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup"
                             aria-expanded="false"
@@ -153,4 +174,15 @@ const mapStateToProps = (state) => {
     }
 }
 
-export default connect(mapStateToProps, {editNameContainer})(Header)
+function WithNavigate(props) {
+    let history = useHistory();
+    return <Header {...props} history={history}/>
+}
+
+export default connect(mapStateToProps, {
+    editNameContainer,
+    editAuthRoles,
+    editAuthToken,
+    editAuthProjects,
+    editAuthLogin
+})(WithNavigate)

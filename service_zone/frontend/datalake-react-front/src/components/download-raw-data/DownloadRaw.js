@@ -147,7 +147,8 @@ class DownloadRaw extends React.Component {
         selectedElements.forEach(element => {
             body.push({
                 'object_id': element.swift_object_id,
-                'container_name': element.swift_container
+                'container_name': element.swift_container,
+                'token': localStorage.getItem('token')
             })
         })
 
@@ -158,7 +159,16 @@ class DownloadRaw extends React.Component {
                     let url = result.data.swift_zip
                     const link = document.createElement('a');
                     link.href = url;
+                    console.log(link.href);
+
                     link.click();
+
+                    // const url = window.URL.createObjectURL(new Blob([result.data.swift_zip], {type: 'application/zip'}));
+                    // let link = document.createElement('a');
+                    // link.href = url;
+                    // link.setAttribute('download', 'download.zip'); //or any other extension
+                    // document.body.appendChild(link);
+                    // link.click();
                     window.URL.revokeObjectURL(url);
                     toast.success("Le téléchargement a été effectué avec succès !", {
                         theme: "colored",
@@ -235,7 +245,8 @@ class DownloadRaw extends React.Component {
                 endDate: this.state.endDate,
                 sort_field: this.state.sort_field,
                 sort_value: this.state.sort_value,
-                container_name: this.props.nameContainer.nameContainer
+                container_name: this.props.nameContainer.nameContainer,
+                token: localStorage.getItem('token')
             })
         } else {
             data = JSON.stringify({
@@ -244,7 +255,8 @@ class DownloadRaw extends React.Component {
                 filetype: this.state.filetype,
                 beginDate: this.state.beginDate,
                 endDate: this.state.endDate,
-                container_name: this.props.nameContainer.nameContainer
+                container_name: this.props.nameContainer.nameContainer,
+                token: localStorage.getItem('token')
             })
         }
 
@@ -456,6 +468,7 @@ class DownloadRaw extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

@@ -50,7 +50,8 @@ class ModelEditForm extends React.Component {
         });
 
         api.post('models/all', {
-            container_name: this.props.nameContainer.nameContainer
+            container_name: this.props.nameContainer.nameContainer,
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -142,7 +143,8 @@ class ModelEditForm extends React.Component {
                 type_file_accepted: types,
                 metadonnees: this.state.metadonnees,
                 status: this.state.status,
-                container_name: this.props.nameContainer.nameContainer
+                container_name: this.props.nameContainer.nameContainer,
+                token: localStorage.getItem('token')
             })
                 .then(() => {
                     toast.success(`Le modèle ${this.state.label} à bien été modifié !`, {
@@ -316,6 +318,7 @@ class ModelEditForm extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

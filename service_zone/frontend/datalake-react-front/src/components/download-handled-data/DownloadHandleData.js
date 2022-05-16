@@ -60,19 +60,20 @@ class DownloadHandleData extends React.Component {
         json_object.filetype = this.state.filetype.toString()
         json_object.beginDate = this.state.beginDate
         json_object.endDate = this.state.endDate
+        json_object.container_name = this.props.nameContainer.nameContainer
+        json_object.token = localStorage.getItem('token')
 
         body1.push(json_object)
-        var body = JSON.stringify(body1)
+        let body = JSON.stringify(body1)
 
         if (selectedElements.length) {
             this.handleShow();
             api.post('handled-data-file', body, {
-                responseType: 'arraybuffer',
-                container_name: this.props.nameContainer.nameContainer
+                responseType: 'arraybuffer'
             })
                 .then(function (result) {
                     const url = window.URL.createObjectURL(new Blob([result.data], {type: 'application/zip'}));
-                    const link = document.createElement('a');
+                    let link = document.createElement('a');
                     link.href = url;
                     link.setAttribute('download', 'file.zip'); //or any other extension
                     document.body.appendChild(link);
@@ -158,7 +159,8 @@ class DownloadHandleData extends React.Component {
                 filetype: this.state.filetype.toString(),
                 beginDate: this.state.beginDate,
                 endDate: this.state.endDate,
-                container_name: this.props.nameContainer.nameContainer
+                container_name: this.props.nameContainer.nameContainer,
+                token: localStorage.getItem('token')
             }),
             xhrFields: {
                 withCredentials: true
@@ -374,6 +376,7 @@ class DownloadHandleData extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 
