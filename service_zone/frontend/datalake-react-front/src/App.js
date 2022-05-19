@@ -12,13 +12,13 @@ import Login from "./components/Login";
 import {connect} from "react-redux";
 import Protected from "./Protected";
 
-const App = ({auth}) => {
 
+const App = ({auth}) => {
     return (
         <>
             <Switch>
                 {localStorage.getItem('isLogin') && localStorage.getItem('token') !== "" ? (
-                    <Route path='/' render={() => <Protected/>}/>
+                    <Route path='/' render={() => <Protected isAdmin={auth.isLoginAdmin}/> }/>
                 ) : (
                     <Route path="/">
                         <Login/>

@@ -4,7 +4,7 @@ import api from '../api/api';
 import {config} from "../configmeta/projects";
 import {connect} from "react-redux";
 import {editNameContainer} from "../store/nameContainerAction";
-import {editAuthLogin, editAuthProjects, editAuthRoles, editAuthToken} from "../store/authAction";
+import {editAuthProjects, editAuthRoles, editAuthToken, editAuthLoginAdmin} from "../store/authAction";
 
 class Header extends React.Component {
 
@@ -12,20 +12,41 @@ class Header extends React.Component {
         super(props);
         this.state = {
             anomalies: [],
-            container: this.props.nameContainer.nameContainer
+            container: this.props.nameContainer.nameContainer,
         };
         this.logout = this.logout.bind(this);
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
     }
 
     componentDidMount() {
         this.countData(this.state.container);
+        this.loadRolesProjectsUser();
+        console.log(this.props.auth);
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                this.props.editAuthRoles(response.data.roles);
+                this.props.editAuthProjects(response.data.projects);
+                response.data.roles.forEach((role) => {
+                    if(role.name === "admin"){
+                        this.props.editAuthLoginAdmin(true);
+                    }
+                })
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     logout() {
         this.props.editAuthRoles([]);
         this.props.editAuthProjects([]);
         this.props.editAuthToken("");
-        this.props.editAuthLogin(true);
+        this.props.editAuthLoginAdmin(false);
         localStorage.removeItem('token');
         localStorage.removeItem('isLogin');
         this.props.history.push('/');
@@ -61,7 +82,7 @@ class Header extends React.Component {
                     <select value={this.props.nameContainer.nameContainer}
                             onChange={(event) => {
                                 this.props.editNameContainer(event.target.value);
-                                this.countData(event.target.value)
+                                this.countData(event.target.value);
                             }}
                             name="project" className="form-select">
                         {listProjects}
@@ -119,6 +140,15 @@ class Header extends React.Component {
                                 <span>Flux MQTT</span>
                             </NavLink>
                         </li>
+                        {this.props.auth.isLoginAdmin === true &&
+                            <li>
+                                <NavLink activeClassName="active"
+                                         className="nav-item nav-link"
+                                         to="/config-users">
+                                    <span>Users</span>
+                                </NavLink>
+                            </li>
+                        }
                     </ul>
                 </div>
 
@@ -184,5 +214,5 @@ export default connect(mapStateToProps, {
     editAuthRoles,
     editAuthToken,
     editAuthProjects,
-    editAuthLogin
+    editAuthLoginAdmin
 })(WithNavigate)
