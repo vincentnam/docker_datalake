@@ -100,46 +100,6 @@ def login_token():
     return "OK"
 
 
-@keystone_router_bp.route('/role_assignments/add', methods=['POST'])
-def role_assignments_create():
-    """
-    ---
-    get:
-        description: login with token
-        responses:
-            '200':
-                description: call successful
-        tags:
-            - keystone_router
-    """
-    try:
-        token = request.get_json()['token']
-        user = request.get_json()['user']
-        scope = request.get_json()['scope']
-        role = request.get_json()['role']
-    except:
-        return jsonify({'error': 'Missing token'})
-
-    # Connection with admin for return roles of user
-    admin_auth = v3.Password(
-        auth_url=current_app.config['KEYSTONE_URL'],
-        username=current_app.config['USER_ADMIN'],
-        password=current_app.config['USER_ADMIN_PWD'],
-        project_id=current_app.config['PROJECT_ID'],
-        user_domain_id=current_app.config['USER_DOMAIN_ID']
-    )
-
-    admin_sess = keystone_session.Session(auth=admin_auth)
-    admin_ks = client.Client(session=admin_sess)
-
-    try:
-        admin_ks.role_assignments.create(role=role,user=user,scope=scope)
-    except:
-        return jsonify({'error': 'Error role assignment'})
-
-    return jsonify({'role_assignments': "Add"})
-
-
 @keystone_router_bp.route('/users', methods=['POST'])
 def get_users():
     """
@@ -328,7 +288,7 @@ def role_assignments_create():
         project_id=current_app.config['PROJECT_ID']
     )
     admin_sess = keystone_session.Session(auth=admin_auth)
-    admin_ks = client.Client(session=admin_sess)
+crea    admin_ks = client.Client(session=admin_sess)
 
     try:
         admin_ks.role_assignments.create(role=role,user=user,scope=scope)
