@@ -303,8 +303,8 @@ def role_assignments_create():
     try:
         token = request.get_json()['token']
         user = request.get_json()['user']
-        scope = request.get_json()['scope']
         role = request.get_json()['role']
+        project = request.get_json()['project']
     except:
         return jsonify({'error': 'Missing token'})
 
@@ -318,12 +318,7 @@ def role_assignments_create():
     )
     admin_sess = keystone_session.Session(auth=admin_auth)
     admin_ks = client.Client(session=admin_sess)
-
-    try:
-        admin_ks.role_assignments.create(role=role,user=user,scope=scope)
-    except:
-        return jsonify({'error': 'Error role assignment'})
-
+    admin_ks.roles.grant(role=role,user=user,project=project)
     return jsonify({'role_assignments': "Add"})
 
 @keystone_router_bp.route('/role_assignments/delete', methods=['POST'])
@@ -341,8 +336,8 @@ def role_assignments_delete():
     try:
         token = request.get_json()['token']
         user = request.get_json()['user']
-        scope = request.get_json()['scope']
         role = request.get_json()['role']
+        project = request.get_json()['project']
     except:
         return jsonify({'error': 'Missing token'})
 
@@ -356,10 +351,6 @@ def role_assignments_delete():
     )
     admin_sess = keystone_session.Session(auth=admin_auth)
     admin_ks = client.Client(session=admin_sess)
-
-    try:
-        admin_ks.role_assignments.delete(role=role,user=user,scope=scope)
-    except:
-        return jsonify({'error': 'Error role assignment'})
-
+    admin_ks.roles.revoke(role=role,user=user,project=project)
     return jsonify({'role_assignments': "Delete"})
+    
