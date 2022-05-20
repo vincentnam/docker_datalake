@@ -82,13 +82,18 @@ class Login extends React.Component {
                     this.props.editAuthToken(response.data.token);
                     localStorage.setItem('token', response.data.token);
                     localStorage.setItem('isLogin', true);
+                    this.props.history.push('/home');
+                    let isAdmin = false;
                     response.data.roles.forEach((role) => {
                         if(role.name === "admin"){
-                            this.props.editAuthLoginAdmin(true);
+                            isAdmin = true;
                         }
                     });
-
-                    this.props.history.push('/home');
+                    if(isAdmin === true){
+                        this.props.editAuthLoginAdmin(true);
+                    } else {
+                        this.props.editAuthLoginAdmin(false);
+                    }
 
                 })
                 .catch(function (error) {
