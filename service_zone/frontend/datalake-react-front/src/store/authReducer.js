@@ -1,10 +1,10 @@
-import { EDIT_AUTH_PROJECTS, EDIT_AUTH_ROLES, EDIT_AUTH_TOKEN, EDIT_AUTH_LOGIN } from "./types"
+import { EDIT_AUTH_PROJECTS, EDIT_AUTH_ROLES, EDIT_AUTH_TOKEN, EDIT_AUTH_LOGIN_ADMIN } from "./types"
 
 const initialState = {
+    isLoginAdmin: false,
     token: "",
     projects: [],
     roles: [],
-    isLogin: false
 };
 
 export function authReducer(state = initialState, action) {
@@ -24,10 +24,10 @@ export function authReducer(state = initialState, action) {
                 ...state,
                 token: action.payload
             };
-        case EDIT_AUTH_LOGIN:
+        case EDIT_AUTH_LOGIN_ADMIN:
             return {
                 ...state,
-                isLogin: action.payload
+                isLoginAdmin: action.payload
             };
         default:
             return state;

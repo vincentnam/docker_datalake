@@ -1,5 +1,5 @@
 import React from 'react';
-import {Switch,Route} from 'react-router-dom'
+import {Switch, Route} from 'react-router-dom'
 import Header from "./components/Header";
 import Home from './components/Home';
 import {ProcessedDataVisualisationTimeSeries} from './components/Processed-data-visualisation-time-series';
@@ -9,9 +9,10 @@ import Models from './components/Models';
 import DetectionAnomalies from './components/DetectionAnomalies';
 import Traceability from './components/Traceability';
 import MqttConfigList from "./components/Mqtt-config-list";
+import UsersRolesPojectsConfiguration from "./components/Users-roles-pojects-configuration";
 
-const Protected = () => {
-    return(
+const Protected = ({isAdmin}) => {
+    return (
         <div>
             <Header/>
             <Switch>
@@ -39,6 +40,13 @@ const Protected = () => {
                 <Route path="/home">
                     <Home/>
                 </Route>
+                {isAdmin === true &&
+                    <Route path="/config-users">
+                        <UsersRolesPojectsConfiguration/>
+                    </Route>
+
+                }
+
             </Switch>
         </div>
     )

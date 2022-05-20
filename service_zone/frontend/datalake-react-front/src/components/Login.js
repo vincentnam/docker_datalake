@@ -4,7 +4,7 @@ import {toast, ToastContainer} from "react-toastify";
 import {connect} from "react-redux";
 import '../login.css';
 import {Button, Card, Form, FormGroup, FormLabel} from "react-bootstrap";
-import {editAuthToken, editAuthRoles, editAuthProjects, editAuthLogin} from "../store/authAction";
+import {editAuthToken, editAuthRoles, editAuthProjects, editAuthLoginAdmin} from "../store/authAction";
 import { useHistory } from 'react-router-dom';
 
 class Login extends React.Component {
@@ -82,8 +82,18 @@ class Login extends React.Component {
                     this.props.editAuthToken(response.data.token);
                     localStorage.setItem('token', response.data.token);
                     localStorage.setItem('isLogin', true);
-                    this.props.editAuthLogin(true);
                     this.props.history.push('/home');
+                    let isAdmin = false;
+                    response.data.roles.forEach((role) => {
+                        if(role.name === "admin"){
+                            isAdmin = true;
+                        }
+                    });
+                    if(isAdmin === true){
+                        this.props.editAuthLoginAdmin(true);
+                    } else {
+                        this.props.editAuthLoginAdmin(false);
+                    }
 
                 })
                 .catch(function (error) {
@@ -168,5 +178,5 @@ function WithNavigate(props) {
     return <Login {...props} history={history} />
 }
 
-export default connect(mapStateToProps, {editAuthRoles, editAuthToken, editAuthProjects, editAuthLogin})(WithNavigate)
+export default connect(mapStateToProps, {editAuthRoles, editAuthToken, editAuthProjects, editAuthLoginAdmin})(WithNavigate)
 

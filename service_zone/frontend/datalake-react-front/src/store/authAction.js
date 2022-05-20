@@ -1,4 +1,4 @@
-import { EDIT_AUTH_PROJECTS, EDIT_AUTH_ROLES, EDIT_AUTH_TOKEN, EDIT_AUTH_LOGIN } from "./types"
+import {EDIT_AUTH_PROJECTS, EDIT_AUTH_ROLES, EDIT_AUTH_TOKEN, EDIT_AUTH_LOGIN_ADMIN} from "./types"
 
 export const editAuthToken = (token) => {
     return {
@@ -21,9 +21,9 @@ export const editAuthRoles = (roles) => {
     }
 }
 
-export const editAuthLogin = (isLogin) => {
+export const editAuthLoginAdmin = (isLoginAdmin) => {
     return {
-        type: EDIT_AUTH_LOGIN,
-        payload: isLogin,
+        type: EDIT_AUTH_LOGIN_ADMIN,
+        payload: isLoginAdmin,
     }
 }
