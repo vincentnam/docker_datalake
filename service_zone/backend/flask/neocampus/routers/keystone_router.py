@@ -91,14 +91,43 @@ def login_token():
     """
     try:
         token = request.get_json()['token']
-        print(token)
     except:
         return jsonify({'error': 'Missing token'})
 
     if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
         return jsonify({'error': 'Wrong Token'})
-    return "OK"
 
+    auth = v3.token.Token(auth_url=current_app.config['KEYSTONE_URL'], token=token)
+    sess = keystone_session.Session(auth=auth)
+    ks = client.Client(session=sess)
+    user_id = sess.get_user_id()
+    projects = ks.projects.list(user=user_id)
+    list_projects = []
+    for obj in projects:
+        list_projects.append({
+            'id': obj.id,
+            'name': obj.name
+        })
+    # Connection with admin for return roles of user
+    admin_auth = v3.Password(
+        auth_url=current_app.config['KEYSTONE_URL'],
+        username=current_app.config['USER_ADMIN'],
+        password=current_app.config['USER_ADMIN_PWD'],
+        project_id=current_app.config['PROJECT_ID'],
+        user_domain_id=current_app.config['USER_DOMAIN_ID']
+    )
+    admin_sess = keystone_session.Session(auth=admin_auth)
+    admin_ks = client.Client(session=admin_sess)
+    list_roles = []
+    for project in list_projects:
+        roles = admin_ks.roles.list(user=user_id, project=project['id'])
+        for obj in roles:
+            list_roles.append({
+                'id': obj.id,
+                'name': obj.name,
+                'project': project["name"]
+            })
+    return jsonify({'projects': list_projects, 'roles': list_roles})
 
 @keystone_router_bp.route('/users', methods=['POST'])
 def get_users():
@@ -288,7 +317,7 @@ def role_assignments_create():
         project_id=current_app.config['PROJECT_ID']
     )
     admin_sess = keystone_session.Session(auth=admin_auth)
-crea    admin_ks = client.Client(session=admin_sess)
+    admin_ks = client.Client(session=admin_sess)
 
     try:
         admin_ks.role_assignments.create(role=role,user=user,scope=scope)
@@ -333,4 +362,4 @@ def role_assignments_delete():
     except:
         return jsonify({'error': 'Error role assignment'})
 
-    return jsonify({'role_assignments': "Add"})
+    return jsonify({'role_assignments': "Delete"})
