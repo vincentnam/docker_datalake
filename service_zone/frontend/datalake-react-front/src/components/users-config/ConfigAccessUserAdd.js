@@ -13,12 +13,15 @@ class ConfigAccesUserAdd extends React.Component {
             roles: [],
             projects: [],
             selectRole: "",
-            selectProject: ""
+            selectProject: "",
+            assignments: []
         };
-        this.handleChange = this.handleChange.bind(this);
+        this.handleChangeRole = this.handleChangeRole.bind(this);
+        this.handleChangeProject = this.handleChangeProject.bind(this);
         this.submitConfig = this.submitConfig.bind(this);
         this.loadRoles = this.loadRoles.bind(this);
         this.loadProjects = this.loadProjects.bind(this);
+        this.loadUserRolesProjects = this.loadUserRolesProjects.bind(this);
     }
 
     toastError(message) {
@@ -37,20 +40,43 @@ class ConfigAccesUserAdd extends React.Component {
     componentDidMount() {
         this.loadRoles();
         this.loadProjects();
+        this.loadUserRolesProjects(this.props.selectElement);
         this.setState({
             user: this.props.selectElement,
         });
-        console.log(this.props.selectElement);
     }
 
-    loadRoles(){
-        console.log("load roles")
-        api.post('roles', {
-            token: localStorage.getItem('token')
+    loadUserRolesProjects(user) {
+        api.post('user_assignment', {
+            token: localStorage.getItem('token'),
+            user_id: user.id
         })
             .then((response) => {
                 this.setState({
-                    roles: response.data.roles
+                    assignments: response.data.assignment,
+                });
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
+
+    loadRoles(){
+        api.post('all_roles', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let list_roles = []
+                response.data.roles.forEach((element) => {
+                    list_roles.push(
+                        {
+                            value: element.id,
+                            label: element.name
+                        }
+                    )
+                });
+                this.setState({
+                    roles: list_roles
                 });
             })
             .catch(function (error) {
@@ -59,13 +85,21 @@ class ConfigAccesUserAdd extends React.Component {
     }
 
     loadProjects(){
-        console.log("load projects")
-        api.post('projects', {
+        api.post('all_projects', {
             token: localStorage.getItem('token')
         })
             .then((response) => {
+                let list_projects = []
+                response.data.projects.forEach((element) => {
+                    list_projects.push(
+                        {
+                            value: element.id,
+                            label: element.name
+                        }
+                    )
+                });
                 this.setState({
-                    projects: response.data.projects
+                    projects: list_projects
                 });
             })
             .catch(function (error) {
@@ -76,31 +110,38 @@ class ConfigAccesUserAdd extends React.Component {
     submitConfig(event) {
         event.preventDefault();
         let nbErrors = 0;
-
         if (this.state.user === {}) {
             this.toastError("Veuillez choisir un utilisateur !");
             nbErrors += 1;
         }
-        if (this.state.selectRole.trim() === '') {
+        if (this.state.selectRole.value === '') {
             this.toastError("Veuillez choisir un rôle !");
             nbErrors += 1;
         }
-        if (this.state.selectProject.trim() === '') {
+        if (this.state.selectProject.value === '') {
             this.toastError("Veuillez choisir un projet !");
             nbErrors += 1;
         }
 
+        this.state.assignments.forEach((element) => {
+            if(element.role.id === this.state.selectRole.value && element.project.id === this.state.selectProject.value) {
+                this.toastError("Ce rôle et ce projet sont déjà assignés à cet utilisateur !");
+                nbErrors += 1;
+            }
+        })
+
         if (nbErrors === 0) {
-            api.post('user/add', {
+
+            api.post('role_assignments/add', {
                 token: localStorage.getItem('token'),
-                user: this.props.user,
-                role: this.state.selectRole,
-                project: this.state.selectProject,
+                user: this.state.user.id,
+                role: this.state.selectRole.value,
+                project: this.state.selectProject.value,
             })
                 .then(() => {
                     this.props.reload();
                     this.props.close(this.props.selectElement);
-                    toast.success(`Le nouvel accès pour l'utilisateur ${this.state.user.name} a bien été configuré !`, {
+                    toast.success(`Le nouvel accès pour l'utilisateur ${this.state.user.name} sur le projet  ${this.state.selectProject.label} et pour le rôle ${this.state.selectRole.label} a bien été configuré !`, {
                         theme: "colored",
                         position: "top-right",
                         autoClose: 5000,
@@ -117,13 +158,17 @@ class ConfigAccesUserAdd extends React.Component {
         }
     }
 
-    handleChange(event) {
-        const target = event.target;
-        const value = target.type === 'checkbox' ? target.checked : target.value;
-        const name = target.name;
-
+    handleChangeRole(event) {
+        const name = "selectRole";
         this.setState({
-            [name]: value,
+            [name]: event,
+        });
+    }
+
+    handleChangeProject(event) {
+        const name = "selectProject";
+        this.setState({
+            [name]: event,
         });
     }
 
@@ -135,7 +180,7 @@ class ConfigAccesUserAdd extends React.Component {
                         <FormGroup style={{width: "45%"}}>
                             <FormLabel className="mt-2">Choisir un rôle</FormLabel>
                             <Select
-                                onChange={this.handleChange}
+                                onChange={this.handleChangeRole}
                                 name="role"
                                 classNamePrefix="select"
                                 options={this.state.roles} />
@@ -143,7 +188,7 @@ class ConfigAccesUserAdd extends React.Component {
                         <FormGroup style={{width: "45%"}}>
                             <FormLabel className="mt-2">Choisir un projet</FormLabel>
                             <Select
-                                onChange={this.handleChange}
+                                onChange={this.handleChangeProject}
                                 name="project"
                                 classNamePrefix="select"
                                 options={this.state.projects} />

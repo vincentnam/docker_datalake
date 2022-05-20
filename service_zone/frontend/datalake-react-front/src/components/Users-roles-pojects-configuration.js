@@ -4,7 +4,6 @@ import {connect} from "react-redux";
 import {Button, Modal} from "react-bootstrap";
 import {ToastContainer} from "react-toastify";
 import ConfigAccessUserAdd from "./users-config/ConfigAccessUserAdd";
-import ConfigAccessUserEdit from "./users-config/ConfigAccessUserEdit";
 import ConfigAccessUserDelete from "./users-config/ConfigAccessUserDelete";
 
 class UsersRolesProjectsConfiguration extends React.Component {
@@ -12,34 +11,25 @@ class UsersRolesProjectsConfiguration extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            modalEdit: false,
             modalShow: false,
             modalAdd: false,
             modalDelete: false,
-            users: [{
-                id: "1",
-                name: "tlegagneur"
-            }],
+            users: [],
             selectElement: {
                 id: "",
                 name: ""
             },
             selectElementAccess: {
-                role: "",
-                project: ""
+                role: {name:""},
+                project: {name:""}
             },
-            userAccess: [
-                {
-                    "role": "PowerUsers",
-                    "project": "NeOCampus"
-                }
-            ]
+            userAccess: []
         };
 
         this.loadUsers = this.loadUsers.bind(this);
         this.loadUserRolesProjects = this.loadUserRolesProjects.bind(this);
-        this.onChangeModalEdit = this.onChangeModalEdit.bind(this);
         this.onChangeModalShow = this.onChangeModalShow.bind(this);
+        this.onChangeModalShowSecond = this.onChangeModalShowSecond.bind(this);
         this.onChangeModalAdd = this.onChangeModalAdd.bind(this);
         this.onChangeModalDelete = this.onChangeModalDelete.bind(this);
     }
@@ -49,7 +39,6 @@ class UsersRolesProjectsConfiguration extends React.Component {
     }
 
     loadUsers() {
-        console.log("load users")
         api.post('users', {
             token: localStorage.getItem('token')
         })
@@ -64,15 +53,15 @@ class UsersRolesProjectsConfiguration extends React.Component {
     }
 
     loadUserRolesProjects(user) {
-        console.log("load users")
-
-        api.post('usersAccess', {
+        api.post('user_assignment', {
             token: localStorage.getItem('token'),
-            user: user
+            user_id: user.id
         })
             .then((response) => {
                 this.setState({
-                    userAccess: response.data.usersAccess
+                    userAccess: response.data.assignment,
+                    selectElement: user,
+                    modalShow: !this.state.modalShow,
                 });
             })
             .catch(function (error) {
@@ -81,23 +70,12 @@ class UsersRolesProjectsConfiguration extends React.Component {
     }
 
     onChangeModalShow(element) {
+        this.loadUserRolesProjects(element);
+    }
+    onChangeModalShowSecond(element) {
         this.setState({
             selectElement: element,
             modalShow: !this.state.modalShow,
-        });
-    }
-
-    onChangeModalEdit(userAccess, elementAccess) {
-        this.setState({
-            userAccess: [
-                {
-                    "name": "tlegagneur",
-                    "role": "PowerUsers",
-                    "project": "NeOCampus"
-                }
-            ],
-            selectElementAccess: elementAccess,
-            modalEdit: !this.state.modalEdit,
         });
     }
 
@@ -109,13 +87,12 @@ class UsersRolesProjectsConfiguration extends React.Component {
     }
 
     onChangeModalDelete(userAccess, elementAccess) {
-        console.log("delete acces");
         this.setState({
             userAccess: [
                 {
-                    "name": "tlegagneur",
-                    "role": "PowerUsers",
-                    "project": "NeOCampus"
+                    "name": "",
+                    "role": "",
+                    "project": ""
                 }
             ],
             selectElementAccess: elementAccess,
@@ -168,8 +145,7 @@ class UsersRolesProjectsConfiguration extends React.Component {
         }
 
         const TableAccesUser = (user) => {
-            let dataAcces = ""
-
+            let dataAcces = "";
             if (this.state.userAccess.length === 0) {
                 dataAcces = (
                     <tr>
@@ -179,23 +155,14 @@ class UsersRolesProjectsConfiguration extends React.Component {
             } else {
                 dataAcces = this.state.userAccess.map((elementAccess, index) => (
                     <tr key={index}>
-                        <td>{elementAccess.role}</td>
-                        <td>{elementAccess.project}</td>
-                        <td width="200px"></td>
-                        <td>
-                            <button type="button" className="btn btn-primary buttonModel"
-                                    onClick={() => {
-                                        this.onChangeModalEdit(this.state.userAccess, elementAccess);
-                                        this.onChangeModalShow(this.state.selectElement);
-                                    }}>
-                                Modifier l'accès
-                            </button>
-                        </td>
+                        <td>{elementAccess.role.name}</td>
+                        <td>{elementAccess.project.name}</td>
+                        <td width="300px"></td>
                         <td>
                             <button type="button" className="btn btn-primary buttonModel"
                                     onClick={() => {
                                         this.onChangeModalDelete(this.state.userAccess, elementAccess);
-                                        this.onChangeModalShow(this.state.selectElement);
+                                        this.onChangeModalShowSecond(this.state.selectElement);
                                     }}>Supprimer l'accès
                             </button>
                         </td>
@@ -210,7 +177,6 @@ class UsersRolesProjectsConfiguration extends React.Component {
                             <th>Rôle</th>
                             <th>Projet</th>
                             <th></th>
-                            <th>Modifier l'accès</th>
                             <th>Supprimer l'accès</th>
                         </tr>
                         </thead>
@@ -250,32 +216,6 @@ class UsersRolesProjectsConfiguration extends React.Component {
             )
         }
 
-        const ModalEdit = () => {
-            return (
-                <Modal
-                    size="lg"
-                    show={this.state.modalEdit}
-                    onHide={() => this.onChangeModalEdit({name: "",})}
-                    aria-labelledby="model-edit"
-                >
-                    <Modal.Header>
-                        <Modal.Title id="model-edit">
-                            Modifier l'accès à l'utilisateur : "{this.state.selectElement.name}"
-                        </Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <ConfigAccessUserEdit
-                            selectElement={this.state.selectElement}
-                            selectElementAccess={this.state.selectElementAccess}
-                            close={this.onChangeModalEdit}
-                            closeSecond={this.onChangeModalShow}
-                            reload={this.loadUserRolesProjects}
-                        />
-                    </Modal.Body>
-                </Modal>
-            )
-        }
-
         const ModalDelete = () => {
             return (
                 <Modal
@@ -286,7 +226,7 @@ class UsersRolesProjectsConfiguration extends React.Component {
                 >
                     <Modal.Header>
                         <Modal.Title id="model-delete">
-                            Supprimer l'accès à l'utilisateur : "{this.state.selectElement.name}"
+                            Supprimer l'accès : Utilisateur : "{this.state.selectElement.name}", Rôle : "{this.state.selectElementAccess.role.name}", Projet : "{this.state.selectElementAccess.project.name}"
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
@@ -331,7 +271,6 @@ class UsersRolesProjectsConfiguration extends React.Component {
                 <div className="title">Configuration des accès utilisateurs :</div>
                 <div className="data-table">
                     <TableUsers/>
-                    <ModalEdit/>
                     <ModalShow/>
                     <ModalAdd/>
                     <ModalDelete/>

@@ -9,8 +9,8 @@ class ConfigAccesUserDelete extends React.Component {
         super(props);
         this.state = {
             user: {},
-            selectRole: "",
-            selectProject: ""
+            selectRole: {},
+            selectProject: {}
         };
         this.submitConfig = this.submitConfig.bind(this);
         this.close = this.close.bind(this);
@@ -31,7 +31,6 @@ class ConfigAccesUserDelete extends React.Component {
     }
 
     componentDidMount() {
-
         this.setState({
             user: this.props.selectElement,
             selectRole: this.props.selectElementAccess.role,
@@ -42,14 +41,14 @@ class ConfigAccesUserDelete extends React.Component {
     submitConfig(event) {
         event.preventDefault();
 
-        api.post('deleteAccess', {
+        api.post('role_assignments/delete', {
             token: localStorage.getItem('token'),
-            user: this.state.user,
-            role: this.state.selectRole,
-            project: this.state.user
+            user: this.state.user.id,
+            role: this.state.selectRole.id,
+            project: this.state.selectProject.id
         })
             .then(() => {
-                toast.success(`Le nouvel accès pour l'utilisateur ${this.state.user.name} a bien été configuré !`, {
+                toast.success(`L'accès pour l'utilisateur ${this.state.user.name} sur le projet  ${this.state.selectProject.name} pour le rôle ${this.state.selectRole.name} a bien été supprimé !`, {
                     theme: "colored",
                     position: "top-right",
                     autoClose: 5000,
@@ -59,6 +58,7 @@ class ConfigAccesUserDelete extends React.Component {
                     draggable: true,
                     progress: undefined,
                 });
+                this.close();
             })
             .catch(function (error) {
                 console.log(error);
@@ -66,15 +66,8 @@ class ConfigAccesUserDelete extends React.Component {
     }
 
     close() {
-        let val = [
-            {
-                "name": "tlegagneur",
-                "role": "PowerUsers",
-                "project": "NeOCampus"
-            }
-        ]
-        this.props.close(this.state.user, val);
-        this.props.closeSecond(val);
+        this.props.close(this.state.user, this.props.selectElementAccess);
+        this.props.closeSecond(this.state.user);
     }
 
     render() {

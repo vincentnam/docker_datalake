@@ -69,15 +69,8 @@ class ConfigAccesUserEdit extends React.Component {
     }
 
     close() {
-        let val = [
-            {
-                "name": "tlegagneur",
-                "role": "PowerUsers",
-                "project": "NeOCampus"
-            }
-        ]
         this.props.close(this.state.user);
-        this.props.closeSecond(val);
+        this.props.closeSecond(this.state.user);
     }
 
     submitConfig(event) {

@@ -21,7 +21,6 @@ class Header extends React.Component {
     componentDidMount() {
         this.countData(this.state.container);
         this.loadRolesProjectsUser();
-        console.log(this.props.auth);
     }
 
     loadRolesProjectsUser() {
