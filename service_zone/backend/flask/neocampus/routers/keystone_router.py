@@ -98,3 +98,239 @@ def login_token():
     if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
         return jsonify({'error': 'Wrong Token'})
     return "OK"
+
+
+@keystone_router_bp.route('/users', methods=['POST'])
+def get_users():
+    """
+    ---
+    get:
+        description: get list of users
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - keystone_router
+    """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
+    admin_auth = v3.token.Token(
+        auth_url=current_app.config['KEYSTONE_URL'],
+        token=token,
+        project_id=current_app.config['PROJECT_ID']
+    )
+    admin_sess = keystone_session.Session(auth=admin_auth)
+    admin_ks = client.Client(session=admin_sess)
+    users = admin_ks.users.list()
+
+    list_users = []
+    for obj in users:
+        list_users.append({
+            'id': obj.id,
+            'name': obj.name,
+        })
+    return jsonify({'users': list_users})
+
+
+@keystone_router_bp.route('/user_assignment', methods=['POST'])
+def get_user_projects():
+    """
+    ---
+    get:
+        description: get list of assignment of a user
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - keystone_router
+    """
+    try:
+        token = request.get_json()['token']
+        user_id = request.get_json()['user_id']
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
+    admin_auth = v3.token.Token(
+        auth_url=current_app.config['KEYSTONE_URL'],
+        token=token,
+        project_id=current_app.config['PROJECT_ID']
+    )
+    admin_sess = keystone_session.Session(auth=admin_auth)
+    admin_ks = client.Client(session=admin_sess)
+
+    assignments = admin_ks.role_assignments.list(user=user_id)
+    list_assignments = []
+    for obj in assignments:
+        if 'project' in obj.scope.keys():
+            list_assignments.append({
+                'role': {
+                    'id': obj.role['id'],
+                    'name': admin_ks.roles.get(obj.role['id']).name,
+                },
+                'project': {
+                    'id': obj.scope['project']['id'],
+                    'name': admin_ks.projects.get(obj.scope['project']['id']).name,
+                },
+            })
+    return jsonify({'assignment': list_assignments})
+
+
+@keystone_router_bp.route('/all_roles', methods=['POST'])
+def get_all_roles():
+    """
+    ---
+    get:
+        description: get list of all roles
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - keystone_router
+    """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
+    admin_auth = v3.token.Token(
+        auth_url=current_app.config['KEYSTONE_URL'],
+        token=token,
+        project_id=current_app.config['PROJECT_ID']
+    )
+    admin_sess = keystone_session.Session(auth=admin_auth)
+    admin_ks = client.Client(session=admin_sess)
+    roles = admin_ks.roles.list()
+    list_roles = []
+    for obj in roles:
+        list_roles.append({
+            'id': obj.id,
+            'name': obj.name,
+        })
+
+    return jsonify({'roles': list_roles})
+
+
+@keystone_router_bp.route('/all_projects', methods=['POST'])
+def get_all_projects():
+    """
+    ---
+    get:
+        description: get list of all projects
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - keystone_router
+    """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing required fields.'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
+    admin_auth = v3.token.Token(
+        auth_url=current_app.config['KEYSTONE_URL'],
+        token=token,
+        project_id=current_app.config['PROJECT_ID']
+    )
+    admin_sess = keystone_session.Session(auth=admin_auth)
+    admin_ks = client.Client(session=admin_sess)
+    projects = admin_ks.projects.list()
+    list_projects = []
+    for obj in projects:
+        list_projects.append({
+            'id': obj.id,
+            'name': obj.name,
+        })
+    return jsonify({'projects': list_projects})
+
+
+@keystone_router_bp.route('/role_assignments/add', methods=['POST'])
+def role_assignments_create():
+    """
+    ---
+    get:
+        description: create a assigment with a user, a project and a role
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - keystone_router
+    """
+    try:
+        token = request.get_json()['token']
+        user = request.get_json()['user']
+        scope = request.get_json()['scope']
+        role = request.get_json()['role']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+            return jsonify({'error': 'Wrong Token'})
+
+    admin_auth = v3.token.Token(
+        auth_url=current_app.config['KEYSTONE_URL'],
+        token=token,
+        project_id=current_app.config['PROJECT_ID']
+    )
+    admin_sess = keystone_session.Session(auth=admin_auth)
+crea    admin_ks = client.Client(session=admin_sess)
+
+    try:
+        admin_ks.role_assignments.create(role=role,user=user,scope=scope)
+    except:
+        return jsonify({'error': 'Error role assignment'})
+
+    return jsonify({'role_assignments': "Add"})
+
+@keystone_router_bp.route('/role_assignments/delete', methods=['POST'])
+def role_assignments_delete():
+    """
+    ---
+    get:
+        description: create a assigment with a user, a project and a role
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - keystone_router
+    """
+    try:
+        token = request.get_json()['token']
+        user = request.get_json()['user']
+        scope = request.get_json()['scope']
+        role = request.get_json()['role']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+            return jsonify({'error': 'Wrong Token'})
+
+    admin_auth = v3.token.Token(
+        auth_url=current_app.config['KEYSTONE_URL'],
+        token=token,
+        project_id=current_app.config['PROJECT_ID']
+    )
+    admin_sess = keystone_session.Session(auth=admin_auth)
+    admin_ks = client.Client(session=admin_sess)
+
+    try:
+        admin_ks.role_assignments.delete(role=role,user=user,scope=scope)
+    except:
+        return jsonify({'error': 'Error role assignment'})
+
+    return jsonify({'role_assignments': "Add"})
