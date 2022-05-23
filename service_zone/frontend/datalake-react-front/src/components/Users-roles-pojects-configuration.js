@@ -131,7 +131,7 @@ class UsersRolesProjectsConfiguration extends React.Component {
                 <table className="table table-traceability table-striped table-responsive" id="TableUsers">
                     <thead>
                     <tr style={{color: '#ea973b'}}>
-                        <th>Pseudo utilisateur</th>
+                        <th>Login utilisateur</th>
                         <th></th>
                         <th>Afficher les accès</th>
                         <th>Ajouter un accès</th>
