@@ -49,7 +49,7 @@ def swift_files():
         swift_files.append({
             "container_name": container_name,
             "object_id": object_id,
-            "object_file": os.path.join(request.host_url, file_path)
+            "object_file": os.path.join(current_app.config['HOST_URL'], file_path)
         })
         zip_obj.write(os.path.join(current_app.root_path,
                       file_path), os.path.basename(file_path))
@@ -57,7 +57,7 @@ def swift_files():
 
     result = {
         'swift_files': swift_files,
-        'swift_zip': os.path.join(request.host_url, 'api', zip_path),
+        'swift_zip': os.path.join(current_app.config['HOST_URL'], 'api', zip_path),
     }
     return jsonify(result)
 
