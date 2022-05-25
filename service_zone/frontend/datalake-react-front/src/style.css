@@ -281,6 +281,16 @@ body {
     border-color: #e58419!important;
 }
 
+.meta {
+    border: 2px solid;
+    border-color: lightgrey;
+    border-radius: 10px;
+    background-color: white;
+}
+
+.list-button {
+    display: block;
+}
 .modelsList-cacher {
     color: grey;
     border: none;

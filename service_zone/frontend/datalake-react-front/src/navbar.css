@@ -1,0 +1,28 @@
+.upbar {
+    width: 100% !important;
+    height: 80px;
+    background-color: #EA883C !important;
+    position: fixed;
+}
+
+.select-project {
+    border-radius: 80px !important;
+}
+
+.mr {
+    margin-right: 1em;
+}
+
+.navbar-nav-up a, p{
+    font-size: 20px;
+    margin-right: 20px;
+    margin-left: 20px;
+    color: white;
+}
+.navbar-nav-up a:hover, a:focus{
+    color: grey !important;
+}
+
+.navbar-nav-up a.active {
+    color: rgba(20, 33, 61, 1) !important;
+}

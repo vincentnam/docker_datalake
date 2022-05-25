@@ -115,18 +115,23 @@ class Models extends React.Component {
 
         const ListModels = () => {
             const AllModels = this.state.models.map((model) => (
-                <button className="mt-2 modelsList" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></button>
+                <span><button className="mt-2 modelsList" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></button><br/></span>
             ));
             const AllModelsCache = this.state.modelsCache.map((model) => (
-                <button className="mt-2 modelsList-cacher" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></button>
+                <span><button className="mt-2 modelsList-cacher" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></button><br/></span>
             ));
 
             return (
-                <div className="col-sm-2 card pt-2 pb-2">
+                <div className="col-sm-2 pt-2 pb-2 meta">
                     <h6><b>Liste des modèles de métadonnées visibles</b></h6>
-                    {AllModels}
+                    <div className="list-button">
+                        {AllModels}
+                    </div>
+
                     <h6 className="mt-4"><b>Liste des modèles de métadonnées cachés</b></h6>
-                    {AllModelsCache}
+                    <div className="list-button">
+                        {AllModelsCache}
+                    </div>
                 </div>
             );
         };

@@ -86,21 +86,19 @@
     overflow: hidden;
 }
 
-.navbar {
-    min-height: 70px;
-    background: rgba(20, 33, 61, 1);
-}
-
 .navbar-brand-text {
     font-size: 36px;
     margin-right: 120px;
 }
 
-.navbar-nav a {
+.navbar-nav-up a {
     font-size: 20px;
     margin-right: 50px;
 }
+.navbar-nav-up span {
+    font-size: 16px;
+}
 
-.navbar-nav a.active {
+.navbar-nav-up a.active {
     color: #EA973B !important;
 }

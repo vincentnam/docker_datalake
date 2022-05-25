@@ -390,7 +390,7 @@ class Home extends React.Component {
 
                     <div className="download-detail">
                         <div className="title">Dernières données brutes uploadées</div>
-                        <div className="grid mt5 shadow-sm">
+                        <div className="grid mt5 shadow">
                             <DataTable
                                 columns={columns}
                                 data={elts}
