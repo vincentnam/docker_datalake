@@ -5,7 +5,9 @@ import {connect} from "react-redux";
 import '../login.css';
 import {Button, Card, Form, FormGroup, FormLabel} from "react-bootstrap";
 import {editAuthToken, editAuthRoles, editAuthProjects, editAuthLoginAdmin} from "../store/authAction";
-import { useHistory } from 'react-router-dom';
+import {useHistory} from 'react-router-dom';
+import SideBar from "./SideBar";
+import UpBar from "./UpBar";
 
 class Login extends React.Component {
     constructor(props) {
@@ -66,7 +68,7 @@ class Login extends React.Component {
                 user: this.state.user,
                 password: this.state.password,
             })
-                .then((response) =>{
+                .then((response) => {
                     toast.success("Vous êtes connecté !", {
                         theme: "colored",
                         position: "top-right",
@@ -85,11 +87,11 @@ class Login extends React.Component {
                     this.props.history.push('/home');
                     let isAdmin = false;
                     response.data.roles.forEach((role) => {
-                        if(role.name === "admin"){
+                        if (role.name === "admin") {
                             isAdmin = true;
                         }
                     });
-                    if(isAdmin === true){
+                    if (isAdmin === true) {
                         this.props.editAuthLoginAdmin(true);
                     } else {
                         this.props.editAuthLoginAdmin(false);
@@ -113,51 +115,49 @@ class Login extends React.Component {
 
     render() {
         return (
-            <div>
-                <nav className="navbar navbar-expand-lg navbar-dark">
-                    <div className="container">
-                        <div className="d-flex align-content-center">
-                            <a className="navbar-brand mt-1" href="/home"><img src="images/logo-datalake.svg" alt="neOCampus"/></a>
-                            <a href="/home" className="navbar-brand-text">Datalake</a>
+            <div className="">
+                <UpBar/>
+                <div className="row m-0">
+                    <SideBar/>
+                    <div className="col-10" style={{marginLeft: "15%"}}>
+                        <div className="container">
+                            <div className="login-wrapper">
+                                <Card
+                                    border="primary"
+                                    text={'dark'}
+                                    style={{width: '20rem'}}
+                                >
+                                    <Card.Body>
+                                        <div className="d-flex justify-content-center">
+                                            <h1>Login</h1>
+                                        </div>
+                                        <Form onSubmit={this.handleSubmit}>
+                                            <FormGroup>
+                                                <FormLabel>Pseudo</FormLabel>
+                                                <Form.Control
+                                                    type="text"
+                                                    name="user"
+                                                    onChange={this.handleChange}
+                                                    value={this.state.user}
+                                                />
+                                            </FormGroup>
+                                            <FormGroup>
+                                                <FormLabel>Mot de passe</FormLabel>
+                                                <Form.Control
+                                                    type="password"
+                                                    name="password"
+                                                    onChange={this.handleChange}
+                                                    value={this.state.password}
+                                                />
+                                            </FormGroup>
+                                            <div className="mt-4 d-flex justify-content-center">
+                                                <Button className="btn buttonModel" type="submit">Connexion</Button>
+                                            </div>
+                                        </Form>
+                                    </Card.Body>
+                                </Card>
+                            </div>
                         </div>
-                    </div>
-                </nav>
-                <div className="container">
-                    <div className="login-wrapper">
-                        <Card
-                            border="primary"
-                            text={'dark'}
-                            style={{ width: '20rem' }}
-                        >
-                            <Card.Body>
-                                <div className="d-flex justify-content-center">
-                                    <h1>Login</h1>
-                                </div>
-                                <Form onSubmit={this.handleSubmit}>
-                                    <FormGroup>
-                                        <FormLabel>Pseudo</FormLabel>
-                                        <Form.Control
-                                            type="text"
-                                            name="user"
-                                            onChange={this.handleChange}
-                                            value={this.state.user}
-                                        />
-                                    </FormGroup>
-                                    <FormGroup>
-                                        <FormLabel>Mot de passe</FormLabel>
-                                        <Form.Control
-                                            type="password"
-                                            name="password"
-                                            onChange={this.handleChange}
-                                            value={this.state.password}
-                                        />
-                                    </FormGroup>
-                                    <div className="mt-4 d-flex justify-content-center">
-                                        <Button className="btn buttonModel" type="submit">Connexion</Button>
-                                    </div>
-                                </Form>
-                            </Card.Body>
-                        </Card>
                     </div>
                     <ToastContainer/>
                 </div>
@@ -175,8 +175,13 @@ const mapStateToProps = (state) => {
 
 function WithNavigate(props) {
     let history = useHistory();
-    return <Login {...props} history={history} />
+    return <Login {...props} history={history}/>
 }
 
-export default connect(mapStateToProps, {editAuthRoles, editAuthToken, editAuthProjects, editAuthLoginAdmin})(WithNavigate)
+export default connect(mapStateToProps, {
+    editAuthRoles,
+    editAuthToken,
+    editAuthProjects,
+    editAuthLoginAdmin
+})(WithNavigate)
 

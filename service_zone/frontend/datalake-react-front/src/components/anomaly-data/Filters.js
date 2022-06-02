@@ -180,7 +180,7 @@ class Filters extends React.Component {
         return (
             <div>
                 <h4 className="mb-4">Anomaly Detection</h4>
-                <div className="jumbotron shadow-sm">
+                <div className="jumbotron shadow">
                     <Form onSubmit={this.handleSubmit}>
                         <div className="row align-items-center">
                             <div className="form-group col-md-3 border-right">

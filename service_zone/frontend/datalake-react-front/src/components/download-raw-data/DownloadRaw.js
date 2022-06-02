@@ -428,7 +428,7 @@ class DownloadRaw extends React.Component {
                             </select>
                         </div>
                     </div>
-                    <div className="grid mt5 shadow-sm">
+                    <div className="grid mt5 shadow">
                         <DataTable
                             columns={columns}
                             data={elts}

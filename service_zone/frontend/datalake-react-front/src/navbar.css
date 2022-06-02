@@ -1,0 +1,122 @@
+.upbar {
+    width: 100% !important;
+    height: 80px;
+    background-color: #EA883C !important;
+    position: fixed;
+}
+
+.select-project {
+    border-radius: 80px !important;
+}
+
+.mr {
+    margin-right: 1em;
+}
+
+.navbar-nav-up a, p{
+    font-size: 20px;
+    margin-right: 20px;
+    margin-left: 20px;
+    color: white;
+}
+.navbar-nav-up a:hover, a:focus{
+    color: grey !important;
+    fill: grey !important;
+}
+.dropdown {
+    margin-top: 10px;
+}
+
+.navbar-nav-up a.active {
+    color: rgba(20, 33, 61, 1) !important;
+}
+
+#User:hover path {
+    overflow: visible;
+    fill: grey !important;
+}
+#Path_278 {
+    fill: rgba(255,255,255,1) !important;
+}
+.Path_278 {
+    overflow: visible;
+    position: absolute;
+    width: 21.693px;
+    height: 8.911px;
+    left: 6.007px;
+    top: 21.114px;
+    transform: matrix(1,0,0,1,0,0);
+}
+#Path_279 {
+    fill: rgba(255,255,255,1) !important;
+}
+.Path_279 {
+    overflow: visible;
+    position: absolute;
+    width: 12.134px;
+    height: 12.908px;
+    left: 10.786px;
+    top: 6.499px;
+    transform: matrix(1,0,0,1,0,0);
+}
+#Path_280 {
+    fill: rgba(255,255,255,1) !important;
+}
+.Path_280 {
+    overflow: visible;
+    position: absolute;
+    width: 33.706px;
+    height: 33.706px;
+    left: 0px;
+    top: 0px;
+    transform: matrix(1,0,0,1,0,0);
+}
+
+
+.Logo_alertes {
+    position: relative;
+    width: 26.744px;
+    height: 32.706px;
+    overflow: visible;
+    fill: white !important;
+}
+.Logo_alertes:hover path{
+    fill: grey !important;
+}
+
+#Path_76 {
+    fill: white;
+}
+.Path_76 {
+    overflow: visible;
+    position: absolute;
+    width: 26.744px;
+    height: 26.574px;
+    left: 0px;
+    top: 1.363px;
+    transform: matrix(1,0,0,1,0,0);
+}
+#Path_77 {
+    fill: white;
+}
+.Path_77 {
+    overflow: visible;
+    position: absolute;
+    width: 3.407px;
+    height: 3.407px;
+    left: 11.703px;
+    top: 29.299px;
+    transform: matrix(1,0,0,1,0,0);
+}
+#Path_78 {
+    fill: white;
+}
+.Path_78 {
+    overflow: visible;
+    position: absolute;
+    width: 1.363px;
+    height: 2.044px;
+    left: 13.066px;
+    top: 0px;
+    transform: matrix(1,0,0,1,0,0);
+}
