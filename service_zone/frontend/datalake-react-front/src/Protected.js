@@ -1,6 +1,5 @@
 import React from 'react';
 import {Switch, Route} from 'react-router-dom'
-import Header from "./components/Header";
 import Home from './components/Home';
 import {ProcessedDataVisualisationTimeSeries} from './components/Processed-data-visualisation-time-series';
 import Upload from './components/Upload';

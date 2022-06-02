@@ -64,7 +64,7 @@ class Traceability extends React.Component {
                 if (dataInProgress.length === 0) {
                     dataTableInProgress = (
                         <tr>
-                            <td colSpan="5" align="center"><p>Il n'y a aucun fichier qui est en cours d'upload !</p></td>
+                            <td colSpan="5" align="center" style={{color: "black !important"}}>Il n'y a aucun fichier qui est en cours d'upload !</td>
                         </tr>
                     );
                 } else {
@@ -105,7 +105,7 @@ class Traceability extends React.Component {
             if (this.state.elements.length === 0) {
                 dataTableFinished = (
                     <tr>
-                        <td colSpan="5" align="center"><p>Il n'y a aucun fichier qui est en upload terminé !</p></td>
+                        <td colSpan="5" align="center" style={{color: "black !important"}}>Il n'y a aucun fichier qui est en upload terminé !</td>
                     </tr>
 
                 );
