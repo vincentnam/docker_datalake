@@ -91,12 +91,14 @@ class ConfigAccesUserAdd extends React.Component {
             .then((response) => {
                 let list_projects = []
                 response.data.projects.forEach((element) => {
-                    list_projects.push(
-                        {
-                            value: element.id,
-                            label: element.name
-                        }
-                    )
+                    if(element.name !== "admin"){
+                        list_projects.push(
+                            {
+                                value: element.id,
+                                label: element.name
+                            }
+                        )
+                    }
                 });
                 this.setState({
                     projects: list_projects

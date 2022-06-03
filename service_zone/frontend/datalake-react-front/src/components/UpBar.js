@@ -100,7 +100,9 @@ class UpBar extends React.Component {
                         <div className="navbar-nav-up">
                             <NavLink activeClassName="active"
                                      className="nav-item nav-link"
-                                     to="/detection-anomalies">
+                                     to="/detection-anomalies"
+                                     data-toggle="tooltip" data-placement="bottom" title={this.state.anomalies.length + " Anomalies"}
+                            >
                                 <div className="Logo_alertes">
                                     <svg className="Path_76" viewBox="208.773 147 26.744 26.574">
                                         <path id="Path_76"
