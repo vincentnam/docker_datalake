@@ -1,7 +1,8 @@
-import {EDIT_NAME_CONTAINER } from "./types";
+import {EDIT_NAME_CONTAINER, EDIT_LIST_CONTAINER } from "./types";
 
 const initialState = {
-    nameContainer: "neOCampus",
+    nameContainer: "",
+    listProjectsAccess: []
 };
 
 export function containerReducer(state = initialState, action) {
@@ -10,6 +11,11 @@ export function containerReducer(state = initialState, action) {
             return {
                 ...state,
                 nameContainer: action.payload
+            };
+        case EDIT_LIST_CONTAINER:
+            return {
+                ...state,
+                listProjectsAccess: action.payload
             };
         default:
             return state;

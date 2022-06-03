@@ -31,7 +31,8 @@ class Home extends React.Component {
             type: 0,
             offset: 0,
             perPage: 10,
-            token: localStorage.getItem('token')
+            token: localStorage.getItem('token'),
+            container_name: this.props.nameContainer.nameContainer
         }
     }
 
@@ -44,6 +45,9 @@ class Home extends React.Component {
     }
 
     componentDidMount() {
+        this.setState({
+            container_name: this.props.nameContainer.nameContainer
+        })
         this.loadObjectsFromServer()
     }
 

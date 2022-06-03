@@ -8,6 +8,7 @@ import {editAuthToken, editAuthRoles, editAuthProjects, editAuthLoginAdmin} from
 import {useHistory} from 'react-router-dom';
 import SideBar from "./SideBar";
 import UpBar from "./UpBar";
+import {editListProjectAccess, editNameContainer} from "../store/nameContainerAction";
 
 class Login extends React.Component {
     constructor(props) {
@@ -84,7 +85,19 @@ class Login extends React.Component {
                     this.props.editAuthToken(response.data.token);
                     localStorage.setItem('token', response.data.token);
                     localStorage.setItem('isLogin', true);
-                    this.props.history.push('/home');
+
+                    let listProjectAccess = [];
+                    response.data.projects.forEach((project) =>{
+                        if (project.name !== "datalake"){
+                            listProjectAccess.push({
+                                label: project.name,
+                                name_container: project.name,
+                            })
+                        }
+                    });
+                    this.props.editNameContainer(listProjectAccess[0].name_container);
+                    this.props.editListProjectAccess(listProjectAccess);
+
                     let isAdmin = false;
                     response.data.roles.forEach((role) => {
                         if (role.name === "admin") {
@@ -96,6 +109,8 @@ class Login extends React.Component {
                     } else {
                         this.props.editAuthLoginAdmin(false);
                     }
+
+                    this.props.history.push('/home');
 
                 })
                 .catch(function (error) {
@@ -182,6 +197,8 @@ export default connect(mapStateToProps, {
     editAuthRoles,
     editAuthToken,
     editAuthProjects,
-    editAuthLoginAdmin
+    editAuthLoginAdmin,
+    editNameContainer,
+    editListProjectAccess
 })(WithNavigate)
 

@@ -3,7 +3,7 @@ import {NavLink, useHistory} from 'react-router-dom';
 import api from '../api/api';
 import {config} from "../configmeta/projects";
 import {connect} from "react-redux";
-import {editNameContainer} from "../store/nameContainerAction";
+import {editListProjectAccess, editNameContainer} from "../store/nameContainerAction";
 import {editAuthProjects, editAuthRoles, editAuthToken, editAuthLoginAdmin} from "../store/authAction";
 import '../navbar.css';
 
@@ -14,6 +14,7 @@ class UpBar extends React.Component {
         this.state = {
             anomalies: [],
             container: this.props.nameContainer.nameContainer,
+            listProjectAccess: []
         };
         this.logout = this.logout.bind(this);
         this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
@@ -21,8 +22,13 @@ class UpBar extends React.Component {
 
     componentDidMount() {
         if (localStorage.getItem('isLogin')) {
+            this.setState({
+                listProjectAccess: this.props.nameContainer.listProjectsAccess,
+                container: this.props.nameContainer.nameContainer,
+            })
             this.countData(this.state.container);
             this.loadRolesProjectsUser();
+            console.log(this.props.nameContainer.nameContainer);
         }
     }
 
@@ -38,6 +44,18 @@ class UpBar extends React.Component {
                         this.props.editAuthLoginAdmin(true);
                     }
                 })
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) =>{
+                    if (project.name !== "datalake"){
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.props.editNameContainer(listProjectAccess[0].name_container);
+                this.props.editListProjectAccess(listProjectAccess);
+                console.log(this.props.nameContainer.nameContainer);
             })
             .catch(function (error) {
                 console.log(error);
@@ -72,11 +90,9 @@ class UpBar extends React.Component {
 
     render() {
         const SelectProjects = () => {
-            let projects = [config.projects];
-            const listProjects = projects.map((project) => (
-                project.map((p, key) =>
+            // let projects = [config.projects];
+            const listProjects = this.props.nameContainer.listProjectsAccess.map((p, key) => (
                     <option key={key} value={p.name_container}>{p.label}</option>
-                )
             ));
 
             return (
@@ -196,5 +212,6 @@ export default connect(mapStateToProps, {
     editAuthRoles,
     editAuthToken,
     editAuthProjects,
-    editAuthLoginAdmin
+    editAuthLoginAdmin,
+    editListProjectAccess
 })(WithNavigate)
