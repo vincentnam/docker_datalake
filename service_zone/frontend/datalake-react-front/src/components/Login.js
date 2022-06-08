@@ -70,47 +70,58 @@ class Login extends React.Component {
                 password: this.state.password,
             })
                 .then((response) => {
-                    toast.success("Vous êtes connecté !", {
-                        theme: "colored",
-                        position: "top-right",
-                        autoClose: 1500,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: false,
-                        draggable: true,
-                        progress: undefined,
-                    });
-                    this.props.editAuthRoles(response.data.roles);
-                    this.props.editAuthProjects(response.data.projects);
-                    this.props.editAuthToken(response.data.token);
-                    localStorage.setItem('token', response.data.token);
-                    localStorage.setItem('isLogin', true);
-
                     let listProjectAccess = [];
                     response.data.projects.forEach((project) =>{
-                        if (project.name !== "datalake"){
+                        if (project.name !== "datalake" && project.name !== "admin"){
                             listProjectAccess.push({
                                 label: project.name,
                                 name_container: project.name,
                             })
                         }
                     });
-                    this.props.editNameContainer(listProjectAccess[0].name_container);
-                    this.props.editListProjectAccess(listProjectAccess);
-
-                    let isAdmin = false;
-                    response.data.roles.forEach((role) => {
-                        if (role.name === "admin") {
-                            isAdmin = true;
-                        }
-                    });
-                    if (isAdmin === true) {
-                        this.props.editAuthLoginAdmin(true);
+                    if(listProjectAccess.length === 0){
+                        toast.error("La connexion n'a pas abouti, car vous n'êtes pas relié à minimum, un projet, veuillez contacter votre administrateur !", {
+                            theme: "colored",
+                            position: "top-right",
+                            autoClose: 15000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            progress: undefined,
+                        });
                     } else {
-                        this.props.editAuthLoginAdmin(false);
+                        this.props.editAuthRoles(response.data.roles);
+                        this.props.editAuthProjects(response.data.projects);
+                        this.props.editAuthToken(response.data.token);
+                        localStorage.setItem('token', response.data.token);
+                        localStorage.setItem('isLogin', true);
+                        this.props.editNameContainer(listProjectAccess[0].name_container);
+                        this.props.editListProjectAccess(listProjectAccess);
+                        toast.success("Vous êtes connecté !", {
+                            theme: "colored",
+                            position: "top-right",
+                            autoClose: 1500,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: false,
+                            draggable: true,
+                            progress: undefined,
+                        });
+                        let isAdmin = false;
+                        response.data.roles.forEach((role) => {
+                            if (role.name === "admin") {
+                                isAdmin = true;
+                            }
+                        });
+                        if (isAdmin === true) {
+                            this.props.editAuthLoginAdmin(true);
+                        } else {
+                            this.props.editAuthLoginAdmin(false);
+                        }
+                        this.props.history.push('/home');
                     }
 
-                    this.props.history.push('/home');
 
                 })
                 .catch(function (error) {

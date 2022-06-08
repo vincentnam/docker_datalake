@@ -46,7 +46,7 @@ class UpBar extends React.Component {
                 })
                 let listProjectAccess = [];
                 response.data.projects.forEach((project) => {
-                    if (project.name !== "datalake") {
+                    if (project.name !== "datalake" && project.name !== "admin") {
                         listProjectAccess.push({
                             label: project.name,
                             name_container: project.name,
@@ -60,6 +60,7 @@ class UpBar extends React.Component {
                     container: listProjectAccess[0].name_container,
                 })
                 this.countData(listProjectAccess[0].name_container);
+
             })
             .catch(function (error) {
                 console.log(error);
