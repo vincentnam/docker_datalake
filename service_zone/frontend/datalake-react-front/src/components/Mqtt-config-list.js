@@ -1,6 +1,6 @@
 import React from "react";
 import api from '../api/api';
-import {Button, Modal, ProgressBar} from 'react-bootstrap';
+import {Modal} from 'react-bootstrap';
 import {connect} from "react-redux";
 import ConfigMqttAdd from "./mqtt-config/ConfigMqttAdd";
 import ConfigMqttEdit from "./mqtt-config/ConfigMqttEdit";
@@ -216,6 +216,13 @@ class MqttConfigList extends React.Component {
         }
 
         const ModalChangeStatus = () => {
+            let message = "";
+            if(this.state.selectElement.status) {
+                message = "Voulez-vous désactiver le flux MQTT : " +this.state.selectElement.name +" ?";
+            } else {
+                message = "Voulez-vous activer le flux MQTT : " +this.state.selectElement.name +" ?";
+            }
+            
             return (
                 <Modal
                     size="lg"
@@ -225,7 +232,7 @@ class MqttConfigList extends React.Component {
                 >
                     <Modal.Header>
                         <Modal.Title id="model-change">
-                            Voulez-vous changer le status du flux MQTT : "{this.state.selectElement.name}" ?
+                            {message}
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body>

@@ -1,12 +1,12 @@
 import React from "react";
 import '../home.css';
 import $ from 'jquery';
-import { config } from '../configmeta/config';
+import {config} from '../configmeta/config';
 import api from '../api/api';
 import Filters from "./download-raw-data/Filters";
 import Moment from "moment";
 import DataTable from 'react-data-table-component';
-import { LoadingSpinner } from "./utils/LoadingSpinner";
+import {LoadingSpinner} from "./utils/LoadingSpinner";
 import {connect} from "react-redux";
 
 class Home extends React.Component {
@@ -45,10 +45,7 @@ class Home extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({
-            container_name: this.props.nameContainer.nameContainer
-        })
-        this.loadObjectsFromServer()
+        this.loadObjectsFromServer();
     }
 
     // TODO : To refactor later
@@ -59,8 +56,8 @@ class Home extends React.Component {
         // when homepage finished to load, load last 10 uploaded raw data
         // OR there is sorting data less filters
         if ((this.state.sort_field === undefined &&
-            this.state.sort_value === undefined &&
-            this.state.beginDate === undefined)
+                this.state.sort_value === undefined &&
+                this.state.beginDate === undefined)
             ||
             (this.state.sort_field !== undefined &&
                 this.state.sort_value !== undefined &&
@@ -186,17 +183,17 @@ class Home extends React.Component {
 
     setFiletype(value) {
         let filetype = value;
-        return this.setState({ filetype: filetype })
+        return this.setState({filetype: filetype})
     }
 
     setBeginDate(value) {
         let beginDate = value;
-        return this.setState({ beginDate: beginDate })
+        return this.setState({beginDate: beginDate})
     }
 
     setEndDate(value) {
         let endDate = value;
-        return this.setState({ endDate: endDate })
+        return this.setState({endDate: endDate})
     }
 
     getSelectedElements() {
@@ -243,8 +240,8 @@ class Home extends React.Component {
                 .catch(function (error, status) {
                     console.error(status, error.toString()); // eslint-disable-line
                 }).finally(function () {
-                    this.handleClose()
-                }.bind(this))
+                this.handleClose()
+            }.bind(this))
 
             // empty selected elements
             this.emptySelectedlements()
@@ -369,7 +366,7 @@ class Home extends React.Component {
             {
                 id: 'other_data',
                 name: "Métadescriptions",
-                selector: row => row.other_data ? JSON.stringify(row.other_data) : '-' 
+                selector: row => row.other_data ? JSON.stringify(row.other_data) : '-'
             },
             {
                 id: 'creation_date',
@@ -412,7 +409,7 @@ class Home extends React.Component {
                                 {elts.length ?
                                     <div className="col-12 text-center">
                                         <button className="btn btn-darkblue" onClick={this.validate}
-                                            type="submit">Télécharger
+                                                type="submit">Télécharger
                                         </button>
                                     </div>
                                     : ''}
@@ -421,7 +418,7 @@ class Home extends React.Component {
                     </div>
                 </div>
 
-                <LoadingSpinner loading={this.state.loading} />
+                <LoadingSpinner loading={this.state.loading}/>
             </div>
         );
     }

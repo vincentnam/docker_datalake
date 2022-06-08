@@ -1,7 +1,6 @@
 import React from "react";
 import {NavLink, useHistory} from 'react-router-dom';
 import api from '../api/api';
-import {config} from "../configmeta/projects";
 import {connect} from "react-redux";
 import {editListProjectAccess, editNameContainer} from "../store/nameContainerAction";
 import {editAuthProjects, editAuthRoles, editAuthToken, editAuthLoginAdmin} from "../store/authAction";
@@ -22,13 +21,14 @@ class UpBar extends React.Component {
 
     componentDidMount() {
         if (localStorage.getItem('isLogin')) {
-            this.setState({
-                listProjectAccess: this.props.nameContainer.listProjectsAccess,
-                container: this.props.nameContainer.nameContainer,
-            })
-            this.countData(this.state.container);
             this.loadRolesProjectsUser();
-            console.log(this.props.nameContainer.nameContainer);
+            if (this.props.nameContainer.nameContainer !== "") {
+                this.setState({
+                    listProjectAccess: this.props.nameContainer.listProjectsAccess,
+                    container: this.props.nameContainer.nameContainer,
+                })
+                this.countData(this.props.nameContainer.nameContainer);
+            }
         }
     }
 
@@ -45,8 +45,8 @@ class UpBar extends React.Component {
                     }
                 })
                 let listProjectAccess = [];
-                response.data.projects.forEach((project) =>{
-                    if (project.name !== "datalake"){
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake") {
                         listProjectAccess.push({
                             label: project.name,
                             name_container: project.name,
@@ -55,7 +55,11 @@ class UpBar extends React.Component {
                 });
                 this.props.editNameContainer(listProjectAccess[0].name_container);
                 this.props.editListProjectAccess(listProjectAccess);
-                console.log(this.props.nameContainer.nameContainer);
+                this.setState({
+                    listProjectAccess: listProjectAccess,
+                    container: listProjectAccess[0].name_container,
+                })
+                this.countData(listProjectAccess[0].name_container);
             })
             .catch(function (error) {
                 console.log(error);
@@ -90,9 +94,11 @@ class UpBar extends React.Component {
 
     render() {
         const SelectProjects = () => {
-            // let projects = [config.projects];
+            // if(this.props.nameContainer.nameContainer !== ""){
+            //     this.countData(this.props.nameContainer.nameContainer);
+            // }
             const listProjects = this.props.nameContainer.listProjectsAccess.map((p, key) => (
-                    <option key={key} value={p.name_container}>{p.label}</option>
+                <option key={key} value={p.name_container}>{p.label}</option>
             ));
 
             return (
@@ -117,7 +123,8 @@ class UpBar extends React.Component {
                             <NavLink activeClassName="active"
                                      className="nav-item nav-link"
                                      to="/detection-anomalies"
-                                     data-toggle="tooltip" data-placement="bottom" title={this.state.anomalies.length + " Anomalies"}
+                                     data-toggle="tooltip" data-placement="bottom"
+                                     title={this.state.anomalies.length + " Anomalies"}
                             >
                                 <div className="Logo_alertes">
                                     <svg className="Path_76" viewBox="208.773 147 26.744 26.574">
@@ -171,14 +178,13 @@ class UpBar extends React.Component {
                                 </a>
                                 <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
                                     {this.props.auth.isLoginAdmin === true &&
-                                        <li>
-                                            <NavLink activeClassName="active"
-                                                     className="nav-item nav-link text-end"
-                                                     to="/config-users">
-                                                Users
-                                            </NavLink>
-                                        </li>
+                                        <NavLink activeClassName="active"
+                                                 className="nav-item nav-link text-end"
+                                                 to="/config-users">
+                                            Users
+                                        </NavLink>
                                     }
+                                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                                     <a className="text-end" style={{textDecoration: "none"}}
                                        onClick={this.logout}>Déconnexion</a>
                                 </ul>

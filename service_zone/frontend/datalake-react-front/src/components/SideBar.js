@@ -7,10 +7,6 @@ import '../sidebar.css';
 
 class SideBar extends React.Component {
 
-    constructor(props) {
-        super(props);
-    }
-
     render() {
         const NavSidebar = () => (
             <nav className="navbar-nav">
