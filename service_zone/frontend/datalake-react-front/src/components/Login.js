@@ -4,7 +4,12 @@ import {toast, ToastContainer} from "react-toastify";
 import {connect} from "react-redux";
 import '../login.css';
 import {Button, Card, Form, FormGroup, FormLabel} from "react-bootstrap";
-import {editAuthToken, editAuthRoles, editAuthProjects, editAuthLoginAdmin} from "../store/authAction";
+import {
+    editAuthToken,
+    editAuthRoles,
+    editAuthProjects,
+    editAuthLoginAdmin
+} from "../store/authAction";
 import {useHistory} from 'react-router-dom';
 import SideBar from "./SideBar";
 import UpBar from "./UpBar";
@@ -79,50 +84,43 @@ class Login extends React.Component {
                             })
                         }
                     });
-                    if(listProjectAccess.length === 0){
-                        toast.error("La connexion n'a pas abouti, car vous n'êtes pas relié à minimum, un projet, veuillez contacter votre administrateur !", {
-                            theme: "colored",
-                            position: "top-right",
-                            autoClose: 15000,
-                            hideProgressBar: false,
-                            closeOnClick: true,
-                            pauseOnHover: true,
-                            draggable: true,
-                            progress: undefined,
-                        });
-                    } else {
-                        this.props.editAuthRoles(response.data.roles);
-                        this.props.editAuthProjects(response.data.projects);
-                        this.props.editAuthToken(response.data.token);
-                        localStorage.setItem('token', response.data.token);
-                        localStorage.setItem('isLogin', true);
-                        this.props.editNameContainer(listProjectAccess[0].name_container);
-                        this.props.editListProjectAccess(listProjectAccess);
-                        toast.success("Vous êtes connecté !", {
-                            theme: "colored",
-                            position: "top-right",
-                            autoClose: 1500,
-                            hideProgressBar: false,
-                            closeOnClick: true,
-                            pauseOnHover: false,
-                            draggable: true,
-                            progress: undefined,
-                        });
-                        let isAdmin = false;
-                        response.data.roles.forEach((role) => {
-                            if (role.name === "admin") {
-                                isAdmin = true;
-                            }
-                        });
-                        if (isAdmin === true) {
-                            this.props.editAuthLoginAdmin(true);
-                        } else {
-                            this.props.editAuthLoginAdmin(false);
+                    this.props.editAuthRoles(response.data.roles);
+                    this.props.editAuthProjects(response.data.projects);
+                    this.props.editAuthToken(response.data.token);
+                    localStorage.setItem('token', response.data.token);
+                    localStorage.setItem('isLogin', true);
+
+                    this.props.editListProjectAccess(listProjectAccess);
+                    toast.success("Vous êtes connecté !", {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 1500,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: false,
+                        draggable: true,
+                        progress: undefined,
+                    });
+                    let isAdmin = false;
+                    response.data.roles.forEach((role) => {
+                        if (role.name === "admin") {
+                            isAdmin = true;
                         }
+                    });
+                    if (isAdmin === true) {
+                        this.props.editAuthLoginAdmin(true);
+                    } else {
+                        this.props.editAuthLoginAdmin(false);
+                    }
+                    console.log(listProjectAccess.length);
+                    if(listProjectAccess.length === 0){
+                        localStorage.setItem('isNoProject', true);
+                        this.props.history.push('/info');
+                    } else {
+                        localStorage.setItem('isNoProject', false);
+                        this.props.editNameContainer(listProjectAccess[0].name_container);
                         this.props.history.push('/home');
                     }
-
-
                 })
                 .catch(function (error) {
                     toast.error("La connexion n'a pas réussi ! : " + error, {

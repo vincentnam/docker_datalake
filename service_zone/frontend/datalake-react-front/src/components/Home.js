@@ -25,6 +25,7 @@ class Home extends React.Component {
         this.setBeginDate = this.setBeginDate.bind(this);
         this.setEndDate = this.setEndDate.bind(this);
         this.handleChange = this.handleChange.bind(this);
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
 
         this.state = {
             selectedElements: [],
@@ -32,7 +33,7 @@ class Home extends React.Component {
             offset: 0,
             perPage: 10,
             token: localStorage.getItem('token'),
-            container_name: this.props.nameContainer.nameContainer
+            container_name: ""
         }
     }
 
@@ -45,13 +46,43 @@ class Home extends React.Component {
     }
 
     componentDidMount() {
-        this.loadObjectsFromServer();
+        this.loadRolesProjectsUser();
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadObjectsFromServer();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     // TODO : To refactor later
     loadObjectsFromServer() {
-        let data = null
-        let routeName = '/raw-data'
+        let data = null;
+        let routeName = '/raw-data';
+        let container = "";
+        if(this.props.nameContainer.nameContainer === ""){
+            container = this.state.container_name;
+        } else {
+            container = this.props.nameContainer.nameContainer;
+        }
 
         // when homepage finished to load, load last 10 uploaded raw data
         // OR there is sorting data less filters
@@ -64,7 +95,7 @@ class Home extends React.Component {
                 this.state.beginDate === undefined)) {
             routeName = '/last-raw-data'
             data = JSON.stringify({
-                container_name: this.props.nameContainer.nameContainer,
+                container_name: container,
                 token: localStorage.getItem('token'),
                 limit: this.state.perPage,
                 offset: this.state.offset,
@@ -78,7 +109,7 @@ class Home extends React.Component {
             this.state.sort_value === undefined &&
             this.state.beginDate !== undefined) {
             data = JSON.stringify({
-                container_name: this.props.nameContainer.nameContainer,
+                container_name: container,
                 token: localStorage.getItem('token'),
                 limit: this.state.perPage,
                 offset: this.state.offset,
@@ -93,7 +124,7 @@ class Home extends React.Component {
             this.state.sort_value !== undefined &&
             this.state.beginDate !== undefined) {
             data = JSON.stringify({
-                container_name: this.props.nameContainer.nameContainer,
+                container_name: container,
                 token: localStorage.getItem('token'),
                 limit: this.state.perPage,
                 offset: this.state.offset,

@@ -129,6 +129,39 @@ def login_token():
             })
     return jsonify({'projects': list_projects, 'roles': list_roles})
 
+@keystone_router_bp.route('/auth-token/projects', methods=['POST'])
+def login_token_projects():
+    """
+    ---
+    get:
+        description: login with token and return list projects
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - keystone_router
+    """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
+    auth = v3.token.Token(auth_url=current_app.config['KEYSTONE_URL'], token=token)
+    sess = keystone_session.Session(auth=auth)
+    ks = client.Client(session=sess)
+    user_id = sess.get_user_id()
+    projects = ks.projects.list(user=user_id)
+    list_projects = []
+    for obj in projects:
+        list_projects.append({
+            'id': obj.id,
+            'name': obj.name
+        })
+    return jsonify({'projects': list_projects})
+
 @keystone_router_bp.route('/users', methods=['POST'])
 def get_users():
     """
