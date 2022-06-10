@@ -24,6 +24,7 @@ class MqttConfigList extends React.Component {
                 name: "",
             },
             statusFluxAll: true,
+            container_name: this.props.nameContainer.nameContainer,
         };
         this.loadMqttConfig = this.loadMqttConfig.bind(this);
         this.onChangeModalAdd = this.onChangeModalAdd.bind(this);
@@ -31,15 +32,48 @@ class MqttConfigList extends React.Component {
         this.loadMqttConfigStatus = this.loadMqttConfigStatus.bind(this);
         this.onChangeModalElementStatus = this.onChangeModalElementStatus.bind(this);
         this.loadFlux = this.loadFlux.bind(this);
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
     }
 
     componentDidMount() {
-        this.loadMqttConfig();
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            });
+            this.loadMqttConfig();
+        } else {
+            this.loadRolesProjectsUser();
+        }
+
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadMqttConfig();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     loadMqttConfig() {
         api.post('mqtt/all', {
-            container_name: this.props.nameContainer.nameContainer,
+            container_name: this.state.container_name,
             token: localStorage.getItem('token')
         })
             .then((response) => {
@@ -54,7 +88,7 @@ class MqttConfigList extends React.Component {
 
     loadMqttConfigStatus() {
         api.post('mqtt/status/actif', {
-            container_name: this.props.nameContainer.nameContainer,
+            container_name: this.state.container_name,
             token: localStorage.getItem('token')
         })
             .then((response) => {

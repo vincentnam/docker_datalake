@@ -13,17 +13,51 @@ class Traceability extends React.Component {
             offset: 0,
             perPage: 10,
             sort_value: 1,
-            sort_field: ''
+            sort_field: '',
+            container_name: this.props.nameContainer.nameContainer,
         };
         this.loadTraceability = this.loadTraceability.bind(this)
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this)
     }
 
     componentDidMount() {
-        this.loadTraceability();
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            });
+            this.loadTraceability();
+        } else {
+            this.loadRolesProjectsUser();
+        }
         this.timerID = setInterval(
             () => this.loadTraceability(),
             5000
         );
+
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadTraceability();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     componentWillUnmount() {

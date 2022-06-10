@@ -14,9 +14,8 @@ import SideBar from "./components/SideBar";
 import Info from "./components/Info";
 
 
-const RoutesConnect = () => {
+const RoutesConnect = (isAdmin) => {
     if (localStorage.getItem('isNoProject') !== "") {
-
         if(localStorage.getItem('isNoProject') === "true" ) {
             return (
                 <Route path="/info">
@@ -50,6 +49,12 @@ const RoutesConnect = () => {
                     <Route path="/home">
                         <Home/>
                     </Route>
+                    {isAdmin.isAdmin === true &&
+                        <Route path="/config-users">
+                            <UsersRolesPojectsConfiguration/>
+                        </Route>
+
+                    }
                 </>
             )
         }
@@ -57,8 +62,7 @@ const RoutesConnect = () => {
 
 }
 
-const Protected = ({isAdmin, isNoProject}) => {
-    console.log();
+const Protected = ({isAdmin}) => {
     return (
         <div>
             <UpBar/>
@@ -66,13 +70,7 @@ const Protected = ({isAdmin, isNoProject}) => {
                 <SideBar/>
                 <div className="col-10 mt-content" style={{marginLeft: "16%"}}>
                     <Switch>
-                        <RoutesConnect/>
-                        {isAdmin === true &&
-                            <Route path="/config-users">
-                                <UsersRolesPojectsConfiguration/>
-                            </Route>
-
-                        }
+                        <RoutesConnect isAdmin={isAdmin}/>
                     </Switch>
                 </div>
             </div>

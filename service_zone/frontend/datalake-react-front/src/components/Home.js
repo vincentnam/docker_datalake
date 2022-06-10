@@ -46,7 +46,14 @@ class Home extends React.Component {
     }
 
     componentDidMount() {
-        this.loadRolesProjectsUser();
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            })
+            this.loadObjectsFromServer();
+        } else {
+            this.loadRolesProjectsUser();
+        }
     }
 
     loadRolesProjectsUser() {

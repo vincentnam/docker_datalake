@@ -24,7 +24,8 @@ class DownloadHandleData extends React.Component {
         this.setEndDate = this.setEndDate.bind(this);
         this.validateFilters = this.validateFilters.bind(this)
         this.handleShow = this.handleShow.bind(this);
-        this.handleClose = this.handleClose.bind(this)
+        this.handleClose = this.handleClose.bind(this);
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
 
         // Set some state
         this.state = {
@@ -35,7 +36,8 @@ class DownloadHandleData extends React.Component {
             beginDate: moment().format('Y-MM-DD'),
             endDate: moment().format('Y-MM-DD'),
             loading: false,
-            perPage: 10
+            perPage: 10,
+            container_name: "",
         };
     }
 
@@ -121,7 +123,38 @@ class DownloadHandleData extends React.Component {
     }
 
     componentDidMount() {
-        this.loadObjectsFromServer();
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            })
+            this.loadObjectsFromServer();
+        } else {
+            this.loadRolesProjectsUser();
+        }
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadObjectsFromServer();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     handlePageClick = (data) => {

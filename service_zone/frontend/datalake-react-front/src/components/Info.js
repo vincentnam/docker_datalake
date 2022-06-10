@@ -17,7 +17,7 @@ class Info extends React.Component {
     render() {
         return (
             <div className="d-flex justify-content-center align-content-center">
-                <div className="w-50" >
+                <div className="w-50 mt-5" >
                     <p className="text-break"><b style={{color: "red"}}>Vous n'avez accès à aucun projet. Veuillez contacter votre administrateur !</b></p>
                 </div>
             </div>
