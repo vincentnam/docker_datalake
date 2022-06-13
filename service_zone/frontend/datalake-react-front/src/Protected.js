@@ -14,9 +14,9 @@ import SideBar from "./components/SideBar";
 import Info from "./components/Info";
 
 
-const RoutesConnect = (isAdmin) => {
+const RoutesConnect = (props) => {
     if (localStorage.getItem('isNoProject') !== "") {
-        if(localStorage.getItem('isNoProject') === "true" ) {
+        if (localStorage.getItem('isNoProject') === "true") {
             return (
                 <Route path="/info">
                     <Info/>
@@ -25,35 +25,17 @@ const RoutesConnect = (isAdmin) => {
         } else {
             return (
                 <>
-                    <Route path="/upload">
-                        <Upload/>
-                    </Route>
-                    <Route path="/download">
-                        <Download/>
-                    </Route>
-                    <Route path="/data-processed-visualization">
-                        <ProcessedDataVisualisationTimeSeries/>
-                    </Route>
-                    <Route path="/models">
-                        <Models/>
-                    </Route>
-                    <Route path="/detection-anomalies">
-                        <DetectionAnomalies/>
-                    </Route>
-                    <Route path="/traceability">
-                        <Traceability/>
-                    </Route>
-                    <Route path="/mqtt-config">
-                        <MqttConfigList/>
-                    </Route>
-                    <Route path="/home">
-                        <Home/>
-                    </Route>
-                    {isAdmin.isAdmin === true &&
-                        <Route path="/config-users">
-                            <UsersRolesPojectsConfiguration/>
-                        </Route>
-
+                    <Route path="/upload" component={props => <Upload {...props} />}/>
+                    <Route path="/download" component={props => <Download {...props} />}/>
+                    <Route path="/data-processed-visualization"
+                           component={props => <ProcessedDataVisualisationTimeSeries {...props} />}/>
+                    <Route path="/models" component={props => <Models {...props} />}/>
+                    <Route path="/detection-anomalies" component={props => <DetectionAnomalies {...props} />}/>
+                    <Route path="/traceability" component={props => <Traceability {...props} />}/>
+                    <Route path="/mqtt-config" component={props => <MqttConfigList {...props} />}/>
+                    <Route path="/home" component={props => <Home {...props} />}/>
+                    {props.isAdmin === true &&
+                        <Route path="/config-users" component={props => <UsersRolesPojectsConfiguration {...props} />}/>
                     }
                 </>
             )
@@ -62,7 +44,7 @@ const RoutesConnect = (isAdmin) => {
 
 }
 
-const Protected = ({isAdmin}) => {
+const Protected = ({isAdmin, nameContainer}) => {
     return (
         <div>
             <UpBar/>
@@ -70,7 +52,7 @@ const Protected = ({isAdmin}) => {
                 <SideBar/>
                 <div className="col-10 mt-content" style={{marginLeft: "16%"}}>
                     <Switch>
-                        <RoutesConnect isAdmin={isAdmin}/>
+                        <RoutesConnect isAdmin={isAdmin} container={nameContainer}/>
                     </Switch>
                 </div>
             </div>

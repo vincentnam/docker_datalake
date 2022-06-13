@@ -112,7 +112,6 @@ class Login extends React.Component {
                     } else {
                         this.props.editAuthLoginAdmin(false);
                     }
-                    console.log(listProjectAccess.length);
                     if(listProjectAccess.length === 0){
                         localStorage.setItem('isNoProject', true);
                         this.props.history.push('/info');

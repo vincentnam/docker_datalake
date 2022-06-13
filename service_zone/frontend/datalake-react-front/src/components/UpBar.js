@@ -107,9 +107,6 @@ class UpBar extends React.Component {
 
     render() {
         const SelectProjects = () => {
-            // if(this.props.nameContainer.nameContainer !== ""){
-            //     this.countData(this.props.nameContainer.nameContainer);
-            // }
             const listProjects = this.props.nameContainer.listProjectsAccess.map((p, key) => (
                 <option key={key} value={p.name_container}>{p.label}</option>
             ));
