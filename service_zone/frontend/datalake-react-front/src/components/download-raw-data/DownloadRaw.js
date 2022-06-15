@@ -71,6 +71,7 @@ class DownloadRaw extends React.Component {
         this.handleShow = this.handleShow.bind(this);
         this.handleClose = this.handleClose.bind(this);
         this.isSelected = this.isSelected.bind(this);
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
 
         // Set some state
         this.state = {
@@ -83,7 +84,8 @@ class DownloadRaw extends React.Component {
             loading: false,
             perPage: 10,
             sort_value: 1,
-            sort_field: ''
+            sort_field: '',
+            container_name: "",
         };
     }
 
@@ -214,7 +216,38 @@ class DownloadRaw extends React.Component {
     }
 
     componentDidMount() {
-        this.loadObjectsFromServer();
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            })
+            this.loadObjectsFromServer();
+        } else {
+            this.loadRolesProjectsUser();
+        }
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadObjectsFromServer();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     handlePageClick = (data) => {
@@ -245,7 +278,7 @@ class DownloadRaw extends React.Component {
                 endDate: this.state.endDate,
                 sort_field: this.state.sort_field,
                 sort_value: this.state.sort_value,
-                container_name: this.props.nameContainer.nameContainer,
+                container_name: this.state.container_name,
                 token: localStorage.getItem('token')
             })
         } else {
@@ -255,7 +288,7 @@ class DownloadRaw extends React.Component {
                 filetype: this.state.filetype,
                 beginDate: this.state.beginDate,
                 endDate: this.state.endDate,
-                container_name: this.props.nameContainer.nameContainer,
+                container_name: this.state.container_name,
                 token: localStorage.getItem('token')
             })
         }

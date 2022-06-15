@@ -1,12 +1,12 @@
 import React from "react";
 import '../home.css';
 import $ from 'jquery';
-import { config } from '../configmeta/config';
+import {config} from '../configmeta/config';
 import api from '../api/api';
 import Filters from "./download-raw-data/Filters";
 import Moment from "moment";
 import DataTable from 'react-data-table-component';
-import { LoadingSpinner } from "./utils/LoadingSpinner";
+import {LoadingSpinner} from "./utils/LoadingSpinner";
 import {connect} from "react-redux";
 
 class Home extends React.Component {
@@ -25,13 +25,15 @@ class Home extends React.Component {
         this.setBeginDate = this.setBeginDate.bind(this);
         this.setEndDate = this.setEndDate.bind(this);
         this.handleChange = this.handleChange.bind(this);
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
 
         this.state = {
             selectedElements: [],
             type: 0,
             offset: 0,
             perPage: 10,
-            token: localStorage.getItem('token')
+            token: localStorage.getItem('token'),
+            container_name: ""
         }
     }
 
@@ -44,26 +46,63 @@ class Home extends React.Component {
     }
 
     componentDidMount() {
-        this.loadObjectsFromServer()
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            })
+            this.loadObjectsFromServer();
+        } else {
+            this.loadRolesProjectsUser();
+        }
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadObjectsFromServer();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     // TODO : To refactor later
     loadObjectsFromServer() {
-        let data = null
-        let routeName = '/raw-data'
+        let data = null;
+        let routeName = '/raw-data';
+        let container = "";
+        if(this.props.nameContainer.nameContainer === ""){
+            container = this.state.container_name;
+        } else {
+            container = this.props.nameContainer.nameContainer;
+        }
 
         // when homepage finished to load, load last 10 uploaded raw data
         // OR there is sorting data less filters
         if ((this.state.sort_field === undefined &&
-            this.state.sort_value === undefined &&
-            this.state.beginDate === undefined)
+                this.state.sort_value === undefined &&
+                this.state.beginDate === undefined)
             ||
             (this.state.sort_field !== undefined &&
                 this.state.sort_value !== undefined &&
                 this.state.beginDate === undefined)) {
             routeName = '/last-raw-data'
             data = JSON.stringify({
-                container_name: this.props.nameContainer.nameContainer,
+                container_name: container,
                 token: localStorage.getItem('token'),
                 limit: this.state.perPage,
                 offset: this.state.offset,
@@ -77,7 +116,7 @@ class Home extends React.Component {
             this.state.sort_value === undefined &&
             this.state.beginDate !== undefined) {
             data = JSON.stringify({
-                container_name: this.props.nameContainer.nameContainer,
+                container_name: container,
                 token: localStorage.getItem('token'),
                 limit: this.state.perPage,
                 offset: this.state.offset,
@@ -92,7 +131,7 @@ class Home extends React.Component {
             this.state.sort_value !== undefined &&
             this.state.beginDate !== undefined) {
             data = JSON.stringify({
-                container_name: this.props.nameContainer.nameContainer,
+                container_name: container,
                 token: localStorage.getItem('token'),
                 limit: this.state.perPage,
                 offset: this.state.offset,
@@ -182,17 +221,17 @@ class Home extends React.Component {
 
     setFiletype(value) {
         let filetype = value;
-        return this.setState({ filetype: filetype })
+        return this.setState({filetype: filetype})
     }
 
     setBeginDate(value) {
         let beginDate = value;
-        return this.setState({ beginDate: beginDate })
+        return this.setState({beginDate: beginDate})
     }
 
     setEndDate(value) {
         let endDate = value;
-        return this.setState({ endDate: endDate })
+        return this.setState({endDate: endDate})
     }
 
     getSelectedElements() {
@@ -239,8 +278,8 @@ class Home extends React.Component {
                 .catch(function (error, status) {
                     console.error(status, error.toString()); // eslint-disable-line
                 }).finally(function () {
-                    this.handleClose()
-                }.bind(this))
+                this.handleClose()
+            }.bind(this))
 
             // empty selected elements
             this.emptySelectedlements()
@@ -365,7 +404,7 @@ class Home extends React.Component {
             {
                 id: 'other_data',
                 name: "Métadescriptions",
-                selector: row => row.other_data ? JSON.stringify(row.other_data) : '-' 
+                selector: row => row.other_data ? JSON.stringify(row.other_data) : '-'
             },
             {
                 id: 'creation_date',
@@ -408,7 +447,7 @@ class Home extends React.Component {
                                 {elts.length ?
                                     <div className="col-12 text-center">
                                         <button className="btn btn-darkblue" onClick={this.validate}
-                                            type="submit">Télécharger
+                                                type="submit">Télécharger
                                         </button>
                                     </div>
                                     : ''}
@@ -417,7 +456,7 @@ class Home extends React.Component {
                     </div>
                 </div>
 
-                <LoadingSpinner loading={this.state.loading} />
+                <LoadingSpinner loading={this.state.loading}/>
             </div>
         );
     }

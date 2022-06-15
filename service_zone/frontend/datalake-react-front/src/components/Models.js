@@ -15,14 +15,49 @@ class Models extends React.Component {
             model: {},
             newModel: {},
             show: "",
+            container_name: "",
         };
         this.loadModel = this.loadModel.bind(this);
         this.formAdd = this.formAdd.bind(this);
         this.handleCallShow = this.handleCallShow.bind(this);
         this.editChange = this.editChange.bind(this);
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
     }
+
     componentDidMount() {
-        this.loadModel();
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            })
+            this.loadModel();
+        } else {
+            this.loadRolesProjectsUser();
+        }
+
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadModel();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     loadModel() {

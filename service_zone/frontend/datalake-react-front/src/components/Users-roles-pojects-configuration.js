@@ -149,7 +149,7 @@ class UsersRolesProjectsConfiguration extends React.Component {
             if (this.state.userAccess.length === 0) {
                 dataAcces = (
                     <tr>
-                        <td colSpan="5" align="center"><p>Il n'y a aucun utilisateurs !</p></td>
+                        <td colSpan="5" align="center"><p>L'utilisateur n'a aucun accès, veuillez lui en rajouter !</p></td>
                     </tr>
                 );
             } else {

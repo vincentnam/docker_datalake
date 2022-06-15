@@ -7,10 +7,6 @@ import '../sidebar.css';
 
 class SideBar extends React.Component {
 
-    constructor(props) {
-        super(props);
-    }
-
     render() {
         const NavSidebar = () => (
             <nav className="navbar-nav">
@@ -131,8 +127,9 @@ class SideBar extends React.Component {
                         <img src="images/logo-datalake.svg" alt="neOCampus"/> Datalake
                     </NavLink>
                 </div>
-                {localStorage.getItem('isLogin') &&
+                {localStorage.getItem('isLogin') && localStorage.getItem('isNoProject') === "false" ?
                     <NavSidebar/>
+                    :<></>
                 }
 
             </div>

@@ -19,10 +19,12 @@ class Filters extends React.Component {
             dt: [],
             startDate: moment().format("YYYY-MM-DD"),
             endDate: moment().format("YYYY-MM-DD"),
+            container_name: this.props.nameContainer.nameContainer
         };
-        this.loadMeasurements();
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.loadMeasurements = this.loadMeasurements.bind(this);
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
     }
     updateData(){
         this.props.dataGraph({});
@@ -75,22 +77,46 @@ class Filters extends React.Component {
             this.updateData();
         }
     }
-    loadBuckets() {
-        api.get('bucket', {
+    componentDidMount() {
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            })
+            this.loadMeasurements();
+        } else {
+            this.loadRolesProjectsUser();
+        }
+
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
             token: localStorage.getItem('token')
         })
             .then((response) => {
-                this.setState({
-                    buckets: response.data.buckets
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
                 });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadMeasurements();
             })
             .catch(function (error) {
                 console.log(error);
             });
     }
+
+
     loadMeasurements() {
         api.post('measurements', {
-            bucket: this.props.nameContainer.nameContainer,
+            bucket: this.state.container_name,
             token: localStorage.getItem('token')
         })
             .then((response) => {
@@ -106,7 +132,7 @@ class Filters extends React.Component {
     }
     loadTopics(measurement) {
         api.post('topics', {
-            bucket: this.props.nameContainer.nameContainer,
+            bucket: this.state.container_name,
             measurement: measurement,
             token: localStorage.getItem('token')
         })
@@ -149,7 +175,7 @@ class Filters extends React.Component {
             this.toastError("Veuillez selectionner un topic !")
         } else {
             api.post('dataTimeSeries', {
-                bucket: this.props.nameContainer.nameContainer,
+                bucket: this.state.container_name,
                 measurement: this.state.measurement,
                 topic: this.state.topic,
                 startDate: moment(start).format('X'),

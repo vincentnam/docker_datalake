@@ -4,10 +4,16 @@ import {toast, ToastContainer} from "react-toastify";
 import {connect} from "react-redux";
 import '../login.css';
 import {Button, Card, Form, FormGroup, FormLabel} from "react-bootstrap";
-import {editAuthToken, editAuthRoles, editAuthProjects, editAuthLoginAdmin} from "../store/authAction";
+import {
+    editAuthToken,
+    editAuthRoles,
+    editAuthProjects,
+    editAuthLoginAdmin
+} from "../store/authAction";
 import {useHistory} from 'react-router-dom';
 import SideBar from "./SideBar";
 import UpBar from "./UpBar";
+import {editListProjectAccess, editNameContainer} from "../store/nameContainerAction";
 
 class Login extends React.Component {
     constructor(props) {
@@ -69,6 +75,22 @@ class Login extends React.Component {
                 password: this.state.password,
             })
                 .then((response) => {
+                    let listProjectAccess = [];
+                    response.data.projects.forEach((project) =>{
+                        if (project.name !== "datalake" && project.name !== "admin"){
+                            listProjectAccess.push({
+                                label: project.name,
+                                name_container: project.name,
+                            })
+                        }
+                    });
+                    this.props.editAuthRoles(response.data.roles);
+                    this.props.editAuthProjects(response.data.projects);
+                    this.props.editAuthToken(response.data.token);
+                    localStorage.setItem('token', response.data.token);
+                    localStorage.setItem('isLogin', true);
+
+                    this.props.editListProjectAccess(listProjectAccess);
                     toast.success("Vous êtes connecté !", {
                         theme: "colored",
                         position: "top-right",
@@ -79,12 +101,6 @@ class Login extends React.Component {
                         draggable: true,
                         progress: undefined,
                     });
-                    this.props.editAuthRoles(response.data.roles);
-                    this.props.editAuthProjects(response.data.projects);
-                    this.props.editAuthToken(response.data.token);
-                    localStorage.setItem('token', response.data.token);
-                    localStorage.setItem('isLogin', true);
-                    this.props.history.push('/home');
                     let isAdmin = false;
                     response.data.roles.forEach((role) => {
                         if (role.name === "admin") {
@@ -96,7 +112,14 @@ class Login extends React.Component {
                     } else {
                         this.props.editAuthLoginAdmin(false);
                     }
-
+                    if(listProjectAccess.length === 0){
+                        localStorage.setItem('isNoProject', true);
+                        this.props.history.push('/info');
+                    } else {
+                        localStorage.setItem('isNoProject', false);
+                        this.props.editNameContainer(listProjectAccess[0].name_container);
+                        this.props.history.push('/home');
+                    }
                 })
                 .catch(function (error) {
                     toast.error("La connexion n'a pas réussi ! : " + error, {
@@ -182,6 +205,8 @@ export default connect(mapStateToProps, {
     editAuthRoles,
     editAuthToken,
     editAuthProjects,
-    editAuthLoginAdmin
+    editAuthLoginAdmin,
+    editNameContainer,
+    editListProjectAccess
 })(WithNavigate)
 

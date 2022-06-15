@@ -17,11 +17,49 @@ class Filters extends React.Component {
             dt: [],
             startDate: moment().format("YYYY-MM-DD"),
             endDate: moment().format("YYYY-MM-DD"),
+            container_name: this.props.nameContainer.nameContainer
         };
-        this.loadMeasurements(this.state.bucket);
+        this.loadMeasurements = this.loadMeasurements.bind(this);
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
+
+    componentDidMount() {
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            })
+            this.loadMeasurements();
+        } else {
+            this.loadRolesProjectsUser();
+        }
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadMeasurements();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
+
     updateData(){
         this.props.data([]);
     }
@@ -66,7 +104,7 @@ class Filters extends React.Component {
     }
     loadMeasurements() {
         api.post('measurements', {
-            bucket: this.props.nameContainer.nameContainer,
+            bucket: this.state.container_name,
             token: localStorage.getItem('token')
         })
             .then((response) => {
@@ -82,7 +120,7 @@ class Filters extends React.Component {
     }
     loadTopics(bucket, measurement) {
         api.post('topics', {
-            bucket: this.props.nameContainer.nameContainer,
+            bucket: this.state.container_name,
             token: localStorage.getItem('token'),
             measurement: measurement
         })
@@ -126,7 +164,7 @@ class Filters extends React.Component {
                 topic: this.state.topic,
                 startDate: start,
                 endDate: end,
-                container_name: this.props.nameContainer.nameContainer,
+                container_name: this.state.container_name,
                 token: localStorage.getItem('token')
             })
                 .then((response) => {

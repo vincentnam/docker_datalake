@@ -133,7 +133,7 @@ class Upload extends React.Component {
             toast.success("Le fichier a bien été ajouté, veuillez cliquer sur le bouton upload le fichier !", {
                 theme: "colored",
                 position: "top-right",
-                autoClose: 1500,
+                autoClose: 5000,
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: false,

@@ -326,3 +326,10 @@ body {
     background-color: rgba(0, 0, 0, 0.05)
 }
 
+td {
+    color: black !important;
+}
+td > p {
+    color: black !important;
+}
+

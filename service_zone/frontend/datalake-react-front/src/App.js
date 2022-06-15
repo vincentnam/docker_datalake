@@ -18,7 +18,7 @@ const App = ({auth}) => {
         <>
             <Switch>
                 {localStorage.getItem('isLogin') && localStorage.getItem('token') !== "" ? (
-                    <Route path='/' render={() => <Protected isAdmin={auth.isLoginAdmin}/> }/>
+                    <Route path='/' render={() => <Protected isAdmin={auth.isLoginAdmin} /> }/>
                 ) : (
                     <Route path="/">
                         <Login/>

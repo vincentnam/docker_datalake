@@ -4,7 +4,7 @@ const initialState = {
     isLoginAdmin: false,
     token: "",
     projects: [],
-    roles: [],
+    roles: []
 };
 
 export function authReducer(state = initialState, action) {
