@@ -1,5 +1,4 @@
 import React from "react";
-import Dropzone from 'react-dropzone';
 import {InputMeta} from './upload-child/InputMeta';
 import {TextAreaMeta} from './upload-child/TextAreaMeta';
 import {config} from '../configmeta/config';
@@ -7,7 +6,6 @@ import {configWithSGE} from "../configmeta/configWithSGE";
 import {extensions_types_files} from '../configmeta/extensions_types_files';
 import api from '../api/api';
 import {ProgressBarComponent} from "./upload-child/ProgressBarComponent";
-import filesize from "filesize";
 import {ToastContainer, toast} from 'react-toastify';
 import ModelAddForm from './upload-child/model/ModelAddForm';
 import ModelEditForm from './upload-child/model/ModelEditForm';
@@ -117,6 +115,7 @@ class Upload extends React.Component {
             maxFilesize: 1000000, // megabytes (1 000 000 MB = 1 To, for now but changer after)
             chunkSize: 10000000, // bytes (10 MB),
             autoProcessQueue: false, // disable upload automatically
+            // eslint-disable-next-line no-multi-str
             dictDefaultMessage: " Veuillez glisser un fichier ici<br /> \
             ou<br /> \
             <u>cliquer pour ajouter un fichier</u><br /> \
@@ -168,7 +167,7 @@ class Upload extends React.Component {
     }
 
     toggleDownloadMode(event) {
-        event.target.id != 'nav-chunking-tab' ? this.setState({'downloadMode': 'ssh'}) : this.setState({'downloadMode': 'chunking'})
+        event.target.id !== 'nav-chunking-tab' ? this.setState({'downloadMode': 'ssh'}) : this.setState({'downloadMode': 'chunking'})
     }
 
     reload() {
@@ -626,27 +625,18 @@ class Upload extends React.Component {
     }
 
     render() {
-
-        const files = this.state.files.map(file => (
-            <li key={file.name}>
-                {file.name} <span className="filesize">{filesize(file.size)}</span>
-                <div className="supprimer" onClick={this.removeSelectedFile}>
-                    <span aria-hidden="true">Supprimer</span><img alt="Icon Trash" src="/images/trash.svg"/>
-                </div>
-            </li>
-        ));
-
         const Metadonnees = () => {
             let listMeta = null;
             let othermeta = this.state.othermeta;
             listMeta = (
                 othermeta.map((meta) => {
                     const index = othermeta.indexOf(meta);
+                    let m = "";
                     if (meta.type === "number" || meta.type === "text")
-                        return <InputMeta key={meta.name} meta={meta} othermeta={othermeta} index={index}/>
-
+                        m = (<InputMeta key={meta.name} meta={meta} othermeta={othermeta} index={index}/>)
                     if (meta.type === "textarea")
-                        return <TextAreaMeta key={meta.name} meta={meta} othermeta={othermeta} index={index}/>
+                        m = (<TextAreaMeta key={meta.name} meta={meta} othermeta={othermeta} index={index}/>)
+                    return m;
                 })
             );
             return (
@@ -762,7 +752,7 @@ class Upload extends React.Component {
                     <div className="title">Upload de données</div>
                     <div className="jumbotron">
                         <form
-                            onSubmit={this.state.downloadMode == 'ssh' ? this.handleSubmit : this.handleSubmitChunking}>
+                            onSubmit={this.state.downloadMode === 'ssh' ? this.handleSubmit : this.handleSubmitChunking}>
                             <div className="row">
                                 <div className="form-group required col-6">
                                     <label className="control-label file-type">Type de fichier</label>
@@ -877,7 +867,7 @@ class Upload extends React.Component {
                                     <button type="submit" className="btn btn-oran">Upload le fichier</button>
                                 </div>
                                 <div className="d-md-flex justify-content-center">
-                                    <a onClick={this.clear} className="btn btn-oran">Clear</a>
+                                    <button type="button" onClick={this.clear} className="btn btn-oran">Clear</button>
                                 </div>
                             </div>
                         </form>
