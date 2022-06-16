@@ -85,11 +85,12 @@ class Upload extends React.Component {
 
         this.setState({'dropper': myDropzone})
 
+        //Message toast after add a file
         myDropzone.on("addedfile", file => {
             toast.success("Le fichier a bien été ajouté, veuillez cliquer sur le bouton upload le fichier !", {
                 theme: "colored",
                 position: "top-right",
-                autoClose: 15000,
+                autoClose: 8000,
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: false,
@@ -98,11 +99,12 @@ class Upload extends React.Component {
             });
         });
 
+        //Message after the file is completely upload
         myDropzone.on("success", file =>{
             toast.success("L'upload a bien été fait !", {
                 theme: "colored",
                 position: "top-right",
-                autoClose: 15000,
+                autoClose: 10000,
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: false,
@@ -113,11 +115,12 @@ class Upload extends React.Component {
             this.reloadPage();
         })
 
+        //Message error if the file not correctly upload
         myDropzone.on("error", file =>{
             toast.error("L'upload n'a pas réussi !", {
                 theme: "colored",
                 position: "top-right",
-                autoClose: 15000,
+                autoClose: 10000,
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: false,
@@ -356,6 +359,7 @@ class Upload extends React.Component {
         this.state.othermeta.forEach((meta) => {
             other[meta.name] = meta.value
         });
+
         let nbErrors = 0;
 
         if (this.state.type === 0) {
@@ -551,7 +555,7 @@ class Upload extends React.Component {
                     toast.success("L'upload a bien été fait !", {
                         theme: "colored",
                         position: "top-right",
-                        autoClose: 1500,
+                        autoClose: 5000,
                         hideProgressBar: false,
                         closeOnClick: true,
                         pauseOnHover: false,
@@ -564,7 +568,7 @@ class Upload extends React.Component {
                     toast.error("L'upload n'a pas réussi ! : " + error, {
                         theme: "colored",
                         position: "top-right",
-                        autoClose: 4000,
+                        autoClose: 5000,
                         hideProgressBar: false,
                         closeOnClick: true,
                         pauseOnHover: true,
@@ -579,9 +583,7 @@ class Upload extends React.Component {
 
     handleSubmitChunking(event) {
         event.preventDefault();
-        let dropper = this.state.dropper
-        console.log(dropper);
-        console.log(event);
+        let dropper = this.state.dropper;
         let nbErrors = 0;
 
         if (this.state.type === 0) {
@@ -601,8 +603,12 @@ class Upload extends React.Component {
         dropper.files.forEach((file) => {
             let typeFile = file.type;
             const filename = file.name;
-            if (!typeFile && filename.split('.').pop().toLowerCase() === "sql") {
+            if (typeFile === "" && !typeFile && filename.split('.').pop().toLowerCase() === "sql") {
                 typeFile = "application/sql"
+            } else {
+                if (typeFile === "") {
+                    typeFile = "application/octet-stream";
+                }
             }
             if (this.state.type_file_accepted.includes(typeFile) === false) {
                 toast.error("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + this.state.type_file_accepted.join(' '), {
@@ -621,21 +627,23 @@ class Upload extends React.Component {
 
         if(nbErrors === 0 ){
             // Upload files by chunking (file is divized into chunks which are sent sucessively)
-            // let dropper = this.state.dropper
-
             dropper.on("sending", function (file, xhr, formData) {
-                let othermeta = this.state.othermeta
-                let token = localStorage.getItem('token')
-                formData.append('othermeta', othermeta);
+                let other = {}
+                this.state.othermeta.forEach((meta) => {
+                    other[meta.name] = meta.value
+                });
+                let token = localStorage.getItem('token');
+                formData.append('othermeta', JSON.stringify(other));
                 formData.append('token', token);
                 formData.append('container_name', this.props.nameContainer.nameContainer);
             }.bind(this));
 
-            dropper.processQueue()
+            dropper.processQueue();
+            //Message to warn that the file is being uploaded
             toast.success("L'upload est en cours, veuillez patienter !", {
                 theme: "colored",
                 position: "top-right",
-                autoClose: 10000,
+                autoClose: 7000,
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: false,
@@ -692,8 +700,6 @@ class Upload extends React.Component {
             } else {
                 types = [config.types];
             }
-
-
             const listTypes = types.map((type) => (
                 type.map((t, key) =>
                     <option value={key}>{t.label}</option>
@@ -809,15 +815,6 @@ class Upload extends React.Component {
                                 </button>
                                 <EditButton/>
                             </div>
-                            {/*this.state.uploadLink === false &&
-                                <div className="main-download mt-4 mb-5">
-                                    <div className="form-group required">
-                                        <label className="form-label">Lien vers le fichier</label>
-                                        <input value={this.state.linkFile} onChange={this.handleChange} type="text" name="linkFile" className="form-control"
-                                            placeholder="https://-----/dossier/file.extension ou XX.XX.XX.XXX/dossier/file.extension" />
-                                    </div>
-                                </div>
-                            */}
                             {this.state.uploadLink === true &&
                                 <div className="main-download">
                                     <div className="main-download">
@@ -879,7 +876,6 @@ class Upload extends React.Component {
                     <ModalAdd/>
                     <ModalEdit/>
                 </div>
-
                 {/* ProgressBar shown when upload form submitted with percent updated in onUploadProgress above */}
                 <ProgressBarComponent
                     loading={this.state.loading}
