@@ -2,6 +2,7 @@ import os
 import uuid
 from zipfile import ZipFile
 import base64
+import json
 from flask import Blueprint, jsonify, current_app, request, send_from_directory, make_response
 from ..services import swift, mongo, keystone
 import os
@@ -235,9 +236,7 @@ def upload():
                       f" expected {request.form['dztotalfilesize']} ")
             return make_response(('Size mismatch', 500))
         else:
-            other_meta = request.form["othermeta"]
-
-
+            other_meta = json.loads(request.form["othermeta"])
             extension = file.filename.split(".")
             extension = extension.pop()
             type_file = mongo.typefile(extension)

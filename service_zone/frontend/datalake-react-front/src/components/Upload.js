@@ -1,5 +1,4 @@
 import React from "react";
-import Dropzone from 'react-dropzone';
 import {InputMeta} from './upload-child/InputMeta';
 import {TextAreaMeta} from './upload-child/TextAreaMeta';
 import {config} from '../configmeta/config';
@@ -7,7 +6,6 @@ import {configWithSGE} from "../configmeta/configWithSGE";
 import {extensions_types_files} from '../configmeta/extensions_types_files';
 import api from '../api/api';
 import {ProgressBarComponent} from "./upload-child/ProgressBarComponent";
-import filesize from "filesize";
 import {ToastContainer, toast} from 'react-toastify';
 import ModelAddForm from './upload-child/model/ModelAddForm';
 import ModelEditForm from './upload-child/model/ModelEditForm';
@@ -18,49 +16,6 @@ import {Dropzone as DropzoneBigData} from "dropzone";
 class Upload extends React.Component {
     constructor() {
         super();
-
-        this.onDrop = (files) => {
-            if (files.length < 1) {
-                toast.error('Format de fichier non accepté ou trop grand !', {
-                    theme: "colored",
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                });
-            }
-            files.forEach((file) => {
-                let typeFile = file.type;
-                const filename = file.name;
-                if (!typeFile && filename.split('.').pop().toLowerCase() === "sql") {
-                    typeFile = "application/sql"
-                }
-                if (this.state.type_file_accepted.includes(typeFile) === false) {
-                    toast.error("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + this.state.type_file_accepted.join(' '), {
-                        theme: "colored",
-                        position: "top-right",
-                        autoClose: 5000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                    });
-                } else {
-                    var reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => this.setState({file: reader.result});
-                    this.setState({typeFile: typeFile});
-                    this.setState({filename: filename});
-                    const f = [file]
-                    this.setState({files: f});
-                }
-            });
-        };
-
         this.state = {
             downloadMode: 'ssh',
             files: [],
@@ -117,6 +72,7 @@ class Upload extends React.Component {
             maxFilesize: 1000000, // megabytes (1 000 000 MB = 1 To, for now but changer after)
             chunkSize: 10000000, // bytes (10 MB),
             autoProcessQueue: false, // disable upload automatically
+            // eslint-disable-next-line no-multi-str
             dictDefaultMessage: " Veuillez glisser un fichier ici<br /> \
             ou<br /> \
             <u>cliquer pour ajouter un fichier</u><br /> \
@@ -129,11 +85,12 @@ class Upload extends React.Component {
 
         this.setState({'dropper': myDropzone})
 
+        //Message toast after add a file
         myDropzone.on("addedfile", file => {
             toast.success("Le fichier a bien été ajouté, veuillez cliquer sur le bouton upload le fichier !", {
                 theme: "colored",
                 position: "top-right",
-                autoClose: 5000,
+                autoClose: 8000,
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: false,
@@ -141,6 +98,39 @@ class Upload extends React.Component {
                 progress: undefined,
             });
         });
+
+        //Message after the file is completely upload
+        myDropzone.on("success", file =>{
+            toast.success("L'upload a bien été fait !", {
+                theme: "colored",
+                position: "top-right",
+                autoClose: 10000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: true,
+                progress: undefined,
+            });
+            myDropzone.removeFile(file);
+            this.reloadPage();
+        })
+
+        //Message error if the file not correctly upload
+        myDropzone.on("error", file =>{
+            toast.error("L'upload n'a pas réussi !", {
+                theme: "colored",
+                position: "top-right",
+                autoClose: 10000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: true,
+                progress: undefined,
+            });
+        })
+
+
+
     }
 
     reloadPage() {
@@ -168,7 +158,7 @@ class Upload extends React.Component {
     }
 
     toggleDownloadMode(event) {
-        event.target.id != 'nav-chunking-tab' ? this.setState({'downloadMode': 'ssh'}) : this.setState({'downloadMode': 'chunking'})
+        event.target.id !== 'nav-chunking-tab' ? this.setState({'downloadMode': 'ssh'}) : this.setState({'downloadMode': 'chunking'})
     }
 
     reload() {
@@ -369,6 +359,7 @@ class Upload extends React.Component {
         this.state.othermeta.forEach((meta) => {
             other[meta.name] = meta.value
         });
+
         let nbErrors = 0;
 
         if (this.state.type === 0) {
@@ -564,7 +555,7 @@ class Upload extends React.Component {
                     toast.success("L'upload a bien été fait !", {
                         theme: "colored",
                         position: "top-right",
-                        autoClose: 1500,
+                        autoClose: 5000,
                         hideProgressBar: false,
                         closeOnClick: true,
                         pauseOnHover: false,
@@ -577,7 +568,7 @@ class Upload extends React.Component {
                     toast.error("L'upload n'a pas réussi ! : " + error, {
                         theme: "colored",
                         position: "top-right",
-                        autoClose: 4000,
+                        autoClose: 5000,
                         hideProgressBar: false,
                         closeOnClick: true,
                         pauseOnHover: true,
@@ -592,19 +583,74 @@ class Upload extends React.Component {
 
     handleSubmitChunking(event) {
         event.preventDefault();
+        let dropper = this.state.dropper;
+        let nbErrors = 0;
 
-        // Upload files by chunking (file is divized into chunks which are sent sucessively)
-        let dropper = this.state.dropper
+        if (this.state.type === 0) {
+            toast.error("Veuillez renseigner le type de données !", {
+                theme: "colored",
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+            nbErrors += 1;
+        }
 
-        dropper.on("sending", function (file, xhr, formData) {
-            let othermeta = this.state.othermeta
-            let token = localStorage.getItem('token')
-            formData.append('othermeta', othermeta);
-            formData.append('token', token);
-            formData.append('container_name', this.props.nameContainer.nameContainer);
-        }.bind(this));
+        dropper.files.forEach((file) => {
+            let typeFile = file.type;
+            const filename = file.name;
+            if (typeFile === "" && !typeFile && filename.split('.').pop().toLowerCase() === "sql") {
+                typeFile = "application/sql"
+            } else {
+                if (typeFile === "") {
+                    typeFile = "application/octet-stream";
+                }
+            }
+            if (this.state.type_file_accepted.includes(typeFile) === false) {
+                toast.error("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + this.state.type_file_accepted.join(' '), {
+                    theme: "colored",
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
+                nbErrors += 1;
+            }
+        });
 
-        dropper.processQueue()
+        if(nbErrors === 0 ){
+            // Upload files by chunking (file is divized into chunks which are sent sucessively)
+            dropper.on("sending", function (file, xhr, formData) {
+                let other = {}
+                this.state.othermeta.forEach((meta) => {
+                    other[meta.name] = meta.value
+                });
+                let token = localStorage.getItem('token');
+                formData.append('othermeta', JSON.stringify(other));
+                formData.append('token', token);
+                formData.append('container_name', this.props.nameContainer.nameContainer);
+            }.bind(this));
+
+            dropper.processQueue();
+            //Message to warn that the file is being uploaded
+            toast.success("L'upload est en cours, veuillez patienter !", {
+                theme: "colored",
+                position: "top-right",
+                autoClose: 7000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: true,
+                progress: undefined,
+            });
+        }
     }
 
     getDropper() {
@@ -626,27 +672,18 @@ class Upload extends React.Component {
     }
 
     render() {
-
-        const files = this.state.files.map(file => (
-            <li key={file.name}>
-                {file.name} <span className="filesize">{filesize(file.size)}</span>
-                <div className="supprimer" onClick={this.removeSelectedFile}>
-                    <span aria-hidden="true">Supprimer</span><img alt="Icon Trash" src="/images/trash.svg"/>
-                </div>
-            </li>
-        ));
-
         const Metadonnees = () => {
             let listMeta = null;
             let othermeta = this.state.othermeta;
             listMeta = (
                 othermeta.map((meta) => {
                     const index = othermeta.indexOf(meta);
+                    let m = "";
                     if (meta.type === "number" || meta.type === "text")
-                        return <InputMeta key={meta.name} meta={meta} othermeta={othermeta} index={index}/>
-
+                        m = (<InputMeta key={meta.name} meta={meta} othermeta={othermeta} index={index}/>)
                     if (meta.type === "textarea")
-                        return <TextAreaMeta key={meta.name} meta={meta} othermeta={othermeta} index={index}/>
+                        m = (<TextAreaMeta key={meta.name} meta={meta} othermeta={othermeta} index={index}/>)
+                    return m;
                 })
             );
             return (
@@ -663,8 +700,6 @@ class Upload extends React.Component {
             } else {
                 types = [config.types];
             }
-
-
             const listTypes = types.map((type) => (
                 type.map((t, key) =>
                     <option value={key}>{t.label}</option>
@@ -762,7 +797,7 @@ class Upload extends React.Component {
                     <div className="title">Upload de données</div>
                     <div className="jumbotron">
                         <form
-                            onSubmit={this.state.downloadMode == 'ssh' ? this.handleSubmit : this.handleSubmitChunking}>
+                            onSubmit={this.state.downloadMode === 'ssh' ? this.handleSubmit : this.handleSubmitChunking}>
                             <div className="row">
                                 <div className="form-group required col-6">
                                     <label className="control-label file-type">Type de fichier</label>
@@ -780,15 +815,6 @@ class Upload extends React.Component {
                                 </button>
                                 <EditButton/>
                             </div>
-                            {/*this.state.uploadLink === false &&
-                                <div className="main-download mt-4 mb-5">
-                                    <div className="form-group required">
-                                        <label className="form-label">Lien vers le fichier</label>
-                                        <input value={this.state.linkFile} onChange={this.handleChange} type="text" name="linkFile" className="form-control"
-                                            placeholder="https://-----/dossier/file.extension ou XX.XX.XX.XXX/dossier/file.extension" />
-                                    </div>
-                                </div>
-                            */}
                             {this.state.uploadLink === true &&
                                 <div className="main-download">
                                     <div className="main-download">
@@ -809,41 +835,6 @@ class Upload extends React.Component {
                                             </div>
                                         </nav>
                                         <div className="tab-content" id="pills-tabContent">
-                                            <div className="tab-pane fade" id="nav-small-file" role="tabpanel"
-                                                 aria-labelledby="nav-small-file-tab">
-                                                <div className="form-group required">
-                                                    <label>Fichiers</label>
-
-                                                    {/* Dropzone JS */}
-
-                                                    {/* <Dropzone value={this.state.file} name="file" onDrop={this.onDrop} maxSize={250000000}
-                                                        accept="image/*,application/JSON,.csv,text/plain,.sql,application/x-gzip,application/x-zip-compressed,application/octet-stream">
-                                                        {({ getRootProps, getInputProps }) => (
-                                                            <section>
-                                                                <div {...getRootProps({ className: 'drop' })}>
-                                                                    <input {...getInputProps()} />
-                                                                    <div>
-                                                                        Veuillez glisser un fichier ici<br />
-                                                                        ou<br />
-                                                                        <u>cliquer pour ajouter un fichier</u><br />
-                                                                        Taille limitée à 250Mo (.jpg, .jpeg, .png, .svg, .csv, .json, .zip, .sql et .txt)
-                                                                    </div>
-                                                                </div>
-                                                                <aside className="pt-3">
-                                                                    {files.length !== 0 ?
-                                                                        <aside className="pt-3">
-                                                                            <ul>
-                                                                                {files}
-                                                                            </ul>
-                                                                        </aside>
-                                                                        : ''}
-                                                                </aside>
-                                                            </section>
-                                                        )}
-                                                                    </Dropzone> */}
-                                                </div>
-                                            </div>
-
                                             { /* Upload volumineux - Chunking */}
                                             <div className="tab-pane fade mb-4" id="nav-chunking-file" role="tabpanel"
                                                  aria-labelledby="nav-large-file-tab">
@@ -877,7 +868,7 @@ class Upload extends React.Component {
                                     <button type="submit" className="btn btn-oran">Upload le fichier</button>
                                 </div>
                                 <div className="d-md-flex justify-content-center">
-                                    <a onClick={this.clear} className="btn btn-oran">Clear</a>
+                                    <button type="button" onClick={this.clear} className="btn btn-oran">Clear</button>
                                 </div>
                             </div>
                         </form>
@@ -885,7 +876,6 @@ class Upload extends React.Component {
                     <ModalAdd/>
                     <ModalEdit/>
                 </div>
-
                 {/* ProgressBar shown when upload form submitted with percent updated in onUploadProgress above */}
                 <ProgressBarComponent
                     loading={this.state.loading}
