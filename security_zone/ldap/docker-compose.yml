@@ -1,0 +1,54 @@
+services:
+  openldap:
+    image: osixia/openldap:latest
+    container_name: openldap
+    hostname: openldap
+    ports:
+      - "389:389"
+      - "636:636"
+    volumes:
+      - ./data/certificates:/container/service/slapd/assets/certs
+      - ./data/slapd/database:/var/lib/ldap
+      - ./data/slapd/config:/etc/ldap/slapd.d
+    environment:
+      - LDAP_ORGANISATION=local
+      - LDAP_DOMAIN=local.com
+      - LDAP_ADMIN_USERNAME=admin
+      - LDAP_ADMIN_PASSWORD="password admin"
+      - LDAP_CONFIG_PASSWORD="password config"
+      - "LDAP_BASE_DN=dc=datalakelocal,dc=com"
+      - LDAP_READONLY_USER=true
+      - LDAP_READONLY_USER_USERNAME="user name"
+      - LDAP_READONLY_USER_PASSWORD="password user"
+      - LDAP_TLS_CRT_FILENAME=server.crt
+      - LDAP_TLS_KEY_FILENAME=server.key
+      - LDAP_TLS_CA_CRT_FILENAME=certificate.pem
+      #- LDAP_TLS_CRT_FILENAME=certificate.pem
+      #- LDAP_TLS_KEY_FILENAME=certificate.key
+      #- LDAP_TLS_CA_CRT_FILENAME=certificate.pem
+      #- LDAPTLS_REQCERT=never
+      #- LDAP_TLS_VERIFY_CLIENT=never
+      #- LDAP_TLS_PROTOCOL_MIN=1.2
+      #- LDAP_TLS_CIPHER_SUITE=SECURE128:-VERS-SSL3.0:+VERS-TLS1.2
+    networks:
+      - openldap
+  phpldapadmin:
+    image: osixia/phpldapadmin:latest
+    container_name: phpldapadmin
+    hostname: phpldapadmin
+    ports:
+      - "80:80"
+      #- "443:443"
+    environment:
+      - PHPLDAPADMIN_LDAP_HOSTS=openldap
+      - PHPLDAPADMIN_HTTPS=false
+      #- PHPLDAPADMIN_HTTPS_CRT_FILENAME=certificate.pem
+      #- PHPLDAPADMIN_HTTPS_KEY_FILENAME=certificate.key
+    depends_on:
+      - openldap
+    networks:
+      - openldap
+networks:
+  openldap:
+    driver: bridge
+
