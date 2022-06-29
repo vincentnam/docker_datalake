@@ -91,16 +91,6 @@ class Login extends React.Component {
                     localStorage.setItem('isLogin', true);
 
                     this.props.editListProjectAccess(listProjectAccess);
-                    toast.success("Vous êtes connecté !", {
-                        theme: "colored",
-                        position: "top-right",
-                        autoClose: 1500,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: false,
-                        draggable: true,
-                        progress: undefined,
-                    });
                     let isAdmin = false;
                     response.data.roles.forEach((role) => {
                         if (role.name === "admin") {
@@ -119,6 +109,16 @@ class Login extends React.Component {
                         localStorage.setItem('isNoProject', false);
                         this.props.editNameContainer(listProjectAccess[0].name_container);
                         this.props.history.push('/home');
+                        toast.success("Vous êtes connecté !", {
+                            theme: "colored",
+                            position: "top-right",
+                            autoClose: 3000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: false,
+                            draggable: true,
+                            progress: undefined,
+                        });
                     }
                 })
                 .catch(function (error) {
