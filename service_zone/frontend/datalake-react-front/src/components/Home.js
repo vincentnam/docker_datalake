@@ -8,6 +8,7 @@ import Moment from "moment";
 import DataTable from 'react-data-table-component';
 import {LoadingSpinner} from "./utils/LoadingSpinner";
 import {connect} from "react-redux";
+import {ToastContainer} from "react-toastify";
 
 class Home extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
@@ -455,7 +456,7 @@ class Home extends React.Component {
                         </div>
                     </div>
                 </div>
-
+                <ToastContainer/>
                 <LoadingSpinner loading={this.state.loading}/>
             </div>
         );
