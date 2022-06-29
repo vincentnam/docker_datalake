@@ -193,14 +193,6 @@ def upload():
         tags:
             - openstack_swift_router
     """
-    try:
-        token = request.form["token"]
-    except:
-        return jsonify({'error': 'Missing token'})
-
-    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
-        return jsonify({'error': 'Wrong Token'})
-
     file = request.files['file']
 
     save_path = os.path.join(
