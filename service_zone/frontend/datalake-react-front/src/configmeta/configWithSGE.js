@@ -10,7 +10,7 @@ export const configWithSGE = {
         },
         {
             "label": "CSV",
-            "type_file_accepted": ["application/csv", "application/vnd.ms-excel"],
+            "type_file_accepted": ["application/csv", "application/vnd.ms-excel", "text/csv"],
         },
         {
             "label": "Dump SQL",
