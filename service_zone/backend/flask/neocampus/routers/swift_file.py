@@ -144,7 +144,8 @@ def storage():
             path,
             filename,
             type_file,
-            container_name
+            container_name,
+            other_meta
         ))
         upload_processing.start()
 
@@ -212,7 +213,7 @@ def upload():
             f.seek(int(request.form['dzchunkbyteoffset']))
             f.write(file.stream.read())
     except OSError:
-        # log.exception will include the traceback so we can see what's wrong 
+        # log.exception will include the traceback so we can see what's wrong
         print('Could not write to file')
         return make_response(("Not sure why,"
                               " but we couldn't write the file to disk", 500))
@@ -228,27 +229,26 @@ def upload():
                       f" expected {request.form['dztotalfilesize']} ")
             return make_response(('Size mismatch', 500))
         else:
-            other_meta = json.loads(request.form["othermeta"])
+            other_data = json.loads(request.form["othermeta"])
             extension = file.filename.split(".")
             extension = extension.pop()
             type_file = mongo.typefile(extension)
 
+            container_name = request.form["container_name"]
+            filename = file.filename
+
             # File upload completely finished (end of chunks)
             print(f'File {file.filename} has been uploaded successfully')
 
-            container_name = request.form["container_name"]
-
-            filename = file.filename
-
             # Get content file totally
             filepath = os.path.join(
-                current_app.root_path, 
-                current_app.config['SWIFT_FILES_DIRECTORY'], 
-                file.filename
+            current_app.root_path,
+            current_app.config['SWIFT_FILES_DIRECTORY'],
+            file.filename
             )
 
             file = open(filepath, 'rb')
-            data_file = file.read()
+            data_file = swift.read_in_chunks(file)
 
             file_content = data_file
             mongodb_url = current_app.config['MONGO_URL']
@@ -259,24 +259,22 @@ def upload():
             application = None
             data_process = "custom"
             processed_data_area_service = ["MongoDB"]
-            other_data = other_meta
 
             # Multithreading for upload file from backend to Openstack Swift in background
             upload_processing = Process(
-                target=mongo.insert_datalake, 
+                target=mongo.insert_datalake,
                 name="Upload_Openstack_Swift",
                 args=(
-                    file_content, user, key, authurl, 
-                    container_name, filename, processed_data_area_service, data_process, 
+                    file_content, user, key, authurl,
+                    container_name, filename, processed_data_area_service, data_process,
                     application, content_type, mongodb_url, other_data
                 )
             )
-
             upload_processing.start()
     else:
         print(f'Chunk {current_chunk + 1} of {total_chunks} '
-                  f'for file {file.filename} complete')
+            f'for file {file.filename} complete')
 
-        
+
 
     return make_response(("Chunk upload successful", 200))

@@ -10,6 +10,13 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import datetime
 
+def read_in_chunks(file_object, blocksize=1024):
+    while True:
+        data = file_object.read(blocksize)
+        if not data:
+            break
+        yield data
+
 def download_object_file(container_name, object_id):
     """
     convert swift object to file and down it
@@ -26,6 +33,7 @@ def download_object_file(container_name, object_id):
     # save file
     file_path = f"{current_app.config['SWIFT_FILES_DIRECTORY']}/{original_object_name}"
     f = open(os.path.join(current_app.root_path, file_path), 'wb')
+
     f.write(swift_object_raw[1])
     f.close()
 
@@ -38,7 +46,8 @@ def ssh_file(
     remote_path,
     filename,
     type_file,
-    container_name
+    container_name,
+    other_data
     ):
     try:
         ssh = paramiko.SSHClient()
@@ -96,15 +105,10 @@ def ssh_file(
         sftp.close()
         ssh.close()
 
-        path =  Path(localpath)
-        
-        if type_file == "application/octet-stream":
-            content_file = path.read_bytes()
-        else:
-            content_file = path.read_text()
-        filename = path.name
+        file = open(localpath, 'rb')
+        data_file = read_in_chunks(file)
 
-        file_content = content_file
+        file_content = data_file
         
         # All variables to put informations in MongoDB
         # and in OpenstackSwift
@@ -116,9 +120,10 @@ def ssh_file(
         application = None
         data_process = "default"
         processed_data_area_service = ["MongoDB"]
-        other_data = {
-            "type_link": "ssh"
-        }
+        if other_data == "":
+            other_data = {
+                "type_link": "ssh"
+            }
         mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
                             processed_data_area_service, data_process, application,
                             content_type, mongodb_url, other_data)
