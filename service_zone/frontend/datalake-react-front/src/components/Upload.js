@@ -867,9 +867,6 @@ class Upload extends React.Component {
                                 <div className="d-md-flex justify-content-center">
                                     <button type="submit" className="btn btn-oran">Upload le fichier</button>
                                 </div>
-                                <div className="d-md-flex justify-content-center">
-                                    <button type="button" onClick={this.clear} className="btn btn-oran">Clear</button>
-                                </div>
                             </div>
                         </form>
                     </div>
