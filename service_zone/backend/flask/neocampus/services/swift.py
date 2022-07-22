@@ -25,16 +25,17 @@ def download_object_file(container_name, object_id):
     :return: saved file path in flask
     """
     swift_conn = swiftclient.Connection(user=current_app.config['SWIFT_USER'], key=current_app.config['SWIFT_KEY'],
-                                        authurl=current_app.config['SWIFT_AUTHURL'], insecure=True)
-    swift_object_raw = swift_conn.get_object(container_name, object_id)
+                                        authurl=current_app.config['SWIFT_AUTHURL'],insecure=True)
+    swift_object_raw = swift_conn.get_object(container_name, object_id,resp_chunk_size=64 * 2 ** 10)
 
     original_object_name = get_swift_original_object_name(container_name, object_id)
 
-    # save file
     file_path = f"{current_app.config['SWIFT_FILES_DIRECTORY']}/{original_object_name}"
-    f = open(os.path.join(current_app.root_path, file_path), 'wb')
+    f = open(os.path.join(current_app.root_path, file_path), 'ab')
 
-    f.write(swift_object_raw[1])
+    for chunk in swift_object_raw[1]:
+        f.write(chunk)
+
     f.close()
 
     return file_path
