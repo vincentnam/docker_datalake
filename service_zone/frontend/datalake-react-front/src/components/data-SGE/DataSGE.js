@@ -1,9 +1,10 @@
 import React from "react";
-import { Graph } from './graph';
+import { Graph } from '../processed-data/graph';
 import { useTable, useSortBy, usePagination } from "react-table";
 import * as Icon from 'react-bootstrap-icons';
+import {connect} from "react-redux";
 
-export class DataVisiualisation extends React.Component {
+export class DataSGE extends React.Component {
     constructor(props) {
         super(props);
         this.props = props;
@@ -242,3 +243,12 @@ export class DataVisiualisation extends React.Component {
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+        auth: state.auth
+    }
+}
+
+export default connect(mapStateToProps, null)(DataSGE)

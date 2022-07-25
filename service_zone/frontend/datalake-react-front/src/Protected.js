@@ -1,7 +1,7 @@
 import React from 'react';
 import {Switch, Route} from 'react-router-dom'
 import Home from './components/Home';
-import {ProcessedDataVisualisationTimeSeries} from './components/Processed-data-visualisation-time-series';
+import {ProcessedDataVisualisationAll} from './components/Processed-data-visualisation-all';
 import Upload from './components/Upload';
 import {Download} from './components/Download';
 import Models from './components/Models';
@@ -27,8 +27,8 @@ const RoutesConnect = (props) => {
                 <>
                     <Route path="/upload" component={props => <Upload {...props} />}/>
                     <Route path="/download" component={props => <Download {...props} />}/>
-                    <Route path="/data-processed-visualization"
-                           component={props => <ProcessedDataVisualisationTimeSeries {...props} />}/>
+                    <Route path="/data-visualisation-all"
+                           component={props => <ProcessedDataVisualisationAll {...props} />}/>
                     <Route path="/models" component={props => <Models {...props} />}/>
                     <Route path="/detection-anomalies" component={props => <DetectionAnomalies {...props} />}/>
                     <Route path="/traceability" component={props => <Traceability {...props} />}/>
