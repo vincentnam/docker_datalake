@@ -191,7 +191,7 @@ export class DataSGE extends React.Component {
                 );
             } else {
                 return (
-                    <h5 className="title-graph mb-4">Bucket: <span><b>{this.props.bucket}</b></span> - Measurement: <span><b>{this.props.measurement}</b></span> - Topic: <span><b>{this.props.topic}</b></span></h5>
+                    <h5 className="title-graph mb-4">Measurement: <span><b>{this.props.measurement}</b></span> - Topic: <span><b>{this.props.topic}</b></span></h5>
                 );
             }
         }

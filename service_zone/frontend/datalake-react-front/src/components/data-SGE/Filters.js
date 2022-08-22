@@ -12,10 +12,8 @@ class Filters extends React.Component {
         this.state = {
             measurements: [],
             topics: [],
-            buckets: [],
             measurement: "",
             topic: "",
-            bucket: "",
             dt: [],
             startDate: moment().format("YYYY-MM-DD"),
             endDate: moment().format("YYYY-MM-DD"),
@@ -58,13 +56,6 @@ class Filters extends React.Component {
             });
         }
 
-        if (name === "bucket") {
-            this.props.selectBucket(value);
-            this.loadMeasurements();
-            this.props.selectMeasurement("");
-            this.props.selectTopic("");
-            this.updateData();
-        }
         if (name === "measurement") {
             this.props.selectMeasurement(value);
             this.loadTopics(value);
@@ -115,8 +106,7 @@ class Filters extends React.Component {
 
 
     loadMeasurements() {
-        api.post('measurements', {
-            bucket: this.state.container_name,
+        api.post('measurementsSGE', {
             token: localStorage.getItem('token')
         })
             .then((response) => {
@@ -131,8 +121,7 @@ class Filters extends React.Component {
             });
     }
     loadTopics(measurement) {
-        api.post('topics', {
-            bucket: this.state.container_name,
+        api.post('topicsSGE', {
             measurement: measurement,
             token: localStorage.getItem('token')
         })
@@ -167,15 +156,12 @@ class Filters extends React.Component {
 
         if (moment(start).format('X') === moment(end).format('X')) {
             this.toastError("Veuillez modifier l'espacement entre la date de début et la date de fin !");
-        // } else if (this.state.bucket === null  || this.state.bucket === "") {
-        //     this.toastError("Veuillez selectionner un bucket !")
         } else if (this.state.measurement === null || this.state.measurement === "") {
             this.toastError("Veuillez selectionner un measurement !")
         } else if (this.state.topic === null || this.state.topic === "") {
             this.toastError("Veuillez selectionner un topic !")
         } else {
-            api.post('dataTimeSeries', {
-                bucket: this.state.container_name,
+            api.post('dataSGE', {
                 measurement: this.state.measurement,
                 topic: this.state.topic,
                 startDate: moment(start).format('X'),
@@ -184,7 +170,7 @@ class Filters extends React.Component {
             })
                 .then((response) => {
                     let result = [];
-                    for (const value of Object.entries(response.data.dataTimeSeries[0])) {
+                    for (const value of Object.entries(response.data.dataSGE[0])) {
                         result.push(value[1]);
                     }
                     let data = []
@@ -197,7 +183,7 @@ class Filters extends React.Component {
                         })
                     });
                     this.props.data(data);
-                    this.props.dataGraph(response.data.dataTimeSeriesGraph[0]);
+                    this.props.dataGraph(response.data.dataSGEGraph[0]);
                 })
                 .catch(function (error) {
                     console.log(error);
@@ -205,18 +191,6 @@ class Filters extends React.Component {
         }
     }
     render() {
-        const SelectBucket = () => {
-            const listBuckets = this.state.buckets.map((bucket) => (
-                <option key={bucket} value={bucket}>{bucket}</option>
-            ));
-            return (
-                <select value={this.state.bucket} onChange={this.handleChange} multiple={false} name="bucket" className="form-select">
-                    <option key="" value="">Veuillez sélectionner un bucket</option>
-                    {listBuckets}
-                </select>
-            );
-        }
-
         const SelectMesurements = () => {
             const listMeasurements = this.state.measurements.map((measurement) => (
                 <option key={measurement} value={measurement}>{measurement}</option>
@@ -241,16 +215,9 @@ class Filters extends React.Component {
         }
         return (
             <div>
-
 							<div className="jumbotron shadow">
 								<Form onSubmit={this.handleSubmit}>
 									<div className="row align-items-center">
-										<div className="form-group col-md-2 border-right" hidden>
-											<FormGroup>
-												<FormLabel>Bucket</FormLabel>
-												<SelectBucket />
-											</FormGroup>
-										</div>
 										<div className="form-group col-md-2">
 											<FormGroup>
 												<FormLabel>Measurement</FormLabel>

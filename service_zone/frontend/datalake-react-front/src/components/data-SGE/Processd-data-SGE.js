@@ -8,7 +8,6 @@ export class ProcessedDataSGE extends React.Component {
         this.state = {
             dataFilters: [],
             dataGraph : {},
-            selectBucket: "",
             selectMeasurement: "",
             selectTopic: "",
         };
@@ -28,9 +27,6 @@ export class ProcessedDataSGE extends React.Component {
     handleCallbackDataGraph = (childData) =>{
         this.setState({dataGraph: childData})
     }
-    handleCallbackBucket = (childData) =>{
-        this.setState({selectBucket: childData})
-    }
     handleCallbackMeasurement = (childData) =>{
         this.setState({selectMeasurement: childData})
     }
@@ -45,12 +41,10 @@ export class ProcessedDataSGE extends React.Component {
                     <Filters
                         data={this.handleCallbackData} 
                         dataGraph={this.handleCallbackDataGraph}
-                        selectBucket={this.handleCallbackBucket}
                         selectMeasurement={this.handleCallbackMeasurement}
                         selectTopic={this.handleCallbackTopic}
                     />
                     <DataSGE
-                        bucket={this.state.selectBucket}
                         measurement={this.state.selectMeasurement}
                         topic={this.state.selectTopic}
                         data={this.state.dataFilters}
