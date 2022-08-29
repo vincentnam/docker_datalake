@@ -36,14 +36,15 @@ def get_all_measurements():
     client = sqldb.connection_sqldb()
 
     # Execute the query
-    tables = client.get_all_measurements()
+    results = sqldb.get_all_measurements()
 
-    # Flatten output tables into list of measurements
-    measurements = [row[0] for table in tables for row in table]
+    # Flatten output results into list of measurements
+    measurements = [row for table in results for row in table]
 
     all_measurements = {
         "measurements": measurements
     }
+    
     return jsonify(all_measurements)
 
 
@@ -77,10 +78,10 @@ def get_all_topics():
     tag = "topic"
 
     # Execute the query
-    tables = client.get_all_topics(measurement)
+    results = sqldb.get_all_topics(measurement)
 
-    # Flatten output tables into list of topics
-    topics = [row[0] for table in tables for row in table]
+    # Flatten output results into list of topics
+    topics = [row for table in results for row in table]
  
     all_topics = {
         "topics": topics
@@ -128,15 +129,13 @@ def get_data_SGE():
     }
  
     # Execute the query
-    result = client.get_all_data(params)
-    
-    #Dataframe to json format
-    data = result.to_json(orient="index")
-    data = json.loads(data)
-    dataGraph = result.to_json()
-    dataGraph = json.loads(dataGraph)
+    results = sqldb.get_all_data(params)
+
+    # Flatten output results into list of res_data
+    res_data = [row for table in results for row in table]
+
     all_topics = {
-        "dataSGE": [data],
-        "dataSGEGraph": [dataGraph]
+        "dataSGE": res_data,
+        "dataSGEGraph": res_data
     }
     return jsonify(all_topics)

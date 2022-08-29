@@ -13,6 +13,8 @@ def connection_sqldb():
     SQLSERVER_LOGIN = "sa"
     SQLSERVER_PWD = "!ModisSGE"
 
+    driver = "ODBC Driver 17 for SQL Server"
+
     server = SQLSERVER_URL ##globals()["SQLSERVER_URL"]
     database = SQLSERVER_DB ##globals()["SQLSERVER_DB"]
     username = SQLSERVER_LOGIN ##globals()["SQLSERVER_LOGIN"]
@@ -20,7 +22,7 @@ def connection_sqldb():
 
     # Connection to sqldb database
     ##connection = pyodbc.connect('DRIVER={SQL Server Native Client 11.0};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
-    connection = pyodbc.connect('DRIVER={FreeTDS};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
+    connection = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
 
     return connection
 
@@ -50,58 +52,51 @@ def get_all_measurements():
     order by 1;"
 
     cursor.execute(query_api)
-    results = cursor.fetchone()
+    results = cursor.fetchall()
 
-    # Flatten output tables into list of measurements
-    measurements = [row[0] for table in results for row in table]
-    
-    return measurements
+    return results
 
-def get_all_topics(params):
+
+def get_all_topics(measurement):
     connection = connection_sqldb()
     cursor = connection.cursor()
 
     # Query
     query_api = "SELECT distinct SUBSTRING(Name, 1, len(Name)-CHARINDEX('.', reverse(Name), CHARINDEX('.', reverse(Name))+1)) As Topic \
     FROM [IndexCPT].[dbo].[Table_Index] \
-    WHERE SUBSTRING(Name, len(Name)-CHARINDEX('.', reverse(Name), CHARINDEX('.', reverse(Name))+1)+2, CHARINDEX('.', reverse(Name), CHARINDEX('.', reverse(Name))+1)) = " + params['measurement'] + \
+    WHERE SUBSTRING(Name, len(Name)-CHARINDEX('.', reverse(Name), CHARINDEX('.', reverse(Name))+1)+2, CHARINDEX('.', reverse(Name), CHARINDEX('.', reverse(Name))+1)) = '" + measurement + "'" \
     " order by 1;"
 
     cursor.execute(query_api)
-    results = cursor.fetchone()
+    results = cursor.fetchall()
+   
+    return results
 
-    # Flatten output tables into list of measurements
-    topics = [row[0] for table in results for row in table]
-    
-    return topics
 
 def get_all_data(params):
     connection = connection_sqldb()
     cursor = connection.cursor()
 
-    dict_params = {
-        'begin_date': datetime.strptime(params['beginDate'], '%Y-%m-%d'), 
-        'end_date':  datetime.strptime(params['endDate'], '%Y-%m-%d')
-    }
+    date_format = "%Y-%m-%d"
 
-    #dict_params.get('begin_date')
-    #dict_params.get('end_date')
+    dt_begin_date = datetime.fromtimestamp(int(params['begin_date']))
+    dt_end_date = datetime.fromtimestamp(int(params['end_date']))
+
+    dict_params = {
+        'begin_date': dt_begin_date.strftime('%Y-%m-%d'), 
+        'end_date':  dt_end_date.strftime('%Y-%m-%d')
+    }
 
     # Query
     query_api = "SELECT Value \
     FROM [IndexCPT].[dbo].[Table_Index] \
-    WHERE len(Name) - len(replace(Name,'.','')) >=2 \
-    AND " + params['measurement'] + " = SUBSTRING(Name, len(Name)-CHARINDEX('.', reverse(Name), CHARINDEX('.', reverse(Name))+1)+2, CHARINDEX('.', reverse(Name), CHARINDEX('.', reverse(Name))+1)) \
-    AND " + params['topic']+ " = SUBSTRING(Name, 1, len(Name)-CHARINDEX('.', reverse(Name), CHARINDEX('.', reverse(Name))+1)) \
-    AND TS between cast(" + params['beginDate'] + " As Date) and  cast(" + params['endDate'] + " As Date);"
+    WHERE '" + params['topic'] + "." + params['measurement'] + "' = Name \
+    AND TS between cast('" + dict_params['begin_date'] + "' As Date) and  cast('" + dict_params['end_date'] + "' As Date);"
+
+    #print(query_api)
 
     cursor.execute(query_api)
-    row = cursor.fetchone()
+    results = cursor.fetchall()
 
-    results = cursor.fetchone()
-
-    # Flatten output tables into list of measurements
-    results_data = [row[0] for table in results for row in table]
-    
-    return results_data
+    return results
 
