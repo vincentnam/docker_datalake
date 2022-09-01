@@ -79,8 +79,8 @@ def get_all_data(params):
 
     date_format = "%Y-%m-%d"
 
-    dt_begin_date = datetime.fromtimestamp(int(params['begin_date']))
-    dt_end_date = datetime.fromtimestamp(int(params['end_date']))
+    dt_begin_date = datetime.fromtimestamp(int(params['begin_date'])) + timedelta(days=1)
+    dt_end_date = datetime.fromtimestamp(int(params['end_date'])) + timedelta(days=1)
 
     dict_params = {
         'begin_date': dt_begin_date.strftime('%Y-%m-%d'), 
@@ -88,15 +88,26 @@ def get_all_data(params):
     }
 
     # Query
-    query_api = "SELECT Value \
+    query_api = "SELECT TS, Value \
     FROM [IndexCPT].[dbo].[Table_Index] \
     WHERE '" + params['topic'] + "." + params['measurement'] + "' = Name \
     AND TS between cast('" + dict_params['begin_date'] + "' As Date) and  cast('" + dict_params['end_date'] + "' As Date);"
 
-    #print(query_api)
+    print(query_api)
 
     cursor.execute(query_api)
     results = cursor.fetchall()
 
-    return results
+    data = []
+    for row in results:
+        data.append({
+            '_time':  row[0],
+            '_value': row[1],
+            '_measurement': params['measurement'],
+            'topic': params['topic'],
+        })
+    
+    print(data)
+
+    return data
 

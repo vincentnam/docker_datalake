@@ -16,5 +16,4 @@ marshmallow
 keystoneauth1==4.5.0
 python-keystoneclient==4.4.0
 pyodbc
-pymssql
 

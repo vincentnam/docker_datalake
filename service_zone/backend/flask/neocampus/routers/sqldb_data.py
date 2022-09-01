@@ -2,6 +2,8 @@ from flask import Blueprint, jsonify, request, current_app
 from ..services import sqldb, keystone
 from datetime import datetime
 import json
+import pandas as pd
+
 
 sqldb_data_bp = Blueprint('sqldb_data_bp', __name__)
 
@@ -132,10 +134,16 @@ def get_data_SGE():
     results = sqldb.get_all_data(params)
 
     # Flatten output results into list of res_data
-    res_data = [row for table in results for row in table]
+    #res_data = [row for table in results for row in table]
+    results_df = pd.DataFrame(results)
 
-    all_topics = {
-        "dataSGE": res_data,
-        "dataSGEGraph": res_data
+    data = results_df.to_json(orient="index")
+    data = json.loads(data)
+    dataGraph = results_df.to_json()
+    dataGraph = json.loads(dataGraph)
+
+    all_SGE_data = {
+        "dataSGE": [data],
+        "dataSGEGraph": [dataGraph]
     }
-    return jsonify(all_topics)
+    return jsonify(all_SGE_data)
