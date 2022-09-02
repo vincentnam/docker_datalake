@@ -214,7 +214,7 @@ export class DataSGE extends React.Component {
         }
 
         return (
-            <div className="mt-1 row d-flex">
+            <div className="mt-3 row d-flex">
                 <nav className="tab-show">
                     <div className="nav nav-pills" id="pills-tab" role="tablist">
                         <button className="nav-link active" id="nav-raw-tab" data-bs-toggle="pill"
@@ -227,7 +227,7 @@ export class DataSGE extends React.Component {
                         </button>
                     </div>
                 </nav>
-                <div className="tab-content mt-2" id="pills-tabContent">
+                <div className="tab-content mt-4" id="pills-tabContent">
                     <div className="tab-pane fade show active" id="nav-raw" role="tabpanel"
                         aria-labelledby="nav-raw-tab">
                         <Show />

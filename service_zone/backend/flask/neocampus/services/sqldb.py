@@ -91,7 +91,8 @@ def get_all_data(params):
     query_api = "SELECT TS, Value \
     FROM [IndexCPT].[dbo].[Table_Index] \
     WHERE '" + params['topic'] + "." + params['measurement'] + "' = Name \
-    AND TS between cast('" + dict_params['begin_date'] + "' As Date) and  cast('" + dict_params['end_date'] + "' As Date);"
+    AND TS between cast('" + dict_params['begin_date'] + "' As Date) and  cast('" + dict_params['end_date'] + "' As Date) \
+    ORDER BY TS ASC;"
 
     print(query_api)
 
