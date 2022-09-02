@@ -46,7 +46,7 @@ export class DataSGE extends React.Component {
         return result;
     }
     render() {
-        const Table = ({ data }) => {
+        const Table2 = ({ data }) => {
             const columns = React.useMemo(
                 () => [
                     {
@@ -196,7 +196,7 @@ export class DataSGE extends React.Component {
             }
         }
         
-        const Show = () => {
+        const Show2 = () => {
             if (this.props.topic === "") {
                 return (
                     <div></div>
@@ -218,24 +218,24 @@ export class DataSGE extends React.Component {
                 <nav className="tab-show">
                     <div className="nav nav-pills" id="pills-tab" role="tablist">
                         <button className="nav-link active" id="nav-raw-tab" data-bs-toggle="pill"
-                                data-bs-target="#nav-raw" type="button" role="tab" aria-controls="nav-raw"
+                                data-bs-target="#nav-rawSGE" type="button" role="tab" aria-controls="nav-raw"
                                 aria-selected="true">Graphique
                         </button>
                         <button className="nav-link" id="nav-handled-tab" data-bs-toggle="pill"
-                                data-bs-target="#nav-handled" type="button" role="tab" aria-controls="nav-handled"
+                                data-bs-target="#nav-handledSGE" type="button" role="tab" aria-controls="nav-handled"
                                 aria-selected="false">Tableau de données
                         </button>
                     </div>
                 </nav>
                 <div className="tab-content mt-4" id="pills-tabContent">
-                    <div className="tab-pane fade show active" id="nav-raw" role="tabpanel"
+                    <div className="tab-pane fade show active" id="nav-rawSGE" role="tabpanel"
                         aria-labelledby="nav-raw-tab">
-                        <Show />
+                        <Show2 />
                     </div>
-                    <div className="tab-pane fade" id="nav-handled" role="tabpanel"
+                    <div className="tab-pane fade" id="nav-handledSGE" role="tabpanel"
                         aria-labelledby="nav-handled-tab">
                         <div  className="data-table">
-                            <Table data={this.props.data} />
+                            <Table2 data={this.props.data} />
                         </div>
                     </div>
                 </div>  
