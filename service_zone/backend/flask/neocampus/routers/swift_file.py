@@ -200,7 +200,7 @@ def upload():
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.upload
-    mongo_collection = mongo_db["file_upload"]
+    mongo_collection = mongo_db["big_file_upload"]
 
     save_path = os.path.join(
         current_app.root_path, current_app.config['SWIFT_FILES_DIRECTORY'], file.filename)
@@ -243,12 +243,13 @@ def upload():
                 "total_bytes": request.form['dztotalfilesize'],
                 "created_at": datetime.datetime.now(),
                 "update_at": datetime.datetime.now(),
-                "container_name": container_name,
+                "container_name": request.form["container_name"],
+                "id_big_file": request.form["id_big_file"],
             }
             id_file_upload = mongo_collection.insert_one(data).inserted_id
             new_value = False
     else:
-        doc = {"_id": ObjectId(id_file_upload)}
+        doc = {"id_big_file": request.form["id_big_file"]}
         newvalues = { "$set": { "total_bytes_download": os.path.getsize(save_path), "update_at": datetime.datetime.now() } }
         mongo_collection.update_one(doc, newvalues)
         # This was the last chunk, the file should be complete and the size we expect
