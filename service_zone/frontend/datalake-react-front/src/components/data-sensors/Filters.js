@@ -131,6 +131,10 @@ class Filters extends React.Component {
             });
     }
     loadTopics(measurement) {
+        this.setState({
+            topics: [],
+            topic: "",
+        });
         api.post('topics', {
             bucket: this.state.container_name,
             measurement: measurement,

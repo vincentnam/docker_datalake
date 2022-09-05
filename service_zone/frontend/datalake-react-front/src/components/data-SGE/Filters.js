@@ -121,6 +121,10 @@ class Filters extends React.Component {
             });
     }
     loadTopics(measurement) {
+        this.setState({
+            topics: [],
+            topic: "",
+        });
         api.post('topicsSGE', {
             measurement: measurement,
             token: localStorage.getItem('token')
