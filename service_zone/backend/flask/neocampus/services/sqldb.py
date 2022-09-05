@@ -8,17 +8,12 @@ import json
 #Function for connection to sqldb
 def connection_sqldb():
     #Connection sqldb
-    SQLSERVER_URL = "Neocampus-datalake-sql.dev.modiscloud.net"
-    SQLSERVER_DB = "IndexCPT"
-    SQLSERVER_LOGIN = "sa"
-    SQLSERVER_PWD = "!ModisSGE"
-
     driver = "ODBC Driver 17 for SQL Server"
 
-    server = SQLSERVER_URL ##globals()["SQLSERVER_URL"]
-    database = SQLSERVER_DB ##globals()["SQLSERVER_DB"]
-    username = SQLSERVER_LOGIN ##globals()["SQLSERVER_LOGIN"]
-    password = SQLSERVER_PWD ##globals()["SQLSERVER_PWD"]
+    server = current_app.config['SQLSERVER_URL']
+    database = current_app.config['SQLSERVER_DB']
+    username = current_app.config['SQLSERVER_LOGIN']
+    password = current_app.config['SQLSERVER_PWD']
 
     # Connection to sqldb database
     ##connection = pyodbc.connect('DRIVER={SQL Server Native Client 11.0};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
