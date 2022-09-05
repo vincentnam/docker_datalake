@@ -100,7 +100,7 @@ class Upload extends React.Component {
         });
 
         //Message after the file is completely upload
-        myDropzone.on("success", file =>{
+        myDropzone.on("success", file => {
             toast.success("L'upload a bien été fait !", {
                 theme: "colored",
                 position: "top-right",
@@ -116,7 +116,7 @@ class Upload extends React.Component {
         })
 
         //Message error if the file not correctly upload
-        myDropzone.on("error", file =>{
+        myDropzone.on("error", file => {
             toast.error("L'upload n'a pas réussi !", {
                 theme: "colored",
                 position: "top-right",
@@ -128,7 +128,6 @@ class Upload extends React.Component {
                 progress: undefined,
             });
         })
-
 
 
     }
@@ -625,32 +624,44 @@ class Upload extends React.Component {
             }
         });
 
-        if(nbErrors === 0 ){
-            // Upload files by chunking (file is divized into chunks which are sent sucessively)
-            dropper.on("sending", function (file, xhr, formData) {
-                let other = {}
-                this.state.othermeta.forEach((meta) => {
-                    other[meta.name] = meta.value
-                });
-                let token = localStorage.getItem('token');
-                formData.append('othermeta', JSON.stringify(other));
-                formData.append('token', token);
-                formData.append('container_name', this.props.nameContainer.nameContainer);
-            }.bind(this));
+        api.post('object_id_big_file', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                if (nbErrors === 0) {
+                    // Upload files by chunking (file is divized into chunks which are sent sucessively)
+                    dropper.on("sending", function (file, xhr, formData) {
+                        let other = {}
+                        this.state.othermeta.forEach((meta) => {
+                            other[meta.name] = meta.value
+                        });
+                        let token = localStorage.getItem('token');
+                        formData.append('othermeta', JSON.stringify(other));
+                        formData.append('token', token);
+                        formData.append('container_name', this.props.nameContainer.nameContainer);
+                        formData.append('id_big_file', response.data.object_id_big_file + 1);
+                    }.bind(this));
 
-            dropper.processQueue();
-            //Message to warn that the file is being uploaded
-            toast.success("L'upload est en cours, veuillez patienter !", {
-                theme: "colored",
-                position: "top-right",
-                autoClose: 7000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: false,
-                draggable: true,
-                progress: undefined,
+                    dropper.processQueue();
+                    //Message to warn that the file is being uploaded
+                    toast.success("L'upload est en cours, veuillez patienter !", {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 7000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: false,
+                        draggable: true,
+                        progress: undefined,
+                    });
+                }
+
+            })
+            .catch(function (error) {
+                console.log(error);
             });
-        }
+
+
     }
 
     getDropper() {

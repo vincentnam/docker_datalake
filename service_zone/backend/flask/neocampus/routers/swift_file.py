@@ -7,6 +7,7 @@ from flask import Blueprint, jsonify, current_app, request, send_from_directory,
 from ..services import swift, mongo, keystone
 import os
 from multiprocessing import Process
+from pymongo import MongoClient
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 

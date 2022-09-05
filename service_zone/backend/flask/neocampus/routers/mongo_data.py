@@ -1003,7 +1003,6 @@ def show_mqtt_flux_actifs():
 def traceability_big_file_update_id():
     try:
         params = {
-            "container_name": request.get_json()['container_name'],
             "token": request.get_json()['token'],
         }
     except:
@@ -1013,4 +1012,4 @@ def traceability_big_file_update_id():
         return jsonify({'error': 'Wrong Token'})
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
-    return mongo_client.stats.traceability_big_file.find_one_and_update({"type": "object_id_big_file"}, {"$inc": {"object_id": 1}})["object_id"]
+    return {"object_id_big_file": mongo_client.stats.traceability_big_file.find_one_and_update({"type": "object_id_big_file"}, {"$inc": {"object_id": 1}})["object_id"]}
