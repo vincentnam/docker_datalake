@@ -248,10 +248,10 @@ def upload():
             }
             id_file_upload = mongo_collection.insert_one(data).inserted_id
             new_value = False
-    else:
-        doc = {"id_big_file": request.form["id_big_file"]}
-        newvalues = { "$set": { "total_bytes_download": os.path.getsize(save_path), "update_at": datetime.datetime.now() } }
-        mongo_collection.update_one(doc, newvalues)
+        else:
+            doc = {"id_big_file": request.form["id_big_file"]}
+            newvalues = { "$set": { "total_bytes_download": os.path.getsize(save_path), "update_at": datetime.datetime.now() } }
+            mongo_collection.update_one(doc, newvalues)
         # This was the last chunk, the file should be complete and the size we expect
         if os.path.getsize(save_path) != int(request.form['dztotalfilesize']):
             print(f"File {file.filename} was completed, "
