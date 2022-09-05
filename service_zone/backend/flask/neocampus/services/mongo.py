@@ -108,7 +108,7 @@ def init_id():
 def insert_datalake(file_content, user, key, authurl, container_name,
                     file_name, processed_data_area_service, data_process,
                     application, content_type,
-                    mongodb_url, other_data):
+                    mongodb_url, other_data, id_big_file):
     conn = swiftclient.Connection(user=user, key=key,
                                   authurl=authurl, insecure=True)
     client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
@@ -148,6 +148,11 @@ def insert_datalake(file_content, user, key, authurl, container_name,
     retry = 0
     while True:
         try:
+            traceability_file_upload_swift = Process(
+                target=get_traceability_file,
+                name="Upload_Openstack_Swift",
+                args=(container_name, meta_data["swift_object_id"], id_big_file))
+            traceability_file_upload_swift.start()
             conn.put_object(container_name, meta_data["swift_object_id"],
                             contents=file_content,
                             content_type=meta_data["content_type"])
@@ -158,6 +163,26 @@ def insert_datalake(file_content, user, key, authurl, container_name,
             retry += 1
             if retry > 3:
                 return None
+
+def get_traceability_file(container_name,swift_object_id, id_big_file):
+    """
+    Update the traceability of file
+    :return: all models
+    """
+
+    swift_co = swiftclient.Connection(user=globals()["SWIFT_USER"],key=globals()["SWIFT_KEY"],authurl=globals()["SWIFT_AUTHURL"], insecure=True)
+    swift_json = swift_co.get_object(kwargs["dag_run"].conf["swift_container"], kwargs["dag_run"].conf["swift_obj_id"])
+
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
+    mongo_db = mongo_client.upload
+    mongo_collection = mongo_db["big_file_upload"]
+    doc = {"id_big_file": id_big_file}
+    newvalues = { "$set": { "total_bytes_upload_swift": transferred, "update_at": datetime.datetime.now() } }
+    mongo_collection.update_one(doc, newvalues)
+
+    return "OK"
+
 
 
 def get_handled_data(params):
@@ -394,3 +419,9 @@ def typefile(typef):
         type_file = "application/octet-stream"
 
     return type_file
+
+
+def traceability_big_file_update_id():
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
+    return mongo_client.stats.traceability_big_file.find_one_and_update({"type": "object_id_big_file"}, {"$inc": {"object_id": 1}})["object_id"]

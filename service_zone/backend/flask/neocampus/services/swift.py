@@ -2,7 +2,7 @@ import os
 
 import swiftclient
 from flask import current_app
-from .mongo import get_swift_original_object_name
+from .mongo import get_swift_original_object_name, traceability_big_file_update_id
 from ..services import mongo
 import paramiko
 from pathlib import Path
@@ -78,6 +78,8 @@ def ssh_file(
         mongo_collection = mongo_db["file_upload"]
         new_value = True
         id_file_upload = ""
+        id_big_file = traceability_big_file_update_id()+1
+
         #Callback function
         def callback_large_file_upload(transferred, toBeTransferred):
             nonlocal new_value
@@ -93,6 +95,8 @@ def ssh_file(
                     "created_at": datetime.datetime.now(),
                     "update_at": datetime.datetime.now(),
                     "container_name": container_name,
+                    "total_bytes_upload_swift": 0,
+                    "id_big_file": id_big_file
                 }
                 id_file_upload = mongo_collection.insert_one(data).inserted_id
                 new_value = False
@@ -127,7 +131,7 @@ def ssh_file(
             }
         mongo.insert_datalake(file_content, user, key, authurl, container_name, filename,
                             processed_data_area_service, data_process, application,
-                            content_type, mongodb_url, other_data)
+                            content_type, mongodb_url, other_data, id_big_file)
         
         return "OK"
     except Exception as e:

@@ -201,7 +201,7 @@ def upload():
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.upload
-    mongo_collection = mongo_db["big_file_upload"]
+    mongo_collection = mongo_db["file_upload"]
 
     save_path = os.path.join(
         current_app.root_path, current_app.config['SWIFT_FILES_DIRECTORY'], file.filename)
@@ -245,7 +245,8 @@ def upload():
                 "created_at": datetime.datetime.now(),
                 "update_at": datetime.datetime.now(),
                 "container_name": request.form["container_name"],
-                "id_big_file": request.form["id_big_file"],
+                "total_bytes_upload_swift": 0,
+                "id_big_file": request.form["id_big_file"]
             }
             id_file_upload = mongo_collection.insert_one(data).inserted_id
             new_value = False
