@@ -8,6 +8,8 @@ from ..services import swift, mongo, keystone
 import os
 from multiprocessing import Process
 from pymongo import MongoClient
+import swiftclient
+import datetime
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
@@ -230,9 +232,6 @@ def upload():
 
     if current_chunk == 0:
         new_value = True
-
-    if current_chunk + 1 == total_chunks:
-        new_value = False
         if new_value == True:
             extension = file.filename.split(".")
             extension = extension.pop()
@@ -250,10 +249,15 @@ def upload():
             }
             id_file_upload = mongo_collection.insert_one(data).inserted_id
             new_value = False
-        else:
-            doc = {"id_big_file": request.form["id_big_file"]}
-            newvalues = { "$set": { "total_bytes_download": os.path.getsize(save_path), "update_at": datetime.datetime.now() } }
-            mongo_collection.update_one(doc, newvalues)
+    else:
+        doc = {"id_big_file": request.form["id_big_file"]}
+        newvalues = { "$set": { "total_bytes_download": os.path.getsize(save_path), "update_at": datetime.datetime.now() } }
+        mongo_collection.update_one(doc, newvalues)
+
+    if current_chunk + 1 == total_chunks:
+        doc = {"id_big_file": request.form["id_big_file"]}
+        newvalues = { "$set": { "total_bytes_download": request.form['dztotalfilesize'], "update_at": datetime.datetime.now() } }
+        mongo_collection.update_one(doc, newvalues)
         # This was the last chunk, the file should be complete and the size we expect
         if os.path.getsize(save_path) != int(request.form['dztotalfilesize']):
             print(f"File {file.filename} was completed, "
@@ -292,6 +296,7 @@ def upload():
             application = None
             data_process = "custom"
             processed_data_area_service = ["MongoDB"]
+            id_big_file = request.form["id_big_file"]
 
             # Multithreading for upload file from backend to Openstack Swift in background
             upload_processing = Process(
@@ -300,7 +305,7 @@ def upload():
                 args=(
                     file_content, user, key, authurl,
                     container_name, filename, processed_data_area_service, data_process,
-                    application, content_type, mongodb_url, other_data
+                    application, content_type, mongodb_url, other_data, id_big_file
                 )
             )
             upload_processing.start()
@@ -311,3 +316,30 @@ def upload():
 
 
     return make_response(("Chunk upload successful", 200))
+
+@swift_file_bp.route('/test-return-swift', methods=['POST'])
+def get_traceability_file():
+    """
+    Update the traceability of file
+    :return: all models
+    """
+    swift_object_id = '118518'
+    swift_container = 'neOCampus'
+    swift_co = swiftclient.Connection(user=current_app.config["SWIFT_USER"],key=current_app.config["SWIFT_KEY"],authurl=current_app.config["SWIFT_AUTHURL"], insecure=True)
+    file_content = "test"
+    content_type = "text/plain"
+    swift_co.put_object(swift_container, swift_object_id,
+                        contents=file_content,
+                        content_type=content_type)
+
+
+    swift_json = swift_co.get_object(swift_container,swift_object_id)
+
+    content_length_swift_object = int(swift_json[0]['content-length'])
+
+    print(content_length_swift_object)
+
+
+
+
+    return "OK"
