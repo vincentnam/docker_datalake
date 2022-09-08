@@ -107,35 +107,6 @@ def init_id():
         client.insert_one(id_doc)
     client.create_index("type", unique=True)
 
-def get_traceability_file_swift(container_name,swift_object_id, id_big_file):
-    """
-    Update the traceability of file
-    :return: OK
-    """
-    content_length_swift_object = 0
-    content_length_object = 1
-    while content_length_swift_object < content_length_object :
-        swift_co = swiftclient.Connection(user=current_app.config["SWIFT_USER"],key=current_app.config["SWIFT_KEY"],authurl=current_app.config["SWIFT_AUTHURL"], insecure=True)
-        swift_json = swift_co.get_object(container_name,swift_object_id)
-        content_length_swift_object = int(swift_json[0]['content-length'])
-        print(content_length_swift_object)
-
-        mongodb_url = current_app.config['MONGO_URL']
-        mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
-        mongo_db = mongo_client.upload
-        mongo_collection = mongo_db["file_upload"]
-        doc = {"id_big_file": id_big_file}
-        newvalues = { "$set": { "total_bytes_upload_swift": content_length_swift_object, "update_at": datetime.datetime.now() } }
-        mongo_collection.update_one(doc, newvalues)
-
-        result = mongo_collection.find(doc)
-        content_length_object = result[0]["total_bytes"]
-        content_length_object = int(content_length_object)
-        print(content_length_object)
-        print(id_big_file)
-
-    return "OK"
-
 
 def insert_datalake(file_content, user, key, authurl, container_name,
                     file_name, processed_data_area_service, data_process,
@@ -180,22 +151,16 @@ def insert_datalake(file_content, user, key, authurl, container_name,
     retry = 0
     while True:
         try:
-            content = ""
-            conn.put_object(container_name, meta_data["swift_object_id"],
-                            contents=content,
-                            content_type=meta_data["content_type"])
-            print("first")
-
-            traceability_file_upload_swift = Process(
-                target=get_traceability_file_swift,
-                name="Upload_in_Swift",
-                args=(container_name, meta_data["swift_object_id"], id_big_file))
-            traceability_file_upload_swift.start()
-            print("second")
             conn.put_object(container_name, meta_data["swift_object_id"],
                             contents=file_content,
                             content_type=meta_data["content_type"])
-            print("3")
+
+            mongo_db = client.upload
+            mongo_collection = mongo_db["file_upload"]
+            doc = {"id_big_file": id_big_file}
+            newvalues = { "$set": { "upload_swift": True, "update_at": datetime.datetime.now() } }
+            mongo_collection.update_one(doc, newvalues)
+
             coll.insert_one(meta_data)
             return None
         except Exception as e:

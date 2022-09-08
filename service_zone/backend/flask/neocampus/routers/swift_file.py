@@ -207,14 +207,12 @@ def upload():
 
     save_path = os.path.join(
         current_app.root_path, current_app.config['SWIFT_FILES_DIRECTORY'], file.filename)
-    print(save_path)
     current_chunk = int(request.form['dzchunkindex'])
 
     # If the file already exists it's ok if we are appending to it,
     # but not if it's new file that would overwrite the existing one
     if os.path.exists(save_path) and current_chunk == 0:
         # 400 and 500s will tell dropzone that an error occurred and show an error
-        print('file already exists')
         return make_response(('File already exists', 400))
 
     try:
@@ -223,7 +221,6 @@ def upload():
             f.write(file.stream.read())
     except OSError:
         # log.exception will include the traceback so we can see what's wrong
-        print('Could not write to file')
         return make_response(("Not sure why,"
                               " but we couldn't write the file to disk", 500))
 
@@ -244,7 +241,7 @@ def upload():
                 "created_at": datetime.datetime.now(),
                 "update_at": datetime.datetime.now(),
                 "container_name": request.form["container_name"],
-                "total_bytes_upload_swift": 0,
+                "upload_swift": False,
                 "id_big_file": request.form["id_big_file"]
             }
             id_file_upload = mongo_collection.insert_one(data).inserted_id
@@ -260,10 +257,6 @@ def upload():
         mongo_collection.update_one(doc, newvalues)
         # This was the last chunk, the file should be complete and the size we expect
         if os.path.getsize(save_path) != int(request.form['dztotalfilesize']):
-            print(f"File {file.filename} was completed, "
-                      f"but has a size mismatch."
-                      f"Was {os.path.getsize(save_path)} but we"
-                      f" expected {request.form['dztotalfilesize']} ")
             return make_response(('Size mismatch', 500))
         else:
             other_data = json.loads(request.form["othermeta"])
@@ -273,9 +266,6 @@ def upload():
 
             container_name = request.form["container_name"]
             filename = file.filename
-
-            # File upload completely finished (end of chunks)
-            print(f'File {file.filename} has been uploaded successfully')
 
             # Get content file totally
             filepath = os.path.join(
@@ -309,37 +299,5 @@ def upload():
                 )
             )
             upload_processing.start()
-    else:
-        print(f'Chunk {current_chunk + 1} of {total_chunks} '
-            f'for file {file.filename} complete')
-
-
 
     return make_response(("Chunk upload successful", 200))
-
-@swift_file_bp.route('/test-return-swift', methods=['POST'])
-def get_traceability_file():
-    """
-    Update the traceability of file
-    :return: all models
-    """
-    swift_object_id = '118518'
-    swift_container = 'neOCampus'
-    swift_co = swiftclient.Connection(user=current_app.config["SWIFT_USER"],key=current_app.config["SWIFT_KEY"],authurl=current_app.config["SWIFT_AUTHURL"], insecure=True)
-    file_content = "test"
-    content_type = "text/plain"
-    swift_co.put_object(swift_container, swift_object_id,
-                        contents=file_content,
-                        content_type=content_type)
-
-
-    swift_json = swift_co.get_object(swift_container,swift_object_id)
-
-    content_length_swift_object = int(swift_json[0]['content-length'])
-
-    print(content_length_swift_object)
-
-
-
-
-    return "OK"

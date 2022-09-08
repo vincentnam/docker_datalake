@@ -95,7 +95,7 @@ def ssh_file(
                     "created_at": datetime.datetime.now(),
                     "update_at": datetime.datetime.now(),
                     "container_name": container_name,
-                    "total_bytes_upload_swift": 0,
+                    "upload_swift": False,
                     "id_big_file": id_big_file
                 }
                 id_file_upload = mongo_collection.insert_one(data).inserted_id
