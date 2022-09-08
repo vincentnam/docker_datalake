@@ -6,7 +6,7 @@ import {configWithSGE} from "../configmeta/configWithSGE";
 import {extensions_types_files} from '../configmeta/extensions_types_files';
 import api from '../api/api';
 import {ProgressBarComponent} from "./upload-child/ProgressBarComponent";
-import {ToastContainer, toast} from 'react-toastify';
+import {toast, ToastContainer} from 'react-toastify';
 import ModelAddForm from './upload-child/model/ModelAddForm';
 import ModelEditForm from './upload-child/model/ModelEditForm';
 import {Modal} from "react-bootstrap";
@@ -44,7 +44,8 @@ class Upload extends React.Component {
                 typesFiles: [],
                 metadonnees: [],
                 status: true,
-            }
+            },
+            id_file: 0
         };
         this.toggleDownloadMode = this.toggleDownloadMode.bind(this);
         this.handleChange = this.handleChange.bind(this);
@@ -57,12 +58,14 @@ class Upload extends React.Component {
         this.reloadEdit = this.reloadEdit.bind(this);
         this.handleSubmitChunking = this.handleSubmitChunking.bind(this);
         this.setDropper = this.setDropper.bind(this);
-        this.reloadPage = this.reloadPage.bind(this);
         this.clear = this.clear.bind(this);
+        this.get_id_file = this.get_id_file.bind(this);
+        this.reloadPage = this.reloadPage.bind(this);
     }
 
     componentDidMount() {
         /* Dropzone.js - Upload big data configuration */
+        this.get_id_file();
         DropzoneBigData.options.dropper = {
             paramName: 'file',
             chunking: true,
@@ -113,8 +116,8 @@ class Upload extends React.Component {
             });
             myDropzone.removeFile(file);
             this.reloadPage();
+            this.get_id_file();
         })
-
         //Message error if the file not correctly upload
         myDropzone.on("error", file => {
             toast.error("L'upload n'a pas réussi !", {
@@ -128,8 +131,6 @@ class Upload extends React.Component {
                 progress: undefined,
             });
         })
-
-
     }
 
     reloadPage() {
@@ -149,6 +150,17 @@ class Upload extends React.Component {
             uploadLink: true,
             models: [],
             model: "",
+        });
+    }
+
+    get_id_file() {
+        api.post('object_id_big_file', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                this.setState({id_file: response.data.object_id_big_file + 1})
+            }).catch(function (error) {
+            console.log(error);
         });
     }
 
@@ -623,45 +635,32 @@ class Upload extends React.Component {
                 nbErrors += 1;
             }
         });
+        if (nbErrors === 0) {
+            dropper.on("sending", function (file, xhr, formData) {
+                let other = {}
+                this.state.othermeta.forEach((meta) => {
+                    other[meta.name] = meta.value
+                });
+                let token = localStorage.getItem('token');
+                formData.append('othermeta', JSON.stringify(other));
+                formData.append('token', token);
+                formData.append('container_name', this.props.nameContainer.nameContainer);
+                formData.append('id_big_file', this.state.id_file);
+            }.bind(this));
 
-        api.post('object_id_big_file', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                if (nbErrors === 0) {
-                    // Upload files by chunking (file is divized into chunks which are sent sucessively)
-                    dropper.on("sending", function (file, xhr, formData) {
-                        let other = {}
-                        this.state.othermeta.forEach((meta) => {
-                            other[meta.name] = meta.value
-                        });
-                        let token = localStorage.getItem('token');
-                        formData.append('othermeta', JSON.stringify(other));
-                        formData.append('token', token);
-                        formData.append('container_name', this.props.nameContainer.nameContainer);
-                        formData.append('id_big_file', response.data.object_id_big_file + 1);
-                    }.bind(this));
-
-                    dropper.processQueue();
-                    //Message to warn that the file is being uploaded
-                    toast.success("L'upload est en cours, veuillez patienter !", {
-                        theme: "colored",
-                        position: "top-right",
-                        autoClose: 7000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: false,
-                        draggable: true,
-                        progress: undefined,
-                    });
-                }
-
-            })
-            .catch(function (error) {
-                console.log(error);
+            dropper.processQueue();
+            //Message to warn that the file is being uploaded
+            toast.success("L'upload est en cours, veuillez patienter !", {
+                theme: "colored",
+                position: "top-right",
+                autoClose: 7000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: true,
+                progress: undefined,
             });
-
-
+        }
     }
 
     getDropper() {
@@ -674,7 +673,7 @@ class Upload extends React.Component {
         this.setState({'dropper': dropper})
     }
 
-    // remove selected file on upload page
+// remove selected file on upload page
     removeSelectedFile() {
         this.setState({file: ''});
         this.setState({typeFile: ''});
@@ -735,7 +734,8 @@ class Upload extends React.Component {
                     <option key={model._id} value={model._id}>{model.label}</option>
                 ));
                 return (
-                    <select value={this.state.model} onChange={this.handleChange} name="model" className="form-select">
+                    <select value={this.state.model} onChange={this.handleChange} name="model"
+                            className="form-select">
                         <option value="">Sélectionnez un modèle de métadonnées</option>
                         {listModels}
                     </select>
@@ -834,10 +834,12 @@ class Upload extends React.Component {
                                                 <button className="nav-link active" id="nav-ssh-tab"
                                                         data-bs-toggle="pill"
                                                         data-bs-target="#nav-ssh-file" type="button" role="tab"
-                                                        onClick={this.toggleDownloadMode} aria-controls="nav-ssh-file"
+                                                        onClick={this.toggleDownloadMode}
+                                                        aria-controls="nav-ssh-file"
                                                         aria-selected="true">Par SSH
                                                 </button>
-                                                <button className="nav-link" id="nav-chunking-tab" data-bs-toggle="pill"
+                                                <button className="nav-link" id="nav-chunking-tab"
+                                                        data-bs-toggle="pill"
                                                         data-bs-target="#nav-chunking-file" type="button" role="tab"
                                                         onClick={this.toggleDownloadMode}
                                                         aria-controls="nav-chunking-file"
@@ -847,7 +849,8 @@ class Upload extends React.Component {
                                         </nav>
                                         <div className="tab-content" id="pills-tabContent">
                                             { /* Upload volumineux - Chunking */}
-                                            <div className="tab-pane fade mb-4" id="nav-chunking-file" role="tabpanel"
+                                            <div className="tab-pane fade mb-4" id="nav-chunking-file"
+                                                 role="tabpanel"
                                                  aria-labelledby="nav-large-file-tab">
 
                                                 <form method="POST" action='/upload-big-file'
