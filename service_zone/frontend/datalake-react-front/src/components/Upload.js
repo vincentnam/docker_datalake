@@ -78,7 +78,7 @@ class Upload extends React.Component {
             <u>cliquer pour ajouter un fichier</u><br /> \
             Formats suivants acceptés (.jpg, .jpeg, .png, .svg, .csv, .json, .zip, .sql et .txt)",
             addRemoveLinks: true,
-            acceptedFiles: "image/*,application/JSON,.csv,text/plain,.sql,application/x-gzip,application/x-zip-compressed,application/octet-stream"
+            acceptedFiles: "image/*,application/json,.csv,application/csv,application/vnd.ms-excel,text/csv,text/plain,.sql,application/sql,application/x-gzip,application/x-zip-compressed,application/octet-stream"
         }
 
         const myDropzone = new DropzoneBigData("#dropper");
@@ -866,9 +866,6 @@ class Upload extends React.Component {
                             <div className="d-flex justify-content-around align-content-center">
                                 <div className="d-md-flex justify-content-center">
                                     <button type="submit" className="btn btn-oran">Upload le fichier</button>
-                                </div>
-                                <div className="d-md-flex justify-content-center">
-                                    <button type="button" onClick={this.clear} className="btn btn-oran">Clear</button>
                                 </div>
                             </div>
                         </form>

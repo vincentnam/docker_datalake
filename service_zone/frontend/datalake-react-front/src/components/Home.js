@@ -8,7 +8,7 @@ import Moment from "moment";
 import DataTable from 'react-data-table-component';
 import {LoadingSpinner} from "./utils/LoadingSpinner";
 import {connect} from "react-redux";
-import {ToastContainer} from "react-toastify";
+import {toast, ToastContainer} from "react-toastify";
 
 class Home extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
@@ -145,7 +145,7 @@ class Home extends React.Component {
             })
         }
 
-        this.handleShow()
+        this.handleShow();
         $.ajax({
             url: this.url + routeName,
             data: data,
@@ -275,6 +275,16 @@ class Home extends React.Component {
                     link.href = url;
                     link.click();
                     window.URL.revokeObjectURL(url);
+                    toast.success("Le téléchargement a été effectué avec succès !", {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
                 })
                 .catch(function (error, status) {
                     console.error(status, error.toString()); // eslint-disable-line

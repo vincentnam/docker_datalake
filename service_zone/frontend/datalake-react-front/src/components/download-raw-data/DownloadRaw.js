@@ -161,16 +161,7 @@ class DownloadRaw extends React.Component {
                     let url = result.data.swift_zip
                     const link = document.createElement('a');
                     link.href = url;
-                    console.log(link.href);
-
                     link.click();
-
-                    // const url = window.URL.createObjectURL(new Blob([result.data.swift_zip], {type: 'application/zip'}));
-                    // let link = document.createElement('a');
-                    // link.href = url;
-                    // link.setAttribute('download', 'download.zip'); //or any other extension
-                    // document.body.appendChild(link);
-                    // link.click();
                     window.URL.revokeObjectURL(url);
                     toast.success("Le téléchargement a été effectué avec succès !", {
                         theme: "colored",
@@ -191,7 +182,6 @@ class DownloadRaw extends React.Component {
 
             // empty selected elements
             this.emptySelectedlements()
-            this.loadObjectsFromServer()
         } else {
             alert('Veuillez sélectionner une métadonnée !')
         }
@@ -293,7 +283,7 @@ class DownloadRaw extends React.Component {
             })
         }
 
-        this.handleShow()
+        this.handleShow();
         $.ajax({
             url: this.url + '/raw-data',
             data: data,
