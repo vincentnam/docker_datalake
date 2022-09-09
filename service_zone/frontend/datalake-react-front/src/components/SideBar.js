@@ -69,7 +69,7 @@ class SideBar extends React.Component {
                 </NavLink>
                 <NavLink activeClassName="active"
                          className="nav-item nav-link "
-                         to="/data-processed-visualization">
+                         to="/data-visualisation-all">
                     <div className="route d-flex align-content-center">
                         <div id="Logo_data_viz">
                             <svg className="Path_281" viewBox="113.75 43.75 30.72 30.72">
