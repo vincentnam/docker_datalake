@@ -1,7 +1,7 @@
 import React from "react";
 import api from '../api/api';
 import Moment from 'moment';
-import { ProgressBar } from 'react-bootstrap';
+import {ProgressBar} from 'react-bootstrap';
 import {connect} from "react-redux";
 
 class Traceability extends React.Component {
@@ -78,6 +78,7 @@ class Traceability extends React.Component {
                 console.log(error);
             });
     }
+
     render() {
         const TableInProgress = () => {
             let dataTableInProgress = "";
@@ -91,44 +92,59 @@ class Traceability extends React.Component {
             if (this.state.elements.length !== 0) {
                 let dataInProgress = [];
                 this.state.elements.forEach((element) => {
-                    if (element.total_bytes_download !== element.total_bytes) {
+                    if ((element.total_bytes_download !== element.total_bytes && element.upload_swift === false) || (element.total_bytes_download === element.total_bytes && element.upload_swift === false)) {
                         dataInProgress.push(element);
                     }
                 });
                 if (dataInProgress.length === 0) {
                     dataTableInProgress = (
                         <tr>
-                            <td colSpan="5" align="center" style={{color: "black !important"}}>Il n'y a aucun fichier qui est en cours d'upload !</td>
+                            <td colSpan="5" align="center" style={{color: "black !important"}}>Il n'y a aucun fichier
+                                qui est en cours d'upload !
+                            </td>
                         </tr>
                     );
                 } else {
+                    const EtatSwift = (etatBoolean, totalUpload, totalFile) => {
+                        let etat;
+                        if (totalUpload === totalFile) {
+                            etat = "En cours";
+                        } else {
+                            etat = "En attente";
+                        }
+                        return etat;
+                    }
                     dataTableInProgress = dataInProgress.map((element) => (
                         <tr>
                             <td>{element.filename}</td>
                             <td>{element.type_file}</td>
                             <td>
-                                <ProgressBar now={(element.total_bytes_download / element.total_bytes) * 100} label={`${Math.round((element.total_bytes_download / element.total_bytes) * 100)}%`} />
+                                <ProgressBar now={(element.total_bytes_download / element.total_bytes) * 100}
+                                             label={`${Math.round((element.total_bytes_download / element.total_bytes) * 100)}%`}/>
+                            </td>
+                            <td><b
+                                style={{color: '#ea973b'}}>{EtatSwift(element.upload_swift, element.total_bytes_download, element.total_bytes)}</b>
                             </td>
                             <td>{Moment(element.created_at).format('DD/MM/YYYY HH:mm:ss')}</td>
                             <td>{Moment(element.update_at).format('DD/MM/YYYY HH:mm:ss')}</td>
                         </tr>
                     ));
                 }
-                
             }
             return (
                 <table className="table table-traceability table-striped table-responsive" id="TableInProgress">
                     <thead>
-                        <tr style={{ color: '#ea973b' }}>
-                            <th>Nom du fichier</th>
-                            <th>Type du fichier</th>
-                            <th>Progression de l'upload</th>
-                            <th>Début de l'upload</th>
-                            <th>Time of control</th>
-                        </tr>
+                    <tr style={{color: '#ea973b'}}>
+                        <th>Nom du fichier</th>
+                        <th>Type du fichier</th>
+                        <th>Progression de l'upload sur le serveur</th>
+                        <th>Etat de l'ajout sur Openstack Swift</th>
+                        <th>Début de l'upload</th>
+                        <th>Time of control</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        {dataTableInProgress}
+                    {dataTableInProgress}
                     </tbody>
                 </table>
             )
@@ -147,7 +163,7 @@ class Traceability extends React.Component {
             if (this.state.elements.length !== 0) {
                 let dataFinished = [];
                 this.state.elements.forEach((element) => {
-                    if (element.total_bytes_download === element.total_bytes) {
+                    if (element.total_bytes_download === element.total_bytes && element.upload_swift === true) {
                         dataFinished.push(element);
                     }
                 });
@@ -156,7 +172,10 @@ class Traceability extends React.Component {
                         <td>{element.filename}</td>
                         <td>{element.type_file}</td>
                         <td>
-                            <b style={{ color: '#ea973b' }}>Terminé</b>
+                            <b style={{color: '#ea973b'}}>Terminé</b>
+                        </td>
+                        <td>
+                            <b style={{color: '#ea973b'}}>Terminé</b>
                         </td>
                         <td>{Moment(element.created_at).format('DD/MM/YYYY HH:mm:ss')}</td>
                         <td>{Moment(element.update_at).format('DD/MM/YYYY HH:mm:ss')}</td>
@@ -166,16 +185,17 @@ class Traceability extends React.Component {
             return (
                 <table className="table table-traceability table-striped table-responsive" id="TableFinished">
                     <thead>
-                        <tr style={{ color: '#ea973b' }}>
-                            <th>Nom du fichier</th>
-                            <th>Type du fichier</th>
-                            <th>Progression de l'upload</th>
-                            <th>Début de l'upload</th>
-                            <th>Time of control</th>
-                        </tr>
+                    <tr style={{color: '#ea973b'}}>
+                        <th>Nom du fichier</th>
+                        <th>Type du fichier</th>
+                        <th>Progression de l'upload sur le serveur</th>
+                        <th>Etat de l'ajout sur Openstack Swift</th>
+                        <th>Début de l'upload</th>
+                        <th>Time of control</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        {dataTableFinished}
+                    {dataTableFinished}
                     </tbody>
                 </table>
             )
@@ -188,29 +208,31 @@ class Traceability extends React.Component {
                         <nav className="tab-download">
                             <div className="nav nav-pills " id="pills-tab" role="tablist">
                                 <button className="nav-link active" id="nav-in-progress-tab" data-bs-toggle="pill"
-                                    data-bs-target="#nav-in-progress" type="button" role="tab" aria-controls="nav-small-file"
-                                    aria-selected="true">En cours d'upload
+                                        data-bs-target="#nav-in-progress" type="button" role="tab"
+                                        aria-controls="nav-small-file"
+                                        aria-selected="true">En cours d'upload
                                 </button>
                                 <button className="nav-link" id="nav-finished-tab" data-bs-toggle="pill"
-                                    data-bs-target="#nav-finished" type="button" role="tab" aria-controls="nav-large-file"
-                                    aria-selected="false">Upload terminé
+                                        data-bs-target="#nav-finished" type="button" role="tab"
+                                        aria-controls="nav-large-file"
+                                        aria-selected="false">Upload terminé
                                 </button>
                             </div>
                         </nav>
                         <div className="tab-content" id="pills-tabContent">
                             <div className="tab-pane fade show active" id="nav-in-progress" role="tabpanel"
-                                aria-labelledby="nav-in-progress-tab">
+                                 aria-labelledby="nav-in-progress-tab">
                                 <div className="mt-4">
                                     <div className="data-table">
-                                        <TableInProgress />
+                                        <TableInProgress/>
                                     </div>
                                 </div>
                             </div>
                             <div className="tab-pane fade mb-4" id="nav-finished" role="tabpanel"
-                                aria-labelledby="nav-finished-tab">
+                                 aria-labelledby="nav-finished-tab">
                                 <div className="mt-4">
                                     <div className="data-table">
-                                        <TableFinished />
+                                        <TableFinished/>
                                     </div>
                                 </div>
                             </div>
@@ -221,6 +243,7 @@ class Traceability extends React.Component {
         )
     }
 }
+
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
