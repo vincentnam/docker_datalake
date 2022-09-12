@@ -766,9 +766,12 @@ def list_upload_ssh():
     mongo_db = mongo_client.upload
     collection = mongo_db["file_upload"]
     
-    files_upload = collection.find({'container_name': container_name},{ "_id": 0})
+    files_upload = collection.find({'container_name': container_name, "upload_swift": False},{ "_id": 0}).sort("update_at", -1)
     files_upload_list = list(files_upload)
-    return jsonify({'file_upload': files_upload_list})
+
+    file_upload_finished = collection.find({'container_name': container_name, "upload_swift": True},{ "_id": 0}).sort("update_at", -1).limit(50)
+    file_upload_finished_list = list(file_upload_finished)
+    return jsonify({'file_upload': files_upload_list, "file_upload_finished": file_upload_finished_list})
 
 @mongo_data_bp.route('/mqtt/add', methods=['POST'])
 def create_mqtt_flux():
