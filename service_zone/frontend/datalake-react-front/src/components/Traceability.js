@@ -10,6 +10,7 @@ class Traceability extends React.Component {
         // Set some state
         this.state = {
             elements: [],
+            elements_finished: [],
             offset: 0,
             perPage: 10,
             sort_value: 1,
@@ -71,7 +72,8 @@ class Traceability extends React.Component {
         })
             .then((response) => {
                 this.setState({
-                    elements: response.data.file_upload
+                    elements: response.data.file_upload,
+                    elements_finished: response.data.file_upload_finished
                 });
             })
             .catch(function (error) {
@@ -90,13 +92,7 @@ class Traceability extends React.Component {
                 );
             }
             if (this.state.elements.length !== 0) {
-                let dataInProgress = [];
-                this.state.elements.forEach((element) => {
-                    if ((element.total_bytes_download !== element.total_bytes && element.upload_swift === false) || (element.total_bytes_download === element.total_bytes && element.upload_swift === false)) {
-                        dataInProgress.push(element);
-                    }
-                });
-                if (dataInProgress.length === 0) {
+                if (this.state.elements.length === 0) {
                     dataTableInProgress = (
                         <tr>
                             <td colSpan="5" align="center" style={{color: "black !important"}}>Il n'y a aucun fichier
@@ -114,7 +110,7 @@ class Traceability extends React.Component {
                         }
                         return etat;
                     }
-                    dataTableInProgress = dataInProgress.map((element) => (
+                    dataTableInProgress = this.state.elements.map((element) => (
                         <tr>
                             <td>{element.filename}</td>
                             <td>{element.type_file}</td>
@@ -152,7 +148,7 @@ class Traceability extends React.Component {
 
         const TableFinished = () => {
             let dataTableFinished = "";
-            if (this.state.elements.length === 0) {
+            if (this.state.elements_finished.length === 0) {
                 dataTableFinished = (
                     <tr>
                         <td colSpan="5" align="center">Il n'y a aucun fichier qui est en upload terminé !</td>
@@ -160,14 +156,8 @@ class Traceability extends React.Component {
 
                 );
             }
-            if (this.state.elements.length !== 0) {
-                let dataFinished = [];
-                this.state.elements.forEach((element) => {
-                    if (element.total_bytes_download === element.total_bytes && element.upload_swift === true) {
-                        dataFinished.push(element);
-                    }
-                });
-                dataTableFinished = dataFinished.map((element) => (
+            if (this.state.elements_finished.length !== 0) {
+                dataTableFinished = this.state.elements_finished.map((element) => (
                     <tr>
                         <td>{element.filename}</td>
                         <td>{element.type_file}</td>
