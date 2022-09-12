@@ -1,12 +1,15 @@
 from flask import current_app
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from multiprocessing import Process
 import swiftclient
 from swiftclient.service import SwiftService
 import datetime
 from bson.json_util import dumps
 from datetime import datetime as dt
 from time import sleep
+import swiftclient
+
 
 
 
@@ -108,7 +111,7 @@ def init_id():
 def insert_datalake(file_content, user, key, authurl, container_name,
                     file_name, processed_data_area_service, data_process,
                     application, content_type,
-                    mongodb_url, other_data):
+                    mongodb_url, other_data, id_big_file):
     conn = swiftclient.Connection(user=user, key=key,
                                   authurl=authurl, insecure=True)
     client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
@@ -151,6 +154,13 @@ def insert_datalake(file_content, user, key, authurl, container_name,
             conn.put_object(container_name, meta_data["swift_object_id"],
                             contents=file_content,
                             content_type=meta_data["content_type"])
+
+            mongo_db = client.upload
+            mongo_collection = mongo_db["file_upload"]
+            doc = {"id_big_file": id_big_file}
+            newvalues = { "$set": { "upload_swift": True, "update_at": datetime.datetime.now() } }
+            mongo_collection.update_one(doc, newvalues)
+
             coll.insert_one(meta_data)
             return None
         except Exception as e:
@@ -158,7 +168,6 @@ def insert_datalake(file_content, user, key, authurl, container_name,
             retry += 1
             if retry > 3:
                 return None
-
 
 def get_handled_data(params):
     mongodb_url = current_app.config['MONGO_URL']
@@ -394,3 +403,9 @@ def typefile(typef):
         type_file = "application/octet-stream"
 
     return type_file
+
+
+def traceability_big_file_update_id():
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
+    return mongo_client.stats.traceability_big_file.find_one_and_update({"type": "object_id_big_file"}, {"$inc": {"object_id": 1}})["object_id"]

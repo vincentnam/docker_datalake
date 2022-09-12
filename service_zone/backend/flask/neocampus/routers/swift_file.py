@@ -7,6 +7,9 @@ from flask import Blueprint, jsonify, current_app, request, send_from_directory,
 from ..services import swift, mongo, keystone
 import os
 from multiprocessing import Process
+from pymongo import MongoClient
+import swiftclient
+import datetime
 
 swift_file_bp = Blueprint('swift_file_bp', __name__)
 
@@ -196,16 +199,20 @@ def upload():
     """
     file = request.files['file']
 
+    #Traçability file upload
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
+    mongo_db = mongo_client.upload
+    mongo_collection = mongo_db["file_upload"]
+
     save_path = os.path.join(
         current_app.root_path, current_app.config['SWIFT_FILES_DIRECTORY'], file.filename)
-    print(save_path)
     current_chunk = int(request.form['dzchunkindex'])
 
     # If the file already exists it's ok if we are appending to it,
     # but not if it's new file that would overwrite the existing one
     if os.path.exists(save_path) and current_chunk == 0:
         # 400 and 500s will tell dropzone that an error occurred and show an error
-        print('file already exists')
         return make_response(('File already exists', 400))
 
     try:
@@ -214,19 +221,42 @@ def upload():
             f.write(file.stream.read())
     except OSError:
         # log.exception will include the traceback so we can see what's wrong
-        print('Could not write to file')
         return make_response(("Not sure why,"
                               " but we couldn't write the file to disk", 500))
 
     total_chunks = int(request.form['dztotalchunkcount'])
 
+
+    if current_chunk == 0:
+        new_value = True
+        if new_value == True:
+            extension = file.filename.split(".")
+            extension = extension.pop()
+            type_file = mongo.typefile(extension)
+            data = {
+                "filename": file.filename,
+                "type_file": type_file,
+                "total_bytes_download": os.path.getsize(save_path),
+                "total_bytes": request.form['dztotalfilesize'],
+                "created_at": datetime.datetime.now(),
+                "update_at": datetime.datetime.now(),
+                "container_name": request.form["container_name"],
+                "upload_swift": False,
+                "id_big_file": request.form["id_big_file"]
+            }
+            id_file_upload = mongo_collection.insert_one(data).inserted_id
+            new_value = False
+    else:
+        doc = {"id_big_file": request.form["id_big_file"]}
+        newvalues = { "$set": { "total_bytes_download": os.path.getsize(save_path), "update_at": datetime.datetime.now() } }
+        mongo_collection.update_one(doc, newvalues)
+
     if current_chunk + 1 == total_chunks:
+        doc = {"id_big_file": request.form["id_big_file"]}
+        newvalues = { "$set": { "total_bytes_download": request.form['dztotalfilesize'], "update_at": datetime.datetime.now() } }
+        mongo_collection.update_one(doc, newvalues)
         # This was the last chunk, the file should be complete and the size we expect
         if os.path.getsize(save_path) != int(request.form['dztotalfilesize']):
-            print(f"File {file.filename} was completed, "
-                      f"but has a size mismatch."
-                      f"Was {os.path.getsize(save_path)} but we"
-                      f" expected {request.form['dztotalfilesize']} ")
             return make_response(('Size mismatch', 500))
         else:
             other_data = json.loads(request.form["othermeta"])
@@ -236,9 +266,6 @@ def upload():
 
             container_name = request.form["container_name"]
             filename = file.filename
-
-            # File upload completely finished (end of chunks)
-            print(f'File {file.filename} has been uploaded successfully')
 
             # Get content file totally
             filepath = os.path.join(
@@ -259,6 +286,7 @@ def upload():
             application = None
             data_process = "custom"
             processed_data_area_service = ["MongoDB"]
+            id_big_file = request.form["id_big_file"]
 
             # Multithreading for upload file from backend to Openstack Swift in background
             upload_processing = Process(
@@ -267,14 +295,9 @@ def upload():
                 args=(
                     file_content, user, key, authurl,
                     container_name, filename, processed_data_area_service, data_process,
-                    application, content_type, mongodb_url, other_data
+                    application, content_type, mongodb_url, other_data, id_big_file
                 )
             )
             upload_processing.start()
-    else:
-        print(f'Chunk {current_chunk + 1} of {total_chunks} '
-            f'for file {file.filename} complete')
-
-
 
     return make_response(("Chunk upload successful", 200))
