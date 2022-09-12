@@ -1,7 +1,7 @@
 import React from 'react';
 import {Switch, Route} from 'react-router-dom'
 import Home from './components/Home';
-import {ProcessedDataVisualisationAll} from './components/Processed-data-visualisation-all';
+import ProcessedDataVisualisationAll from './components/Processed-data-visualisation-all';
 import Upload from './components/Upload';
 import {Download} from './components/Download';
 import Models from './components/Models';

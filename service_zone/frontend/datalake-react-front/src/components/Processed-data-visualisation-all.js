@@ -2,10 +2,48 @@ import React from "react";
 import { ToastContainer } from 'react-toastify';
 import {ProcessedDataSensors} from './data-sensors/Processd-data-sensors';
 import {ProcessedDataSGE} from './data-SGE/Processd-data-SGE';
+import {connect} from "react-redux";
 
 
-export class ProcessedDataVisualisationAll extends React.Component {
+class ProcessedDataVisualisationAll extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            container_name: this.props.nameContainer.nameContainer,
+        };
+    }
     render() {
+
+        const TabDataSGE = () => {
+            let tabSGE = "";
+            if(this.state.container_name === "neOCampus"){
+                tabSGE = (
+                    <button className="nav-link" id="nav-sge-tab" data-bs-toggle="pill"
+                            data-bs-target="#nav-sge" type="button" role="tab" aria-controls="nav-sge"
+                            aria-selected="false">Données SGE
+                    </button>
+                );
+            } else {
+                tabSGE = <></>
+            }
+            return tabSGE;
+        }
+
+        const SectionDataSGE = () => {
+            let sectionSGE = "";
+            if(this.state.container_name === "neOCampus"){
+                sectionSGE = (
+                    <div className="tab-pane fade" id="nav-sge" role="tabpanel"
+                         aria-labelledby="nav-sge-tab">
+                        <ProcessedDataSGE/>
+                    </div>
+                );
+            } else {
+                sectionSGE = <></>
+            }
+            return sectionSGE;
+        }
+
         return (
             <div>
                 <div className="container main-download">
@@ -15,10 +53,7 @@ export class ProcessedDataVisualisationAll extends React.Component {
                                     data-bs-target="#nav-sensors" type="button" role="tab" aria-controls="nav-sensors"
                                     aria-selected="true">Données capteurs
                             </button>
-                            <button className="nav-link" id="nav-sge-tab" data-bs-toggle="pill"
-                                    data-bs-target="#nav-sge" type="button" role="tab" aria-controls="nav-sge"
-                                    aria-selected="false">Données SGE
-                            </button>
+                            <TabDataSGE/>
                         </div>
                     </nav>
                     <div className="tab-content" id="pills-tabContent">
@@ -26,10 +61,7 @@ export class ProcessedDataVisualisationAll extends React.Component {
                             aria-labelledby="nav-sensors-tab">
                             <ProcessedDataSensors/>
                         </div>
-                        <div className="tab-pane fade" id="nav-sge" role="tabpanel"
-                            aria-labelledby="nav-sge-tab">
-                            <ProcessedDataSGE/>
-                        </div>
+                        <SectionDataSGE/>
                     </div>
                     <ToastContainer />
                 </div>
@@ -37,3 +69,12 @@ export class ProcessedDataVisualisationAll extends React.Component {
         )
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+        auth: state.auth
+    }
+}
+
+export default connect(mapStateToProps, null)(ProcessedDataVisualisationAll)
