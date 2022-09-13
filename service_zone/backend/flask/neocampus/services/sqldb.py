@@ -43,7 +43,7 @@ def get_all_measurements():
 
     # Query
     query_api = "SELECT distinct SUBSTRING(Name, len(Name)-CHARINDEX('.', reverse(Name), CHARINDEX('.', reverse(Name))+1)+2, CHARINDEX('.', reverse(Name), CHARINDEX('.', reverse(Name))+1)) AS Mesurement \
-    FROM [IndexCPT].[dbo].[Table_Index] \
+    FROM [IndexCPT].[dbo].[V_SGE_NAMES] \
     order by 1;"
 
     cursor.execute(query_api)
@@ -58,8 +58,8 @@ def get_all_topics(measurement):
 
     # Query
     query_api = "SELECT distinct SUBSTRING(Name, 1, len(Name)-CHARINDEX('.', reverse(Name), CHARINDEX('.', reverse(Name))+1)) As Topic \
-    FROM [IndexCPT].[dbo].[Table_Index] \
-    WHERE SUBSTRING(Name, len(Name)-CHARINDEX('.', reverse(Name), CHARINDEX('.', reverse(Name))+1)+2, CHARINDEX('.', reverse(Name), CHARINDEX('.', reverse(Name))+1)) = '" + measurement + "'" \
+    FROM [IndexCPT].[dbo].[V_SGE_NAMES] \
+    WHERE Substring(Name, LEN(Name)-(LEN('" + measurement + "')-1), LEN('" + measurement + "')) = '" + measurement + "'" \
     " order by 1;"
 
     cursor.execute(query_api)
