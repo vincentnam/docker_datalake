@@ -122,7 +122,7 @@ class Login extends React.Component {
                     }
                 })
                 .catch(function (error) {
-                    toast.error("La connexion n'a pas réussi ! : " + error, {
+                    toast.error("La connexion n'a pas réussi ! : Veuillez vérifier votre pseudo et votre mot de passe sinon veuillez contacter votre administrateur ! ", {
                         theme: "colored",
                         position: "top-right",
                         autoClose: 4000,
