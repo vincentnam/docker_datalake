@@ -668,8 +668,6 @@ class Upload extends React.Component {
     }
 
     setDropper(dropper) {
-        console.log('chunk drop')
-        console.log(dropper)
         this.setState({'dropper': dropper})
     }
 
