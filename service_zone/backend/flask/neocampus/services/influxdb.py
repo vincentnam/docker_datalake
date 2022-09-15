@@ -39,12 +39,12 @@ def get_handled_data(params):
         f'''from(bucket:"{params['container_name']}")
         |> range(start: begin_date, stop: end_date)''',
         dialect=Dialect(
-            header=True, 
-            delimiter=",", 
-            comment_prefix="#", 
+            header=True,
+            delimiter=",",
+            comment_prefix="#",
             annotations=[],
             date_time_format="RFC3339"
-        ), 
+        ),
         org=org
     , params=dict_params)
 
