@@ -729,12 +729,8 @@ def count_anomalies_all():
     mongodb_url = current_app.config['MONGO_URL']
     collection = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False).data_anomaly.influxdb_anomaly
     container_name = request.get_json()['container_name']
-    print(container_name)
     metadata = collection.find({'container_name': container_name})
     nbrAnomaly = str(metadata.count())
-
-    #output = {"msg": "I'm the test endpoint from blueprint_x."}
-    #return jsonify(output)
 
     return nbrAnomaly
 
