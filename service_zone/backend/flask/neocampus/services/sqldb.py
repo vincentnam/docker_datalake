@@ -89,8 +89,6 @@ def get_all_data(params):
     AND TS between cast('" + dict_params['begin_date'] + "' As Date) and  cast('" + dict_params['end_date'] + "' As Date) \
     ORDER BY TS ASC;"
 
-    print(query_api)
-
     cursor.execute(query_api)
     results = cursor.fetchall()
 
@@ -102,8 +100,6 @@ def get_all_data(params):
             '_measurement': params['measurement'],
             'topic': params['topic'],
         })
-    
-    print(data)
 
     return data
 
