@@ -5,7 +5,9 @@ from joblib import load
 class Classification:
     def __init__(self):
         self.classe = {'CAR' : 0, 'CAT' : 1, 'DOG' : 2, 'FRUIT' : 3, 'PERSON':4}
-        self.model = load("RandomForeastModel_0.joblib")
+        #self.model = load("RandomForeastModel_0.joblib")
+        self.model = load("RandomForeast_Model_65.joblib")
+
 
 
     def get_key(self,val):

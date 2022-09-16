@@ -40,9 +40,9 @@ class AppCBIRH:
                 # To See details
                 col2.subheader("Query Image")
                 col2.image(app.load_image(image_file)[0], width=250)
-                search = sr.Searcher('dataset_index.csv')
+                search = sr.Searcher('dataset_index_65.csv')
                 start = time.time()
-                features = descriptor.describe_image_query(app.load_image(image_file)[1])
+                features = descriptor.image_query_describe(app.load_image(image_file)[1])
                 Images = search.search(features)
 
             result = col1.button('Search Similarity')

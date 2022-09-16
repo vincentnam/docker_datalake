@@ -195,18 +195,17 @@ class Descriptor:
         Vector.extend(v)
         Vector.extend(e)
         return Vector
-    #Concatenetion de deuc descripteirs
-    def describe_image_query(self,image):
-        #image_grey = cv2.imread(imagePath, 0)
-        #image_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        #image = cv2.imread(imagePath)
-        #img_color = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        # describe the image
-        # features_1 = self.describe(image)
-        #features_1 = self.DOMINANT_COLOR_DESCRIPTOR(image)
-        features_1 = self.descriptor_color_hitogramme(image)
-        features_2 = self.descriptor_matix_coccurrence(image)
-        return features_1+features_2
+
+    #reduce the vector to 65 caracteristiques
+    def reduce_dim(self,vect):
+        columns_importances = ['1', '3', '4', '5', '6', '7', '8', '9', '12', '13', '14', '17', '27',
+           '28', '32', '33', '34', '36', '37', '38', '39', '42', '43', '44', '52',
+           '53', '54', '57', '58', '59', '62', '63', '64', '67', '68', '69', '70',
+           '71', '72', '73', '74', '77', '78', '79', '83', '84', '85', '86', '87',
+           '88', '89', '91', '92', '93', '94', '95', '96', '109', '110', '241',
+           '242', '373', '374', '425', '492']
+        return [vect[int(i)] for i in columns_importances]
+
     #Concatination de tous les descripteurs
     def image_query_describe(self,image):
 
@@ -217,69 +216,4 @@ class Descriptor:
         DCD = self.descriptor_dominant_color(image)
         DSIFT = self.descriptor_sift(image)
         DMH = self.descriptor_moments_Hu(   image)
-        return DTH+DMC+DFG+DHC+DCD+DSIFT+DMH
-
-
-    """
-    def histogram(self, image, mask):
-        # extract a 3D color histogram from the masked region of the
-        # image, using the supplied number of bins per channel
-        hist = cv2.calcHist([image], [0, 1, 2], mask, (8, 12, 3),
-                            [0, 180, 0, 256, 0, 256])
-        # normalize the histogram if we are using OpenCV 2.4
-        if imutils.is_cv2():
-            hist = cv2.normalize(hist).flatten()
-        # otherwise handle for OpenCV 3+
-        else:
-            hist = cv2.normalize(hist, hist).flatten()
-        # return the histogram
-        return hist
-    """
-    """
-    def describe(self, image):
-        # convert the image to the HSV color space and initialize
-        # the features used to quantify the image
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        features = []
-        # grab the dimensions and compute the center of the image
-        (h, w) = image.shape[:2]
-        (cX, cY) = (int(w * 0.5), int(h * 0.5))
-        # divide the image into four rectangles/segments (top-left,
-        # top-right, bottom-right, bottom-left)
-        segments = [(0, cX, 0, cY), (cX, w, 0, cY), (cX, w, cY, h), (0, cX, cY, h)]
-        # construct an elliptical mask representing the center of the
-        # image
-        (axesX, axesY) = (int(w * 0.75) // 2, int(h * 0.75) // 2)
-        ellipMask = np.zeros(image.shape[:2], dtype="uint8")
-        cv2.ellipse(ellipMask, (cX, cY), (axesX, axesY), 0, 0, 360, 255, -1)
-        # loop over the segments
-        for (startX, endX, startY, endY) in segments:
-            # construct a mask for each corner of the image, subtracting
-            # the elliptical center from it
-            cornerMask = np.zeros(image.shape[:2], dtype="uint8")
-            cv2.rectangle(cornerMask, (startX, startY), (endX, endY), 255, -1)
-            cornerMask = cv2.subtract(cornerMask, ellipMask)
-            # extract a color histogram from the image, then update the
-            # feature vector
-            hist = self.histogram(image, cornerMask)
-            features.extend(hist)
-        # extract a color histogram from the elliptical region and
-        # update the feature vector
-        hist = self.histogram(image, ellipMask)
-        features.extend(hist)
-        # return the feature vector
-        return features
-    """
-    """
-    def EXTRACT_FEATURS(self, hist, centroids):
-
-        Vector = []
-        Features = []
-        for (percent, color) in zip(hist, centroids):
-            color = list(color.flatten())
-            color = [np.round(item, 2) for item in color]
-            color.append(np.round(percent * 100, 3))
-            Features.append(color)
-            # print("percent :",np.round(percent*100,3),"\tcolor : ",color)
-        return Features
-    """
+        return self.reduce_dim(DTH+DMC+DFG+DHC+DCD+DSIFT+DMH)

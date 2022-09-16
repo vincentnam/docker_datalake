@@ -8,6 +8,12 @@ class Searcher:
     def __init__(self, indexPath):
         # store our index path
         self.indexPath = indexPath
+    def chi2_distance(self, A, B, eps = 1e-10):
+
+        # compute the chi-squared distance
+        d = 0.5 * np.sum([((a - b) ** 2) / (a + b + eps) for (a, b) in zip(A, B)])
+        # return the chi-squared distance
+        return d
 
     def search(self, queryFeatures, limit=10):
         # initialize our dictionary of results
@@ -38,28 +44,8 @@ class Searcher:
         # sort our results, so that the smaller distances (i.e. the
         # more relevant images are at the front of the list)
         results = sorted([(v, k) for (k, v) in results.items()])
-        results = sorted([(v, k) for (v, k) in results if v < 5])
+        #results = sorted([(v, k) for (v, k) in results if v < 5])
 
         return results[:limit]
 
-    """    def chi2_distance(self, histA, histB, eps = 1e-10):
-
-        # compute the chi-squared distance
-        d = 0.5 * np.sum([((a - b) ** 2) / (a + b + eps) for (a, b) in zip(histA, histB)])
-        # return the chi-squared distance
-        #print(d)
-        return d
-        """
-
-    def chi2_distance(self, A, B, eps=1e-10):
-        F1_A = A[0:11]
-        F2_A = A[12:16]
-        F1_B = B[0:11]
-        F2_B = B[12:16]
-        # compute the chi-squared distance
-        d_1 = 0.5 * np.sum([((a - b) ** 2) / (a + b + eps) for (a, b) in zip(F1_A, F1_B)])
-        d_2 = 0.5 * np.sum([((a - b) ** 2) / (a + b + eps) for (a, b) in zip(F2_A, F2_B)])
-        d = 0.5 * d_1 + 0.5 * d_2
-        # return the chi-squared distance
-        return d
 
