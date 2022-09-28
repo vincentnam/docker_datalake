@@ -33,8 +33,19 @@ object Main {
         thread.start()
       }
       jssc.start()
-      jssc.awaitTerminationOrTimeout(config.getLong("jssc.timeout"))
-      jssc.stop(stopSparkContext = true)
+      jssc.awaitTermination()
+      val t = new java.util.Timer()
+      val task = new java.util.TimerTask {
+
+        def run(): Unit = {
+          if (streamGetter.changeFlag()) {
+            jssc.stop(stopSparkContext = true)
+          }
+        }
+      }
+      t.scheduleAtFixedRate(task, 0, config.getLong("jssc.timeout"))
+//      jssc.awaitTerminationOrTimeout(config.getLong("jssc.timeout"))
+//      jssc.stop(stopSparkContext = true)
     } while(true)
   }
 }
