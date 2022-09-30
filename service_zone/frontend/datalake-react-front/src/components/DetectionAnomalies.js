@@ -12,17 +12,50 @@ class DetectionAnomalies extends React.Component {
             selectMeasurement: "",
             selectTopic: "",
             all_data: [],
-            nbr_anomaly: ""
+            nbr_anomaly: "",
+            container_name: this.props.nameContainer.nameContainer
         };
     }
 
     componentDidMount() {
-        this.loadData();
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            })
+            this.loadData();
+        } else {
+            this.loadRolesProjectsUser();
+        }
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadData();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     loadData() {
         api.post('getDataAnomalyAll', {
-            container_name: this.props.nameContainer.nameContainer
+            container_name: this.props.nameContainer.nameContainer,
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 let result = [];
@@ -96,6 +129,7 @@ class DetectionAnomalies extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

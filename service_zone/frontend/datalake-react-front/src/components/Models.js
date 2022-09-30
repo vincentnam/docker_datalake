@@ -15,19 +15,55 @@ class Models extends React.Component {
             model: {},
             newModel: {},
             show: "",
+            container_name: "",
         };
         this.loadModel = this.loadModel.bind(this);
         this.formAdd = this.formAdd.bind(this);
         this.handleCallShow = this.handleCallShow.bind(this);
         this.editChange = this.editChange.bind(this);
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
     }
+
     componentDidMount() {
-        this.loadModel();
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            })
+            this.loadModel();
+        } else {
+            this.loadRolesProjectsUser();
+        }
+
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadModel();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     loadModel() {
         api.post('models/show/all', {
-            container_name: this.props.nameContainer.nameContainer
+            container_name: this.props.nameContainer.nameContainer,
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -39,7 +75,8 @@ class Models extends React.Component {
             });
 
         api.post('models/cache/all', {
-            container_name: this.props.nameContainer.nameContainer
+            container_name: this.props.nameContainer.nameContainer,
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 console.log()
@@ -113,18 +150,23 @@ class Models extends React.Component {
 
         const ListModels = () => {
             const AllModels = this.state.models.map((model) => (
-                <button className="mt-2 modelsList" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></button>
+                <span><button className="mt-2 modelsList" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></button><br/></span>
             ));
             const AllModelsCache = this.state.modelsCache.map((model) => (
-                <button className="mt-2 modelsList-cacher" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></button>
+                <span><button className="mt-2 modelsList-cacher" key={model._id} onClick={() => this.editChange(model)}><b>{model.label}</b></button><br/></span>
             ));
 
             return (
-                <div className="col-sm-2 card pt-2 pb-2">
+                <div className="col-sm-2 pt-2 pb-2 meta">
                     <h6><b>Liste des modèles de métadonnées visibles</b></h6>
-                    {AllModels}
+                    <div className="list-button">
+                        {AllModels}
+                    </div>
+
                     <h6 className="mt-4"><b>Liste des modèles de métadonnées cachés</b></h6>
-                    {AllModelsCache}
+                    <div className="list-button">
+                        {AllModelsCache}
+                    </div>
                 </div>
             );
         };
@@ -148,6 +190,7 @@ class Models extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

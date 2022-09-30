@@ -11,7 +11,7 @@ from services import restore_diff
 def extract_transform_load_sge(swift_result, swift_container, swift_id, process_type):
     
     #Connection mongodb
-    mongo_client = MongoClient(config.mongodb_url)
+    mongo_client = MongoClient(config.mongodb_url, username=config.mongodb_user, password=config.mongodb_pwd, authSource=config.mongodb_db_auth)
     db = mongo_client.swift[config.container_name_collection_upload]
     result = db.find_one({"swift_object_id": swift_id}, {"_id" : 0})
     filename = result["original_object_name"]

@@ -24,7 +24,8 @@ class DownloadHandleData extends React.Component {
         this.setEndDate = this.setEndDate.bind(this);
         this.validateFilters = this.validateFilters.bind(this)
         this.handleShow = this.handleShow.bind(this);
-        this.handleClose = this.handleClose.bind(this)
+        this.handleClose = this.handleClose.bind(this);
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
 
         // Set some state
         this.state = {
@@ -35,7 +36,8 @@ class DownloadHandleData extends React.Component {
             beginDate: moment().format('Y-MM-DD'),
             endDate: moment().format('Y-MM-DD'),
             loading: false,
-            perPage: 10
+            perPage: 10,
+            container_name: "",
         };
     }
 
@@ -60,19 +62,20 @@ class DownloadHandleData extends React.Component {
         json_object.filetype = this.state.filetype.toString()
         json_object.beginDate = this.state.beginDate
         json_object.endDate = this.state.endDate
+        json_object.container_name = this.props.nameContainer.nameContainer
+        json_object.token = localStorage.getItem('token')
 
         body1.push(json_object)
-        var body = JSON.stringify(body1)
+        let body = JSON.stringify(body1)
 
         if (selectedElements.length) {
             this.handleShow();
             api.post('handled-data-file', body, {
-                responseType: 'arraybuffer',
-                container_name: this.props.nameContainer.nameContainer
+                responseType: 'arraybuffer'
             })
                 .then(function (result) {
                     const url = window.URL.createObjectURL(new Blob([result.data], {type: 'application/zip'}));
-                    const link = document.createElement('a');
+                    let link = document.createElement('a');
                     link.href = url;
                     link.setAttribute('download', 'file.zip'); //or any other extension
                     document.body.appendChild(link);
@@ -120,7 +123,38 @@ class DownloadHandleData extends React.Component {
     }
 
     componentDidMount() {
-        this.loadObjectsFromServer();
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            })
+            this.loadObjectsFromServer();
+        } else {
+            this.loadRolesProjectsUser();
+        }
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadObjectsFromServer();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     handlePageClick = (data) => {
@@ -158,7 +192,8 @@ class DownloadHandleData extends React.Component {
                 filetype: this.state.filetype.toString(),
                 beginDate: this.state.beginDate,
                 endDate: this.state.endDate,
-                container_name: this.props.nameContainer.nameContainer
+                container_name: this.props.nameContainer.nameContainer,
+                token: localStorage.getItem('token')
             }),
             xhrFields: {
                 withCredentials: true
@@ -337,7 +372,7 @@ class DownloadHandleData extends React.Component {
                             </select>
                         </div>
                     </div>
-                    <div className="grid mt5 shadow-sm">
+                    <div className="grid mt5 shadow">
                         <DataTable
                             columns={columns}
                             data={elts}
@@ -374,6 +409,7 @@ class DownloadHandleData extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

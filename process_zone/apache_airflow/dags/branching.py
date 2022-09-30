@@ -11,7 +11,6 @@ import sys
 from datetime import timedelta
 import datetime
 from textwrap import dedent
-from pymongo import MongoClient
 import swiftclient.service
 from swiftclient.service import SwiftService
 import config
@@ -38,7 +37,6 @@ from airflow.operators.python_operator import PythonOperator, \
 from airflow.utils.dates import days_ago
 from airflow.utils.helpers import chain
 from time import sleep
-from pymongo import MongoClient
 import datetime
 import os
 from airflow.operators.bash_operator import BashOperator
@@ -175,7 +173,7 @@ def failed_data_processing(*args, **kwargs):
     group = args[0]["dag_run"].conf["swift_container"]
     swift_id = str(args[0]["dag_run"].conf["swift_obj_id"])
     mongodb_url = config.mongodb_url
-    meta_base = MongoClient(mongodb_url, connect=False)
+    meta_base = MongoClient(mongodb_url, username=config.mongodb_user, password=config.mongodb_pwd, authSource=config.mongodb_db_auth, connect=False)
     print(meta_base.swift[group].find_one_and_update(
         {
             "swift_object_id": swift_id,
@@ -205,7 +203,7 @@ def successful_data_processing(*args, **kwargs):
     group = args[0]["dag_run"].conf["swift_container"]
     swift_id = str(args[0]["dag_run"].conf["swift_obj_id"])
     mongodb_url = config.mongodb_url
-    meta_base = MongoClient(mongodb_url, connect=False)
+    meta_base = MongoClient(mongodb_url, username=config.mongodb_user, password=config.mongodb_pwd, authSource=config.mongodb_db_auth, connect=False)
     print(meta_base.swift[group].find_one_and_update(
         {
             "swift_object_id": swift_id,

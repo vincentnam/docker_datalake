@@ -1,0 +1,66 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    projects:
+      - name: service
+        description: Service users
+      - name: project1
+        description: Example project 1
+      - name: project2
+        description: Example project 2
+    users:
+      - name: provider
+        email: provider@example.com
+        project: service
+        role: admin
+      - name: testuser1
+        email: testuser1@example.com
+        project: project1
+      - name: testuser2
+        email: testuser2@example.com
+        project: project1
+      - name: testuser3
+        email: testuser3@example.com
+        project: project2
+      - name: testuser4
+        email: testuser4@example.com
+        project: project2
+    passwords: {}
+  tasks:
+    - name: generate passwords
+      set_fact:
+        passwords: >-
+          {{
+          passwords|combine(
+          {item.name: lookup('password', 'credentials/' + item.name + ' length=15')}
+          )
+          }}
+      loop: "{{ users }}"
+
+    - name: create projects
+      os_project:
+        state: present
+        name: "{{ item.name }}"
+        description: "{{ item.description }}"
+        domain_id: default
+        enabled: true
+      loop: "{{ projects }}"
+
+    - name: create users
+      os_user:
+        state: present
+        name: "{{ item.name }}"
+        email: "{{ item.email }}"
+        domain: default
+        password: "{{ passwords[item.name] }}"
+        default_project: "{{ item.project }}"
+      loop: "{{ users }}"
+
+    - name: assign users roles in projects
+      os_user_role:
+        state: present
+        user: "{{ item.name }}"
+        project: "{{ item.project }}"
+        role: "{{ item.role|default('member') }}"
+      loop: "{{ users }}"

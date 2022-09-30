@@ -50,7 +50,9 @@ class ModelEditForm extends React.Component {
             status: this.props.editModel.status,
         });
 
-        api.get('models/all')
+        api.get('models/all',{
+            token: localStorage.getItem('token')
+        })
             .then((response) => {
                 this.setState({
                     verifModels: response.data.models.data
@@ -141,7 +143,8 @@ class ModelEditForm extends React.Component {
                 type_file_accepted: types,
                 metadonnees: this.state.metadonnees,
                 status: this.state.status,
-                container_name: this.props.nameContainer.nameContainer
+                container_name: this.props.nameContainer.nameContainer,
+                token: localStorage.getItem('token')
             })
                 .then(() => {
                     this.props.reload();
@@ -327,6 +330,7 @@ class ModelEditForm extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

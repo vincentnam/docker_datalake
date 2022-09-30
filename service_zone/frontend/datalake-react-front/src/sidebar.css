@@ -1,0 +1,233 @@
+.sidebar {
+    min-height: 100% !important;
+    background-color: rgba(20, 33, 61, 1);
+    color: white;
+    border-top-right-radius: 40px;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    padding: 0;
+}
+
+/* Header links */
+.title a {
+    font-size: 30px;
+    margin-right: 15px;
+    margin-left: 15px;
+    color: white;
+}
+
+.title a:hover, a:focus {
+    color: grey !important;
+}
+
+.title a.active {
+    color: #EA973B;
+}
+
+.navbar a, p {
+    color: rgba(255, 255, 255, 1) !important;
+    text-decoration: none !important;
+}
+
+.navbar a:hover, a:focus {
+    color: #EA973B !important;
+}
+
+.navbar-nav a, p, path{
+    font-size: 20px;
+    color: white;
+    fill: white;
+}
+
+.navbar-nav span {
+    font-size: 20px;
+    color: white;
+}
+
+
+.navbar-nav a:hover, a:focus {
+    color: grey !important;
+}
+
+.navbar-nav a.active{
+    background-color: lightgrey;
+    color: rgba(20, 33, 61, 1) !important;
+}
+
+a.active path {
+    fill: rgba(20, 33, 61, 1) !important;
+}
+
+.route {
+    margin-right: 4%;
+    margin-left: 15%;
+}
+
+.route:hover path {
+    fill: grey;
+}
+
+.sub-route {
+    margin-right: 4%;
+    margin-left: 30%;
+}
+.gestion {
+    margin-right: 4%;
+    margin-left: 15%;
+}
+
+.Logo_Upload {
+    position: relative;
+    width: 31.005px;
+    height: 26.758px;
+    left: 0px;
+    top: 4px;
+    overflow: visible;
+    margin-right: 1em;
+}
+
+#Path_276 {
+    fill: white;
+}
+.Path_276 {
+    overflow: visible;
+    position: absolute;
+    width: 31.005px;
+    height: 22.258px;
+    left: 0px;
+    top: 0px;
+    transform: matrix(1,0,0,1,0,0);
+}
+#Path_277 {
+    fill: white;
+}
+.Path_277 {
+    overflow: visible;
+    position: absolute;
+    width: 6.875px;
+    height: 11.916px;
+    left: 12.126px;
+    top: 14.842px;
+    transform: matrix(1,0,0,1,0,0);
+}
+
+#Logo_gestion {
+    fill: rgba(255,255,255,1);
+}
+.Logo_gestion {
+    overflow: visible;
+    position: relative;
+    width: 30.72px;
+    height: 30.72px;
+    left: 0px;
+    top: 2px;
+    transform: matrix(1,0,0,1,0,0);
+    margin-right: 1em;
+}
+#Logo_data_viz {
+    position: relative;
+    width: 30.72px;
+    height: 30.72px;
+    left: 0px;
+    top: 2px;
+    overflow: visible;
+    margin-right: 1em;
+}
+#Path_281 {
+    fill: rgba(255,255,255,1);
+}
+.Path_281 {
+    overflow: visible;
+    position: absolute;
+    width: 30.72px;
+    height: 30.72px;
+    left: 0px;
+    top: 0px;
+    transform: matrix(1,0,0,1,0,0);
+}
+#Path_282 {
+    fill: rgba(255,255,255,1);
+}
+.Path_282 {
+    overflow: visible;
+    position: absolute;
+    width: 26.171px;
+    height: 23.894px;
+    left: 4.544px;
+    top: 2.281px;
+    transform: matrix(1,0,0,1,0,0);
+}
+#Logo_download {
+    fill: rgba(255,255,255,1);
+}
+.Logo_download {
+    overflow: visible;
+    position: relative;
+    width: 30.201px;
+    height: 27.563px;
+    left: 0px;
+    top: 3px;
+    transform: matrix(1,0,0,1,0,0);
+    margin-right: 1em;
+}
+
+#Logo_traabilit {
+    position: relative;
+    width: 31.005px;
+    height: 31.008px;
+    left: 0px;
+    top: 2px;
+    overflow: visible;
+    margin-right: 1em;
+}
+#Path_233 {
+    fill: rgba(255,255,255,1);
+}
+.Path_233 {
+    overflow: visible;
+    position: absolute;
+    width: 31.005px;
+    height: 31.008px;
+    left: 0px;
+    top: 0px;
+    transform: matrix(1,0,0,1,0,0);
+}
+#Path_234 {
+    fill: rgba(255,255,255,1);
+}
+.Path_234 {
+    overflow: visible;
+    position: absolute;
+    width: 19.269px;
+    height: 19.254px;
+    left: 5.844px;
+    top: 5.885px;
+    transform: matrix(1,0,0,1,0,0);
+}
+#Path_235 {
+    fill: rgba(255,255,255,1);
+}
+.Path_235 {
+    overflow: visible;
+    position: absolute;
+    width: 6.467px;
+    height: 6.454px;
+    left: 12.249px;
+    top: 12.285px;
+    transform: matrix(1,0,0,1,0,0);
+}
+
+#Logo_anomalies {
+    fill: rgba(255,255,255,1);
+}
+.Logo_anomalies {
+    overflow: visible;
+    position: relative;
+    width: 31.005px;
+    height: 30.093px;
+    left: 0px;
+    top: 0px;
+    transform: matrix(1,0,0,1,0,0);
+    margin-right: 1em;
+}

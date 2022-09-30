@@ -114,7 +114,7 @@ class Filters extends React.Component {
 
 
         return (
-            <div className="jumbotron shadow-sm">
+            <div className="jumbotron shadow">
                 <Form onSubmit={this.validateFilters}>
                     <div className="row align-items-center">
                         <SelectDatatype />
@@ -148,6 +148,7 @@ class Filters extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

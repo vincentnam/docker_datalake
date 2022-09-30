@@ -35,7 +35,8 @@ class ModelAddForm extends React.Component {
     }
     componentDidMount() {
         api.post('models/all', {
-            container_name: this.props.nameContainer.nameContainer
+            container_name: this.props.nameContainer.nameContainer,
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -122,7 +123,8 @@ class ModelAddForm extends React.Component {
                 type_file_accepted: this.state.selectedTypesFiles,
                 metadonnees: this.state.metadonnees,
                 status: this.state.status,
-                container_name: this.props.nameContainer.nameContainer
+                container_name: this.props.nameContainer.nameContainer,
+                token: localStorage.getItem('token')
             })
                 .then(() => {
                     this.props.loading();
@@ -272,6 +274,7 @@ class ModelAddForm extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 
