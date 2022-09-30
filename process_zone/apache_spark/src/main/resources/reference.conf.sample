@@ -1,7 +1,8 @@
 mongo.host = ""
 mongo.port = ""
 mongo.user = ""
-mongo.pass = ""
+mongo.pwd = ""
+mongo.db.auth = ""
 mongo.historyDB= ""
 
 swift.host = ""

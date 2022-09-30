@@ -34,3 +34,7 @@ code {
   content:"*";
   color:red;
 }
+
+.mt-content {
+  margin-top: 5% !important;
+}

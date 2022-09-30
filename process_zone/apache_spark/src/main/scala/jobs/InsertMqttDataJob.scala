@@ -2,9 +2,8 @@ package jobs
 
 import com.google.gson.Gson
 import com.typesafe.config.{Config, ConfigFactory}
-import org.apache.log4j.Logger
-import org.apache.spark.SparkConf
-import org.apache.spark.streaming.Seconds
+import org.apache.spark.sql.{Row}
+//import org.apache.log4j.Logger
 import org.apache.spark.streaming.api.java.JavaStreamingContext
 import org.apache.spark.streaming.mqtt.MQTTUtils
 import org.eclipse.paho.client.mqttv3.MqttClient
@@ -15,22 +14,21 @@ import scala.util.{Failure, Success}
 
 
 object InsertMqttDataJob {
-  @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
+  //  @transient lazy val log: Logger = org.apache.log4j.LogManager.getLogger(getClass.getName)
+  val config: Config = ConfigFactory.load()
 
-  def start(): Unit = {
-    val config: Config = ConfigFactory.load()
+  def start(configFlux: Row, jssc: JavaStreamingContext): Unit = {
     val swiftWriter = new SwiftWriter(config)
-    val influxDDWriter = new InfluxDBWriter(config)
 
-    val brokerUrl = config.getString("mqtt.brokerUrl")
-    val username = config.getString("mqtt.username")
-    val password = config.getString("mqtt.password")
-    val topic = config.getString("mqtt.topic")
-    val batchDuration = config.getInt("mqtt.batchDuration")
-
-    val sparkConf: SparkConf = new SparkConf().setMaster("local[*]").setAppName("StreamingMQTT")
-    val jssc = new JavaStreamingContext(sparkConf, Seconds(batchDuration))
     val clientId = MqttClient.generateClientId()
+    // ConfigFlux : [_id, brokerUrl, container_name, description, name, password, status, topic, user ]
+    val brokerUrl: String = configFlux(1).asInstanceOf[String]
+    val username: String = configFlux(8).asInstanceOf[String]
+    val password: String = configFlux(5).asInstanceOf[String]
+    val topic: String = configFlux(7).asInstanceOf[String]
+    val container_name: String = configFlux(2).asInstanceOf[String]
+
+    val influxDDWriter = new InfluxDBWriter(config, container_name)
     println("brokerUrl: " + brokerUrl)
     println("topic: " + topic)
     val lines = MQTTUtils.createPairedStream(jssc, brokerUrl, Array(topic), clientId, username, password, cleanSession = true)
@@ -39,9 +37,8 @@ object InsertMqttDataJob {
       val mongoWriter = new MongoWriter(config)
       val data = rdd.map(r => (r._1, r._2)).collect.toList
       if (data.nonEmpty) {
-        println("raw data: " + data)
         // insert mqtt into swift
-        val inserted_swift_ids = swiftWriter.writeMqtt(data, time, mongoWriter)
+        val inserted_swift_ids = swiftWriter.writeMqtt(data, time, mongoWriter, container_name)
 
         // insert mqtt into influxDB
         val resInsertInfluxDB = influxDDWriter.writeMqtt(rdd, time)
@@ -49,18 +46,16 @@ object InsertMqttDataJob {
           case Success(points) =>
             // insert operation history into mongodb
             val influxDbPoints = (new Gson).toJson(points)
-            mongoWriter.putIntoHistoryDB(time.toString(), config.getString("swift.container"),
+            mongoWriter.putIntoHistoryDB(time.toString(), container_name,
               config.getString("swift.user"), inserted_swift_ids.mkString(","),
               "mqtt json to influxdb data points",
               data.toString, influxDbPoints)
-            println("new influxDB data points: " + influxDbPoints)
           case Failure(exception) =>
-            log.error(s"Insert into InfluxDB Error : $exception")
+          //            log.error(s"Insert into InfluxDB Error : $exception")
         }
       }
     })
 
-    jssc.start()
-    jssc.awaitTermination()
   }
+
 }

@@ -1,18 +1,16 @@
 import React from "react";
-import {Filters} from "../download-raw-data/Filters";
+import Filters from "../download-raw-data/Filters";
 import moment from "moment";
 import api from '../../api/api';
 import $ from 'jquery';
-import {RowItem} from "./RowItem";
 import {LoadingSpinner} from "../utils/LoadingSpinner";
 import {Paginate} from "../download-raw-data/Paginate";
 import DataTable from 'react-data-table-component';
-import Moment from 'moment';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
+import {connect} from "react-redux";
 
-export class DownloadHandleData extends React.Component {
+class DownloadHandleData extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
-    title = 'Affichage des données traitées'
     selectedElementsOnActualPage = []
 
     constructor(props) {
@@ -26,7 +24,8 @@ export class DownloadHandleData extends React.Component {
         this.setEndDate = this.setEndDate.bind(this);
         this.validateFilters = this.validateFilters.bind(this)
         this.handleShow = this.handleShow.bind(this);
-        this.handleClose = this.handleClose.bind(this)
+        this.handleClose = this.handleClose.bind(this);
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
 
         // Set some state
         this.state = {
@@ -37,7 +36,8 @@ export class DownloadHandleData extends React.Component {
             beginDate: moment().format('Y-MM-DD'),
             endDate: moment().format('Y-MM-DD'),
             loading: false,
-            perPage: 10
+            perPage: 10,
+            container_name: "",
         };
     }
 
@@ -62,9 +62,11 @@ export class DownloadHandleData extends React.Component {
         json_object.filetype = this.state.filetype.toString()
         json_object.beginDate = this.state.beginDate
         json_object.endDate = this.state.endDate
+        json_object.container_name = this.props.nameContainer.nameContainer
+        json_object.token = localStorage.getItem('token')
 
         body1.push(json_object)
-        var body = JSON.stringify(body1)
+        let body = JSON.stringify(body1)
 
         if (selectedElements.length) {
             this.handleShow();
@@ -73,7 +75,7 @@ export class DownloadHandleData extends React.Component {
             })
                 .then(function (result) {
                     const url = window.URL.createObjectURL(new Blob([result.data], {type: 'application/zip'}));
-                    const link = document.createElement('a');
+                    let link = document.createElement('a');
                     link.href = url;
                     link.setAttribute('download', 'file.zip'); //or any other extension
                     document.body.appendChild(link);
@@ -121,7 +123,38 @@ export class DownloadHandleData extends React.Component {
     }
 
     componentDidMount() {
-        this.loadObjectsFromServer();
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            })
+            this.loadObjectsFromServer();
+        } else {
+            this.loadRolesProjectsUser();
+        }
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadObjectsFromServer();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     handlePageClick = (data) => {
@@ -141,42 +174,9 @@ export class DownloadHandleData extends React.Component {
     };
 
     handler(event) {
-        //console.log(event)
-
-        // selected elements on all pages
-        let selectedElements = this.getSelectedElements()
-
         // selected elements on actual page (component React DataTable send selected elements only on actual page)
 
         // in actual page, if elements have been selected, add selected ones into selected elements global array
-        if(event.selectedRows !== undefined) {
-            // loop into selected rows in actual page
-            event.selectedRows.map((element) => {
-                // if selected rowx in actual page is not in global selected elements
-                console.log('page actuelle')
-                console.log(this.selectedElementsOnActualPage)
-                if(!this.selectedElementsOnActualPage.includes(element)){
-                    console.log('AJOUTE')
-                    //selectedElements.push(element)
-                } 
-            })
-        }
-
-       /* if(this.selectedElementsOnActualPage.length > 0) {
-            this.selectedElementsOnActualPage.map((selectedElement) => {
-                console.log('SELECTION')
-                console.log(event.selectedRows)
-                if(!event.selectedRows.includes(selectedElement)) {
-                    var index = selectedElements.indexOf(selectedElement)
-                    if(index != -1) {
-                        console.log('INDEX')
-                        console.log(index)
-                        selectedElements.splice(index, 1)
-                    }
-                }
-            })
-        }*/
-
         this.setState({
             selectedElements: event.selectedRows
         })
@@ -191,7 +191,9 @@ export class DownloadHandleData extends React.Component {
                 offset: this.state.offset,
                 filetype: this.state.filetype.toString(),
                 beginDate: this.state.beginDate,
-                endDate: this.state.endDate
+                endDate: this.state.endDate,
+                container_name: this.props.nameContainer.nameContainer,
+                token: localStorage.getItem('token')
             }),
             xhrFields: {
                 withCredentials: true
@@ -262,8 +264,6 @@ export class DownloadHandleData extends React.Component {
         if (this.state.elements) {
             elts = this.state.elements
         }
-        //console.log(elts)
-        let selectedElements = this.getSelectedElements()
         let setFiletype = this.setFiletype
         let setBeginDate = this.setBeginDate
         let setEndDate = this.setEndDate
@@ -273,9 +273,6 @@ export class DownloadHandleData extends React.Component {
             'beginDate': this.state.beginDate,
             'endDate': this.state.endDate
         }
-        let beginDate = this.state.beginDate
-        let endDate = this.state.endDate
-        //let loading = this.state.loading
 
         const columns = [
             {
@@ -361,7 +358,7 @@ export class DownloadHandleData extends React.Component {
                     setEndDate={setEndDate}
                     validateFilters={validateFilters}
                     data={filterData}
-                    title={this.title}
+                    filterDataType={'processed-data'}
                 />
                 <div className="download-detail">
                     <div className="row">
@@ -375,7 +372,7 @@ export class DownloadHandleData extends React.Component {
                             </select>
                         </div>
                     </div>
-                    <div className="grid mt5 shadow-sm">
+                    <div className="grid mt5 shadow">
                         <DataTable
                             columns={columns}
                             data={elts}
@@ -403,10 +400,17 @@ export class DownloadHandleData extends React.Component {
                         />
                     </div>
                 </div>
-
                 <LoadingSpinner loading={this.state.loading}/>
-                <ToastContainer />
             </div>
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+        auth: state.auth
+    }
+}
+
+export default connect(mapStateToProps, null)(DownloadHandleData)

@@ -58,7 +58,8 @@ class NewDataTriggerMiddleware(object):
                     requests.post(
                         url=self.airflow_api_url + '/dags/' + self.airflow_new_upload_dag_id + '/dagRuns',
                         json=airflow_post_body,
-                        auth=('airflow', 'airflow')
+                        auth=('airflow', 'airflow'),
+                        verify=False
                     )
                 except Exception as e:
                     self.logger.exception('Failed POST to Airflow: %s' % e)

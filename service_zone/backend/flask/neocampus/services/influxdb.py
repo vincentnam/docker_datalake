@@ -1,7 +1,10 @@
-from flask import current_app
+from flask import current_app,jsonify
 from influxdb_client import InfluxDBClient, Dialect
 import pandas as pd
 from datetime import datetime, timedelta
+from ..services import influxdb, mongo, keystone
+
+import json
 
 def get_handled_data(params):
     #Connection Influxdb
@@ -9,7 +12,7 @@ def get_handled_data(params):
     org = current_app.config['INFLUXDB_ORG']
 
     # Connection to InfluxDB database
-    client = InfluxDBClient(url=current_app.config['INFLUXDB_URL'], token=token, debug=True)
+    client = InfluxDBClient(url=current_app.config['INFLUXDB_URL'], token=token, debug=True, verify_ssl=False)
 
     # Query
     query_api = client.query_api()
@@ -33,15 +36,15 @@ def get_handled_data(params):
     All informations above have been copied from InfluxDB UI : Telegraf 
     """
     csv_result = query_api.query_csv(
-        f'''from(bucket:"{current_app.config['INFLUXDB_BUCKET']}")  
+        f'''from(bucket:"{params['container_name']}")
         |> range(start: begin_date, stop: end_date)''',
         dialect=Dialect(
-            header=True, 
-            delimiter=",", 
-            comment_prefix="#", 
+            header=True,
+            delimiter=",",
+            comment_prefix="#",
             annotations=[],
             date_time_format="RFC3339"
-        ), 
+        ),
         org=org
     , params=dict_params)
 
@@ -67,5 +70,23 @@ def connection_inflxdb():
     token = current_app.config['INFLUXDB_TOKEN']
     url = current_app.config['INFLUXDB_URL']
     org = current_app.config['INFLUXDB_ORG']
-    client = InfluxDBClient(url=url, token=token, debug=True)
-    return client, org;
+    client = InfluxDBClient(url=url, token=token, debug=True, verify_ssl=False)
+    return client, org
+
+def get_all_measurements(bucket):
+    client, org = connection_inflxdb()
+    # Query for show all measurements in a bucket
+    query = f""" 
+    import \"influxdata/influxdb/schema\"
+
+    schema.measurements(bucket: \"{bucket}\")
+    """
+    # Execute the query
+    query_api = client.query_api()
+    tables = query_api.query(query=query, org=org)
+
+    # Flatten output tables into list of measurements
+    measurements = [row.values["_value"] for table in tables for row in table]
+
+    
+    return measurements

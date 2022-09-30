@@ -1,0 +1,70 @@
+---
+
+- import_playbook: "{{playbook_dir}}/../../base/tasks/docker_install.yml"
+  vars:
+    host: security_authentication_monitoring_zone_openstack_keystone
+
+
+- name : Download files
+  vars_files: ../vars/main.yml
+  hosts: security_authentication_monitoring_zone_openstack_keystone
+  tasks:
+  - name: Print all available facts
+    ansible.builtin.debug:
+      var: hostvars
+  - name: Create a build directory
+    ansible.builtin.file:
+      path: "{{ hostvars.security_authentication_monitoring_zone_openstack_keystone.BUILD_DIR}}/security_authentication_monitoring_zone_openstack_keystone"
+      state: directory
+      mode: "0755"
+  - name: Stop and delete any container
+    shell :
+      cmd : "docker stop $(docker ps -a -q); docker rm $(docker ps -a -q)"
+    become : yes
+    ignore_errors: yes
+  - name : Add build folders
+    ansible.builtin.copy:
+      src :  "{{playbook_dir}}/../../../../../security_zone/"
+      dest : "{{ hostvars.security_authentication_monitoring_zone_openstack_keystone.BUILD_DIR }}/security_authentication_monitoring_zone_openstack_keystone/"
+  - name : Update REST API webserver port
+    ansible.builtin.replace:
+      path : "{{ hostvars.security_authentication_monitoring_zone_openstack_keystone.BUILD_DIR }}/security_authentication_monitoring_zone_openstack_keystone/flocx-keystone-dev/docker-compose.yaml"
+      regexp:   "    expose:
+      - \"5000:5000\""
+      replace: "    expose:
+      - \"{{REST_API_PORT}}:5000\""
+
+  - name: Create env file
+    ansible.builtin.copy:
+      src: "{{playbook_dir}}/../../../../../security_zone/flocx-keystone-dev/.env.sample"
+      dest: "{{ hostvars.security_authentication_monitoring_zone_openstack_keystone.BUILD_DIR }}/security_authentication_monitoring_zone_openstack_keystone/flocx-keystone-dev/.env"
+  - name: Update env file
+    ansible.builtin.replace:
+      path: "{{ hostvars.security_authentication_monitoring_zone_openstack_keystone.BUILD_DIR }}/security_authentication_monitoring_zone_openstack_keystone/flocx-keystone-dev/docker-compose.yaml"
+      regexp: "MYSQL_ROOT_PASSWORD=
+MARKET_DB_PASSWORD=
+PROVIDER_DB_PASSWORD=
+KEYSTONE_DB_USER=
+KEYSTONE_DB_PASSWORD=
+KEYSTONE_DB_NAME=
+KEYSTONE_ADMIN_PASSWORD=
+KEYSTONE_DEBUG="
+
+      replace: "MYSQL_ROOT_PASSWORD={{MYSQL_ROOT_PASSWORD}}
+MARKET_DB_PASSWORD={{MARKET_DB_PASSWORD}}
+PROVIDER_DB_PASSWORD={{PROVIDER_DB_PASSWORD}}
+KEYSTONE_DB_USER={{KEYSTONE_DB_USER}}
+KEYSTONE_DB_PASSWORD={{KEYSTONE_DB_PASSWORD}}
+KEYSTONE_DB_NAME={{KEYSTONE_DB_NAME}}
+KEYSTONE_ADMIN_PASSWORD={{KEYSTONE_ADMIN_PASSWORD}}
+KEYSTONE_DEBUG={{KEYSTONE_DEBUG}}"
+
+  - name : Start Openstack keystone
+    shell :
+      cmd : '(docker-compose up -d &); (cd ../ldap/ ; docker-compose up -d &); sleep 30'
+      chdir : "{{ hostvars.security_authentication_monitoring_zone_openstack_keystone.BUILD_DIR}}/security_authentication_monitoring_zone_openstack_keystone"
+    become : yes
+    register: output
+  - ansible.builtin.debug:
+      var: output
+

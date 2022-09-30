@@ -21,6 +21,8 @@ def typefile(typef):
         type_file = "application/x-zip-compressed"
     if(typef == "tar"):
         type_file = "application/x-gzip"
+    if(typef == "sql"):
+        type_file = "application/sql"
     
     return type_file
 

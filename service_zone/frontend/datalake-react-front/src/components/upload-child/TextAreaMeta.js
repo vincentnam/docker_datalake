@@ -22,11 +22,11 @@ export class TextAreaMeta extends React.Component {
 
     render() {
         return (
-            <div key={this.props.meta.name} class="mb-3">
-                <label class="form-label">{this.props.meta.label}</label>
+            <div key={this.props.meta.name} className="mb-3">
+                <label className="form-label meta-label">{this.props.meta.label}</label>
                 <textarea value={this.props.meta.value} onChange={(event) => this.editMeta(event)}
-                          name={this.props.meta.name} class="form-control" rows="3"
-                          placeholder="Saisissez vos métadonnées"/>
+                    name={this.props.meta.name} className="form-control" rows="3"
+                    placeholder="Saisissez vos métadonnées" />
             </div>
         )
     }

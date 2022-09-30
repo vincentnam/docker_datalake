@@ -30,13 +30,18 @@ export class DataVisiualisation extends React.Component {
         return result;
     }
     numberData() {
-        let data = this.props.dataGraph._value;
-        let result = null
-        if (data === undefined) {
-            result = 0;
-        } else {
-            result = Object.keys(this.props.dataGraph._value).length;
+        let result = 0
+
+        if (this.props.dataGraph !== undefined)
+        {
+            let data = this.props.dataGraph._value;
+            if (data === undefined) {
+                result = 0;
+            } else {
+                result = Object.keys(this.props.dataGraph._value).length;
+            }    
         }
+        
         return result;
     }
     render() {

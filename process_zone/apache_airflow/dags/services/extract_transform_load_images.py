@@ -22,9 +22,8 @@ def extract_transform_load_images(swift_result, swift_container, swift_id, proce
     image = ''.join(map(str.capitalize, image[1:]))
     #URL Mongo
     mongodb_url = config.mongodb_url
-    container_name_collection_upload = config.container_name_collection_upload
     #Recuperation de la collection mongo avec en paramètre le swift_id
-    nb_objects, mongo_collections = get_metadata(container_name_collection_upload, mongodb_url ,{"swift_id": str_swift_id})
+    nb_objects, mongo_collections = get_metadata(swift_container, mongodb_url ,{"swift_id": str_swift_id})
     mongo_collections = list(mongo_collections)
     
     #Recupération des autres métadata
@@ -34,7 +33,7 @@ def extract_transform_load_images(swift_result, swift_container, swift_id, proce
     
     #Configuration de mongo pour le processed data 
     container_name = config.container_name_processed_data
-    client = MongoClient(mongodb_url, connect=False)
+    client = MongoClient(mongodb_url, username=config.mongodb_user, password=config.mongodb_pwd, authSource=config.mongodb_db_auth, connect=False)
     db = client.data_conso
     collection = db[container_name]
     
@@ -45,6 +44,7 @@ def extract_transform_load_images(swift_result, swift_container, swift_id, proce
     data_conso_image["content_image"] = image
     data_conso_image["image_metadata"] = other_metadata
     data_conso_image["creation_date"] = datetime.datetime.now()
+    data_conso_image["container_name"] = swift_container
     
     # Encode DateTime and ObjectId Object into JSON using custom JSONEncoder
     data_conso_image = JSONEncoder().encode(data_conso_image)

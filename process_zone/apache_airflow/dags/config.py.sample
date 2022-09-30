@@ -11,6 +11,9 @@ container_name_history = ""
 container_name_collection_upload = ""
 container_name_processed_data = ""
 mongodb_url = "mongodb://127.0.0.1:27017"
+mongodb_user = ""
+mongodb_pwd = ""
+mongodb_db_auth = ""
 
 #Influxdb
 token_influxdb = ""
@@ -24,3 +27,23 @@ mariadb_host=""
 mariadb_user=""
 mariadb_passwd=""
 mariadb_database=""
+
+airflow_tmp = ""
+
+mssqlserver_url = ""
+mssqlserver_user = ""
+mssqlserver_pwd = ""
+mssqlserver_db_environment = ""
+
+
+host_server_ms_sql = ""
+host_server_ms_sql_user = ""
+host_server_ms_sql_password = ""
+path_server_ms_sql_file = ""
+container_name_mssql_server = ""
+
+#List of projects in datalake
+list_projects = []
+
+#Anomaly detection
+schedule_interval = ""

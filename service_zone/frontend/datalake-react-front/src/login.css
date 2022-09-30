@@ -1,0 +1,9 @@
+.login-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 15%
+}
+.wrapper {
+    padding-left: 4rem;
+}

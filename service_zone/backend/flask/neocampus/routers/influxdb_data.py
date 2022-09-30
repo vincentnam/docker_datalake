@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app
 from influxdb_client import InfluxDBClient
-from ..services import influxdb
+from ..services import influxdb, keystone
 from datetime import datetime
 import json
 
@@ -9,6 +9,29 @@ influxdb_data_bp = Blueprint('influxdb_data_bp', __name__)
 
 @influxdb_data_bp.route('/bucket', methods=['GET'])
 def get_all_buckets():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get all buckets
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - influxdb_router
+    """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     client, org = influxdb.connection_inflxdb()
     buckets_api = client.buckets_api()
     buckets = buckets_api.find_buckets().buckets
@@ -25,6 +48,30 @@ def get_all_buckets():
 
 @influxdb_data_bp.route('/measurements', methods=['GET', 'POST'])
 def get_all_measurements():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get all measurements
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - influxdb_router
+    """
+
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     client, org = influxdb.connection_inflxdb()
     bucket = request.get_json()["bucket"]
     # Query for show all measurements in a bucket
@@ -48,6 +95,29 @@ def get_all_measurements():
 
 @influxdb_data_bp.route('/topics', methods=['GET', 'POST'])
 def get_all_topics():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get all topics
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - influxdb_router
+    """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     client, org = influxdb.connection_inflxdb()
     bucket = request.get_json()["bucket"]
     measurement = request.get_json()["measurement"]
@@ -75,6 +145,29 @@ def get_all_topics():
 
 @influxdb_data_bp.route('/dataTimeSeries', methods=['GET', 'POST'])
 def get_data_time_series():
+    """
+    ---
+    post:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema: InputSchema
+        description: get data time series
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - influxdb_router
+    """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     client, org = influxdb.connection_inflxdb()
     bucket = request.get_json()["bucket"]
     measurement = request.get_json()["measurement"]

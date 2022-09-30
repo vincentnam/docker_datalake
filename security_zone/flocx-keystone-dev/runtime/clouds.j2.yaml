@@ -1,0 +1,24 @@
+---
+clouds:
+  openstack-public:
+    auth:
+      username: admin
+      project_name: admin
+      password: "{{ environ.KEYSTONE_ADMIN_PASSWORD }}"
+      auth_url: "{{ environ.KEYSTONE_PUBLIC_URL|default('http://localhost:5000/') }}"
+      user_domain_name: Default
+      project_domain_name: Default
+    identity_api_version: 3
+    interface: public
+    verify: false
+
+  openstack-internal:
+    auth:
+      username: admin
+      project_name: admin
+      password: "{{ environ.KEYSTONE_ADMIN_PASSWORD }}"
+      auth_url: "http://localhost:5000/"
+      user_domain_name: Default
+      project_domain_name: Default
+    identity_api_version: 3
+    interface: internal

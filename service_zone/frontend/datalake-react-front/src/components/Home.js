@@ -1,17 +1,16 @@
 import React from "react";
-import { Header } from "./Header";
 import '../home.css';
 import $ from 'jquery';
-import { config } from '../configmeta/config';
+import {config} from '../configmeta/config';
 import api from '../api/api';
-import { config_processed_data } from '../configmeta/config_processed_data';
-import { Filters } from "./download-raw-data/Filters";
-import {RowItem} from './download-raw-data/RowItem';
+import Filters from "./download-raw-data/Filters";
 import Moment from "moment";
 import DataTable from 'react-data-table-component';
-import { LoadingSpinner } from "./utils/LoadingSpinner";
+import {LoadingSpinner} from "./utils/LoadingSpinner";
+import {connect} from "react-redux";
+import {toast, ToastContainer} from "react-toastify";
 
-export class Home extends React.Component {
+class Home extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
     selectedElementsOnActualPage = []
 
@@ -27,12 +26,15 @@ export class Home extends React.Component {
         this.setBeginDate = this.setBeginDate.bind(this);
         this.setEndDate = this.setEndDate.bind(this);
         this.handleChange = this.handleChange.bind(this);
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
 
         this.state = {
             selectedElements: [],
             type: 0,
             offset: 0,
-            perPage: 10
+            perPage: 10,
+            token: localStorage.getItem('token'),
+            container_name: ""
         }
     }
 
@@ -44,20 +46,79 @@ export class Home extends React.Component {
         })
     }
 
+    componentDidMount() {
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            })
+            this.loadObjectsFromServer();
+        } else {
+            this.loadRolesProjectsUser();
+        }
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadObjectsFromServer();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
+
+    // TODO : To refactor later
     loadObjectsFromServer() {
-        let data = null
-        if(this.state.sort_field && this.state.sort_value) {
+        let data = null;
+        let routeName = '/raw-data';
+        let container = "";
+        if(this.props.nameContainer.nameContainer === ""){
+            container = this.state.container_name;
+        } else {
+            container = this.props.nameContainer.nameContainer;
+        }
+
+        // when homepage finished to load, load last 10 uploaded raw data
+        // OR there is sorting data less filters
+        if ((this.state.sort_field === undefined &&
+                this.state.sort_value === undefined &&
+                this.state.beginDate === undefined)
+            ||
+            (this.state.sort_field !== undefined &&
+                this.state.sort_value !== undefined &&
+                this.state.beginDate === undefined)) {
+            routeName = '/last-raw-data'
             data = JSON.stringify({
+                container_name: container,
+                token: localStorage.getItem('token'),
                 limit: this.state.perPage,
                 offset: this.state.offset,
-                filetype: this.state.filetype,
-                beginDate: this.state.beginDate,
-                endDate: this.state.endDate,
                 sort_field: this.state.sort_field,
                 sort_value: this.state.sort_value
             })
-        } else {
+        }
+
+        // when filters button has been clicked less sorting data
+        if (this.state.sort_field === undefined &&
+            this.state.sort_value === undefined &&
+            this.state.beginDate !== undefined) {
             data = JSON.stringify({
+                container_name: container,
+                token: localStorage.getItem('token'),
                 limit: this.state.perPage,
                 offset: this.state.offset,
                 filetype: this.state.filetype,
@@ -66,9 +127,27 @@ export class Home extends React.Component {
             })
         }
 
-        this.handleShow()
+        // when filters button has been clicked with sorting data
+        if (this.state.sort_field !== undefined &&
+            this.state.sort_value !== undefined &&
+            this.state.beginDate !== undefined) {
+            data = JSON.stringify({
+                container_name: container,
+                token: localStorage.getItem('token'),
+                limit: this.state.perPage,
+                offset: this.state.offset,
+                filetype: this.state.filetype,
+                beginDate: this.state.beginDate,
+                endDate: this.state.endDate,
+                sort_field: this.state.sort_field,
+                sort_value: this.state.sort_value,
+
+            })
+        }
+
+        this.handleShow();
         $.ajax({
-            url: this.url + '/raw-data',
+            url: this.url + routeName,
             data: data,
             xhrFields: {
                 withCredentials: true
@@ -116,7 +195,7 @@ export class Home extends React.Component {
 
         datatypeConf.map((type) => (
             // loop in config file
-            type.map((t) => {
+            type.forEach((t) => {
                 // if selected data type corresponds with current data type
                 if (t.id === parseInt(id)) {
                     filetypesResult = t.type_file_accepted
@@ -133,8 +212,8 @@ export class Home extends React.Component {
         const value = target.type === 'checkbox' ? target.checked : target.value;
         const name = target.name;
 
-        let filetypesResult = this.getFiletypeById( [config.types], value)
-        this.setFiletype(filetypesResult) 
+        let filetypesResult = this.getFiletypeById([config.types], value)
+        this.setFiletype(filetypesResult)
 
         this.setState({
             [name]: value
@@ -143,17 +222,17 @@ export class Home extends React.Component {
 
     setFiletype(value) {
         let filetype = value;
-        return this.setState({ filetype: filetype })
+        return this.setState({filetype: filetype})
     }
 
     setBeginDate(value) {
         let beginDate = value;
-        return this.setState({ beginDate: beginDate })
+        return this.setState({beginDate: beginDate})
     }
 
     setEndDate(value) {
         let endDate = value;
-        return this.setState({ endDate: endDate })
+        return this.setState({endDate: endDate})
     }
 
     getSelectedElements() {
@@ -166,44 +245,11 @@ export class Home extends React.Component {
         })
     }
 
-    
+
     handler(event) {
-        //console.log(event)
-
-        // selected elements on all pages
-        let selectedElements = this.getSelectedElements()
-
         // selected elements on actual page (component React DataTable send selected elements only on actual page)
 
         // in actual page, if elements have been selected, add selected ones into selected elements global array
-        if(event.selectedRows !== undefined) {
-            // loop into selected rows in actual page
-            event.selectedRows.map((element) => {
-                // if selected rowx in actual page is not in global selected elements
-                console.log('page actuelle')
-                console.log(this.selectedElementsOnActualPage)
-                if(!this.selectedElementsOnActualPage.includes(element)){
-                    console.log('AJOUTE')
-                    //selectedElements.push(element)
-                } 
-            })
-        }
-
-       /* if(this.selectedElementsOnActualPage.length > 0) {
-            this.selectedElementsOnActualPage.map((selectedElement) => {
-                console.log('SELECTION')
-                console.log(event.selectedRows)
-                if(!event.selectedRows.includes(selectedElement)) {
-                    var index = selectedElements.indexOf(selectedElement)
-                    if(index != -1) {
-                        console.log('INDEX')
-                        console.log(index)
-                        selectedElements.splice(index, 1)
-                    }
-                }
-            })
-        }*/
-
         this.setState({
             selectedElements: event.selectedRows
         })
@@ -212,10 +258,11 @@ export class Home extends React.Component {
     validate() {
         let selectedElements = this.getSelectedElements()
         let body = []
-        selectedElements.map(element => {
+        selectedElements.forEach(element => {
             body.push({
                 'object_id': element.swift_object_id,
-                'container_name': element.swift_container
+                'container_name': element.swift_container,
+                'token': localStorage.getItem('token')
             })
         })
 
@@ -226,9 +273,18 @@ export class Home extends React.Component {
                     let url = result.data.swift_zip
                     const link = document.createElement('a');
                     link.href = url;
-
                     link.click();
                     window.URL.revokeObjectURL(url);
+                    toast.success("Le téléchargement a été effectué avec succès !", {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
                 })
                 .catch(function (error, status) {
                     console.error(status, error.toString()); // eslint-disable-line
@@ -245,41 +301,18 @@ export class Home extends React.Component {
 
 
     render() {
-         // data type field
-         const SelectDatatype = () => {
-            let types = [config.types];
-            if(this.props.title == "Affichage des données traitées"){
-                types = [config_processed_data.types];
-            }
-            // loop into conf to get all data types
-            const listTypes = types.map((type) => (
-                type.map((t) => 
-                    <option key={t.id} value={t.id}>{t.label}</option>
-                )
-            ));
-            return (
-                <select value={this.state.type} onChange={this.handleChange} name="type" className="form-control">
-                    {listTypes}
-                </select>
-            );
-        }
-        let handler = this.handler
-        let selectedElements = this.getSelectedElements()
-        
         let elts = []
         if (this.state.elements) {
             elts = this.state.elements
         }
 
-         // sort columns
-         const handleSort = async (column, sortDirection) => {
+        // sort columns
+        const handleSort = async (column, sortDirection) => {
             /// reach out to some API and get new data using or sortField and sortDirection
-        
-            console.log(column)
-            console.log(sortDirection)
+
             // for desc
             let sort = 1
-            if(this.state.sort_value == 1) {
+            if (this.state.sort_value === 1) {
                 sort = -1
             }
             this.setState({
@@ -296,8 +329,8 @@ export class Home extends React.Component {
             'endDate': this.state.endDate
         }
 
-         //  Internally, customStyles will deep merges your customStyles with the default styling.
-         const customStyles = {
+        //  Internally, customStyles will deep merges your customStyles with the default styling.
+        const customStyles = {
             table: {
                 style: {
                     padding: '0.5rem 0.5rem',
@@ -325,14 +358,14 @@ export class Home extends React.Component {
                     '&:hover': {
                         cursor: 'pointer',
                         backgroundColor: '#ea973b'
-                      },
+                    },
                 },
             },
             headCells: {
                 style: {
                     paddingLeft: '8px', // override the cell padding for head cells
                     paddingRight: '8px',
-                    color: '#ea973b' ,
+                    color: '#ea973b',
                     borderColor: 'inherit',
                     borderStyle: 'solid',
                     borderWidth: '0',
@@ -380,26 +413,20 @@ export class Home extends React.Component {
                 sortable: true,
             },
             {
-                id: 'meta1',
-                name: "Meta 1",
-                selector: row => row.other_data ? row.other_data['meta1'] : '-'
-            },
-            {
-                id: 'meta2',
-                name: "Meta 2",
-                selector: row => row.other_data ? row.other_data['meta2'] : '-'
+                id: 'other_data',
+                name: "Métadescriptions",
+                selector: row => row.other_data ? JSON.stringify(row.other_data) : '-'
             },
             {
                 id: 'creation_date',
                 name: "Date de création",
-                selector: row => Moment(row.creation_date).format('YYYY-MM-DD hh:mm:ss'),
+                selector: row => Moment(row.creation_date).format('YYYY-MM-DD HH:mm:ss'),
                 sortable: true
             },
         ];
 
         return (
             <div>
-                <Header/>
                 <div className="container main-download">
                     <div className="title">Home</div>
                     <Filters
@@ -413,7 +440,7 @@ export class Home extends React.Component {
 
                     <div className="download-detail">
                         <div className="title">Dernières données brutes uploadées</div>
-                        <div className="grid mt5 shadow-sm">
+                        <div className="grid mt5 shadow">
                             <DataTable
                                 columns={columns}
                                 data={elts}
@@ -439,9 +466,18 @@ export class Home extends React.Component {
                         </div>
                     </div>
                 </div>
-
+                <ToastContainer/>
                 <LoadingSpinner loading={this.state.loading}/>
             </div>
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        nameContainer: state.nameContainer,
+        auth: state.auth
+    }
+}
+
+export default connect(mapStateToProps, null)(Home)

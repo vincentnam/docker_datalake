@@ -81,6 +81,18 @@ body {
     color: #ffffff;
 }
 
+.btn-oran-header {
+    background-color: #ea973b;
+    color: #ffffff;
+    border-radius: 10px;
+    border: none;
+}
+
+.btn-oran-header:hover {
+    background-color: #e58419;
+    color: #ffffff;
+}
+
 .main-download .tab-download .nav-link,
 .main-download .tab-download .nav-link.active {
     background-color: transparent;
@@ -238,3 +250,86 @@ body {
 ::-webkit-calendar-picker-indicator {
     background-image: url('datepicker-calendar.png');
 }
+
+.modelsList {
+    color: #E9973B;
+    border: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    background-color: white;
+    text-decoration:none;
+}
+.modelsList:hover {
+    color: black;
+    text-decoration:none;
+}
+
+.buttonModel {
+    color: white;
+    background-color: #ea973b;
+    border: #ea973b;
+}
+
+.buttonModel:hover {
+    background-color: #e58419;
+    border: #e58419;
+}
+
+.form-check-input:checked {
+    background-color: #e58419!important;
+    border-color: #e58419!important;
+}
+
+.meta {
+    border: 2px solid;
+    border-color: lightgrey;
+    border-radius: 10px;
+    background-color: white;
+}
+
+.list-button {
+    display: block;
+}
+.modelsList-cacher {
+    color: grey;
+    border: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    background-color: white;
+    text-decoration:none;
+}
+.modelsList-cacher:hover {
+    color: black;
+    text-decoration:none;
+}
+
+.buttonClose {
+    color: white;
+    background-color: grey;
+    border: grey;
+}
+
+.buttonClose:hover {
+    background-color: rgb(143, 142, 142);
+    border: rgb(143, 142, 142);
+}
+
+.table-traceability {
+    padding: '0.5rem 0.5rem';
+    width: '100%';
+    margin-bottom: '1rem';
+    color: '#212529';
+    vertical-align: 'top';
+    border-color: '#dee2e6';
+    background-color: rgba(0, 0, 0, 0.05)
+}
+
+td {
+    color: black !important;
+}
+td > p {
+    color: black !important;
+}
+

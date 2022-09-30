@@ -8,6 +8,7 @@ from swiftclient.service import SwiftService
 import config
 from services import extract_transform_load_time_series_csv
 from services import extract_transform_load_time_series_json
+from services import extract_transform_load_time_series_text
 from services import extract_transform_load_images
 from services import extract_transform_load_dump_sql
 from services import typefile
@@ -36,6 +37,7 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
+
 def get_swift_object(*args, **kwargs):
     swift_container = kwargs["params"]["swift_container"]
     swift_id = kwargs["params"]["swift_obj_id"]
@@ -52,7 +54,7 @@ def get_swift_object(*args, **kwargs):
     key = config.key_swift
     # Connction à Swift
     conn = swiftclient.Connection(
-        user=user, 
+        user=user,
         key=key,
         authurl=authurl
     )
@@ -67,58 +69,77 @@ def get_swift_object(*args, **kwargs):
 
     process_type = "other"
     processed_data = {}
-    
-    if "application/x-zip-compressed" in content_type or "application/x-gzip" in content_type :
-        #Creation of a temp file for stock the data
+
+    if "application/x-zip-compressed" in content_type or "application/x-gzip" in content_type:
+        # Creation of a temp file for stock the data
         fp = tempfile.TemporaryFile()
         fp.write(swift_result)
         fp.seek(0)
-        #Using ZipFile package to unzip zip file data
+        # Using ZipFile package to unzip zip file data
         zip = ZipFile(fp, 'r')
-        #Using a for to read each file in the zip file
+        # Using a for to read each file in the zip file
         for file in zip.filelist:
-            #Read file to retrieve the data
+            # Read file to retrieve the data
             data_file = zip.read(file.filename)
-            #Split the filename to retrieve the extension file for the type file
+            # Split the filename to retrieve the extension file for the type file
             typef = file.filename.split('.')
             typef = typef[1]
-            #Function return the type file
+            # Function return the type file
             type_file = typefile(typef)
             # Compare filetype
-            if "image/" in type_file :
+            if "image/" in type_file:
                 process_type = "images"
-                processed_data = extract_transform_load_images(data_file, swift_container, swift_id, process_type)
+                processed_data = extract_transform_load_images(
+                    data_file, swift_container, swift_id, process_type)
             if "application/json" in type_file:
                 process_type = "time_series_json"
                 # Json parsing
-                processed_data = extract_transform_load_time_series_json(data_file, swift_container, swift_id, process_type)
+                processed_data = extract_transform_load_time_series_json(
+                    data_file, swift_container, swift_id, process_type)
             if "application/vnd.ms-excel" in type_file:
                 process_type = "time_series_csv"
-                # Json parsing
-                processed_data = extract_transform_load_time_series_csv(data_file, swift_container, swift_id, process_type)
+                # CSV parsing
+                processed_data = extract_transform_load_time_series_csv(
+                    data_file, swift_container, swift_id, process_type)
+            if "text/plain" in type_file:
+                process_type = "time_series_txt"
+                # Text parsing
+                processed_data = extract_transform_load_time_series_text(
+                    data_file, swift_container, swift_id, process_type)
+    else:
+        # Compare filetype
+        if "image/" in content_type:
+            process_type = "images"
+            # Image parsing
+            processed_data = extract_transform_load_images(
+                swift_result, swift_container, swift_id, process_type)
+        if "application/json" in content_type:
+            process_type = "time_series_json"
+            # Json parsing
+            processed_data = extract_transform_load_time_series_json(
+                swift_result, swift_container, swift_id, process_type)
 
-                
-    # Compare filetype
-    if "image/" in content_type :
-        process_type = "images"
-        processed_data = extract_transform_load_images(swift_result, swift_container, swift_id, process_type)
-    if "application/json" in content_type:
-        process_type = "time_series_json"
-        # Json parsing
-        processed_data = extract_transform_load_time_series_json(swift_result, swift_container, swift_id, process_type)
+        if "application/vnd.ms-excel" in content_type:
+            process_type = "time_series_csv"
+            # CSV parsing
+            processed_data = extract_transform_load_time_series_csv(
+                swift_result, swift_container, swift_id, process_type)
 
-    if "application/vnd.ms-excel" in content_type:
-        process_type = "time_series_csv"
-        # Json parsing
-        processed_data = extract_transform_load_time_series_csv(swift_result, swift_container, swift_id, process_type)
+        if "application/sql" in content_type:
+            process_type = "sql_dump"
+            # SQL parsing
+            processed_data = extract_transform_load_dump_sql(
+                swift_result, swift_container, swift_id, process_type)
 
-    if "application/sql" in content_type:
-        process_type = "sql_dump"
-        # Json parsing
-        processed_data = extract_transform_load_dump_sql(swift_result, swift_container, swift_id, process_type)
+        if "text/plain" in content_type:
+            process_type = "time_series_txt"
+            # Text parsing
+            processed_data = extract_transform_load_time_series_text(
+                swift_result, swift_container, swift_id, process_type)
 
     # Handled data
     return processed_data
+
 
 dag = DAG(
     'data-processing-upload',

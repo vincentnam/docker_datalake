@@ -1,0 +1,114 @@
+---
+
+- import_playbook: "{{playbook_dir}}/../../base/tasks/docker_install.yml"
+  vars:
+    host: service_zone_rest_api
+
+
+- name : Download files
+  vars_files: ../vars/main.yml
+  hosts: service_zone_rest_api
+  tasks:
+  - name: Print all available facts
+    ansible.builtin.debug:
+      var: hostvars
+  - name: Create a build directory
+    ansible.builtin.file:
+      path: "{{ hostvars.service_zone_rest_api.BUILD_DIR}}/service_zone_rest_api"
+      state: directory
+      mode: "0755"
+  - name: Stop and delete any container
+    shell :
+      cmd : "docker stop $(docker ps -a -q); docker rm $(docker ps -a -q)"
+    become : yes
+    ignore_errors: yes
+  - name : Add build folders
+    ansible.builtin.copy:
+      src :  "{{playbook_dir}}/../../../../../service_zone/backend/"
+      dest : "{{ hostvars.service_zone_rest_api.BUILD_DIR }}/service_zone_rest_api/"
+  - name : Update REST API webserver port
+    ansible.builtin.replace:
+      path : "{{ hostvars.service_zone_rest_api.BUILD_DIR }}/service_zone_rest_api/docker-compose.yaml"
+      regexp:   "    expose:
+      - \"5000\""
+      replace: "    expose:
+      - \"{{REST_API_PORT}}\""
+
+  - name: Create api config file
+    ansible.builtin.copy:
+      src: "{{playbook_dir}}/../../../../../service_zone_rest_api/backend/flask/neocampus/config.py.sample"
+      dest: "{{ hostvars.service_zone_rest_api.BUILD_DIR }}/service_zone_rest_api/backend/flask/neocampus/config.py"
+  - name: Update REST API var file
+    ansible.builtin.replace:
+      path: "{{ hostvars.service_zone_rest_api.BUILD_DIR }}/service_zone_rest_api/docker-compose.yaml"
+      regexp: "MONGO_URL = \"XXXXX:27017\"
+MONGO_ADMIN = \"\"
+MONGO_PWD = \"\"
+MONGO_DB_AUTH = \"\"
+SWIFT_AUTHURL = \"http://XXXXXX:8080/auth/v1.0\"
+SWIFT_USER = 'XXXX'
+SWIFT_KEY = 'XXXXX'
+SWIFT_FILES_DIRECTORY = \"cache-swift-files\"
+INFLUXDB_URL = \"http://XXXXXXX:8086\"
+INFLUXDB_TOKEN = \"XXXXXXX\"
+INFLUXDB_ORG = \"XXXXXX\"
+INFLUXDB_BUCKET = \"xxxx\"
+USER = \"\"
+PASSWORD = \"\"
+KEYSTONE_URL = \"\"
+PROJECT_ID = \"\"
+USER_DOMAIN_ID = \"\"
+USER_ADMIN = \"\"
+USER_ADMIN_PWD = \"\"
+HOST_URL = \"\"
+
+SQLSERVER_URL = \"\"
+SQLSERVER_DB = \"\"
+SQLSERVER_LOGIN = \"\"
+SQLSERVER_PWD = \"\"
+
+BIG_FILE_PATH = \"\"
+IP_MACHINE_MONGO = \"\"
+USER_MACHINE_MONGO = \"\"
+PWD_MACHINE_MONGO = \"\""
+
+      replace: "MONGO_URL = \"{{MONGO_URL}}:27017\"
+MONGO_ADMIN = \"{{MONGO_ADMIN}}\"
+MONGO_PWD = \"{{MONGO_PWD}}\"
+MONGO_DB_AUTH = \"{{MONGO_DB_AUTH}}\"
+SWIFT_AUTHURL = \"http://{{SWIFT_AUTHURL}}:8080/auth/v1.0\"
+SWIFT_USER = '{{SWIFT_USER}}'
+SWIFT_KEY = '{{SWIFT_KEY}}'
+SWIFT_FILES_DIRECTORY = \"cache-swift-files\"
+INFLUXDB_URL = \"http://{{INFLUXDB_URL}}:8086\"
+INFLUXDB_TOKEN = \"{{INFLUXDB_TOKEN}}\"
+INFLUXDB_ORG = \"{{INFLUXDB_ORG}}\"
+INFLUXDB_BUCKET = \"{{INFLUXDB_BUCKET}}\"
+USER = \"{{USER}}\"
+PASSWORD = \"{{PASSWORD}}\"
+KEYSTONE_URL = \"{{KEYSTONE_URL}}\"
+PROJECT_ID = \"{{PROJECT_ID}}\"
+USER_DOMAIN_ID = \"{{USER_DOMAIN_ID}}\"
+USER_ADMIN = \"{{USER_ADMIN}}\"
+USER_ADMIN_PWD = \"{{USER_ADMIN_PWD}}\"
+HOST_URL = \"{{HOST_URL}}\"
+
+SQLSERVER_URL = \"{{SQLSERVER_URL}}\"
+SQLSERVER_DB = \"{{SQLSERVER_DB}}\"
+SQLSERVER_LOGIN = \"{{SQLSERVER_LOGIN}}\"
+SQLSERVER_PWD = \"{{SQLSERVER_PWD}}\"
+
+BIG_FILE_PATH = \"{{BIG_FILE_PATH}}\"
+IP_MACHINE_MONGO = \"{{IP_MACHINE_MONGO}}\"
+USER_MACHINE_MONGO = \"{{USER_MACHINE_MONGO}}\"
+PWD_MACHINE_MONGO = \"{{PWD_MACHINE_MONGO}}\""
+
+  - name : Start API REST with NGINX
+    shell :
+      cmd : '(docker-compose up -d &); sleep 30'
+      chdir : "{{ hostvars.service_zone_rest_api.BUILD_DIR}}/service_zone_rest_api"
+    become : yes
+    register: output
+  - ansible.builtin.debug:
+      var: output
+
