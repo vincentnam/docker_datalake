@@ -69,7 +69,6 @@ The development of this architecture will integrate a semantic dimension in the 
         + [API description - TODO](#APIdescrption)
         + [Data exchanges between services](#Dataexchangesbetweenservices)
     * [Data formats](#Dataformats)
-
         + [Openstack Swift](#OpenstackSwift)
         + [MongoDB metadata database - TO REFACTOR](#MongoDBmetadatadatabase)
 - [Getting started](#GettingStarted)
@@ -752,6 +751,11 @@ MongoDB : API in several languages (Pymongo in Python as an example)
 Airflow : Web server GUI and REST API (see documentation)
 
 
+
+API paths : 
+...
+
+
 ### Data exchanges between services <a name="Dataexchangesbetweenservices"></a>
 [Return to the table of content](#Tableofcontent)
 
@@ -1128,7 +1132,7 @@ TODO : Update TODO list
         - [x] Data download with React + Express backend server
             - [x] Drag'n'drop insertion 
             - [x] Progress bar
-            - [ ] Handle SLO Openstack Swift insertion (Static Large Object) for > 1 Go files
+            - [x] Handle SLO Openstack Swift insertion (Static Large Object) for > 1 Go files
         - [x] Data visualization with React + D3.JS
             - [x] Basic time series visualization
             - [x] Basic graph visualization
@@ -1154,10 +1158,10 @@ TODO : Update TODO list
         - [x] MongoDB enterprise container
         - [x] Openstack Swift container
         - [x] Apache Airflow container (Official container)
-        - [ ] Apache Spark
+        - [x] Apache Spark
         - [x] Processed data zone container (InfluxDB, SQL database)
-        - [ ] (NEEDED : Security design and implementation) Openstack Keystone container
-        - [ ] (NEEDED : Process zone design and rework : add Apache Spark) Apache Spark container
+        - [x] (NEEDED : Security design and implementation) Openstack Keystone container
+        - [x] (NEEDED : Process zone design and rework : add Apache Spark) Apache Spark container
     - [ ] Kubernetes
         - [ ] Apache Spark cluster on kubernetes design  
         - [ ] ...
@@ -1294,7 +1298,7 @@ Patches : for a bug fix
 
 The whole project is (C) 2020 March, **DANG Vincent-Nam** <dang.vincent-nam@gmail.com>
 
-during an end of study internship for Université Toulouse 3 Paul-Sabatier (FRANCE), 
+during an end of study internship for Université Toul[API description - TODO](#APIdescrption)ouse 3 Paul-Sabatier (FRANCE), 
 IRIT and SMAC Team, neOCampus as original designer of the project / solution / architecture and basis code owner 
 
 and for CNRS (as a 1-year fixed-term contract) as developer of the project / solution / architecture and
