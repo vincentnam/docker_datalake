@@ -1,0 +1,3 @@
+---
+- name : Rest api install
+  import_playbook: rest_api_container_build.yml

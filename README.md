@@ -829,29 +829,15 @@ Each object is stored on a container that match to the project or the user group
 ## Deployment <a name="Deployment"></a>
 [Return to the table of content](#Tableofcontent)
 
-TODO : Finish ansible, make fully automatic deployment with ansible (see docker branch) 
-- docker-compose up 
+The deployment is done through Ansible playbook in [deployment_scripts/ansible](./deployment_scripts/ansible/).
 
+To deploy the architect, several configuration have to be done : 
+- Configure host file [deployment_scripts/ansible/inventories/staging/hosts.yml](deployment_scripts/ansible/inventories/staging/hosts.yml) with host that will host each services. For the moment, only Centos 7 hosts are available to automatic deployment.
+- Configure var file in each zone you want to deploy (in [deployment_scripts/ansible/roles](deployment_scripts/ansible/roles)). Each var files are in "\[service_zone\]/vars" folder
+- Select zone you want to deploy in [deployment_scripts/ansible/roles/global/tasks/install_datalake.yml](deployment_scripts/ansible/roles/global/tasks/install_datalake.yml) (uncomment lines).
+- Run "ansible-playbook -i deployment_scripts/ansible/roles/global/tasks/install_datalake.yml" in root folder.
 
-### Start Openstack Swift docker container <a name="StartOpenstackSwiftdockercontainer"></a>
-[Return to the table of content](#Tableofcontent)
-
-TODO : Refactor, update 
-
-    docker build -f ./swift/Ubuntu1604.Dockerfile -t ubuntuswift ./swift/
-    docker run -p 8080:8080 --privileged --device /dev/loop0 --device /dev/loop-control -it ubuntuswift
-
-To make data persistant, use docker volume bind 
-    
-    docker run -p 8080:8080 --privileged --device /dev/loop0 --device /dev/loop-control -v /tmp/dev:/data_dev/1 -it ubuntuswift
-
-The volumes are mounted in /tmp, you have to use a mountable object : dev or loopbackdevice file.
-
-
-### First action to do <a name="FirstActionToDo"></a>
-[Return to the table of content](#Tableofcontent)
-
-Before any insertion, you have to initialize the ID counter by using "init_id(mongodb_url)".
+All have not been tested, but main part of playbook are written. Some modifications may be needed.
 
 
 ## Usage <a name="Usage"></a>
@@ -1162,12 +1148,15 @@ TODO : Update TODO list
         - [x] Processed data zone container (InfluxDB, SQL database)
         - [x] (NEEDED : Security design and implementation) Openstack Keystone container
         - [x] (NEEDED : Process zone design and rework : add Apache Spark) Apache Spark container
-    - [ ] Kubernetes
-        - [ ] Apache Spark cluster on kubernetes design  
-        - [ ] ...
     - [x] Ansible
-        - [x] Create first playbook for ansible 
-
+        - [x] Create Ansible playbook for core services 
+          - [ ] Test whole automatic deployment
+        - [ ] Create playbook for whole architecture
+            - [ ] Add GUI deployment
+            - [ ] Add Apache Spark 
+            - [ ] Add processed data zone (for databases)
+            - [ ] Add multi-node deployment
+    - [ ] Kubernetes deployment 
 ## TODO : Design <a name="TODOImplementation"></a>
 [Return to the table of content](#Tableofcontent)
 
@@ -1185,7 +1174,7 @@ Another approach to metadata management will be adopted with distributed metadat
 
 - [ ] Security and monitoring area (REQUIRED : [AutomaticDeployment](#TODO:AutomaticDeployment) ) 
     - [x] Design security services  
-    - [ ] Design monitoring services :
+    - [ ] Design monitoring services : 
         - [ ] Low level monitoring (network)
         - [ ] Mid level monitoring (process)
         - [ ] High level monitoring (user consumption)    
