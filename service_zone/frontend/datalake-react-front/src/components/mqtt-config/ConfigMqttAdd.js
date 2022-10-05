@@ -78,7 +78,8 @@ class ConfigMqttAdd extends React.Component {
                 password: this.state.password,
                 topic: this.state.topic,
                 container_name: this.props.containerName,
-                status: this.state.status
+                status: this.state.status,
+                token: localStorage.getItem('token')
             })
                 .then(() => {
                     this.props.reload();
@@ -216,6 +217,7 @@ class ConfigMqttAdd extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

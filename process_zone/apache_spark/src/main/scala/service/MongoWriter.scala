@@ -10,7 +10,7 @@ class MongoWriter(config: Config) {
 
 //  @transient lazy val log = org.apache.log4j.LogManager.getLogger(getClass.getName)
 
-  val mongodbUri = s"mongodb://${config.getString("mongo.host")}:${config.getString("mongo.port")}/"
+  val mongodbUri = s"mongodb://${config.getString("mongo.user")}:${config.getString("mongo.pwd")}@${config.getString("mongo.host")}:${config.getString("mongo.port")}/?authSource=${config.getString("mongo.db.auth")}"
 
   val spark = SparkSession
     .builder()

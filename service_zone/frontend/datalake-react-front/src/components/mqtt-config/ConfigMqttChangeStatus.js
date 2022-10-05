@@ -1,6 +1,6 @@
 import React from "react";
 import api from '../../api/api';
-import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
+import {Form, Button} from "react-bootstrap";
 import {ToastContainer, toast} from 'react-toastify';
 import {connect} from "react-redux";
 
@@ -27,7 +27,8 @@ class ConfigMqttChangeStatus extends React.Component {
         event.preventDefault();
         api.post('mqtt/status/change', {
             id: this.props.selectElement._id,
-            status: !this.props.selectElement.status
+            status: !this.props.selectElement.status,
+            token: localStorage.getItem('token')
         })
             .then(() => {
                 this.props.reload();
@@ -72,6 +73,7 @@ class ConfigMqttChangeStatus extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

@@ -1,12 +1,15 @@
 from flask import current_app
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from multiprocessing import Process
 import swiftclient
 from swiftclient.service import SwiftService
 import datetime
 from bson.json_util import dumps
 from datetime import datetime as dt
 from time import sleep
+import swiftclient
+
 
 
 
@@ -18,7 +21,7 @@ def get_swift_original_object_name(swift_container_name, swift_object_id):
     :return: swift original object/file name
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.swift
     mongo_collection = mongo_db[swift_container_name]
     metadata_swift = mongo_collection.find_one(
@@ -28,7 +31,7 @@ def get_swift_original_object_name(swift_container_name, swift_object_id):
 
 def get_last_metadata(db_name, params):
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.swift
     collection = mongo_db[db_name]
 
@@ -51,7 +54,7 @@ def get_last_metadata(db_name, params):
 
 def get_metadata(db_name, params):
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.swift
     collection = mongo_db[db_name]
 
@@ -90,7 +93,7 @@ def get_metadata(db_name, params):
 
 def get_id():
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     return mongo_client.stats.swift.find_one_and_update({"type": "object_id_file"}, {"$inc": {"object_id": 1}})[
         "object_id"]
 
@@ -98,7 +101,7 @@ def get_id():
 def init_id():
     id_doc = {"type": "object_id_file", "object_id": 0}
     mongodb_url = current_app.config['MONGO_URL']
-    client = MongoClient(mongodb_url, connect=False).stats.swift
+    client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False).stats.swift
     if MongoClient(mongodb_url).stats.swift.find_one(
             {"type": "object_id_file"}) is None:
         client.insert_one(id_doc)
@@ -108,10 +111,10 @@ def init_id():
 def insert_datalake(file_content, user, key, authurl, container_name,
                     file_name, processed_data_area_service, data_process,
                     application, content_type,
-                    mongodb_url, other_data):
+                    mongodb_url, other_data, id_big_file):
     conn = swiftclient.Connection(user=user, key=key,
                                   authurl=authurl, insecure=True)
-    client = MongoClient(mongodb_url, connect=False)
+    client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     db = client.swift
     coll = db[container_name]
     if content_type is not None:
@@ -151,6 +154,13 @@ def insert_datalake(file_content, user, key, authurl, container_name,
             conn.put_object(container_name, meta_data["swift_object_id"],
                             contents=file_content,
                             content_type=meta_data["content_type"])
+
+            mongo_db = client.upload
+            mongo_collection = mongo_db["file_upload"]
+            doc = {"id_big_file": id_big_file}
+            newvalues = { "$set": { "upload_swift": True, "update_at": datetime.datetime.now() } }
+            mongo_collection.update_one(doc, newvalues)
+
             coll.insert_one(meta_data)
             return None
         except Exception as e:
@@ -159,10 +169,9 @@ def insert_datalake(file_content, user, key, authurl, container_name,
             if retry > 3:
                 return None
 
-
 def get_handled_data(params):
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'])
 
     mongo_database = ""
     collection_name = ""
@@ -208,7 +217,7 @@ def get_models_all(container_name):
     :return: all models
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
     metadata_models = models.find({"container_name": container_name})
@@ -220,7 +229,7 @@ def get_models_show_all(container_name):
     :return: all models
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
     metadata_models = models.find({"status": True, "container_name": container_name})
@@ -232,7 +241,7 @@ def get_models_all_cache(container_name):
     :return: all models
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
     metadata_models = models.find({"status": False, "container_name": container_name})
@@ -245,7 +254,7 @@ def get_model_id(id):
     :return: a model
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
     query = {"_id": ObjectId(id)}
@@ -260,7 +269,7 @@ def get_models_params(param, container_name):
     :return: all models
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
     query = {"type_file_accepted": param, "status": True, "container_name": container_name}
@@ -276,7 +285,7 @@ def add_model(param):
     :return: done
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
     models.insert_one(param)
@@ -291,7 +300,7 @@ def update_model(param):
     :return: done
     """
     mongodb_url = current_app.config['MONGO_URL']
-    mongo_client = MongoClient(mongodb_url, connect=False)
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
     mongo_db = mongo_client.models_management
     models = mongo_db["models"]
     query = {"_id": ObjectId(param['id'])}
@@ -317,7 +326,7 @@ def get_anomaly(params,measurement,topic, container_name):
     :return: metadate
     """
     mongodb_url = current_app.config['MONGO_URL']
-    collection = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
+    collection = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False).data_anomaly.influxdb_anomaly
 
     start_date =  datetime.datetime.strptime(str(params['beginDate']), "%Y-%m-%dT%H:%M:%S.%fZ")
     end_date = datetime.datetime.strptime(str(params['endDate']), "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -356,8 +365,47 @@ def get_anomaly_all(container_name):
     :return: metadate
     """
     mongodb_url = current_app.config['MONGO_URL']
-    collection = MongoClient(mongodb_url, connect=False).data_anomaly.influxdb_anomaly
+    collection = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False).data_anomaly.influxdb_anomaly
 
     metadata = collection.find({'container_name': container_name})
     nbr_metadata = metadata.count()
     return nbr_metadata, metadata
+
+def typefile(typef):
+    """
+    Return the type_file with the extension in the parameter
+
+    :return: metadate
+    """
+    type_file = ""
+    #Research the type file in function of the extension file
+    if(typef == "txt"):
+        type_file = "text/plain"
+    elif(typef == "xls" or typef == "xlsx" or typef == "csv"):
+        type_file = "application/vnd.ms-excel"
+    elif(typef == "png"):
+        type_file = "image/png"
+    elif(typef == "jpg" or typef == "jpeg"):
+        type_file = "image/jpeg"
+    elif(typef == "json"):
+        type_file = "application/json"
+    elif(typef == "json"):
+        type_file = "application/json"
+    elif(typef == "json"):
+        type_file = "application/json"
+    elif(typef == "zip"):
+        type_file = "application/x-zip-compressed"
+    elif(typef == "tar"):
+        type_file = "application/x-gzip"
+    elif(typef == "sql"):
+        type_file = "application/sql"
+    else:
+        type_file = "application/octet-stream"
+
+    return type_file
+
+
+def traceability_big_file_update_id():
+    mongodb_url = current_app.config['MONGO_URL']
+    mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
+    return mongo_client.stats.traceability_big_file.find_one_and_update({"type": "object_id_big_file"}, {"$inc": {"object_id": 1}})["object_id"]

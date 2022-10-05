@@ -81,6 +81,18 @@ body {
     color: #ffffff;
 }
 
+.btn-oran-header {
+    background-color: #ea973b;
+    color: #ffffff;
+    border-radius: 10px;
+    border: none;
+}
+
+.btn-oran-header:hover {
+    background-color: #e58419;
+    color: #ffffff;
+}
+
 .main-download .tab-download .nav-link,
 .main-download .tab-download .nav-link.active {
     background-color: transparent;
@@ -269,6 +281,16 @@ body {
     border-color: #e58419!important;
 }
 
+.meta {
+    border: 2px solid;
+    border-color: lightgrey;
+    border-radius: 10px;
+    background-color: white;
+}
+
+.list-button {
+    display: block;
+}
 .modelsList-cacher {
     color: grey;
     border: none;
@@ -302,5 +324,12 @@ body {
     vertical-align: 'top';
     border-color: '#dee2e6';
     background-color: rgba(0, 0, 0, 0.05)
+}
+
+td {
+    color: black !important;
+}
+td > p {
+    color: black !important;
 }
 

@@ -1,6 +1,6 @@
 import React from "react";
 import api from '../api/api';
-import {Button, Modal, ProgressBar} from 'react-bootstrap';
+import {Modal} from 'react-bootstrap';
 import {connect} from "react-redux";
 import ConfigMqttAdd from "./mqtt-config/ConfigMqttAdd";
 import ConfigMqttEdit from "./mqtt-config/ConfigMqttEdit";
@@ -24,6 +24,7 @@ class MqttConfigList extends React.Component {
                 name: "",
             },
             statusFluxAll: true,
+            container_name: this.props.nameContainer.nameContainer,
         };
         this.loadMqttConfig = this.loadMqttConfig.bind(this);
         this.onChangeModalAdd = this.onChangeModalAdd.bind(this);
@@ -31,15 +32,49 @@ class MqttConfigList extends React.Component {
         this.loadMqttConfigStatus = this.loadMqttConfigStatus.bind(this);
         this.onChangeModalElementStatus = this.onChangeModalElementStatus.bind(this);
         this.loadFlux = this.loadFlux.bind(this);
+        this.loadRolesProjectsUser = this.loadRolesProjectsUser.bind(this);
     }
 
     componentDidMount() {
-        this.loadMqttConfig();
+        if (this.props.nameContainer.nameContainer !== "") {
+            this.setState({
+                container_name: this.props.nameContainer.nameContainer,
+            });
+            this.loadMqttConfig();
+        } else {
+            this.loadRolesProjectsUser();
+        }
+
+    }
+
+    loadRolesProjectsUser() {
+        api.post('auth-token/projects', {
+            token: localStorage.getItem('token')
+        })
+            .then((response) => {
+                let listProjectAccess = [];
+                response.data.projects.forEach((project) => {
+                    if (project.name !== "datalake" && project.name !== "admin") {
+                        listProjectAccess.push({
+                            label: project.name,
+                            name_container: project.name,
+                        })
+                    }
+                });
+                this.setState({
+                    container_name: listProjectAccess[0].name_container,
+                })
+                this.loadMqttConfig();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     }
 
     loadMqttConfig() {
         api.post('mqtt/all', {
-            container_name: this.props.nameContainer.nameContainer
+            container_name: this.state.container_name,
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -53,7 +88,8 @@ class MqttConfigList extends React.Component {
 
     loadMqttConfigStatus() {
         api.post('mqtt/status/actif', {
-            container_name: this.props.nameContainer.nameContainer
+            container_name: this.state.container_name,
+            token: localStorage.getItem('token')
         })
             .then((response) => {
                 this.setState({
@@ -214,6 +250,13 @@ class MqttConfigList extends React.Component {
         }
 
         const ModalChangeStatus = () => {
+            let message = "";
+            if(this.state.selectElement.status) {
+                message = "Voulez-vous désactiver le flux MQTT : " +this.state.selectElement.name +" ?";
+            } else {
+                message = "Voulez-vous activer le flux MQTT : " +this.state.selectElement.name +" ?";
+            }
+            
             return (
                 <Modal
                     size="lg"
@@ -223,7 +266,7 @@ class MqttConfigList extends React.Component {
                 >
                     <Modal.Header>
                         <Modal.Title id="model-change">
-                            Voulez-vous changer le status du flux MQTT : "{this.state.selectElement.name}" ?
+                            {message}
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
@@ -295,6 +338,7 @@ class MqttConfigList extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
+        auth: state.auth
     }
 }
 

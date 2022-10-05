@@ -8,7 +8,7 @@ def connection_mongo_metadata(swift_container, swift_object_id):
     container_name = swift_container
 
     # Connection to mongodb metadata
-    client = MongoClient(mongodb_url, connect=False)
+    client = MongoClient(mongodb_url, username=config.mongodb_user, password=config.mongodb_pwd, authSource=config.mongodb_db_auth, connect=False)
     db = client.swift
     coll = db[container_name]
     # Find data with the swift_object_id

@@ -1,0 +1,37 @@
+version: "3"
+
+services:
+  database:
+    image: mariadb:10.4.5-bionic
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MARKET_DB_PASSWORD: ${MARKET_DB_PASSWORD}
+      PROVIDER_DB_PASSWORD: ${PROVIDER_DB_PASSWORD}
+      MYSQL_USER: ${KEYSTONE_DB_USER:-keystone}
+      MYSQL_PASSWORD: ${KEYSTONE_DB_PASSWORD}
+      MYSQL_DATABASE: ${KEYSTONE_DB_NAME:-keystone}
+    volumes:
+      - mysql:/var/lib/mysql
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:z
+    ports:
+      - "3306:3306"
+  keystone:
+    build:
+      context: .
+      args:
+        KEYSTONE_IMAGE_TAG: current-tripleo
+    volumes:
+      - ./certs/certification.pem:/etc/pki/tls/certs/localhost.crt
+      - ./certs/certification.key:/etc/pki/tls/private/localhost.key
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      KEYSTONE_ADMIN_PASSWORD: ${KEYSTONE_ADMIN_PASSWORD}
+      KEYSTONE_DB_PASSWORD: ${KEYSTONE_DB_PASSWORD}
+      KEYSTONE_DB_USER: ${KEYSTONE_DB_USER:-keystone}
+      KEYSTONE_DB_NAME: ${KEYSTONE_DB_NAME:-keystone}
+      KEYSTONE_DEBUG: ${KEYSTONE_DEBUG:-"false"}
+    ports:
+      - "5000:5000"
+
+volumes:
+  mysql:

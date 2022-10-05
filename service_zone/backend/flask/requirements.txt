@@ -2,7 +2,7 @@ flask>=1.1,<1.2
 markupsafe==2.0.1
 python-swiftclient>=3.11,<3.12
 pymongo>=3.11,<3.12
-influxdb_client
+influxdb_client==1.30.0
 pandas
 pynacl
 pyOpenSSL
@@ -13,5 +13,8 @@ Werkzeug==0.16.1
 apispec 
 apispec_webframeworks 
 marshmallow
-keystoneauth1
-python-keystoneclient
+keystoneauth1==4.5.0
+python-keystoneclient==4.4.0
+python-swiftclient
+pyodbc
+
