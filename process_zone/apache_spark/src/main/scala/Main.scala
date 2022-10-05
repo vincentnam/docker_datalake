@@ -32,20 +32,21 @@ object Main {
         }
         thread.start()
       }
-      jssc.start()
-      jssc.awaitTermination()
       val t = new java.util.Timer()
       val task = new java.util.TimerTask {
-
         def run(): Unit = {
+          println("debut verif")
           if (streamGetter.changeFlag()) {
-            jssc.stop(stopSparkContext = true)
+            println("Stop")
+            //            jssc.awaitTerminationOrTimeout(1000)
+            jssc.stop()
+
           }
         }
       }
-      t.scheduleAtFixedRate(task, 0, config.getLong("jssc.timeout"))
-//      jssc.awaitTerminationOrTimeout(config.getLong("jssc.timeout"))
-//      jssc.stop(stopSparkContext = true)
+      t.scheduleAtFixedRate(task, 10000, config.getLong("jssc.timeout"))
+      jssc.start()
+      jssc.awaitTermination()
     } while(true)
   }
 }

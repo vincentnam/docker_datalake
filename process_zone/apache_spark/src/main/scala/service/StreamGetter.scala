@@ -3,7 +3,7 @@ package service
 import com.typesafe.config.Config
 import org.apache.avro.io.Encoder
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
-import spark.implicits._
+//import org.mongodb.scala._
 
 import scala.language.postfixOps
 
@@ -30,10 +30,10 @@ class StreamGetter(config: Config) {
     val fluxCollection = spark.read.format("com.mongodb.spark.sql.DefaultSource")
       .options(Map("uri" -> mongodbUri, "database" -> "mqtt", "collection" -> "flux")).load()
 
-    val fluxCollectionStatusTrue = fluxCollection.where("checkUpdate == true")
+    val fluxCollectionStatusTrue = fluxCollection.where(fluxCollection("checkUpdate") === true && fluxCollection("status") === true)
     var errors = 0
     for (configFlux <- fluxCollectionStatusTrue.rdd.collect()) {
-      if (configFlux(9).asInstanceOf[Boolean]) {
+      if (configFlux(2).asInstanceOf[Boolean]) {
         errors += 1
       }
     }

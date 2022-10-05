@@ -36,3 +36,6 @@ libraryDependencies += "org.apache.bahir" % "spark-streaming-mqtt_2.12" % "2.4.0
 
 // https://mvnrepository.com/artifact/com.influxdb/influxdb-client-scala
 libraryDependencies += "com.influxdb" % "influxdb-client-scala_2.12" % "6.3.0"
+
+// https://mvnrepository.com/artifact/org.mongodb.scala/mongo-scala-driver
+//libraryDependencies += "org.mongodb.scala" %% "mongo-scala-driver" % "4.7.0"
