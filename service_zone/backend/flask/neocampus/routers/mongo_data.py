@@ -808,7 +808,8 @@ def create_mqtt_flux():
         "password": params['password'],
         "topic": params['topic'],
         "container_name": params['container_name'],
-        "status": params['status']
+        "status": params['status'],
+        "checkUpdate": True,
     }
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
@@ -858,7 +859,8 @@ def edit_mqtt_flux():
         "password": params['password'],
         "topic": params['topic'],
         "container_name": params['container_name'],
-        "status": params['status']
+        "status": params['status'],
+        "checkUpdate": True,
     }}
 
     mongodb_url = current_app.config['MONGO_URL']
