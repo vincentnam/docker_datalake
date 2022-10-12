@@ -37,7 +37,7 @@ class StreamGetter(config: Config) {
     val fluxCollection = spark.read.format("com.mongodb.spark.sql.DefaultSource")
       .options(Map("uri" -> mongodbUri, "database" -> "mqtt", "collection" -> "flux")).load()
 
-    val fluxCollectionStatusTrue = fluxCollection.where(fluxCollection("checkUpdate") === true && fluxCollection("status") === true)
+    val fluxCollectionStatusTrue = fluxCollection.where(fluxCollection("checkUpdate") === true)
     var nbUpdate = 0
     for (configFlux <- fluxCollectionStatusTrue.rdd.collect()) {
       if (configFlux(2).asInstanceOf[Boolean]) {
@@ -47,11 +47,6 @@ class StreamGetter(config: Config) {
     if (nbUpdate > 0) {
       val configCollection = spark.read.format("com.mongodb.spark.sql.DefaultSource")
         .options(Map("uri" -> mongodbUri, "database" -> "mqtt", "collection" -> "flux")).load()
-
-      val checkUpdateFalse = udf { (checkUpdate: Boolean) =>
-        if (checkUpdate) false else checkUpdate
-      }
-      configCollection.withColumn("checkUpdate", checkUpdateFalse(configCollection("checkUpdate")))
 
       val confCol = configCollection.map(row => {
         val row1: Boolean = row(2).asInstanceOf[Boolean]
