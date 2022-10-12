@@ -896,7 +896,7 @@ def change_status_mqtt_flux():
         return jsonify({'error': 'Wrong Token'})
 
     query = {"_id": ObjectId(params['id'])}
-    status_change = { "$set": { "status": params['status'] } }
+    status_change = { "$set": { "status": params['status'], "checkUpdate": True} }
 
     mongodb_url = current_app.config['MONGO_URL']
     mongo_client = MongoClient(mongodb_url, username=current_app.config['MONGO_ADMIN'], password=current_app.config['MONGO_PWD'], authSource=current_app.config['MONGO_DB_AUTH'], connect=False)
