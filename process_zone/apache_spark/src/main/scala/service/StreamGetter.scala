@@ -1,30 +1,22 @@
 package service
 
 import com.typesafe.config.Config
-import org.apache.avro.io.Encoder
-import org.apache.spark.sql.catalyst.dsl.expressions.StringToAttributeConversionHelper
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.functions.{col, regexp_replace, udf, when}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
-
-import java.util.Base64
-//import org.mongodb.scala._
-
+import com.mongodb.spark._
 import scala.language.postfixOps
 
-import com.mongodb.spark._
 
 class StreamGetter(config: Config) {
 
   val mongodbUri = s"mongodb://${config.getString("mongo.user")}:${config.getString("mongo.pwd")}@${config.getString("mongo.host")}:${config.getString("mongo.port")}/?authSource=${config.getString("mongo.db.auth")}"
 
-  val spark = SparkSession
+  val spark: SparkSession = SparkSession
     .builder()
     .config("spark.sql.warehouse.dir", "file:///tmp/spark-warehouse")
     .master("local[*]")
     .getOrCreate()
 
-  def getAllStreams(): Dataset[Row] = {
+  def getAllStreams: Dataset[Row] = {
     val configCollection = spark.read.format("com.mongodb.spark.sql.DefaultSource")
       .options(Map("uri" -> mongodbUri, "database" -> "mqtt", "collection" -> "flux")).load()
 
@@ -37,9 +29,9 @@ class StreamGetter(config: Config) {
     val fluxCollection = spark.read.format("com.mongodb.spark.sql.DefaultSource")
       .options(Map("uri" -> mongodbUri, "database" -> "mqtt", "collection" -> "flux")).load()
 
-    val fluxCollectionStatusTrue = fluxCollection.where(fluxCollection("checkUpdate") === true)
+    val fluxCollectionCheckUpdateTrue = fluxCollection.where(fluxCollection("checkUpdate") === true)
     var nbUpdate = 0
-    for (configFlux <- fluxCollectionStatusTrue.rdd.collect()) {
+    for (configFlux <- fluxCollectionCheckUpdateTrue.rdd.collect()) {
       if (configFlux(2).asInstanceOf[Boolean]) {
         nbUpdate += 1
       }

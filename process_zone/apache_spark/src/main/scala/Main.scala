@@ -21,32 +21,36 @@ object Main {
 
     val batchDuration = config.getInt("mqtt.batchDuration")
 
-    do{
-      val jssc = new JavaStreamingContext(sparkConf, Seconds(batchDuration))
-      val streamGetter = new StreamGetter(config)
-      val configCollectionStatus = streamGetter.getAllStreams()
+    do {
+      var jssc = new JavaStreamingContext(sparkConf, Seconds(batchDuration))
+      var streamGetter = new StreamGetter(config)
+      val configCollectionStatus = streamGetter.getAllStreams
       println(configCollectionStatus)
-      for (configFlux <- configCollectionStatus.rdd.collect()) {
-        val thread = new Thread {
-          InsertMqttDataJob.start(configFlux, jssc)
-        }
-        thread.start()
-      }
-      val t = new java.util.Timer()
-      val task = new java.util.TimerTask {
-        def run(): Unit = {
-          println("debut verif")
-          if (streamGetter.changeFlag()) {
-            println("Stop")
-            //            jssc.awaitTerminationOrTimeout(1000)
-            jssc.stop()
 
+      var checkUpdate = streamGetter.changeFlag()
+
+      while (!checkUpdate) {
+        for (configFlux <- configCollectionStatus.rdd.collect()) {
+          val thread = new Thread {
+            InsertMqttDataJob.start(configFlux, jssc)
           }
+          thread.start()
+        }
+        jssc.start()
+        println("start")
+        jssc.awaitTerminationOrTimeout(config.getLong("jssc.timeout"))
+        println("after await")
+        checkUpdate = streamGetter.changeFlag()
+        println(checkUpdate)
+        if (!checkUpdate) {
+          jssc.stop(stopSparkContext = false)
+          println("stop")
         }
       }
-      t.scheduleAtFixedRate(task, 10000, config.getLong("jssc.timeout"))
-      jssc.start()
-      jssc.awaitTermination()
-    } while(true)
+      if(checkUpdate){
+        jssc.stop(stopSparkContext = true)
+      }
+      println("test")
+    } while (true)
   }
 }
