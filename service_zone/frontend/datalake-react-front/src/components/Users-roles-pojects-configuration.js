@@ -5,6 +5,7 @@ import {Button, Modal} from "react-bootstrap";
 import {ToastContainer} from "react-toastify";
 import ConfigAccessUserAdd from "./users-config/ConfigAccessUserAdd";
 import ConfigAccessUserDelete from "./users-config/ConfigAccessUserDelete";
+import ConfigAccessUserPurge from "./users-config/ConfigAccessUserPurge";
 
 class UsersRolesProjectsConfiguration extends React.Component {
 
@@ -14,6 +15,7 @@ class UsersRolesProjectsConfiguration extends React.Component {
             modalShow: false,
             modalAdd: false,
             modalDelete: false,
+            modalPurge: false,
             users: [],
             selectElement: {
                 id: "",
@@ -32,6 +34,7 @@ class UsersRolesProjectsConfiguration extends React.Component {
         this.onChangeModalShowSecond = this.onChangeModalShowSecond.bind(this);
         this.onChangeModalAdd = this.onChangeModalAdd.bind(this);
         this.onChangeModalDelete = this.onChangeModalDelete.bind(this);
+        this.onChangeModalPurge = this.onChangeModalPurge.bind(this);
     }
 
     componentDidMount() {
@@ -97,6 +100,12 @@ class UsersRolesProjectsConfiguration extends React.Component {
             ],
             selectElementAccess: elementAccess,
             modalDelete: !this.state.modalDelete,
+        });
+    }
+
+    onChangeModalPurge() {
+        this.setState({
+            modalPurge: !this.state.modalPurge,
         });
     }
 
@@ -266,14 +275,47 @@ class UsersRolesProjectsConfiguration extends React.Component {
             )
         }
 
+        const ModalPurge = () => {
+            return (
+                <Modal
+                    size="lg"
+                    show={this.state.modalPurge}
+                    aria-labelledby="model-purge"
+                >
+                    <Modal.Header>
+                        <Modal.Title id="model-purge">
+                            Purge des utilisateurs supprimés dans LDAP
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <ConfigAccessUserPurge
+                            close={this.onChangeModalPurge}
+                        />
+                    </Modal.Body>
+                </Modal>
+            )
+        }
+        
         return (
             <div className="container main-upload">
-                <div className="title">Configuration des accès utilisateurs :</div>
+                <div className="title">
+                <table>
+                <tr>
+                    <td  width="500px" align="left">Configuration des accès utilisateurs :</td>
+                    <td  width="500px" align="right">
+                        <button type="button" className="btn btn-primary buttonModel"
+                            onClick={() => this.onChangeModalPurge()}>Purge des utilisateurs
+                        </button>
+                    </td>
+                </tr>
+                </table> 
+                </div>
                 <div className="data-table">
                     <TableUsers/>
                     <ModalShow/>
                     <ModalAdd/>
                     <ModalDelete/>
+                    <ModalPurge/>
                 </div>
                 <ToastContainer/>
             </div>
