@@ -27,6 +27,8 @@ The development of this architecture will integrate a semantic dimension in the 
         + [Raw data management zone (a.k.a. landing area)](#RawDataZone)
         + [Metadata management zone](#MetadataManagementZone)
         + [Process zone](#ProcessZone)
+          - [REST API, interaction with code](#RESTAPI)      
+          - [Web GUI, interaction with interface](#WebGUI)
         + [Processed data zone (a.k.a. consumption zone, access zone or gold zone)](#ProcessedDataZone)
         + [Services zone](#Serviceszone)
         + [Security, authentication and monitoring zone](#Securityandmonitoringzone)
@@ -290,6 +292,101 @@ This functional area includes every service to make this platform user-friendly.
 
 
 (12/04/2021) Data consumption may be done through RESTful API, direct access to real-time database (InfluxDB as an exemple) or create direct access 
+#### API REST, interaction with code <a name="APIREST"></a>
+
+[Return to the table of content](#Tableofcontent)
+
+
+#### Web GUI, interaction with interface <a name="WebGUI"></a>  
+
+[Return to the table of content](#Tableofcontent)
+
+(Documentation first draft)
+
+The graphical interface consists of several distinct features. (For the moment, the interface is designed mostly in French)
+#### Upload module :
+
+
+![alt text](./git_image/IHM_images/upload.png)
+Files can be uploaded (in "Upload" tab) to the Datalake architecture in 2 ways: 
+- Data is pulled from an open server via SSH.
+- Data is pushed directly by the user through the graphical interface. A file splitting is performed if it exceeds for large files (by default at 10 MB with a maximum limit of 5 GB by default (see Openstack Swift Large Object Support)). A drag'n'drop zone allows the user to simply upload his data. It is also possible to select a file via a standard dialog box.
+
+The file type (based on MIME type) must be filled in to assign the appropriate processing pipeline (see Apache Airflow) and an associated metadata model.
+
+![alt text](./git_image/IHM_images/upload_file_type.png)
+The metadata template can be chosen from the list of templates associated with the file type.
+![alt text](./git_image/IHM_images/upload_with_model.png)
+Once selected, the list of metadata of the model are displayed, allowing to modify the values of these metadata. It is possible to add new/remove metadata or modify the model. The models can be made visible to all users of the architecture or they can be kept confidential. 
+
+![alt text](./git_image/IHM_images/update_model.png)
+
+#### Upload tracking module : 
+
+A follow-up of the data upload can be done (in the tab "Tracabilité"). It is possible to see the data being uploaded as well as the upload status, the start date and the last update date of the upload status.
+
+
+![alt text](./git_image/IHM_images/track_uploading.png)
+
+It is possible to view the upload status of the latest data.
+
+![alt text](./git_image/IHM_images/track_uploading_done.png)
+
+
+#### Download module :
+The stored data can be downloaded (in the Download tab).
+
+The raw data 
+![alt text](./git_image/IHM_images/download_data.png)
+and processed data are accessible and can be selected for local download.
+
+![alt text](./git_image/IHM_images/download_processed_data.png)
+
+
+#### Data visualisation module : 
+
+A basic visualization of the data inserted in the data lake (currently time series) can be done (in the "Data Visualization" tab).
+![alt text](./git_image/IHM_images/visualisation_time_series.png)
+
+The data can be viewed in graphical form, allowing for easier selection of the data to be downloaded.
+They can also be visualized in a table format.
+![alt text](./git_image/IHM_images/visualisation_capteur_table.png)
+
+#### Anomalies module (feature in proof of concept stage) :
+
+A function of detection of anomalies on the times series was set up and makes it possible to visualize on the various measurements the abnormal values of statements of sensors.
+![alt text](./git_image/IHM_images/visualisation_anomalies.png)
+ 
+
+
+### Login module : 
+For the moment, to access the interface's features, it is necessary for a user to authenticate himself. The first access page is the login page which requires a login and password (from Openstack Keystone).
+![alt text](./git_image/IHM_images/login.png)
+
+### MQTT Flow creation
+The management of MQTT sensor retrieval can be managed via the graphical interface allowing to manage the sensor retrievals by MQTT. 
+The flows can be visualized (in the tab "MQTT flows").
+It is possible to visualize the MQTT flows in active
+
+![alt text](./git_image/IHM_images/configuration_flux_mqtt.png)
+as well as all active and non-active flows.
+![alt text](./git_image/IHM_images/configuration_flux_mqtt_activeandinative.png)
+A flow can be modified by pressing the "Modify" button.
+![alt text](./git_image/IHM_images/configuration_flux_update.png)
+A flow can be disabled to stop listening to data.
+![alt text](./git_image/IHM_images/configuration_flux_deactivate.png)
+
+
+### User administration
+
+Administrators have additional functionality with user management.
+It is possible to view the list of users,
+![alt text](./git_image/IHM_images/user_list.png)
+to see the privileges of a user
+![alt text](./git_image/IHM_images/right_user.png)
+and add access to a user.
+![alt text](./git_image/IHM_images/add_user_on_project.png)
+
 
 
 
@@ -835,7 +932,7 @@ To deploy the architect, several configuration have to be done :
 - Configure host file [deployment_scripts/ansible/inventories/staging/hosts.yml](deployment_scripts/ansible/inventories/staging/hosts.yml) with host that will host each services. For the moment, only Centos 7 hosts are available to automatic deployment.
 - Configure var file in each zone you want to deploy (in [deployment_scripts/ansible/roles](deployment_scripts/ansible/roles)). Each var files are in "\[service_zone\]/vars" folder
 - Select zone you want to deploy in [deployment_scripts/ansible/roles/global/tasks/install_datalake.yml](deployment_scripts/ansible/roles/global/tasks/install_datalake.yml) (uncomment lines).
-- Run "ansible-playbook -i deployment_scripts/ansible/roles/global/tasks/install_datalake.yml" in root folder.
+- Run " ansible-playbook deployment_scripts/ansible/roles/global/tasks/install_datalake.yml -i deployment_scripts/ansible/inventories/staging/hosts.yml  " in root folder.
 
 All have not been tested, but main part of playbook are written. Some modifications may be needed.
 
