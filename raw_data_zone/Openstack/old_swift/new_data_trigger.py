@@ -21,9 +21,7 @@ else:
     from eventlet.green import urllib2
 import requests
 from swift.common.http import is_success
-import sys
-sys.path.append('/usr/local/src/swift/swift/common/middleware/')
-from config import *
+from config import AIRFLOW_API_URL
 
 
 class NewDataTriggerMiddleware(object):

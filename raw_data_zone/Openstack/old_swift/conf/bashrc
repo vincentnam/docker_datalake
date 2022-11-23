@@ -1,0 +1,1 @@
+export SWIFT_TEST_CONFIG_FILE=/etc/swift/test.conf

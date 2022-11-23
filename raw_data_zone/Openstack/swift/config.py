@@ -1,0 +1,1 @@
+AIRFLOW_API_URL = "https://neocampus-datalake-airflow.dev.modiscloud.net:8080/api/v1"
