@@ -1,6 +1,9 @@
-FROM ubuntu:latest
+FROM ubuntu:20.04
 
 RUN DEBIAN_FRONTEND=noninteractive
+
+ENV TZ=Europe/Paris
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -29,7 +32,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     pip3 install supervisor pytz eventlet==0.33.0
 
-RUN pip3 install --upgrade pip setuptools==58.2.0 pytz setuptools-rust cryptography requests
+RUN pip3 install --upgrade pip setuptools==58.2.0 pytz setuptools-rust==0.12.1 cryptography requests
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git-core && \
