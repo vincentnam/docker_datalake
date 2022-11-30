@@ -4,6 +4,7 @@ from .influxdb_data import influxdb_data_bp
 from .sqldb_data import sqldb_data_bp
 from .keystone_router import keystone_router_bp
 from ..utils.swagger.api_spec import spec
+from .similarity import similarity_bp
 from flask import jsonify
 from ..utils.swagger.swagger import swagger_ui_blueprint, SWAGGER_URL
 
@@ -19,6 +20,7 @@ def init_app(app):
     app.register_blueprint(influxdb_data_bp, url_prefix="/api")
     app.register_blueprint(sqldb_data_bp, url_prefix="/api")
     app.register_blueprint(keystone_router_bp, url_prefix="/api")
+    app.register_blueprint(similarity_bp, url_prefix="/api")
 
     # Loading all functions of each Blueprint in JSON OpenAPI specifications
     with app.test_request_context():
