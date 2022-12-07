@@ -1,7 +1,11 @@
 # import the necessary packages
+import os
 import json
+import io
+from PIL import Image
 import numpy as np
 from ..similarity import swift_connection
+from flask import Blueprint, jsonify, request, current_app
 
 class Searcher:
     def __init__(self, data_index, connection_swift):
@@ -17,6 +21,12 @@ class Searcher:
     def search(self, queryFeatures, limit=10):
         container_name = "data_descriptor"
         # initialize our dictionary of results
+
+        files_path = f"{current_app.config['IMAGES_SIMILARITY']}"
+        dir = os.path.join(current_app.root_path, files_path)
+        for f in os.listdir(dir):
+            os.remove(os.path.join(dir, f))
+
         results = {}
         images_list = []
         cursor = self.data_index.find()
@@ -32,6 +42,17 @@ class Searcher:
         results = results[:][:limit]
         keys = [keys for keys, value in results]
         data_image = [swift_connection.get_swift(self.connection_swift,container_name,key) for key in keys]
-        images_list.append(data_image)
-        json_data = json.dumps(images_list, default=str)
+        images = []
+        id = 1
+        for data in data_image:
+            image = data[1]
+            file_path = f"{current_app.config['IMAGES_SIMILARITY']}similarity{id}.png"
+            id+=1
+            f = open(os.path.join(current_app.root_path, file_path), 'ab')
+            f.write(image)
+            f.close()
+            ipath = os.path.join(current_app.config['HOST_URL'], 'api', file_path)
+            images.append(ipath)
+
+        json_data = json.dumps(images)
         return json_data

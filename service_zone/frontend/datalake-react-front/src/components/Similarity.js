@@ -76,9 +76,7 @@ class Similarity extends React.Component {
                 draggable: true,
                 progress: undefined,
             });
-            console.log(response);
-            console.log(JSON.parse(response)[0]);
-            this.setState({'resultSimilarity': JSON.parse(response)[0]})
+            this.setState({'resultSimilarity': JSON.parse(response)})
             myDropzone.removeFile(file);
         })
         //Message error if the file not correctly upload
@@ -170,9 +168,8 @@ class Similarity extends React.Component {
                 return(<p></p>);
             } else {
                 const listImages = this.state.resultSimilarity.map((image) => (
-                    console.log(typeof image[1])
-                    // eslint-disable-next-line jsx-a11y/img-redundant-alt
-                    // <img src={'data:image/jpeg;base64,' + image[1]+"'"}  alt="Image result"/>
+                    // eslint-disable-next-line jsx-a11y/img-redundant-alt,no-eval
+                    <img src={image}  alt="Image result"/>
                 ));
                 return(<div>
                     {listImages}
