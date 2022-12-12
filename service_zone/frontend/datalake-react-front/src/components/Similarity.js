@@ -126,7 +126,6 @@ class Similarity extends React.Component {
 
         dropper.files.forEach((file) => {
             let typeFile = file.type;
-            console.log(typeFile)
             let type_files_accepts = ["image/jpeg","image/png"]
             if (type_files_accepts.includes(typeFile) === false) {
                 toast.error("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + type_files_accepts.join(' '), {
