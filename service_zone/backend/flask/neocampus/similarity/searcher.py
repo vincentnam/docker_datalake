@@ -44,6 +44,7 @@ class Searcher:
         keys = [keys for keys, value in results]
         data_image = [swift_connection.get_swift(self.connection_swift,container_name,key) for key in keys]
         images = []
+        # Write image from the similarity and return the list of link image for the call
         for data in data_image:
             image = data[1]
             file_path = f"{current_app.config['IMAGES_SIMILARITY']}similarity_{str(uuid.uuid4().hex)}.png"

@@ -7,14 +7,14 @@ from dotenv import load_dotenv
 from ..similarity import descriptor as dc
 from ..similarity import searcher as sr
 from ..similarity import mongodb_connection, swift_connection
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, send_from_directory
 from ..services import swift, mongo, keystone
 
 
 similarity_bp = Blueprint('similarity_bp', __name__)
 
 @similarity_bp.route('/similarity', methods=['GET', 'POST'])
-def upload_file():
+def similarity_image():
 
     token = request.form["token"]
 
@@ -41,3 +41,28 @@ def upload_file():
     features = descriptor.image_query_describe(cv2.cvtColor(np.asarray(image), cv2.COLOR_BGR2RGB))
     Images = search.search(features)
     return Images
+
+@similarity_bp.route('/images_similarity/<path:filename>')
+def get_image(filename):
+    """
+    ---
+    get:
+        parameters:
+            - in: query
+              name: path
+              schema:
+                type: string
+            - in: query
+              name: filename
+              schema:
+                type: string
+        description: download file
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - openstack_swift_router
+    """
+    swift_files_directory = os.path.join(
+        current_app.root_path, current_app.config['IMAGES_SIMILARITY'])
+    return send_from_directory(directory=swift_files_directory, filename=filename)

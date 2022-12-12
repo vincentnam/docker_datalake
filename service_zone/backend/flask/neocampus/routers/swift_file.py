@@ -91,32 +91,6 @@ def download(filename):
         current_app.root_path, current_app.config['SWIFT_FILES_DIRECTORY'])
     return send_from_directory(directory=swift_files_directory, filename=filename)
 
-@swift_file_bp.route('/images_similarity/<path:filename>')
-def images(filename):
-    """
-    ---
-    get:
-        parameters:
-            - in: query
-              name: path
-              schema:
-                type: string
-            - in: query
-              name: filename
-              schema:
-                type: string
-        description: download file
-        responses:
-            '200':
-                description: call successful
-        tags:
-            - openstack_swift_router
-    """
-    swift_files_directory = os.path.join(
-        current_app.root_path, current_app.config['IMAGES_SIMILARITY'])
-    return send_from_directory(directory=swift_files_directory, filename=filename)
-
-
 @swift_file_bp.route('/storage', methods=['POST'])
 def storage():
     """
