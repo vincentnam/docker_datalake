@@ -41,7 +41,7 @@ class Similarity extends React.Component {
             dictDefaultMessage: " Veuillez glisser une image ici<br /> \
             ou<br /> \
             <u>cliquer pour ajouter une image</u><br /> \
-            Formats suivants acceptés (.jpg, .jpeg, .png, .svg)",
+            Formats suivants acceptés (.jpg, .jpeg, .png)",
             addRemoveLinks: true,
             acceptedFiles: "image/*"
         }
@@ -62,6 +62,7 @@ class Similarity extends React.Component {
                 draggable: true,
                 progress: undefined,
             });
+            this.setState({'resultSimilarity': []})
         });
 
         //Message after the file is completely upload
@@ -77,7 +78,7 @@ class Similarity extends React.Component {
                 progress: undefined,
             });
             this.setState({'resultSimilarity': JSON.parse(response)})
-            myDropzone.removeFile(file);
+            // myDropzone.removeFile(file);
         })
         //Message error if the file not correctly upload
         myDropzone.on("error", file => {
@@ -169,9 +170,9 @@ class Similarity extends React.Component {
             } else {
                 const listImages = this.state.resultSimilarity.map((image) => (
                     // eslint-disable-next-line jsx-a11y/img-redundant-alt,no-eval
-                    <img src={image}  alt="Image result"/>
+                    <img src={image}  alt="Image result" width="200px" height="200px" className="p-2"/>
                 ));
-                return(<div>
+                return(<div className="d-flex flex-wrap justify-content-between">
                     {listImages}
                 </div>);
             }

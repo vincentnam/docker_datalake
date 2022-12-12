@@ -2,6 +2,7 @@
 import os
 import json
 import io
+import uuid
 from PIL import Image
 import numpy as np
 from ..similarity import swift_connection
@@ -20,13 +21,13 @@ class Searcher:
 
     def search(self, queryFeatures, limit=10):
         container_name = "data_descriptor"
+        #Active or not the delete of similarity in the directory IMAGES_SIMILARITY
+        #files_path = f"{current_app.config['IMAGES_SIMILARITY']}"
+        #dir = os.path.join(current_app.root_path, files_path)
+        #for f in os.listdir(dir):
+        #    os.remove(os.path.join(dir, f))
+
         # initialize our dictionary of results
-
-        files_path = f"{current_app.config['IMAGES_SIMILARITY']}"
-        dir = os.path.join(current_app.root_path, files_path)
-        for f in os.listdir(dir):
-            os.remove(os.path.join(dir, f))
-
         results = {}
         images_list = []
         cursor = self.data_index.find()
@@ -43,11 +44,9 @@ class Searcher:
         keys = [keys for keys, value in results]
         data_image = [swift_connection.get_swift(self.connection_swift,container_name,key) for key in keys]
         images = []
-        id = 1
         for data in data_image:
             image = data[1]
-            file_path = f"{current_app.config['IMAGES_SIMILARITY']}similarity{id}.png"
-            id+=1
+            file_path = f"{current_app.config['IMAGES_SIMILARITY']}similarity_{str(uuid.uuid4().hex)}.png"
             f = open(os.path.join(current_app.root_path, file_path), 'ab')
             f.write(image)
             f.close()

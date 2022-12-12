@@ -8,13 +8,19 @@ from ..similarity import descriptor as dc
 from ..similarity import searcher as sr
 from ..similarity import mongodb_connection, swift_connection
 from flask import Blueprint, jsonify, request, current_app
-from ..services import swift, mongo
+from ..services import swift, mongo, keystone
 
 
 similarity_bp = Blueprint('similarity_bp', __name__)
 
 @similarity_bp.route('/similarity', methods=['GET', 'POST'])
 def upload_file():
+
+    token = request.form["token"]
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+        return jsonify({'error': 'Wrong Token'})
+
     # Upload image request
     f = request.files['file']
     path = os.path.join(current_app.root_path,current_app.config['UPLOAD_FOLDER'], f.filename)
