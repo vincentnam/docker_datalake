@@ -12,6 +12,7 @@ import UsersRolesPojectsConfiguration from "./components/Users-roles-pojects-con
 import UpBar from "./components/UpBar";
 import SideBar from "./components/SideBar";
 import Info from "./components/Info";
+import Similarity from "./components/Similarity";
 
 
 const RoutesConnect = (props) => {
@@ -33,6 +34,7 @@ const RoutesConnect = (props) => {
                     <Route path="/detection-anomalies" component={props => <DetectionAnomalies {...props} />}/>
                     <Route path="/traceability" component={props => <Traceability {...props} />}/>
                     <Route path="/mqtt-config" component={props => <MqttConfigList {...props} />}/>
+                    <Route path="/similarity" component={props => <Similarity {...props} />}/>
                     <Route path="/home" component={props => <Home {...props} />}/>
                     {props.isAdmin === true &&
                         <Route path="/config-users" component={props => <UsersRolesPojectsConfiguration {...props} />}/>

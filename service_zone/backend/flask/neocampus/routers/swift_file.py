@@ -91,7 +91,6 @@ def download(filename):
         current_app.root_path, current_app.config['SWIFT_FILES_DIRECTORY'])
     return send_from_directory(directory=swift_files_directory, filename=filename)
 
-
 @swift_file_bp.route('/storage', methods=['POST'])
 def storage():
     """

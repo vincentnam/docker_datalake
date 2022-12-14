@@ -1,2 +1,9 @@
 *.log
 config.py
+flask/neocampus/cache-swift-files/*
+flask/neocampus/IMAGE_UPLOADS/*
+flask/neocampus/images_similarity/*
+
+flask/neocampus/cache-swift-files/!.gitignore
+flask/neocampus/IMAGE_UPLOADS/!.gitignore
+flask/neocampus/images_similarity/!.gitignore
