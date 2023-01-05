@@ -386,4 +386,44 @@ def role_assignments_delete():
     admin_ks = client.Client(session=admin_sess)
     admin_ks.roles.revoke(role=role,user=user,project=project)
     return jsonify({'role_assignments': "Delete"})
+
+
+@keystone_router_bp.route('/role_assignments/purge', methods=['POST'])
+def role_assignments_purge():
+    """
+    ---
+    get:
+        description: purge users
+        responses:
+            '200':
+                description: call successful
+        tags:
+            - keystone_router
+    """
+    try:
+        token = request.get_json()['token']
+    except:
+        return jsonify({'error': 'Missing token'})
+
+    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+            return jsonify({'error': 'Wrong Token'})
+
+    admin_auth = v3.token.Token(
+        auth_url=current_app.config['KEYSTONE_URL'],
+        token=token,
+        project_id=current_app.config['PROJECT_ID']
+    )
+    admin_sess = keystone_session.Session(auth=admin_auth)
+    admin_ks = client.Client(session=admin_sess)
+    users = admin_ks.users.list()
+    user_list = []
+    for user in users:
+        user_list.append(user.id)
+    assignments = admin_ks.role_assignments.list()
+    
+    for obj in assignments:
+         if 'project' in obj.scope.keys() and obj.user['id'] not in user_list:
+            admin_ks.roles.revoke(obj.role['id'], user=obj.user['id'], project=obj.scope['project']['id'])
+
+    return jsonify({'status': 'ok'})
     
