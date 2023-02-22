@@ -1,11 +1,11 @@
 import React from "react";
-import api from '../../../api/api';
 import { FormGroup, FormLabel, Form, Button } from "react-bootstrap";
 import Select from 'react-select';
 import { types_files } from '../../../configmeta/types_files';
 import { MetadonneesForm } from './MetadonneesForm';
 import { ToastContainer, toast } from 'react-toastify';
 import {connect} from "react-redux";
+import {modelAdd, modelsAll} from "../../../hook/Models/Models";
 
 class ModelAddForm extends React.Component {
     constructor(props) {
@@ -35,17 +35,10 @@ class ModelAddForm extends React.Component {
     }
 
     componentDidMount() {
-        api.get('models/all', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                this.setState({
-                    verifModels: response.data.models.data
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const models = modelsAll(this.props.nameContainer.nameContainer, localStorage.getItem('token'))
+        models.then((response) => {
+            this.setState({verifModels: response.verifModels});
+        });
     }
 
     toastError(message) {
@@ -118,17 +111,11 @@ class ModelAddForm extends React.Component {
         }
 
         if (nbErrors === 0) {
-            api.post('models/add', {
-                label: this.state.label,
-                type_file_accepted: this.state.selectedTypesFiles,
-                metadonnees: this.state.metadonnees,
-                status: this.state.status,
-                container_name: this.props.nameContainer.nameContainer,
-                token: localStorage.getItem('token')
-            })
-                .then(() => {
-                    this.props.reload();
-                    this.props.close();
+            const add = modelAdd(this.state.label, this.state.selectedTypesFiles, this.state.metadonnees, this.state.status, this.props.nameContainer.nameContainer, localStorage.getItem('token'))
+            add.then((response) => {
+                if (response.result === true) {
+                    this.props.loading();
+                    this.props.show();
                     toast.success(`Le modèle ${this.state.label} à bien été enregistré !`, {
                         theme: "colored",
                         position: "top-right",
@@ -139,10 +126,8 @@ class ModelAddForm extends React.Component {
                         draggable: true,
                         progress: undefined,
                     });
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
+                }
+            });
         }
     }
 

@@ -2,9 +2,10 @@ import React from "react";
 import ModelAddForm from './model/ModelAddForm';
 import ModelEditForm from './model/ModelEditForm';
 import { Button } from "react-bootstrap";
-import api from '../api/api';
 import { ToastContainer } from 'react-toastify';
 import {connect} from "react-redux";
+import {loadInfoUser} from "../hook/User/User";
+import {modelsCacheAll, modelsShowAll} from "../hook/Models/Models";
 
 class Models extends React.Component {
     constructor(props) {
@@ -37,56 +38,23 @@ class Models extends React.Component {
     }
 
     loadRolesProjectsUser() {
-        api.post('auth-token/projects', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                let listProjectAccess = [];
-                response.data.projects.forEach((project) => {
-                    if (project.name !== "datalake" && project.name !== "admin") {
-                        listProjectAccess.push({
-                            label: project.name,
-                            name_container: project.name,
-                        })
-                    }
-                });
-                this.setState({
-                    container_name: listProjectAccess[0].name_container,
-                })
-                this.loadModel();
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const info = loadInfoUser(localStorage.getItem('token'))
+        info.then((response) => {
+            this.setState({container_name: response.container_name});
+            this.loadModel();
+        });
     }
 
     loadModel() {
-        api.post('models/show/all', {
-            container_name: this.props.nameContainer.nameContainer,
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                this.setState({
-                    models: response.data.models.data,
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const modelsShow = modelsShowAll(this.props.nameContainer.nameContainer,localStorage.getItem('token'))
+        modelsShow.then((response) => {
+            this.setState({models: response.models});
+        });
 
-        api.post('models/cache/all', {
-            container_name: this.props.nameContainer.nameContainer,
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                console.log()
-                this.setState({
-                    modelsCache: response.data.models.data
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const modelsCache = modelsCacheAll(this.props.nameContainer.nameContainer,localStorage.getItem('token'))
+        modelsCache.then((response) => {
+            this.setState({modelsCache: response.modelsCache});
+        });
     }
 
     handleChange(event) {
