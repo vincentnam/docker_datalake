@@ -1,15 +1,17 @@
 import os
 import uuid
 import base64
-from flask import Blueprint, jsonify, current_app, request
+from flask import Blueprint, jsonify, current_app, request, g
 import os
 from ..services import keystone
 from keystoneauth1 import session as keystone_session
 from keystoneauth1.identity import v3
 from keystoneclient.v3 import client
 
+import requests
 
 keystone_router_bp = Blueprint('keystone_router_bp', __name__)
+
 
 @keystone_router_bp.route('/login', methods=['POST'])
 def login():
@@ -34,46 +36,32 @@ def login():
 
     user = params['user']
     password = params['password']
+    data_admin_token = '{ "auth": {"identity": {"methods": ["password"],"password": ' \
+           '{"user": {"name": "' + current_app.config['USER_ADMIN'] + '","project":{"name":"' + current_app.config['PROJECT_ID'] + '"},' \
+                                                                                                                 ' "domain": { "name": "' + \
+           current_app.config['USER_DOMAIN_ID'] + '" },' \
+                                                  '"password": "' + current_app.config['USER_ADMIN_PWD'] + \
+           '"}}},"scope": {"domain": {"name": "' + current_app.config['USER_DOMAIN_ID'] + '"}}}}'
+    header_admin_token = {"Content-Type": "application/json", "Accept": "*/*"}
+
+    admin_rep = requests.post(current_app.config['KEYSTONE_URL'] + "/auth/tokens", headers=header_admin_token, data=data_admin_token)
+    # admin_rep = requests.post(current_app.config['KEYSTONE_URL'] + "auth/tokens", headers=,
+    #                     data=, verify=False)
+    # admin_token = admin_rep.headers["X-Subject-Token"]
     # Connection with login and password
-    auth = v3.Password(
-        auth_url=current_app.config['KEYSTONE_URL'],
-        username=user,
-        password=password,
-        project_id=current_app.config['PROJECT_ID'],
-        user_domain_id=current_app.config['USER_DOMAIN_ID']
-    )
-    sess = keystone_session.Session(auth=auth)
-    token = sess.get_token()
-    user_id = sess.get_user_id()
-    ks = client.Client(session=sess)
-    projects = ks.projects.list(user=user_id)
-    list_projects = []
-    for obj in projects:
-        list_projects.append({
-            'id': obj.id,
-            'name': obj.name
-        })
 
-    # Connection with admin for return roles of user
-    admin_auth = v3.Password(
-        auth_url=current_app.config['KEYSTONE_URL'],
-        username=current_app.config['USER_ADMIN'],
-        password=current_app.config['USER_ADMIN_PWD'],
-        project_id=current_app.config['PROJECT_ID'],
-        user_domain_id=current_app.config['USER_DOMAIN_ID']
-    )
-    admin_sess = keystone_session.Session(auth=admin_auth)
-    admin_ks = client.Client(session=admin_sess)
-    list_roles = []
-    for project in list_projects:
-        roles = admin_ks.roles.list(user=user_id, project=project['id'])
-        for obj in roles:
-            list_roles.append({
-                'id': obj.id,
-                'name': obj.name,
-                'project': project["name"]
-            })
-
+    header = {"Content-Type": "application/json", "Accept": "*/*"}
+    data = '{ "auth": {"identity": {"methods": ["password"],"password": ' \
+       '{"user": {"name": "' + user + '","project":{"name":"' + current_app.config['PROJECT_ID'] + '"},' \
+                                           ' "domain": { "name": "' + current_app.config['USER_DOMAIN_ID'] + '" },' \
+ '"password": "' + password + '"}}},"scope": {"domain": {"name": "' + current_app.config['USER_DOMAIN_ID'] + '"}}}}'
+    rep = requests.post(current_app.config['KEYSTONE_URL'] + "/auth/tokens", headers=header, data=data)
+    token = rep.headers["X-Subject-Token"]
+    list_roles = rep.json()['token']["roles"]
+    user_id = rep.json()['token']["user"]["id"]
+    header = {"Content-Type": "application/json", "X-Auth-Token": token}
+    rep_project = requests.get(current_app.config['KEYSTONE_URL']+"/users/"+user_id+"/projects", headers=header)
+    list_projects = rep_project.json()["projects"]
     return jsonify({'token': token, 'projects': list_projects, 'roles': list_roles})
 
 
