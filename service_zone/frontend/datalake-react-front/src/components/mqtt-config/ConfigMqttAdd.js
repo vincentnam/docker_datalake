@@ -1,8 +1,8 @@
 import React from "react";
-import api from '../../api/api';
 import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
 import {ToastContainer, toast} from 'react-toastify';
 import {connect} from "react-redux";
+import {mqttAdd} from "../../hook/Mqtt/Mqtt";
 
 class ConfigMqttAdd extends React.Component {
     constructor(props) {
@@ -70,18 +70,9 @@ class ConfigMqttAdd extends React.Component {
         }
 
         if (nbErrors === 0) {
-            api.post('mqtt/add', {
-                name: this.state.name,
-                description: this.state.description,
-                brokerUrl: this.state.url,
-                user: this.state.user,
-                password: this.state.password,
-                topic: this.state.topic,
-                container_name: this.props.containerName,
-                status: this.state.status,
-                token: localStorage.getItem('token')
-            })
-                .then(() => {
+            const mqtt = mqttAdd(this.state.name, this.state.description, this.state.url, this.state.user, this.state.password, this.state.topic, this.state.status, this.props.containerName, localStorage.getItem('token'))
+            mqtt.then((response) => {
+                if (response.result === true) {
                     this.props.reload();
                     this.props.close();
                     toast.success(`Le flux ${this.state.name} à bien été enregistré !`, {
@@ -94,10 +85,8 @@ class ConfigMqttAdd extends React.Component {
                         draggable: true,
                         progress: undefined,
                     });
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
+                }
+            });
         }
     }
 
