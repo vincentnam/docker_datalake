@@ -1,8 +1,8 @@
 import React from "react";
-import api from '../../api/api';
 import {Form, Button} from "react-bootstrap";
 import {ToastContainer, toast} from 'react-toastify';
 import {connect} from "react-redux";
+import {purgeUsers} from "../../hook/Users-assignment-roles-projects/Users";
 
 class ConfigAccesUserPurge extends React.Component {
     constructor(props) {
@@ -37,11 +37,8 @@ class ConfigAccesUserPurge extends React.Component {
 
     submitConfig(event) {
         event.preventDefault();
-
-        api.post('role_assignments/purge', {
-            token: localStorage.getItem('token')
-        })
-            .then(() => {
+        purgeUsers(localStorage.getItem('token')).then((r) => {
+            if (r.result) {
                 toast.success(`La purge des utilisateurs supprimés dans LDAP est effectuée !`, {
                     theme: "colored",
                     position: "top-right",
@@ -53,10 +50,8 @@ class ConfigAccesUserPurge extends React.Component {
                     progress: undefined,
                 });
                 this.close();
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+            }
+        });
     }
 
     close() {
