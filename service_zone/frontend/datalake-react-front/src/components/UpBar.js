@@ -1,6 +1,5 @@
 import React from "react";
 import {NavLink, useHistory} from 'react-router-dom';
-import api from '../api/api';
 import {connect} from "react-redux";
 import {editListProjectAccess, editNameContainer} from "../store/Container/nameContainerAction";
 import {
@@ -10,7 +9,8 @@ import {
     editAuthLoginAdmin
 } from "../store/Auth/authAction";
 import '../navbar.css';
-import {dataAnomalyAll, loadAllInfoUser} from "../hook/User/User";
+import {loadAllInfoUser} from "../hook/User/User";
+import {dataAnomalyAll} from "../hook/Anomalies/Anomalies";
 
 class UpBar extends React.Component {
 
@@ -33,16 +33,18 @@ class UpBar extends React.Component {
                     listProjectAccess: this.props.nameContainer.listProjectsAccess,
                     container: this.props.nameContainer.nameContainer,
                 })
-                this.countData(this.props.nameContainer.nameContainer);
             }
         }
     }
 
     loadRolesProjectsUser() {
-        loadAllInfoUser(localStorage.getItem('token'), this.props);
-        // data.then((response) => {
-        //     this.setState({anomalies: response.anomalies});
-        // });
+        loadAllInfoUser(localStorage.getItem('token'), this.props).then((r) => {
+            this.setState({
+                listProjectAccess: r.listProjectAccess,
+                container: r.container,
+            })
+            this.countData(this.props.nameContainer.nameContainer);
+        });
     }
 
     logout() {

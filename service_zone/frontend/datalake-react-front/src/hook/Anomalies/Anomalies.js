@@ -32,6 +32,21 @@ export const anomaliesAll = (nameContainer, token) => {
         });
 }
 
+export const dataAnomalyAll = (container_name, token ) => {
+    return api.post('getDataAnomalyAll', {
+        container_name: container_name,
+        token: token
+    })
+        .then((response) => {
+            return {
+                anomalies: response.data.anomaly
+            }
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+}
+
 export const anomaliesGet = (measurement, topic, startDate, endDate, nameContainer, token) => {
     return api.post('getDataAnomaly', {
         measurement: measurement,

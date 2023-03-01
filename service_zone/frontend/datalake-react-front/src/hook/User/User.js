@@ -32,7 +32,7 @@ export const loadAllInfoUser = (token, props) => {
             props.editAuthProjects(response.data.projects);
             response.data.roles.forEach((role) => {
                 if (role.name === "admin") {
-                    this.props.editAuthLoginAdmin(true);
+                    props.editAuthLoginAdmin(true);
                 }
             })
             let listProjectAccess = [];
@@ -48,32 +48,15 @@ export const loadAllInfoUser = (token, props) => {
             if (listProjectAccess.length === 0) {
                 localStorage.setItem('isNoProject', true);
             } else {
-                this.setState({
-                    listProjectAccess: listProjectAccess,
-                    container: listProjectAccess[0].name_container,
-                })
-                this.countData(listProjectAccess[0].name_container);
                 localStorage.setItem('isNoProject', false);
                 props.editNameContainer(listProjectAccess[0].name_container);
+                return {
+                    listProjectAccess: listProjectAccess,
+                    container: listProjectAccess[0].name_container,
+                };
             }
         })
         .catch(function (error) {
             console.log(error);
         });
 }
-
-export const dataAnomalyAll = (container_name, token ) => {
-    return api.post('getDataAnomalyAll', {
-        container_name: container_name,
-        token: token
-    })
-        .then((response) => {
-            return {
-                anomalies: response.data.anomaly
-            }
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
-}
-
