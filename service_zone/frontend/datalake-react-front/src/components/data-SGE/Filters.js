@@ -4,6 +4,8 @@ import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
 import moment from 'moment';
 import { ToastContainer, toast } from 'react-toastify';
 import {connect} from "react-redux";
+import {loadInfoUser} from "../../hook/User/User";
+import {dataSGE, measurements, topics} from "../../hook/Data-visualisation/Data-visualisation";
 
 class Filters extends React.Component {
     constructor(props) {
@@ -81,63 +83,31 @@ class Filters extends React.Component {
     }
 
     loadRolesProjectsUser() {
-        api.post('auth-token/projects', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                let listProjectAccess = [];
-                response.data.projects.forEach((project) => {
-                    if (project.name !== "datalake" && project.name !== "admin") {
-                        listProjectAccess.push({
-                            label: project.name,
-                            name_container: project.name,
-                        })
-                    }
-                });
-                this.setState({
-                    container_name: listProjectAccess[0].name_container,
-                })
-                this.loadMeasurements();
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const info = loadInfoUser(localStorage.getItem('token'))
+        info.then((response) => {
+            this.setState({container_name: response.container_name});
+            this.loadObjectsFromServer();
+        });
     }
-
 
     loadMeasurements() {
-        api.post('measurementsSGE', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                this.setState({
-                    measurements: response.data.measurements,
-                    topics: [],
-                    measurement: ""
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
+        const measurementsSGE = measurements(localStorage.getItem('token'))
+        measurementsSGE.then((response) => {
+            this.setState({
+                measurements: response.measurements,
+                topics: response.topics,
+                measurement: response.measurement
             });
+        });
     }
     loadTopics(measurement) {
-        this.setState({
-            topics: [],
-            topic: "",
-        });
-        api.post('topicsSGE', {
-            measurement: measurement,
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                this.setState({
-                    topics: response.data.topics,
-                    topic: "",
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
+        const topicsSGE = topics(this.state.measurement, localStorage.getItem('token'))
+        topicsSGE.then((response) => {
+            this.setState({
+                topics: response.topics,
+                topic: response.topic,
             });
+        });
     }
 
     toastError(message){
@@ -192,6 +162,12 @@ class Filters extends React.Component {
                 .catch(function (error) {
                     console.log(error);
                 });
+
+            const data = dataSGE(this.state.measurement, this.state.topic, start, end, localStorage.getItem('token'))
+            data.then((response) => {
+                this.props.data(response.data);
+                this.props.dataGraph(response.dataGraph);
+            });
         }
     }
     render() {
