@@ -1,6 +1,4 @@
 import React from "react";
-import api from '../../api/api';
-import $ from 'jquery';
 import Filters from "./Filters";
 import moment from "moment";
 import {Paginate} from "./Paginate";
@@ -9,6 +7,9 @@ import { toast } from 'react-toastify';
 import DataTable from 'react-data-table-component';
 import Moment from 'moment';
 import {connect} from "react-redux";
+import {downloadZipRaw, rawData} from "../../hook/Download/Download";
+import {loadInfoUser} from "../../hook/User/User";
+import $ from 'jquery';
 
 const columns = [
             {
@@ -85,7 +86,7 @@ class DownloadRaw extends React.Component {
             perPage: 10,
             sort_value: 1,
             sort_field: '',
-            container_name: "",
+            container_name: this.props.nameContainer.nameContainer,
         };
     }
 
@@ -156,13 +157,8 @@ class DownloadRaw extends React.Component {
 
         if (selectedElements.length) {
             this.handleShow();
-            api.post('swift-files', body)
-                .then(function (result) {
-                    let url = result.data.swift_zip
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.click();
-                    window.URL.revokeObjectURL(url);
+            downloadZipRaw(body).then((r) => {
+                if(r.result) {
                     toast.success("Le téléchargement a été effectué avec succès !", {
                         theme: "colored",
                         position: "top-right",
@@ -173,13 +169,9 @@ class DownloadRaw extends React.Component {
                         draggable: true,
                         progress: undefined,
                     });
-                })
-                .catch(function (error, status) {
-                    console.error(status, error.toString()); // eslint-disable-line
-                }).finally(function () {
-                this.handleClose()
-            }.bind(this))
-
+                }
+            });
+            this.handleClose();
             // empty selected elements
             this.emptySelectedlements()
         } else {
@@ -217,27 +209,11 @@ class DownloadRaw extends React.Component {
     }
 
     loadRolesProjectsUser() {
-        api.post('auth-token/projects', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                let listProjectAccess = [];
-                response.data.projects.forEach((project) => {
-                    if (project.name !== "datalake" && project.name !== "admin") {
-                        listProjectAccess.push({
-                            label: project.name,
-                            name_container: project.name,
-                        })
-                    }
-                });
-                this.setState({
-                    container_name: listProjectAccess[0].name_container,
-                })
-                this.loadObjectsFromServer();
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const info = loadInfoUser(localStorage.getItem('token'))
+        info.then((response) => {
+            this.setState({container_name: response.container_name});
+            this.loadObjectsFromServer();
+        });
     }
 
     handlePageClick = (data) => {
@@ -313,6 +289,14 @@ class DownloadRaw extends React.Component {
                 this.handleClose()
             }
         });
+
+        // const d = rawData(this.url, data);
+        // console.log(d);
+        // this.setState({
+        //     elements: d.elements,
+        //     totalLength: d.totalLength,
+        //     pageCount: d.pageCount
+        // });
     }
 
     setFiletype(value) {

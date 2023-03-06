@@ -1,13 +1,14 @@
 import React from "react";
 import Filters from "../download-raw-data/Filters";
 import moment from "moment";
-import api from '../../api/api';
 import $ from 'jquery';
 import {LoadingSpinner} from "../utils/LoadingSpinner";
 import {Paginate} from "../download-raw-data/Paginate";
 import DataTable from 'react-data-table-component';
 import { toast } from 'react-toastify';
 import {connect} from "react-redux";
+import {loadInfoUser} from "../../hook/User/User";
+import {downloadHandle} from "../../hook/Download/Download";
 
 class DownloadHandleData extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
@@ -70,33 +71,19 @@ class DownloadHandleData extends React.Component {
 
         if (selectedElements.length) {
             this.handleShow();
-            api.post('handled-data-file', body, {
-                responseType: 'arraybuffer'
-            })
-                .then(function (result) {
-                    const url = window.URL.createObjectURL(new Blob([result.data], {type: 'application/zip'}));
-                    let link = document.createElement('a');
-                    link.href = url;
-                    link.setAttribute('download', 'file.zip'); //or any other extension
-                    document.body.appendChild(link);
-                    link.click();
-                    toast.success("Le téléchargement a été effectué avec succès !", {
-                        theme: "colored",
-                        position: "top-right",
-                        autoClose: 3000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                    });
-                })
-                .catch(function (error, status) {
-                    console.error(status, error.toString()); // eslint-disable-line
-                }).finally(function () {
-                this.handleClose()
-            }.bind(this))
-
+            downloadHandle(body).then((r) => {
+                toast.success("Le téléchargement a été effectué avec succès !", {
+                    theme: "colored",
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
+            });
+            this.handleClose();
             // empty selected elements
             this.emptySelectedlements()
         } else {
@@ -134,27 +121,11 @@ class DownloadHandleData extends React.Component {
     }
 
     loadRolesProjectsUser() {
-        api.post('auth-token/projects', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                let listProjectAccess = [];
-                response.data.projects.forEach((project) => {
-                    if (project.name !== "datalake" && project.name !== "admin") {
-                        listProjectAccess.push({
-                            label: project.name,
-                            name_container: project.name,
-                        })
-                    }
-                });
-                this.setState({
-                    container_name: listProjectAccess[0].name_container,
-                })
-                this.loadObjectsFromServer();
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const info = loadInfoUser(localStorage.getItem('token'))
+        info.then((response) => {
+            this.setState({container_name: response.container_name});
+            this.loadObjectsFromServer();
+        });
     }
 
     handlePageClick = (data) => {
