@@ -1,7 +1,7 @@
 import api from "../../api/api";
 import moment from "moment";
 
-export const measurements = (token) => {
+export const measurementsSGE = (token) => {
     return api.post('measurementsSGE', {
         token: localStorage.getItem('token')
     })
@@ -17,7 +17,7 @@ export const measurements = (token) => {
         });
 }
 
-export const topics = (measurement, token) => {
+export const topicsSGE = (measurement, token) => {
     return api.post('topicsSGE', {
         measurement: measurement,
         token: localStorage.getItem('token')
@@ -35,11 +35,11 @@ export const topics = (measurement, token) => {
 
 export const dataSGE = (measurement, topic, startDate, endDate, token) => {
     return api.post('dataSGE', {
-        measurement: this.state.measurement,
-        topic: this.state.topic,
+        measurement: measurement,
+        topic: topic,
         startDate: moment(startDate).format('X'),
         endDate: moment(endDate).format('X'),
-        token: localStorage.getItem('token')
+        token: token
     })
         .then((response) => {
             let result = [];
@@ -58,6 +58,70 @@ export const dataSGE = (measurement, topic, startDate, endDate, token) => {
             return {
                 data: data,
                 dataGraph: response.data.dataSGEGraph[0]
+            }
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+}
+
+
+export const measurementsSensors = (nameContainer, token) => {
+    return api.post('measurements', {
+        bucket: nameContainer,
+        token: token
+    })
+        .then((response) => {
+            return {
+                measurements: response.data.measurements
+            };
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+}
+export const topicsSensors = (nameContainer, token, measurement) => {
+    return api.post('topics', {
+        bucket: nameContainer,
+        token: token,
+        measurement: measurement
+    })
+        .then((response) => {
+            return {
+                topics: response.data.topics
+            };
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+}
+
+export const dataSensors = (bucket, measurement, topic, startDate, endDate, token) => {
+    return api.post('dataTimeSeries', {
+        bucket: bucket,
+        measurement: measurement,
+        topic: topic,
+        startDate: moment(startDate).format('X'),
+        endDate: moment(endDate).format('X'),
+        token: token
+    })
+        .then((response) => {
+            let result = [];
+            for (const value of Object.entries(response.data.dataTimeSeries[0])) {
+                result.push(value[1]);
+            }
+            let data = []
+            result.forEach((dt) => {
+                data.push({
+                    _time: moment.unix(dt._time / 1000).format("DD/MM/YYYY HH:mm:ss"),
+                    _value: dt._value,
+                    _measurement: dt._measurement,
+                    topic: dt.topic,
+                })
+            });
+            return {
+                data: data,
+                dataGraph: response.data.dataTimeSeriesGraph[0]
             }
         })
         .catch(function (error) {

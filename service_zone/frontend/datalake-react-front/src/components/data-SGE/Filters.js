@@ -1,11 +1,10 @@
 import React from "react";
-import api from '../../api/api';
 import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
 import moment from 'moment';
 import { ToastContainer, toast } from 'react-toastify';
 import {connect} from "react-redux";
 import {loadInfoUser} from "../../hook/User/User";
-import {dataSGE, measurements, topics} from "../../hook/Data-visualisation/Data-visualisation";
+import {dataSGE, measurementsSGE, topicsSGE} from "../../hook/Data-visualisation/Data-visualisation";
 
 class Filters extends React.Component {
     constructor(props) {
@@ -83,7 +82,7 @@ class Filters extends React.Component {
     }
 
     loadRolesProjectsUser() {
-        const info = loadInfoUser(localStorage.getItem('token'))
+        const info = loadInfoUser(localStorage.getItem('token'));
         info.then((response) => {
             this.setState({container_name: response.container_name});
             this.loadObjectsFromServer();
@@ -91,8 +90,9 @@ class Filters extends React.Component {
     }
 
     loadMeasurements() {
-        const measurementsSGE = measurements(localStorage.getItem('token'))
-        measurementsSGE.then((response) => {
+        const measurements = measurementsSGE(localStorage.getItem('token'));
+        measurements.then((response) => {
+            console.log(response)
             this.setState({
                 measurements: response.measurements,
                 topics: response.topics,
@@ -101,8 +101,8 @@ class Filters extends React.Component {
         });
     }
     loadTopics(measurement) {
-        const topicsSGE = topics(this.state.measurement, localStorage.getItem('token'))
-        topicsSGE.then((response) => {
+        const topics = topicsSGE(this.state.measurement, localStorage.getItem('token'));
+        topics.then((response) => {
             this.setState({
                 topics: response.topics,
                 topic: response.topic,
@@ -135,34 +135,6 @@ class Filters extends React.Component {
         } else if (this.state.topic === null || this.state.topic === "") {
             this.toastError("Veuillez selectionner un topic !")
         } else {
-            api.post('dataSGE', {
-                measurement: this.state.measurement,
-                topic: this.state.topic,
-                startDate: moment(start).format('X'),
-                endDate: moment(end).format('X'),
-                token: localStorage.getItem('token')
-            })
-                .then((response) => {
-                    let result = [];
-                    for (const value of Object.entries(response.data.dataSGE[0])) {
-                        result.push(value[1]);
-                    }
-                    let data = []
-                    result.forEach((dt) => {
-                        data.push({
-                            _time: moment.unix(dt._time / 1000).format("DD/MM/YYYY HH:mm:ss"),
-                            _value: dt._value,
-                            _measurement: dt._measurement,
-                            topic: dt.topic,
-                        })
-                    });
-                    this.props.data(data);
-                    this.props.dataGraph(response.data.dataSGEGraph[0]);
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
-
             const data = dataSGE(this.state.measurement, this.state.topic, start, end, localStorage.getItem('token'))
             data.then((response) => {
                 this.props.data(response.data);
