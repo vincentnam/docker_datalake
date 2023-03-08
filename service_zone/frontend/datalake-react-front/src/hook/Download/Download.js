@@ -9,6 +9,7 @@ export const downloadZipRaw = (body) => {
             link.href = url;
             link.click();
             window.URL.revokeObjectURL(url);
+            return {result: true};
         })
         .catch(function (error) {
             console.log(error);
