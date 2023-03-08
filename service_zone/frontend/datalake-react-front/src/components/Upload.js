@@ -12,6 +12,7 @@ import ModelEditForm from './upload-child/model/ModelEditForm';
 import {Modal} from "react-bootstrap";
 import {connect} from "react-redux";
 import {Dropzone as DropzoneBigData} from "dropzone";
+import {model, modelsParams, object_id_big_file, storage} from "../hook/Upload/Upload";
 
 class Upload extends React.Component {
     constructor() {
@@ -154,13 +155,9 @@ class Upload extends React.Component {
     }
 
     get_id_file() {
-        api.post('object_id_big_file', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                this.setState({id_file: response.data.object_id_big_file + 1})
-            }).catch(function (error) {
-            console.log(error);
+        const idBigFile = object_id_big_file(localStorage.getItem('token'));
+        idBigFile.then((response) => {
+            this.setState({id_file: response.id_file});
         });
     }
 
@@ -182,33 +179,21 @@ class Upload extends React.Component {
     }
 
     reloadEdit() {
-        this.setState({
-            model: "",
-            models: [],
-            othermeta: [],
-        });
-        api.post("models/params", {
-            types_files: this.state.type_file_accepted,
-            container_name: this.props.nameContainer.nameContainer,
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                this.setState({
-                    models: response.data.models.data,
-                    model: "",
-                    othermeta: [],
-                    editModel: {
-                        id: 0,
-                        label: "",
-                        typesFiles: [],
-                        metadonnees: [],
-                        status: true,
-                    }
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
+        const models = modelsParams(this.state.type_file_accepted, this.props.nameContainer.nameContainer, localStorage.getItem('token'));
+        models.then((response) => {
+            this.setState({
+                models: response.models,
+                model: "",
+                othermeta: [],
+                editModel: {
+                    id: 0,
+                    label: "",
+                    typesFiles: [],
+                    metadonnees: [],
+                    status: true,
+                }
             });
+        });
     }
 
     onChangeModalAdd() {
@@ -231,7 +216,9 @@ class Upload extends React.Component {
 
     handleShow() {
         this.setState({
-            loading: true
+            loading: true,
+            textProgressBar: "Envoi en cours...",
+            percentProgressBar: 100
         })
     }
 
@@ -258,27 +245,21 @@ class Upload extends React.Component {
                             type_file_accepted: t.type_file_accepted
                         });
                         type_file_accepted = t.type_file_accepted
-                        api.post("models/params", {
-                            types_files: type_file_accepted,
-                            container_name: this.props.nameContainer.nameContainer,
-                            token: localStorage.getItem('token')
-                        })
-                            .then((response) => {
-                                this.setState({
-                                    models: response.data.models.data,
-                                    model: "",
-                                    othermeta: [],
-                                    editModel: {
-                                        id: 0,
-                                        label: "",
-                                        typesFiles: [],
-                                        metadonnees: [],
-                                    }
-                                });
-                            })
-                            .catch(function (error) {
-                                console.log(error);
+                        const models = modelsParams(type_file_accepted, this.props.nameContainer.nameContainer, localStorage.getItem('token'));
+                        models.then((response) => {
+                            this.setState({
+                                models: response.models,
+                                model: "",
+                                othermeta: [],
+                                editModel: {
+                                    id: 0,
+                                    label: "",
+                                    typesFiles: [],
+                                    metadonnees: [],
+                                    status: true,
+                                }
                             });
+                        });
                     }
                 })
             ));
@@ -311,25 +292,19 @@ class Upload extends React.Component {
         });
         if (name === "model") {
             if (value !== "") {
-                api.post("models/id", {
-                    id: value,
-                    token: localStorage.getItem('token')
-                })
-                    .then((response) => {
-                        this.setState({
-                            othermeta: response.data.model.metadonnees,
-                            editModel: {
-                                id: response.data.model._id,
-                                label: response.data.model.label,
-                                typesFiles: response.data.model.type_file_accepted,
-                                metadonnees: response.data.model.metadonnees,
-                                status: response.data.model.status,
-                            }
-                        });
-                    })
-                    .catch(function (error) {
-                        console.log(error);
+                const m = model(value, localStorage.getItem('token'));
+                m.then((response) => {
+                    this.setState({
+                        othermeta: response.othermeta,
+                        editModel: {
+                            id: response.editModel.id,
+                            label: response.editModel.label,
+                            typesFiles: response.editModel.typesFiles,
+                            metadonnees: response.editModel.metadonnees,
+                            status: response.editModel.status,
+                        }
                     });
+                });
             } else {
                 this.setState({
                     othermeta: [],
@@ -354,18 +329,18 @@ class Upload extends React.Component {
         let type_file = "";
 
         // options about upload progressBar
-        const options = {
-            onUploadProgress: (progressEvent) => {
-                this.setState({textProgressBar: "Envoi en cours..."})
-                const {loaded, total} = progressEvent;
-                let percent = Math.floor((loaded * 100) / total)
-                this.setState({percentProgressBar: percent})
-
-                if (percent > 99) {
-                    this.setState({textProgressBar: "Finalisation du traitement..."})
-                }
-            }
-        }
+        // const options = {
+        //     onUploadProgress: (progressEvent) => {
+        //         this.setState({textProgressBar: "Envoi en cours..."})
+        //         const {loaded, total} = progressEvent;
+        //         let percent = Math.floor((loaded * 100) / total)
+        //         this.setState({percentProgressBar: percent})
+        //
+        //         if (percent > 99) {
+        //             this.setState({textProgressBar: "Finalisation du traitement..."})
+        //         }
+        //     }
+        // }
 
         this.state.othermeta.forEach((meta) => {
             other[meta.name] = meta.value
@@ -551,44 +526,33 @@ class Upload extends React.Component {
                 typeFile = type_file;
             }
             this.handleShow()
-            api.post('storage', {
-                idType: type,
-                typeFile: typeFile,
-                filename: this.state.filename,
-                file: this.state.file,
-                linkFile: this.state.linkFile.trim(),
-                linkType: type_link,
-                othermeta: other,
-                container_name: this.props.nameContainer.nameContainer,
-                token: localStorage.getItem('token')
-            }, options)
-                .then(() => {
-                    toast.success("L'upload a bien été fait !", {
-                        theme: "colored",
-                        position: "top-right",
-                        autoClose: 5000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: false,
-                        draggable: true,
-                        progress: undefined,
-                    });
-                    this.reloadPage();
+            const model = storage(type, typeFile, this.state.filename, this.state.file, this.state.linkFile.trim(), type_link, other, this.props.nameContainer.nameContainer, localStorage.getItem('token'));
+            model.then(() => {
+                toast.success("L'upload a bien été fait !", {
+                    theme: "colored",
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: false,
+                    draggable: true,
+                    progress: undefined,
+                });
+                this.reloadPage();
+            }).catch(function (error) {
+                toast.error("L'upload n'a pas réussi ! : " + error, {
+                    theme: "colored",
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
                 })
-                .catch(function (error) {
-                    toast.error("L'upload n'a pas réussi ! : " + error, {
-                        theme: "colored",
-                        position: "top-right",
-                        autoClose: 5000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                    });
-                }).finally(function () {
+            }).finally(function () {
                 this.handleClose()
-            }.bind(this))
+            }.bind(this));
         }
     }
 
@@ -897,11 +861,17 @@ class Upload extends React.Component {
     }
 }
 
-const mapStateToProps = (state) => {
-    return {
-        nameContainer: state.nameContainer,
-        auth: state.auth
+const
+    mapStateToProps = (state) => {
+        return {
+            nameContainer: state.nameContainer,
+            auth: state.auth
+        }
     }
-}
 
-export default connect(mapStateToProps, null)(Upload)
+export default connect(mapStateToProps,
+
+    null
+)(
+    Upload
+)

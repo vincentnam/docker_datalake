@@ -114,8 +114,8 @@ class ModelAddForm extends React.Component {
             const add = modelAdd(this.state.label, this.state.selectedTypesFiles, this.state.metadonnees, this.state.status, this.props.nameContainer.nameContainer, localStorage.getItem('token'))
             add.then((response) => {
                 if (response.result === true) {
-                    this.props.loading();
-                    this.props.show();
+                    this.props.reload();
+                    this.props.close();
                     toast.success(`Le modèle ${this.state.label} à bien été enregistré !`, {
                         theme: "colored",
                         position: "top-right",

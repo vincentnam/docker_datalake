@@ -133,8 +133,8 @@ class ModelEditForm extends React.Component {
             const edit = modelEdit(this.props.editModel.id, this.state.label, types, this.state.metadonnees, this.state.status, this.props.nameContainer.nameContainer, localStorage.getItem('token'))
             edit.then((response) => {
                 if (response.result === true) {
-                    this.props.loading();
-                    this.props.show();
+                    this.props.reload();
+                    this.props.close();
                     toast.success(`Le modèle ${this.state.label} à bien été modifié !`, {
                         theme: "colored",
                         position: "top-right",
