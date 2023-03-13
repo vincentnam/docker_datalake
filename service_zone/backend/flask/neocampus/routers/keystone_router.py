@@ -1,6 +1,7 @@
 import os
 import uuid
 import base64
+import json
 from flask import Blueprint, jsonify, current_app, request
 import os
 from ..services import keystone
@@ -128,6 +129,17 @@ def login_token():
                 'project': project["name"]
             })
     return jsonify({'projects': list_projects, 'roles': list_roles})
+
+
+@keystone_router_bp.route('/auth-token/test', methods=['POST'])
+def login_token_test():
+    token = request.get_json()['token']
+    f = open(os.path.join(current_app.root_path, 'json/token.json'))
+    data = json.load(f)
+    data["auth"]["identity"]["token"]["id"] = token
+    header_token = {"Content-Type": "application/json", "Accept": "*/*"}
+    rep = requests.post(current_app.config['KEYSTONE_URL'] + "/v3/auth/tokens", headers=header_token, data=data)
+    return jsonify(rep)
 
 @keystone_router_bp.route('/auth-token/projects', methods=['POST'])
 def login_token_projects():
