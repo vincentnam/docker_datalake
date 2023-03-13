@@ -1,15 +1,16 @@
 import React from "react";
 import {NavLink, useHistory} from 'react-router-dom';
-import api from '../api/api';
 import {connect} from "react-redux";
-import {editListProjectAccess, editNameContainer} from "../store/nameContainerAction";
+import {editListProjectAccess, editNameContainer} from "../store/Container/nameContainerAction";
 import {
     editAuthProjects,
     editAuthRoles,
     editAuthToken,
     editAuthLoginAdmin
-} from "../store/authAction";
+} from "../store/Auth/authAction";
 import '../navbar.css';
+import {loadAllInfoUser} from "../hook/User/User";
+import {dataAnomalyAll} from "../hook/Anomalies/Anomalies";
 
 class UpBar extends React.Component {
 
@@ -32,50 +33,18 @@ class UpBar extends React.Component {
                     listProjectAccess: this.props.nameContainer.listProjectsAccess,
                     container: this.props.nameContainer.nameContainer,
                 })
-                this.countData(this.props.nameContainer.nameContainer);
             }
         }
     }
 
     loadRolesProjectsUser() {
-        api.post('auth-token', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                this.props.editAuthRoles(response.data.roles);
-                this.props.editAuthProjects(response.data.projects);
-                response.data.roles.forEach((role) => {
-                    if (role.name === "admin") {
-                        this.props.editAuthLoginAdmin(true);
-                    }
-                })
-                let listProjectAccess = [];
-                response.data.projects.forEach((project) => {
-                    if (project.name !== "datalake" && project.name !== "admin") {
-                        listProjectAccess.push({
-                            label: project.name,
-                            name_container: project.name,
-                        })
-                    }
-                });
-                this.props.editListProjectAccess(listProjectAccess);
-                if (listProjectAccess.length === 0) {
-                    localStorage.setItem('isNoProject', true);
-                } else {
-                    this.setState({
-                        listProjectAccess: listProjectAccess,
-                        container: listProjectAccess[0].name_container,
-                    })
-                    this.countData(listProjectAccess[0].name_container);
-                    localStorage.setItem('isNoProject', false);
-                    this.props.editNameContainer(listProjectAccess[0].name_container);
-                }
-
-
+        loadAllInfoUser(localStorage.getItem('token'), this.props).then((r) => {
+            this.setState({
+                listProjectAccess: r.listProjectAccess,
+                container: r.container,
             })
-            .catch(function (error) {
-                console.log(error);
-            });
+            this.countData(this.props.nameContainer.nameContainer);
+        });
     }
 
     logout() {
@@ -91,18 +60,10 @@ class UpBar extends React.Component {
     }
 
     countData(container_name) {
-        api.post('getDataAnomalyAll', {
-            container_name: container_name,
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                this.setState({
-                    anomalies: response.data.anomaly
-                })
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const data = dataAnomalyAll(container_name,localStorage.getItem('token'))
+        data.then((response) => {
+            this.setState({anomalies: response.anomalies});
+        });
     }
 
     render() {

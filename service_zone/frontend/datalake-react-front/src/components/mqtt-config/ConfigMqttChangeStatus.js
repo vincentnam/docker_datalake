@@ -1,8 +1,8 @@
 import React from "react";
-import api from '../../api/api';
 import {Form, Button} from "react-bootstrap";
 import {ToastContainer, toast} from 'react-toastify';
 import {connect} from "react-redux";
+import {mqttEditStatus} from "../../hook/Mqtt/Mqtt";
 
 class ConfigMqttChangeStatus extends React.Component {
     constructor(props) {
@@ -25,12 +25,9 @@ class ConfigMqttChangeStatus extends React.Component {
 
     submitConfig(event) {
         event.preventDefault();
-        api.post('mqtt/status/change', {
-            id: this.props.selectElement._id,
-            status: !this.props.selectElement.status,
-            token: localStorage.getItem('token')
-        })
-            .then(() => {
+        const mqttStatus = mqttEditStatus(this.props.selectElement._id, !this.props.selectElement.status, localStorage.getItem('token'))
+        mqttStatus.then((response) => {
+            if (response.result === true) {
                 this.props.reload();
                 this.props.close(this.props.selectElement);
                 toast.success(`Le status du flux ${this.props.selectElement.name} à bien été changé !`, {
@@ -43,11 +40,8 @@ class ConfigMqttChangeStatus extends React.Component {
                     draggable: true,
                     progress: undefined,
                 });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
-
+            }
+        });
     }
 
     render() {

@@ -1,9 +1,10 @@
 import React from "react";
-import api from '../../api/api';
 import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
 import moment from 'moment';
 import { ToastContainer, toast } from 'react-toastify';
 import {connect} from "react-redux";
+import {loadInfoUser} from "../../hook/User/User";
+import {dataSGE, measurementsSGE, topicsSGE} from "../../hook/Data-visualisation/Data-visualisation";
 
 class Filters extends React.Component {
     constructor(props) {
@@ -81,63 +82,32 @@ class Filters extends React.Component {
     }
 
     loadRolesProjectsUser() {
-        api.post('auth-token/projects', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                let listProjectAccess = [];
-                response.data.projects.forEach((project) => {
-                    if (project.name !== "datalake" && project.name !== "admin") {
-                        listProjectAccess.push({
-                            label: project.name,
-                            name_container: project.name,
-                        })
-                    }
-                });
-                this.setState({
-                    container_name: listProjectAccess[0].name_container,
-                })
-                this.loadMeasurements();
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const info = loadInfoUser(localStorage.getItem('token'));
+        info.then((response) => {
+            this.setState({container_name: response.container_name});
+            this.loadObjectsFromServer();
+        });
     }
-
 
     loadMeasurements() {
-        api.post('measurementsSGE', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                this.setState({
-                    measurements: response.data.measurements,
-                    topics: [],
-                    measurement: ""
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
+        const measurements = measurementsSGE(localStorage.getItem('token'));
+        measurements.then((response) => {
+            console.log(response)
+            this.setState({
+                measurements: response.measurements,
+                topics: response.topics,
+                measurement: response.measurement
             });
+        });
     }
     loadTopics(measurement) {
-        this.setState({
-            topics: [],
-            topic: "",
-        });
-        api.post('topicsSGE', {
-            measurement: measurement,
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                this.setState({
-                    topics: response.data.topics,
-                    topic: "",
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
+        const topics = topicsSGE(this.state.measurement, localStorage.getItem('token'));
+        topics.then((response) => {
+            this.setState({
+                topics: response.topics,
+                topic: response.topic,
             });
+        });
     }
 
     toastError(message){
@@ -165,33 +135,11 @@ class Filters extends React.Component {
         } else if (this.state.topic === null || this.state.topic === "") {
             this.toastError("Veuillez selectionner un topic !")
         } else {
-            api.post('dataSGE', {
-                measurement: this.state.measurement,
-                topic: this.state.topic,
-                startDate: moment(start).format('X'),
-                endDate: moment(end).format('X'),
-                token: localStorage.getItem('token')
-            })
-                .then((response) => {
-                    let result = [];
-                    for (const value of Object.entries(response.data.dataSGE[0])) {
-                        result.push(value[1]);
-                    }
-                    let data = []
-                    result.forEach((dt) => {
-                        data.push({
-                            _time: moment.unix(dt._time / 1000).format("DD/MM/YYYY HH:mm:ss"),
-                            _value: dt._value,
-                            _measurement: dt._measurement,
-                            topic: dt.topic,
-                        })
-                    });
-                    this.props.data(data);
-                    this.props.dataGraph(response.data.dataSGEGraph[0]);
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
+            const data = dataSGE(this.state.measurement, this.state.topic, start, end, localStorage.getItem('token'))
+            data.then((response) => {
+                this.props.data(response.data);
+                this.props.dataGraph(response.dataGraph);
+            });
         }
     }
     render() {

@@ -1,9 +1,10 @@
 import React from "react";
-import api from '../../api/api';
 import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
 import moment from 'moment';
-import { ToastContainer, toast } from 'react-toastify';
+import {ToastContainer, toast} from 'react-toastify';
 import {connect} from "react-redux";
+import {loadInfoUser} from "../../hook/User/User";
+import {anomaliesGet, measurementsAll, topicsAll} from "../../hook/Anomalies/Anomalies";
 
 class Filters extends React.Component {
     constructor(props) {
@@ -37,32 +38,17 @@ class Filters extends React.Component {
     }
 
     loadRolesProjectsUser() {
-        api.post('auth-token/projects', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                let listProjectAccess = [];
-                response.data.projects.forEach((project) => {
-                    if (project.name !== "datalake" && project.name !== "admin") {
-                        listProjectAccess.push({
-                            label: project.name,
-                            name_container: project.name,
-                        })
-                    }
-                });
-                this.setState({
-                    container_name: listProjectAccess[0].name_container,
-                })
-                this.loadMeasurements();
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const info = loadInfoUser(localStorage.getItem('token'))
+        info.then((response) => {
+            this.setState({container_name: response.container_name});
+            this.loadMeasurements();
+        });
     }
 
-    updateData(){
+    updateData() {
         this.props.data([]);
     }
+
     handleChange(event) {
         const target = event.target;
         const value = target.type === 'checkbox' ? target.checked : target.value;
@@ -102,40 +88,28 @@ class Filters extends React.Component {
             this.updateData();
         }
     }
+
     loadMeasurements() {
-        api.post('measurements', {
-            bucket: this.state.container_name,
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
+        if (this.props.nameContainer.nameContainer !== ""){
+            const measurements = measurementsAll(this.props.nameContainer.nameContainer, localStorage.getItem('token'))
+            measurements.then((response) => {
                 this.setState({
-                    measurements: response.data.measurements,
-                    topics: [],
-                    measurement: ""
+                    measurements: response.measurements,
+                    topics: response.topics,
+                    measurement: response.measurement
                 });
-            })
-            .catch(function (error) {
-                console.log(error);
             });
-    }
-    loadTopics(bucket, measurement) {
-        api.post('topics', {
-            bucket: this.state.container_name,
-            token: localStorage.getItem('token'),
-            measurement: measurement
-        })
-            .then((response) => {
-                this.setState({
-                    topics: response.data.topics,
-                    topic: "",
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        }
     }
 
-    toastError(message){
+    loadTopics(bucket, measurement) {
+        const topics = topicsAll(this.props.nameContainer.nameContainer, localStorage.getItem('token'), measurement)
+        topics.then((response) => {
+            this.setState({topics: response.topics, topic: response.topics});
+        });
+    }
+
+    toastError(message) {
         toast.error(`${message}`, {
             theme: "colored",
             position: "top-right",
@@ -155,50 +129,24 @@ class Filters extends React.Component {
 
         if (moment(start).format('X') === moment(end).format('X')) {
             this.toastError("Veuillez modifier l'espacement entre la date de début et la date de fin !");
-        } else if (this.state.bucket === null  || this.state.bucket === "") {
+        } else if (this.state.bucket === null || this.state.bucket === "") {
             this.toastError("Veuillez selectionner un bucket !")
         } else {
-
-            api.post('getDataAnomaly', {
-                measurement: this.state.measurement,
-                topic: this.state.topic,
-                startDate: start,
-                endDate: end,
-                container_name: this.state.container_name,
-                token: localStorage.getItem('token')
-            })
-                .then((response) => {
-                    let result = [];
-                    for (const value of Object.entries(response.data.anomly.objects)) {
-                        result.push(value[1]);
-                    }
-                    let data = []
-                    result.forEach((dt) => {
-                        data.push({
-                            _id: dt._id,
-                            _topic: dt.topic,
-                            _value: dt.value,
-                            _unit: dt.unit,
-                            _datetime : dt.datetime,
-                            _startDate_detection: dt.startDate_detection,
-                            _endDate_detection: dt.endDate_detection,
-                            //...
-                        })
-                    });
-                    this.props.data(data);
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
+            const anomalies = anomaliesGet(this.state.measurement, this.state.topic, start, end, this.props.nameContainer.nameContainer, localStorage.getItem('token'))
+            anomalies.then((response) => {
+                this.props.data(response.data);
+            });
         }
     }
+
     render() {
         const SelectMesurements = () => {
             const listMeasurements = this.state.measurements.map((measurement) => (
                 <option key={measurement} value={measurement}>{measurement}</option>
             ));
             return (
-                <select value={this.state.measurement} onChange={this.handleChange} multiple={false} name="measurement" className="form-select">
+                <select value={this.state.measurement} onChange={this.handleChange} multiple={false} name="measurement"
+                        className="form-select">
                     <option key="" value="">Veuillez sélectionner un measurement</option>
                     {listMeasurements}
                 </select>
@@ -209,7 +157,8 @@ class Filters extends React.Component {
                 <option key={topic} value={topic}>{topic}</option>
             ));
             return (
-                <select value={this.state.topic} onChange={this.handleChange} multiple={false} name="topic" className="form-select">
+                <select value={this.state.topic} onChange={this.handleChange} multiple={false} name="topic"
+                        className="form-select">
                     <option key="" value="">Veuillez sélectionner un topic</option>
                     {listTopics}
                 </select>
@@ -224,25 +173,27 @@ class Filters extends React.Component {
                             <div className="form-group col-md-3 border-right">
                                 <FormGroup>
                                     <FormLabel>Measurement</FormLabel>
-                                    <SelectMesurements />
+                                    <SelectMesurements/>
                                 </FormGroup>
                             </div>
                             <div className="form-group col-md-3">
                                 <FormGroup>
                                     <FormLabel>Topic</FormLabel>
-                                    <SelectTopics />
+                                    <SelectTopics/>
                                 </FormGroup>
                             </div>
-                            <div className="form-group col-md-2">                                
+                            <div className="form-group col-md-2">
                                 <FormGroup>
                                     <FormLabel>Date début</FormLabel>
-                                    <Form.Control type="date" onChange={this.handleChange} value={this.state.startDate} name="startDate" required />
+                                    <Form.Control type="date" onChange={this.handleChange} value={this.state.startDate}
+                                                  name="startDate" required/>
                                 </FormGroup>
                             </div>
-                            <div className="form-group col-md-2">                                
+                            <div className="form-group col-md-2">
                                 <FormGroup>
                                     <FormLabel>Date fin</FormLabel>
-                                    <Form.Control type="date" onChange={this.handleChange} value={this.state.endDate} name="endDate" required />
+                                    <Form.Control type="date" onChange={this.handleChange} value={this.state.endDate}
+                                                  name="endDate" required/>
                                 </FormGroup>
                             </div>
                             <div className="form-group col-md-1">
@@ -253,7 +204,7 @@ class Filters extends React.Component {
                         </div>
                     </Form>
                 </div>
-                <ToastContainer />
+                <ToastContainer/>
             </div>
         );
     }
