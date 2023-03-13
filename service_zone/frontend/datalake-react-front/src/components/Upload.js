@@ -121,17 +121,21 @@ class Upload extends React.Component {
         })
         //Message error if the file not correctly upload
         myDropzone.on("error", file => {
-            toast.error("L'upload n'a pas réussi !", {
-                theme: "colored",
-                position: "top-right",
-                autoClose: 10000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: false,
-                draggable: true,
-                progress: undefined,
-            });
+            this.toastError("L'upload n'a pas réussi !")
         })
+    }
+
+    toastError(message) {
+        toast.error(`${message}`, {
+            theme: "colored",
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+        });
     }
 
     reloadPage() {
@@ -266,16 +270,7 @@ class Upload extends React.Component {
         }
         if (this.state.typeFile !== "") {
             if (type_file_accepted.includes(this.state.typeFile) === false) {
-                toast.error("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + type_file_accepted.join(' '), {
-                    theme: "colored",
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                });
+                this.toastError("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + type_file_accepted.join(' '))
                 this.removeSelectedFile()
             }
         }
@@ -349,42 +344,15 @@ class Upload extends React.Component {
         let nbErrors = 0;
 
         if (this.state.type === 0) {
-            toast.error("Veuillez renseigner le type de données !", {
-                theme: "colored",
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
+            this.toastError("Veuillez renseigner le type de données !")
             nbErrors += 1;
         }
 
         if (this.state.filename === '' && this.state.linkFile.trim() === '') {
-            toast.error("Veuillez ajouter un fichier ou un lien pour un fichier !", {
-                theme: "colored",
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
+            this.toastError("Veuillez ajouter un fichier ou un lien pour un fichier !")
         } else {
             if (this.state.filename !== '' && this.state.linkFile.trim() !== '') {
-                toast.error("Veuillez choisir entre ajouter un fichier, un lien http ou une ip pour ajouter un fichier !", {
-                    theme: "colored",
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                });
+                this.toastError("Veuillez choisir entre ajouter un fichier, un lien http ou une ip pour ajouter un fichier !")
                 nbErrors += 1;
             } else {
                 if (this.state.linkFile.trim() !== '' && this.state.filename === '') {
@@ -413,16 +381,7 @@ class Upload extends React.Component {
                         }
                         type_file = content_type;
                         if (this.state.type_file_accepted.includes(content_type) === false) {
-                            toast.error("Le type de fichier dans le lien n'est pas identique au type sélectionné !", {
-                                theme: "colored",
-                                position: "top-right",
-                                autoClose: 5000,
-                                hideProgressBar: false,
-                                closeOnClick: true,
-                                pauseOnHover: true,
-                                draggable: true,
-                                progress: undefined,
-                            });
+                            this.toastError("Le type de fichier dans le lien n'est pas identique au type sélectionné !")
                             nbErrors += 1;
                         }
 
@@ -435,16 +394,7 @@ class Upload extends React.Component {
                             '(\\#[-a-z\\d_]*)?$', 'i');
 
                         if (!pattern.test(this.state.linkFile.trim())) {
-                            toast.error("Le lien du fichier n'est pas pas un lien conforme !", {
-                                theme: "colored",
-                                position: "top-right",
-                                autoClose: 5000,
-                                hideProgressBar: false,
-                                closeOnClick: true,
-                                pauseOnHover: true,
-                                draggable: true,
-                                progress: undefined,
-                            });
+                            this.toastError("Le lien du fichier n'est pas pas un lien conforme !")
                             nbErrors += 1;
                         }
                         //Search the domain site .com, .fr, .gouv et etc
@@ -459,16 +409,7 @@ class Upload extends React.Component {
                         });
 
                         if (domain_check === true) {
-                            toast.error("Le lien du fichier n'est pas pas un lien conforme !", {
-                                theme: "colored",
-                                position: "top-right",
-                                autoClose: 5000,
-                                hideProgressBar: false,
-                                closeOnClick: true,
-                                pauseOnHover: true,
-                                draggable: true,
-                                progress: undefined,
-                            });
+                            this.toastError("Le lien du fichier n'est pas pas un lien conforme !")
                             nbErrors += 1;
                         }
                     } else {
@@ -488,32 +429,14 @@ class Upload extends React.Component {
                         }
                         type_file = content_type;
                         if (this.state.type_file_accepted.includes(content_type) === false) {
-                            toast.error("Le type de fichier dans le lien n'est pas identique au type sélectionné !", {
-                                theme: "colored",
-                                position: "top-right",
-                                autoClose: 5000,
-                                hideProgressBar: false,
-                                closeOnClick: true,
-                                pauseOnHover: true,
-                                draggable: true,
-                                progress: undefined,
-                            });
+                            this.toastError("Le type de fichier dans le lien n'est pas identique au type sélectionné !")
                             nbErrors += 1;
                         }
                         //Check IP adress is compliant
                         let ipformat = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
                         let iplink = link[0];
                         if (!ipformat.test(iplink)) {
-                            toast.error("L'adresse IP n'est pas conforme !", {
-                                theme: "colored",
-                                position: "top-right",
-                                autoClose: 5000,
-                                hideProgressBar: false,
-                                closeOnClick: true,
-                                pauseOnHover: true,
-                                draggable: true,
-                                progress: undefined,
-                            });
+                            this.toastError("L'adresse IP n'est pas conforme !")
                             nbErrors += 1;
                         }
                     }
@@ -540,17 +463,8 @@ class Upload extends React.Component {
                 });
                 this.reloadPage();
             }).catch(function (error) {
-                toast.error("L'upload n'a pas réussi ! : " + error, {
-                    theme: "colored",
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                })
-            }).finally(function () {
+                this.toastError("L'upload n'a pas réussi ! : " + error);
+            }.bind(this)).finally(function () {
                 this.handleClose()
             }.bind(this));
         }
@@ -562,16 +476,7 @@ class Upload extends React.Component {
         let nbErrors = 0;
 
         if (this.state.type === 0) {
-            toast.error("Veuillez renseigner le type de données !", {
-                theme: "colored",
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
+            this.toastError("Veuillez renseigner le type de données !");
             nbErrors += 1;
         }
 
@@ -586,16 +491,7 @@ class Upload extends React.Component {
                 }
             }
             if (this.state.type_file_accepted.includes(typeFile) === false) {
-                toast.error("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + this.state.type_file_accepted.join(' '), {
-                    theme: "colored",
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                });
+                this.toastError("Format de fichier non accepté. Veuillez ajouter un fichier qui correspond à un de ses types : " + this.state.type_file_accepted.join(' '))
                 nbErrors += 1;
             }
         });
