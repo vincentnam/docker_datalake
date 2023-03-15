@@ -11,7 +11,9 @@ export const modelsAll = (nameContainer, token) => {
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                verifModels: []
+            };
         });
 }
 export const modelsShowAll = (nameContainer, token) => {
@@ -25,7 +27,9 @@ export const modelsShowAll = (nameContainer, token) => {
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                models: []
+            };
         });
 }
 
@@ -41,7 +45,9 @@ export const modelsCacheAll = (nameContainer, token) => {
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                modelsCache: []
+            };
         });
 }
 

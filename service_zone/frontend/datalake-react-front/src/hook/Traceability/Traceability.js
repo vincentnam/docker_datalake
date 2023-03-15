@@ -13,5 +13,9 @@ export const loadListTraceability = (nameContainer, token) => {
         })
         .catch(function (error) {
             console.log(error);
+            return {
+                traceability: [],
+                traceability_finished: []
+            };
         });
 }

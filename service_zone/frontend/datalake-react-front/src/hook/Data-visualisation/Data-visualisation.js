@@ -13,7 +13,11 @@ export const measurementsSGE = (token) => {
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                measurements: [],
+                topics: [],
+                measurement: ""
+            };
         });
 }
 
@@ -29,7 +33,10 @@ export const topicsSGE = (measurement, token) => {
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                topics: [],
+                topic: "",
+            };
         });
 }
 
@@ -61,7 +68,10 @@ export const dataSGE = (measurement, topic, startDate, endDate, token) => {
             }
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                data: [],
+                dataGraph: []
+            }
         });
 }
 
@@ -77,7 +87,9 @@ export const measurementsSensors = (nameContainer, token) => {
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                measurements: []
+            };
         });
 }
 export const topicsSensors = (nameContainer, token, measurement) => {
@@ -92,7 +104,9 @@ export const topicsSensors = (nameContainer, token, measurement) => {
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                topics: []
+            };
         });
 }
 
@@ -125,6 +139,9 @@ export const dataSensors = (bucket, measurement, topic, startDate, endDate, toke
             }
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                data: [],
+                dataGraph: []
+            }
         });
 }

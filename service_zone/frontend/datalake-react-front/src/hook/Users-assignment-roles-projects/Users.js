@@ -10,7 +10,9 @@ export const users = (token) => {
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                users: []
+            };
         });
 }
 
@@ -26,7 +28,9 @@ export const userRolesProjects = (user, token) => {
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                userAccess: []
+            };
         });
 }
 
@@ -47,7 +51,7 @@ export const roles = (token) => {
             return {roles: list_roles};
         })
         .catch(function (error) {
-            console.log(error);
+            return {roles: []};
         });
 }
 
@@ -70,7 +74,7 @@ export const projects = (token) => {
             return {projects: list_projects};
         })
         .catch(function (error) {
-            console.log(error);
+            return {projects: []};
         });
 }
 

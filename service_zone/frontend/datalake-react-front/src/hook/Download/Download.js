@@ -12,7 +12,7 @@ export const downloadZipRaw = (body) => {
             return {result: true};
         })
         .catch(function (error) {
-            console.log(error);
+            return {result: false};
         });
 }
 
@@ -30,7 +30,7 @@ export const downloadHandle = (body) => {
             return {result: true};
         })
         .catch(function (error, status) {
-            console.error(status, error.toString()); // eslint-disable-line
+            return {result: false};
         });
 }
 
