@@ -19,7 +19,10 @@ export const loadInfoUser = (token) => {
             }
         })
         .catch(function (error) {
-            console.log(error);
+            localStorage.removeItem('token');
+            localStorage.removeItem('isLogin');
+            localStorage.removeItem('isNoProject');
+            window.location.reload();
         });
 }
 
@@ -57,6 +60,10 @@ export const loadAllInfoUser = (token, props) => {
             }
         })
         .catch(function (error) {
-            console.log(error);
+            localStorage.removeItem('token');
+            localStorage.removeItem('isLogin');
+            localStorage.removeItem('isNoProject');
+            props.history.push('/');
+            window.location.reload();
         });
 }

@@ -60,7 +60,7 @@ class UpBar extends React.Component {
     }
 
     countData(container_name) {
-        const data = dataAnomalyAll(container_name,localStorage.getItem('token'))
+        const data = dataAnomalyAll(container_name, localStorage.getItem('token'))
         data.then((response) => {
             this.setState({anomalies: response.anomalies});
         });

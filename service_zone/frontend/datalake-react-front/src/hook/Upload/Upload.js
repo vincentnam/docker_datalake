@@ -8,6 +8,7 @@ export const object_id_big_file = (token) => {
             return {id_file: response.data.object_id_big_file + 1}
         }).catch(function (error) {
         console.log(error);
+            return {id_file: 0}
     });
 }
 
@@ -20,7 +21,7 @@ export const modelsParams = (types_files, container_name, token) => {
         .then((response) => {
             return {models: response.data.models.data}
         }).catch(function (error) {
-            console.log(error);
+            return {models: []}
         });
 }
 
@@ -41,7 +42,16 @@ export const model = (id, token) => {
                 }
             }
         }).catch(function (error) {
-            console.log(error);
+            return {
+                othermeta: [],
+                editModel: {
+                    id: "",
+                    label: "",
+                    typesFiles: [],
+                    metadonnees: [],
+                    status: false,
+                }
+            }
         });
 }
 
