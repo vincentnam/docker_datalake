@@ -12,8 +12,8 @@ rm .env
 
 
 
-docker system prune -f -a
-docker volume prune -f
+#docker system prune -f -a
+#docker volume prune -f
 
 
 ## Config files
@@ -28,7 +28,7 @@ KEYSTONE_DB_USER=keystone
 KEYSTONE_DB_PASSWORD=keystone_pwd
 KEYSTONE_DB_NAME=keystone
 KEYSTONE_ADMIN_PASSWORD=admin_pass
-REST_API_PASSWORD=test_rest_api_flask
+REST_API_PASSWORD=test
 MONGO_URL="192.167.3.100:27017"
 MONGO_ADMIN="admin_metadata_management"
 MONGO_PWD="password_admin_mongo"
@@ -249,7 +249,7 @@ APP_NAME="Apache_Spark"
 ## SSL Certificate generation
 
 mkdir certificates/$APP_NAME
-mkdir $WORKING_DIR_PATH/$APP_DEPLOYMENT_DIR/certificates
+mkdir $WORKING_DIR_PATH$APP_DEPLOYMENT_DIR/certificates
 openssl req -nodes -newkey rsa:2048 -keyout certificates/$APP_NAME/$APP_NAME.key -out certificates/$APP_NAME/$APP_NAME.csr -subj "$CERT_INFO"
 openssl x509 -req -sha256 -days 365 -in certificates/$APP_NAME/$APP_NAME.csr -signkey certificates/$APP_NAME/$APP_NAME.key -out certificates/$APP_NAME/$APP_NAME.pem
 
@@ -305,7 +305,7 @@ MONGO_DB_AUTH = "$MONGO_DB_AUTH"
 SWIFT_AUTHURL = "https://192.167.4.100:8080/auth/v1.0"
 SWIFT_USER = 'test:tester'
 SWIFT_KEY = 'testing'
-SWIFT_FILES_DIRECTORY = "dossier_fichiers_caches_upload"
+SWIFT_FILES_DIRECTORY = "/tmp/"
 INFLUXDB_URL = "https://url_influxdb:8086"
 INFLUXDB_TOKEN = "token_influxdb"
 INFLUXDB_ORG = "organisation_influxdb"
@@ -435,11 +435,15 @@ docker compose up airflow-init
 
 
 
-docker compose build --no-cache
+#docker compose build --no-cache
 docker compose up -d
 ###### Post launch operation*
 docker cp ./initialise_keystone.sh Openstack_keystone:/
 docker cp ./.env Openstack_keystone:/
 docker exec -it Openstack_keystone sh /initialise_keystone.sh
 
-sudo docker exec MongoDB mongosh --eval "db.createUser( { user: '$MONGO_ADMIN',pwd: '$MONGO_PWD',roles: [ 'root' ]} )" "mongodb://localhost:27017/admin"
+docker cp ./initialise_mongodb.sh MongoDB:/
+docker cp ./.env MongoDB:/
+docker exec -it MongoDB sh /initialise_mongodb.sh
+
+#sudo docker exec MongoDB mongosh --eval "db.createUser( { user: '$MONGO_ADMIN',pwd: '$MONGO_PWD',roles: [ 'root' ]} )" "mongodb://localhost:27017/admin"
