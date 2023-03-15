@@ -32,7 +32,8 @@ def get_all_measurements():
     except:
         return jsonify({'error': 'Missing token'})
 
-    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+    container_name = current_app.config['SGE_VERIFICATION']
+    if keystone.login_token_project(current_app.config['KEYSTONE_URL'], token, container_name) == False:
         return jsonify({'error': 'Wrong Token'})
 
     client = sqldb.connection_sqldb()
@@ -72,7 +73,8 @@ def get_all_topics():
     except:
         return jsonify({'error': 'Missing token'})
 
-    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+    container_name = current_app.config['SGE_VERIFICATION']
+    if keystone.login_token_project(current_app.config['KEYSTONE_URL'], token, container_name) == False:
         return jsonify({'error': 'Wrong Token'})
 
     client = sqldb.connection_sqldb()
@@ -113,11 +115,12 @@ def get_data_SGE():
     except:
         return jsonify({'error': 'Missing token'})
 
-    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+    container_name = current_app.config['SGE_VERIFICATION']
+    if keystone.login_token_project(current_app.config['KEYSTONE_URL'], token, container_name) == False:
         return jsonify({'error': 'Wrong Token'})
 
     client = sqldb.connection_sqldb()
- 
+
     measurement = request.get_json()["measurement"]
     topic = request.get_json()["topic"]
     startDate = request.get_json()["startDate"]

@@ -66,14 +66,15 @@ def get_all_measurements():
 
     try:
         token = request.get_json()['token']
+        bucket = request.get_json()["bucket"]
     except:
         return jsonify({'error': 'Missing token'})
 
-    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+    if keystone.login_token_project(current_app.config['KEYSTONE_URL'], token, bucket) == False:
         return jsonify({'error': 'Wrong Token'})
 
     client, org = influxdb.connection_inflxdb()
-    bucket = request.get_json()["bucket"]
+
     # Query for show all measurements in a bucket
     query = f"""
     import \"influxdata/influxdb/schema\"
@@ -112,14 +113,14 @@ def get_all_topics():
     """
     try:
         token = request.get_json()['token']
+        bucket = request.get_json()["bucket"]
     except:
         return jsonify({'error': 'Missing token'})
 
-    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+    if keystone.login_token_project(current_app.config['KEYSTONE_URL'], token, bucket) == False:
         return jsonify({'error': 'Wrong Token'})
 
     client, org = influxdb.connection_inflxdb()
-    bucket = request.get_json()["bucket"]
     measurement = request.get_json()["measurement"]
     tag = "topic"
     # Execute the query
@@ -162,14 +163,14 @@ def get_data_time_series():
     """
     try:
         token = request.get_json()['token']
+        bucket = request.get_json()["bucket"]
     except:
         return jsonify({'error': 'Missing token'})
 
-    if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
+    if keystone.login_token_project(current_app.config['KEYSTONE_URL'], token, bucket) == False:
         return jsonify({'error': 'Wrong Token'})
 
     client, org = influxdb.connection_inflxdb()
-    bucket = request.get_json()["bucket"]
     measurement = request.get_json()["measurement"]
     topic = request.get_json()["topic"]
     startDate = request.get_json()["startDate"]
