@@ -11,7 +11,9 @@ export const mqttAll = (nameContainer, token) => {
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                elements: []
+            };
         });
 }
 
@@ -26,7 +28,9 @@ export const mqttAllStatus = (nameContainer, token) => {
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                elements: []
+            };
         });
 }
 

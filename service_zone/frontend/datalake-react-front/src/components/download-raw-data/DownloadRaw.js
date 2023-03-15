@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 import DataTable from 'react-data-table-component';
 import Moment from 'moment';
 import {connect} from "react-redux";
-import {downloadZipRaw, rawData} from "../../hook/Download/Download";
+import {downloadZipRaw} from "../../hook/Download/Download";
 import {loadInfoUser} from "../../hook/User/User";
 import $ from 'jquery';
 

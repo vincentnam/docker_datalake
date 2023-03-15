@@ -28,7 +28,9 @@ export const anomaliesAll = (nameContainer, token) => {
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                dataFilters: []
+            };
         });
 }
 
@@ -43,7 +45,9 @@ export const dataAnomalyAll = (container_name, token ) => {
             }
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                anomalies: []
+            }
         });
 }
 
@@ -79,7 +83,9 @@ export const anomaliesGet = (measurement, topic, startDate, endDate, nameContain
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                data: []
+            };
         });
 }
 
@@ -96,7 +102,11 @@ export const measurementsAll = (nameContainer, token) => {
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                measurements: [],
+                topics: [],
+                measurement: ""
+            };
         });
 }
 export const topicsAll = (nameContainer, token, measurement) => {
@@ -112,6 +122,9 @@ export const topicsAll = (nameContainer, token, measurement) => {
             };
         })
         .catch(function (error) {
-            console.log(error);
+            return {
+                topics: [],
+                topic: "",
+            };
         });
 }

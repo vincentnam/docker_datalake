@@ -4,7 +4,6 @@ import {TextAreaMeta} from './upload-child/TextAreaMeta';
 import {config} from '../configmeta/config';
 import {configWithSGE} from "../configmeta/configWithSGE";
 import {extensions_types_files} from '../configmeta/extensions_types_files';
-import api from '../api/api';
 import {ProgressBarComponent} from "./upload-child/ProgressBarComponent";
 import {toast, ToastContainer} from 'react-toastify';
 import ModelAddForm from './upload-child/model/ModelAddForm';
