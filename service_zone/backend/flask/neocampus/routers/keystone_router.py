@@ -84,37 +84,51 @@ def login_token():
 
     if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
         return jsonify({'error': 'Wrong Token'})
+    data ='{ "auth": {     "identity": {       "methods": ["token"], "token": {"id": "'+token+'"}}}}'
 
-    auth = v3.token.Token(auth_url=current_app.config['KEYSTONE_URL'], token=token)
-    sess = keystone_session.Session(auth=auth)
-    ks = client.Client(session=sess)
-    user_id = sess.get_user_id()
-    projects = ks.projects.list(user=user_id)
-    list_projects = []
-    for obj in projects:
-        list_projects.append({
-            'id': obj.id,
-            'name': obj.name
-        })
-    # Connection with admin for return roles of user
-    admin_auth = v3.Password(
-        auth_url=current_app.config['KEYSTONE_URL'],
-        username=current_app.config['USER_ADMIN'],
-        password=current_app.config['USER_ADMIN_PWD'],
-        project_id=current_app.config['PROJECT_ID'],
-        user_domain_id=current_app.config['USER_DOMAIN_ID']
-    )
-    admin_sess = keystone_session.Session(auth=admin_auth)
-    admin_ks = client.Client(session=admin_sess)
-    list_roles = []
-    for project in list_projects:
-        roles = admin_ks.roles.list(user=user_id, project=project['id'])
-        for obj in roles:
-            list_roles.append({
-                'id': obj.id,
-                'name': obj.name,
-                'project': project["name"]
-            })
+    header = {"Content-Type": "application/json", "Accept": "*/*"}
+    rep = requests.post(current_app.config['KEYSTONE_URL'] + "/auth/tokens", headers=header, data=data)
+    print(rep.json())
+    print(rep.headers)
+    user_id = rep.json()['token']["user"]["id"]
+    list_roles = rep.json()['token']["roles"]
+    header = {"Content-Type": "application/json", "X-Auth-Token": token}
+    rep_project = requests.get(current_app.config['KEYSTONE_URL'] + "/users/" + user_id + "/projects", headers=header)
+    print("COUCOU")
+    print(rep_project.json())
+    print(rep_project.headers)
+    list_projects = rep_project.json()["projects"]
+
+    # auth = v3.token.Token(auth_url=current_app.config['KEYSTONE_URL'], token=token)
+    # sess = keystone_session.Session(auth=auth)
+    # ks = client.Client(session=sess)
+    # user_id = sess.get_user_id()
+    # projects = ks.projects.list(user=user_id)
+    # list_projects = []
+    # for obj in projects:
+    #     list_projects.append({
+    #         'id': obj.id,
+    #         'name': obj.name
+    #     })
+    # # Connection with admin for return roles of user
+    # admin_auth = v3.Password(
+    #     auth_url=current_app.config['KEYSTONE_URL'],
+    #     username=current_app.config['USER_ADMIN'],
+    #     password=current_app.config['USER_ADMIN_PWD'],
+    #     project_id=current_app.config['PROJECT_ID'],
+    #     user_domain_id=current_app.config['USER_DOMAIN_ID']
+    # )
+    # admin_sess = keystone_session.Session(auth=admin_auth)
+    # admin_ks = client.Client(session=admin_sess)
+    # list_roles = []
+    # for project in list_projects:
+    #     roles = admin_ks.roles.list(user=user_id, project=project['id'])
+    #     for obj in roles:
+    #         list_roles.append({
+    #             'id': obj.id,
+    #             'name': obj.name,
+    #             'project': project["name"]
+    #         })
     return jsonify({'projects': list_projects, 'roles': list_roles})
 
 @keystone_router_bp.route('/auth-token/projects', methods=['POST'])
