@@ -1,9 +1,9 @@
 import React from "react";
-import api from '../../api/api';
-import { FormGroup, FormLabel, Form, Button } from "react-bootstrap";
-import { ToastContainer, toast } from 'react-toastify';
+import {FormGroup, FormLabel, Form, Button} from "react-bootstrap";
+import {ToastContainer, toast} from 'react-toastify';
 import {connect} from "react-redux";
 import Select from "react-select";
+import {addUser, projects, roles, userRolesProjects} from "../../hook/Users-assignment-roles-projects/Users";
 
 class ConfigAccesUserAdd extends React.Component {
     constructor(props) {
@@ -47,66 +47,21 @@ class ConfigAccesUserAdd extends React.Component {
     }
 
     loadUserRolesProjects(user) {
-        api.post('user_assignment', {
-            token: localStorage.getItem('token'),
-            user_id: user.id
-        })
-            .then((response) => {
-                this.setState({
-                    assignments: response.data.assignment,
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        userRolesProjects(user, localStorage.getItem('token')).then((r) => {
+            this.setState({assignments: r.userAccess})
+        });
     }
 
-    loadRoles(){
-        api.post('all_roles', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                let list_roles = []
-                response.data.roles.forEach((element) => {
-                    list_roles.push(
-                        {
-                            value: element.id,
-                            label: element.name
-                        }
-                    )
-                });
-                this.setState({
-                    roles: list_roles
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+    loadRoles() {
+        roles(localStorage.getItem('token')).then((r) => {
+            this.setState({roles: r.roles})
+        });
     }
 
-    loadProjects(){
-        api.post('all_projects', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                let list_projects = []
-                response.data.projects.forEach((element) => {
-                    if(element.name !== "admin"){
-                        list_projects.push(
-                            {
-                                value: element.id,
-                                label: element.name
-                            }
-                        )
-                    }
-                });
-                this.setState({
-                    projects: list_projects
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+    loadProjects() {
+        projects(localStorage.getItem('token')).then((r) => {
+            this.setState({projects: r.projects})
+        });
     }
 
     submitConfig(event) {
@@ -126,23 +81,15 @@ class ConfigAccesUserAdd extends React.Component {
         }
 
         this.state.assignments.forEach((element) => {
-            if(element.role.id === this.state.selectRole.value && element.project.id === this.state.selectProject.value) {
+            if (element.role.id === this.state.selectRole.value && element.project.id === this.state.selectProject.value) {
                 this.toastError("Ce rôle et ce projet sont déjà assignés à cet utilisateur !");
                 nbErrors += 1;
             }
         })
 
         if (nbErrors === 0) {
-
-            api.post('role_assignments/add', {
-                token: localStorage.getItem('token'),
-                user: this.state.user.id,
-                role: this.state.selectRole.value,
-                project: this.state.selectProject.value,
-            })
-                .then(() => {
-                    this.props.reload();
-                    this.props.close(this.props.selectElement);
+            addUser(this.state.user, this.state.selectRole, this.state.selectProject, localStorage.getItem('token')).then((r) => {
+                if (r.result) {
                     toast.success(`Le nouvel accès pour l'utilisateur ${this.state.user.name} sur le projet  ${this.state.selectProject.label} et pour le rôle ${this.state.selectRole.label} a bien été configuré !`, {
                         theme: "colored",
                         position: "top-right",
@@ -153,10 +100,8 @@ class ConfigAccesUserAdd extends React.Component {
                         draggable: true,
                         progress: undefined,
                     });
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
+                }
+            });
         }
     }
 
@@ -185,7 +130,7 @@ class ConfigAccesUserAdd extends React.Component {
                                 onChange={this.handleChangeRole}
                                 name="role"
                                 classNamePrefix="select"
-                                options={this.state.roles} />
+                                options={this.state.roles}/>
                         </FormGroup>
                         <FormGroup style={{width: "45%"}}>
                             <FormLabel className="mt-2">Choisir un projet</FormLabel>
@@ -193,7 +138,7 @@ class ConfigAccesUserAdd extends React.Component {
                                 onChange={this.handleChangeProject}
                                 name="project"
                                 classNamePrefix="select"
-                                options={this.state.projects} />
+                                options={this.state.projects}/>
                         </FormGroup>
                     </div>
                     <div className="d-flex justify-content-between mt-4">
@@ -206,11 +151,12 @@ class ConfigAccesUserAdd extends React.Component {
                         </Button>
                     </div>
                 </Form>
-                <ToastContainer />
-            </div >
+                <ToastContainer/>
+            </div>
         );
     }
 }
+
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,

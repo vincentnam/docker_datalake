@@ -1,15 +1,14 @@
 import React from "react";
 import {NavLink, useHistory} from 'react-router-dom';
 import {connect} from "react-redux";
-import {editNameContainer} from "../store/nameContainerAction";
-import {editAuthProjects, editAuthRoles, editAuthToken, editAuthLoginAdmin} from "../store/authAction";
+import {editNameContainer} from "../store/Container/nameContainerAction";
+import {editAuthProjects, editAuthRoles, editAuthToken, editAuthLoginAdmin} from "../store/Auth/authAction";
 import '../sidebar.css';
 
 class SideBar extends React.Component {
 
     render() {
-        const NavSidebar = () => (
-            <nav className="navbar-nav">
+        const NavSidebar = () => (<nav className="navbar-nav">
                 <NavLink activeClassName="active"
                          className="nav-item nav-link"
                          to="/upload">
@@ -116,10 +115,63 @@ class SideBar extends React.Component {
                         Anomalies
                     </div>
                 </NavLink>
-            </nav>
-        );
-        return (
-            <div className="col-2 sidebar">
+                <span className="gestion d-flex">
+                    <svg className="Logo_gestion" viewBox="0 0 512.000000 512.000000">
+                        <g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)"
+                           fill="#000000" stroke="none">
+        <path d="M2885 5110 c-660 -76 -1221 -441 -1554 -1012 -150 -258 -238 -551
+-262 -873 -32 -435 96 -905 345 -1270 l75 -110 -96 -96 -95 -96 -64 -6 c-43
+-3 -77 -13 -106 -30 -24 -14 -278 -261 -565 -549 -555 -556 -562 -565 -563
+-659 0 -74 37 -132 163 -257 122 -120 173 -152 247 -152 77 0 124 31 273 178
+76 75 145 149 153 164 27 53 -8 108 -69 108 -24 0 -56 -26 -181 -150 -124
+-123 -158 -150 -181 -150 -23 0 -50 22 -142 113 -92 93 -113 119 -113 143 0
+25 55 84 387 416 l388 388 142 -142 142 -142 -129 -132 c-118 -120 -130 -135
+-130 -168 0 -46 29 -76 72 -76 29 0 61 29 301 267 148 148 280 287 294 311 17
+29 27 63 30 106 l6 64 96 95 96 96 120 -81 c341 -228 707 -338 1130 -339 322
+-1 582 58 873 197 226 108 400 232 578 415 220 227 371 476 469 774 123 372
+137 764 40 1140 -92 358 -269 669 -530 930 -305 305 -683 498 -1115 570 -114
+19 -413 27 -525 15z m396 -150 c806 -82 1466 -669 1643 -1461 142 -640 -60
+-1309 -532 -1760 -571 -546 -1412 -678 -2118 -333 -427 208 -767 577 -935
+1012 -217 566 -146 1211 190 1713 387 580 1061 898 1752 829z m-1633 -3457
+l-83 -83 -72 72 -73 73 82 82 83 83 72 -72 73 -73 -82 -82z m-266 -121 c84
+-84 118 -125 118 -141 0 -17 -29 -53 -92 -118 l-93 -93 -143 143 -143 143 94
+92 c65 63 102 92 118 92 16 0 58 -35 141 -118z"/>
+        <path d="M2895 4744 c-471 -70 -861 -297 -1136 -663 -514 -685 -409 -1671 239
+-2238 512 -447 1234 -538 1845 -232 383 192 693 552 826 959 65 198 75 272 75
+520 0 197 -3 238 -22 330 -144 664 -638 1159 -1297 1300 -79 17 -142 22 -300
+25 -110 2 -213 1 -230 -1z m510 -172 c459 -105 836 -398 1039 -807 104 -210
+145 -378 153 -625 5 -150 2 -193 -16 -299 -108 -632 -583 -1111 -1226 -1237
+-136 -27 -416 -25 -550 4 -278 61 -508 174 -710 350 -359 312 -554 804 -505
+1278 73 709 601 1255 1315 1358 17 2 116 3 220 1 147 -2 211 -8 280 -23z"/>
+        <path d="M2939 3870 c-298 -27 -594 -140 -839 -321 -118 -87 -290 -262 -323
+-329 -37 -73 -38 -172 -3 -246 32 -70 195 -237 326 -336 174 -131 435 -249
+642 -292 520 -107 1036 25 1438 369 103 87 206 205 234 264 30 67 29 170 -3
+235 -30 60 -189 228 -296 311 -255 198 -548 313 -880 345 -121 11 -167 11
+-296 0z m313 -165 c203 -50 382 -222 448 -430 17 -56 37 -75 77 -75 41 0 73
+30 73 68 0 62 -62 204 -124 285 -20 26 -34 47 -31 47 17 0 184 -92 260 -143
+116 -79 307 -267 324 -320 25 -75 12 -100 -127 -237 -133 -131 -234 -206 -378
+-278 l-81 -41 53 80 c55 84 107 211 107 260 0 62 -81 97 -122 53 -10 -10 -28
+-48 -40 -84 -67 -207 -252 -370 -471 -416 -261 -55 -537 67 -673 297 -96 164
+-114 386 -44 554 54 130 163 254 280 319 149 81 303 101 469 61z m-768 -117
+c-5 -7 -23 -34 -41 -59 -80 -112 -123 -243 -130 -400 -9 -178 35 -337 132
+-475 24 -35 40 -64 34 -64 -14 0 -99 44 -177 92 -129 78 -265 195 -354 301
+-42 51 -48 64 -48 103 0 55 9 72 72 145 98 113 269 245 423 326 85 45 101 50
+89 31z"/>
+        <path d="M2987 3509 c-202 -48 -351 -267 -319 -471 30 -194 169 -335 362 -370
+129 -22 275 28 369 127 184 194 154 501 -64 650 -94 65 -234 91 -348 64z m228
+-167 c47 -24 106 -83 130 -132 26 -51 31 -147 11 -207 -64 -192 -317 -251
+-461 -108 -53 54 -78 116 -79 195 -2 115 73 226 178 264 57 22 169 15 221 -12z"/>
+    </g>
+                    </svg>
+                    Images
+                </span>
+                <NavLink activeClassName="active"
+                         className="nav-item nav-link"
+                         to="/similarity">
+                    <div className="sub-route">Similarity</div>
+                </NavLink>
+            </nav>);
+        return (<div className="col-2 sidebar">
                 <div className="title mt-4 mb-4">
                     <NavLink activeClassName="active"
                              className="nav-item nav-link d-flex justify-content-center align-content-center"
@@ -128,12 +180,9 @@ class SideBar extends React.Component {
                     </NavLink>
                 </div>
                 {localStorage.getItem('isLogin') && localStorage.getItem('isNoProject') === "false" ?
-                    <NavSidebar/>
-                    :<></>
-                }
+                    <NavSidebar/> : <></>}
 
-            </div>
-        );
+            </div>);
 
 
     }
@@ -141,8 +190,7 @@ class SideBar extends React.Component {
 
 const mapStateToProps = (state) => {
     return {
-        nameContainer: state.nameContainer,
-        auth: state.auth
+        nameContainer: state.nameContainer, auth: state.auth
     }
 }
 
@@ -152,9 +200,5 @@ function WithNavigate(props) {
 }
 
 export default connect(mapStateToProps, {
-    editNameContainer,
-    editAuthRoles,
-    editAuthToken,
-    editAuthProjects,
-    editAuthLoginAdmin
+    editNameContainer, editAuthRoles, editAuthToken, editAuthProjects, editAuthLoginAdmin
 })(WithNavigate)

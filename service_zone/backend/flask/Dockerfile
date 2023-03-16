@@ -1,4 +1,4 @@
-FROM python:3.9-buster
+FROM python:3.11.0-buster
 
 MAINTAINER Li XU
 
@@ -8,7 +8,7 @@ RUN mkdir /app
 WORKDIR /app
 COPY ./requirements.txt /app/requirements.txt
 
-RUN apt update && apt install -y gcc &&\
+RUN apt update && apt install -y gcc libgl1-mesa-glx &&\
     pip install --upgrade pip && \
     pip install -r requirements.txt
 

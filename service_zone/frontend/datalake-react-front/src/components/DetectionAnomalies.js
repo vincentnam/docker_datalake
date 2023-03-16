@@ -1,8 +1,9 @@
 import React from "react";
 import {DataAnomalyVisiualisation} from './anomaly-data/anomaly-visualisation';
 import Filters from "./anomaly-data/Filters";
-import api from '../api/api';
 import {connect} from "react-redux";
+import {loadInfoUser} from "../hook/User/User";
+import {anomaliesAll} from "../hook/Anomalies/Anomalies";
 
 class DetectionAnomalies extends React.Component {
     constructor(props) {
@@ -29,60 +30,18 @@ class DetectionAnomalies extends React.Component {
     }
 
     loadRolesProjectsUser() {
-        api.post('auth-token/projects', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                let listProjectAccess = [];
-                response.data.projects.forEach((project) => {
-                    if (project.name !== "datalake" && project.name !== "admin") {
-                        listProjectAccess.push({
-                            label: project.name,
-                            name_container: project.name,
-                        })
-                    }
-                });
-                this.setState({
-                    container_name: listProjectAccess[0].name_container,
-                })
-                this.loadData();
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const info = loadInfoUser(localStorage.getItem('token'))
+        info.then((response) => {
+            this.setState({container_name: response.container_name});
+            this.loadData();
+        });
     }
 
     loadData() {
-        api.post('getDataAnomalyAll', {
-            container_name: this.props.nameContainer.nameContainer,
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                let result = [];
-                for (const value of Object.entries(response.data.anomaly.objects)) {
-                    result.push(value[1]);
-                }
-                let all_data = []
-                result.forEach((dt) => {
-                    //console.log(dt)
-                    all_data.push({
-                        _id: dt._id,
-                        _topic: dt.topic,
-                        _value: dt.value,
-                        _unit: dt.unit,
-                        _datetime: dt.datetime,
-                        _startDate_detection: dt.startDate_detection,
-                        _endDate_detection: dt.endDate_detection,
-                    })
-                });
-                this.setState({
-                    dataFilters: all_data
-                });
-
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const anomalies = anomaliesAll(this.props.nameContainer.nameContainer,localStorage.getItem('token'))
+        anomalies.then((response) => {
+            this.setState({dataFilters: response.dataFilters});
+        });
     }
 
 

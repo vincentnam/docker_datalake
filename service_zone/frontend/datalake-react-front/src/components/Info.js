@@ -5,9 +5,9 @@ import {
     editAuthRoles,
     editAuthProjects,
     editAuthLoginAdmin,
-} from "../store/authAction";
+} from "../store/Auth/authAction";
 import {useHistory} from 'react-router-dom';
-import {editListProjectAccess, editNameContainer} from "../store/nameContainerAction";
+import {editListProjectAccess, editNameContainer} from "../store/Container/nameContainerAction";
 
 class Info extends React.Component {
     constructor(props) {
