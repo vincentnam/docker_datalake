@@ -150,18 +150,26 @@ def login_token_projects():
 
     if keystone.login_token(current_app.config['KEYSTONE_URL'], token) == False:
         return jsonify({'error': 'Wrong Token'})
+    data = '{ "auth": {     "identity": {       "methods": ["token"], "token": {"id": "' + token + '"}}}}'
 
-    auth = v3.token.Token(auth_url=current_app.config['KEYSTONE_URL'], token=token)
-    sess = keystone_session.Session(auth=auth)
-    ks = client.Client(session=sess)
-    user_id = sess.get_user_id()
-    projects = ks.projects.list(user=user_id)
-    list_projects = []
-    for obj in projects:
-        list_projects.append({
-            'id': obj.id,
-            'name': obj.name
-        })
+    header = {"Content-Type": "application/json", "Accept": "*/*"}
+    rep = requests.post(current_app.config['KEYSTONE_URL'] + "/auth/tokens", headers=header, data=data)
+    user_id = rep.json()['token']["user"]["id"]
+    list_roles = rep.json()['token']["roles"]
+    header = {"Content-Type": "application/json", "X-Auth-Token": token}
+    rep_project = requests.get(current_app.config['KEYSTONE_URL'] + "/users/" + user_id + "/projects", headers=header)
+    # auth = v3.token.Token(auth_url=current_app.config['KEYSTONE_URL'], token=token)
+    # sess = keystone_session.Session(auth=auth)
+    # ks = client.Client(session=sess)
+    # user_id = sess.get_user_id()
+    # projects = ks.projects.list(user=user_id)
+    # list_projects = []
+    # for obj in projects:
+    #     list_projects.append({
+    #         'id': obj.id,
+    #         'name': obj.name
+    #     })
+    list_projects = rep_project.json()["projects"]
     return jsonify({'projects': list_projects})
 
 @keystone_router_bp.route('/users', methods=['POST'])
