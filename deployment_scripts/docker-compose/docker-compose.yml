@@ -1,0 +1,512 @@
+version: '3.9'
+x-airflow-common:
+  &airflow-common
+  # In order to add custom dependencies or upgrade provider packages you can use your extended image.
+  # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
+  # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
+#  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.5.1}
+  build: ./cache/process_zone/apache_airflow/
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    # For backward compatibility, with Airflow <2.3
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+#    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
+
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+  volumes:
+    - ${AIRFLOW_PROJ_DIR:-./cache/process_zone/apache_airflow/}/dags:/opt/airflow/dags
+    - ${AIRFLOW_PROJ_DIR:-./cache/process_zone/apache_airflow/}/logs:/opt/airflow/logs
+    - ${AIRFLOW_PROJ_DIR:-./cache/process_zone/apache_airflow/}/plugins:/opt/airflow/plugins
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    &airflow-common-depends-on
+    redis:
+      condition: service_healthy
+    postgres:
+      condition: service_healthy
+
+
+services:
+#  openldap:
+#    image: osixia/openldap:latest
+#    container_name: openldap
+#    hostname: openldap
+#    ports:
+#      - "389:389"
+#      - "636:636"
+#    volumes:
+##      - ./certificates:/container/service/slapd/assets/certs
+#      - ./certificates/openldap/openldap.pem:/container/service/slapd/assets/certs/localhost.crt
+#      - ./certificates/openldap/openldap.key:/container/service/slapd/assets/certs/localhost.key
+#      - ./data/openldap/slapd/database:/var/lib/ldap
+#      - ./data/openldap/slapd/config:/etc/ldap/slapd.d
+#    environment:
+#      - LDAP_ORGANISATION=datalakelocal
+#      - LDAP_DOMAIN=datalakelocal.com
+#      - LDAP_ADMIN_USERNAME=admin
+#      - LDAP_ADMIN_PASSWORD=admin_pass
+#      - LDAP_CONFIG_PASSWORD=config_pass
+#      - "LDAP_BASE_DN=dc=datalakelocal,dc=com"
+#      - LDAP_READONLY_USER=true
+#      - LDAP_READONLY_USER_USERNAME=userRead
+#      - LDAP_READONLY_USER_PASSWORD=datalake
+#      - LDAP_TLS_CRT_FILENAME=server.crt
+#      - LDAP_TLS_KEY_FILENAME=server.key
+#      - LDAP_TLS_CA_CRT_FILENAME=datalakelocal.com.ca.crt
+#    networks:
+#      openldap:
+#      default:
+#          ipv4_address: 192.167.1.100
+##    network_mode: host
+#  phpldapadmin:
+#    image: osixia/phpldapadmin:latest
+#    container_name: phpldapadmin
+#    hostname: phpldapadmin
+#    ports:
+#      - "8090:80"
+#    environment:
+#      - PHPLDAPADMIN_LDAP_HOSTS=openldap
+#      - PHPLDAPADMIN_HTTPS=false
+#    depends_on:
+#      - openldap
+#    networks:
+#      - openldap
+
+
+  database:
+    container_name: mariadb_keystone
+    image: mariadb:10.4.5-bionic
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MARKET_DB_PASSWORD: ${MARKET_DB_PASSWORD}
+      PROVIDER_DB_PASSWORD: ${PROVIDER_DB_PASSWORD}
+      MYSQL_USER: ${KEYSTONE_DB_USER:-keystone}
+      MYSQL_PASSWORD: ${KEYSTONE_DB_PASSWORD}
+      MYSQL_DATABASE: ${KEYSTONE_DB_NAME:-keystone}
+    command: --max_allowed_packet=32505856 --wait-timeout=60 --max-connections=100
+    volumes:
+      - ./data/mysql/db/:/var/lib/mysql
+#      - ./cache/security_zone/flocx-keystone-dev/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:z
+#    ports:
+#      - "3306:3306"
+    expose:
+      - 3306
+    networks:
+      default:
+        ipv4_address: 192.167.2.101
+#    network_mode: host
+  keystone:
+    container_name: Openstack_keystone
+    build:
+      context: ./cache/security_zone/flocx-keystone-dev/
+      args:
+        KEYSTONE_IMAGE_TAG: current-tripleo
+    volumes:
+      - ./certificates/Openstack_Keystone/Openstack_Keystone.pem:/etc/pki/tls/certs/localhost.crt
+      - ./certificates/Openstack_Keystone/Openstack_Keystone.key:/etc/pki/tls/private/localhost.key
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      KEYSTONE_ADMIN_PASSWORD: ${KEYSTONE_ADMIN_PASSWORD}
+      KEYSTONE_DB_PASSWORD: ${KEYSTONE_DB_PASSWORD}
+      KEYSTONE_DB_USER: ${KEYSTONE_DB_USER:-keystone}
+      KEYSTONE_DB_NAME: ${KEYSTONE_DB_NAME:-keystone}
+      KEYSTONE_DEBUG: ${KEYSTONE_DEBUG:-"false"}
+      KEYSTONE_DB_HOST: 192.167.2.101
+#    ports:
+#      - "5000"
+    # Work with static ip
+    expose:
+      - 5000
+#    links:
+#      - openldap
+    networks:
+      default:
+        ipv4_address: 192.167.2.100
+#    network_mode: host
+
+
+
+  mongo_datalake:
+    container_name: MongoDB
+    image: mongo:latest
+    volumes:
+#      - ./cache/metadata_management_zone/mongodb/mongodb_entrypoint/entrypoint.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./data/MongoDB/db:/data/db
+      - ./cache/metadata_management_zone/mongodb/certificates/signing_cert.pem:/data/certs/certification.pem
+#      - ./cache/metadata_management_zone/mongodb/certificates/signing_key.pem:/data/certs/certification.key
+    networks:
+      default:
+        ipv4_address: 192.167.3.100
+    ports:
+      - "27017:27017"
+      - "443:443"
+    restart: always
+    command: --auth --tlsMode allowTLS --tlsCertificateKeyFile /data/certs/certification.pem --tlsAllowConnectionsWithoutCertificates
+#    command: --tlsMode allowTLS --tlsCertificateKeyFile /data/certs/certification.pem --tlsAllowConnectionsWithoutCertificates
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ADMIN:-admin_metadata_management}
+#      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PWD:-password_admin_mongo}
+
+
+  swift:
+    build:
+      context: ./cache/raw_data_zone/Openstack/swift/
+      dockerfile: Ubuntu1804.Dockerfile
+    # equivalent to -it in docker run command (needed for react app)
+    privileged: true
+    devices:
+      # Needed for loopback devices
+      - "/dev/loop0:/dev/loop0"
+      - "/dev/loop-control:/dev/loop-control"
+    environment:
+      AIRFLOW_URL : "airflow"
+    stdin_open: true
+    container_name: Openstack_swift
+#    network_mode: host
+    #        networks:
+    #            rest-network:
+    #               aliases:
+    #                  - reverse-proxy
+    ports:
+      # 5000 / 3000 ports are the only ports open on the OSIRIM VM
+      - 8080:8080
+    networks:
+      default:
+        ipv4_address: 192.167.4.100
+    volumes:
+      - ./cache/raw_data_zone/Openstack/swift/dev/1:/data_dev/1
+      - ./cache/raw_data_zone/Openstack/swift/dev/2:/data_dev/2
+      - ./cache/raw_data_zone/Openstack/swift/swift/proxy-server.conf:/etc/swift/proxy-server.conf
+      - ./cache/raw_data_zone/Openstack/swift/config.py:/usr/local/src/swift/swift/common/middleware/config.py
+      - ./cache/raw_data_zone/Openstack/swift/new_data_trigger.py:/usr/local/src/swift/swift/common/middleware/new_data_trigger.py
+      - ./cache/raw_data_zone/Openstack/swift/certificates:/etc/swift/certificates
+
+
+
+  postgres:
+    image: postgres:13
+    container_name: postgres_airflow
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+
+  redis:
+    image: redis:latest
+    container_name: redis_airflow
+    expose:
+      - 6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 50
+    restart: always
+
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: airflow-webserver
+    command: webserver
+    ports:
+      - 8081:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: airflow-scheduler
+    command: scheduler
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-worker:
+    <<: *airflow-common
+    container_name: airlfow-worker
+    command: celery worker
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    environment:
+      <<: *airflow-common-env
+      # Required to handle warm shutdown of the celery workers properly
+      # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
+      DUMB_INIT_SETSID: "0"
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-triggerer:
+    <<: *airflow-common
+    container_name: airflow-triggerer
+    command: triggerer
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    # yamllint disable rule:line-length
+    command:
+      - -c
+      - |
+        function ver() {
+          printf "%04d%04d%04d%04d" $${1//./ }
+        }
+        airflow_version=$$(AIRFLOW__LOGGING__LOGGING_LEVEL=INFO && gosu airflow airflow version)
+        airflow_version_comparable=$$(ver $${airflow_version})
+        min_airflow_version=2.2.0
+        min_airflow_version_comparable=$$(ver $${min_airflow_version})
+        if (( airflow_version_comparable < min_airflow_version_comparable )); then
+          echo
+          echo -e "\033[1;31mERROR!!!: Too old Airflow version $${airflow_version}!\e[0m"
+          echo "The minimum Airflow version supported: $${min_airflow_version}. Only use this or higher!"
+          echo
+          exit 1
+        fi
+        if [[ -z "${AIRFLOW_UID}" ]]; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: AIRFLOW_UID not set!\e[0m"
+          echo "If you are on Linux, you SHOULD follow the instructions below to set "
+          echo "AIRFLOW_UID environment variable, otherwise files will be owned by root."
+          echo "For other operating systems you can get rid of the warning with manually created .env file:"
+          echo "    See: https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#setting-the-right-airflow-user"
+          echo
+        fi
+        one_meg=1048576
+        mem_available=$$(($$(getconf _PHYS_PAGES) * $$(getconf PAGE_SIZE) / one_meg))
+        cpus_available=$$(grep -cE 'cpu[0-9]+' /proc/stat)
+        disk_available=$$(df / | tail -1 | awk '{print $$4}')
+        warning_resources="false"
+        if (( mem_available < 4000 )) ; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough memory available for Docker.\e[0m"
+          echo "At least 4GB of memory required. You have $$(numfmt --to iec $$((mem_available * one_meg)))"
+          echo
+          warning_resources="true"
+        fi
+        if (( cpus_available < 2 )); then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough CPUS available for Docker.\e[0m"
+          echo "At least 2 CPUs recommended. You have $${cpus_available}"
+          echo
+          warning_resources="true"
+        fi
+        if (( disk_available < one_meg * 10 )); then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough Disk space available for Docker.\e[0m"
+          echo "At least 10 GBs recommended. You have $$(numfmt --to iec $$((disk_available * 1024 )))"
+          echo
+          warning_resources="true"
+        fi
+        if [[ $${warning_resources} == "true" ]]; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: You have not enough resources to run Airflow (see above)!\e[0m"
+          echo "Please follow the instructions to increase amount of resources available:"
+          echo "   https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#before-you-begin"
+          echo
+        fi
+        mkdir -p /sources/logs /sources/dags /sources/plugins
+        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
+        exec /entrypoint airflow version
+    # yamllint enable rule:line-length
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_UPGRADE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+      _PIP_ADDITIONAL_REQUIREMENTS: ''
+    user: "0:0"
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}:${AIRFLOW_PROJ_DIR}
+
+  airflow-cli:
+    <<: *airflow-common
+    profiles:
+      - debug
+    environment:
+      <<: *airflow-common-env
+      CONNECTION_CHECK_MAX_COUNT: "0"
+    # Workaround for entrypoint issue. See: https://github.com/apache/airflow/issues/16252
+    command:
+      - bash
+      - -c
+      - airflow
+
+  # You can enable flower by adding "--profile flower" option e.g. docker-compose --profile flower up
+  # or by explicitly targeted on the command line e.g. docker-compose up flower.
+  # See: https://docs.docker.com/compose/profiles/
+  flower:
+    <<: *airflow-common
+    command: celery flower
+    profiles:
+      - flower
+    ports:
+      - 5555:5555
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+## Process zone - Apache Spark
+
+  spark:
+    container_name: Apache_spark
+    build: ./cache/process_zone/apache_spark/
+    volumes:
+#      - ./cache/process_zone/apache_sparke/certificates:/certificate
+      - ./cache/process_zone/apache_spark/certificates:/certificates
+
+### Service zone - API BACKEND : Flask
+
+  flask:
+    build: ./cache/service_zone/backend/flask/.
+    image: flask_uwsgi:py3.9-fl1.1-uw2
+    container_name: flask
+    volumes:
+      - ./cache/service_zone/backend/flask:/app
+      - ./cache/service_zone/backend/flask/uwsgi/log:/var/uwsgi/log
+    command: /app/entrypoint.sh
+    environment:
+      - FLASK_APP=neocampus
+      - FLASK_ENV=production
+#    ports:
+#      - "5000:5000"
+    expose:
+      - 5000
+    restart: always
+    networks:
+      default:
+        ipv4_address: 192.167.6.100
+    sysctls:
+        net.core.somaxconn: 1024 # set max connections to 1024 in kernel
+
+  nginx:
+    image: nginx:1.20-alpine
+    container_name: frontend_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./cache/service_zone/backend/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./cache/service_zone/backend/nginx/uwsgi_params:/etc/nginx/uwsgi_params
+      - ./cache/service_zone/backend/nginx/log:/var/log/nginx
+    depends_on:
+      - flask
+    restart: always
+    networks:
+      default:
+        ipv4_address: 192.167.6.1
+
+  ### Service zone - Frontend :
+
+  react:
+    container_name: react
+    build:
+      context: ./cache/service_zone/frontend/datalake-react-front
+      dockerfile: Dockerfile
+    volumes:
+      - './cache/service_zone/frontend/datalake-react-front:/app'
+      - '/app/node_modules'
+    ports:
+      - 3001:3000
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_ENDPOINT=http://127.0.0.1
+
+
+
+
+
+
+volumes:
+  postgres-db-volume:
+
+networks:
+  openldap:
+    driver: bridge
+  default:
+    ipam:
+      config:
+        - subnet: 192.167.0.0/16
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

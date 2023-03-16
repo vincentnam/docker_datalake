@@ -1,6 +1,6 @@
 flask>=1.1,<1.2
+flask_cors==3.0.10
 markupsafe==2.0.1
-python-swiftclient>=3.11,<3.12
 pymongo>=3.11,<3.12
 influxdb_client==1.30.0
 pandas
@@ -17,4 +17,14 @@ keystoneauth1==4.5.0
 python-keystoneclient==4.4.0
 python-swiftclient
 pyodbc
+numpy
+jsons
+python-math
+scikit-learn
+scikit-image
+urllib3
+pillow
+opencv-python
+scipy
+python-dotenv
 
