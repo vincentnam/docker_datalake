@@ -1,8 +1,8 @@
 import React from "react";
-import api from '../../api/api';
 import {Form, Button} from "react-bootstrap";
 import {ToastContainer, toast} from 'react-toastify';
 import {connect} from "react-redux";
+import {deleteUser} from "../../hook/Users-assignment-roles-projects/Users";
 
 class ConfigAccesUserDelete extends React.Component {
     constructor(props) {
@@ -40,14 +40,8 @@ class ConfigAccesUserDelete extends React.Component {
 
     submitConfig(event) {
         event.preventDefault();
-
-        api.post('role_assignments/delete', {
-            token: localStorage.getItem('token'),
-            user: this.state.user.id,
-            role: this.state.selectRole.id,
-            project: this.state.selectProject.id
-        })
-            .then(() => {
+        deleteUser(this.state.user, this.state.selectRole, this.state.selectProject, localStorage.getItem('token')).then((r) => {
+            if(r.result) {
                 toast.success(`L'accès pour l'utilisateur ${this.state.user.name} sur le projet  ${this.state.selectProject.name} pour le rôle ${this.state.selectRole.name} a bien été supprimé !`, {
                     theme: "colored",
                     position: "top-right",
@@ -59,10 +53,8 @@ class ConfigAccesUserDelete extends React.Component {
                     progress: undefined,
                 });
                 this.close();
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+            }
+        });
     }
 
     close() {

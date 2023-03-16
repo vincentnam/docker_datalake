@@ -1,8 +1,8 @@
 import React from "react";
 import {NavLink, useHistory} from 'react-router-dom';
 import {connect} from "react-redux";
-import {editNameContainer} from "../store/nameContainerAction";
-import {editAuthProjects, editAuthRoles, editAuthToken, editAuthLoginAdmin} from "../store/authAction";
+import {editNameContainer} from "../store/Container/nameContainerAction";
+import {editAuthProjects, editAuthRoles, editAuthToken, editAuthLoginAdmin} from "../store/Auth/authAction";
 import '../sidebar.css';
 
 class SideBar extends React.Component {

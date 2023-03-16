@@ -1,5 +1,4 @@
 import React from "react";
-import api from '../api/api';
 import {toast, ToastContainer} from "react-toastify";
 import {connect} from "react-redux";
 import '../login.css';
@@ -9,11 +8,12 @@ import {
     editAuthRoles,
     editAuthProjects,
     editAuthLoginAdmin
-} from "../store/authAction";
+} from "../store/Auth/authAction";
 import {useHistory} from 'react-router-dom';
 import SideBar from "./SideBar";
 import UpBar from "./UpBar";
-import {editListProjectAccess, editNameContainer} from "../store/nameContainerAction";
+import {editListProjectAccess, editNameContainer} from "../store/Container/nameContainerAction";
+import {login} from "../hook/Login/Login";
 
 class Login extends React.Component {
     constructor(props) {
@@ -70,58 +70,19 @@ class Login extends React.Component {
             nbErrors += 1;
         }
         if (nbErrors === 0) {
-            api.post('login', {
-                user: this.state.user,
-                password: this.state.password,
-            })
-                .then((response) => {
-                    let listProjectAccess = [];
-                    response.data.projects.forEach((project) =>{
-                        if (project.name !== "datalake" && project.name !== "admin"){
-                            listProjectAccess.push({
-                                label: project.name,
-                                name_container: project.name,
-                            })
-                        }
+            login(this.state.user, this.state.password, this.props).then((r) => {
+                if (r.result){
+                    toast.success("Vous êtes connecté !", {
+                        theme: "colored",
+                        position: "top-right",
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: false,
+                        draggable: true,
+                        progress: undefined,
                     });
-                    this.props.editAuthRoles(response.data.roles);
-                    this.props.editAuthProjects(response.data.projects);
-                    this.props.editAuthToken(response.data.token);
-                    localStorage.setItem('token', response.data.token);
-                    localStorage.setItem('isLogin', true);
-
-                    this.props.editListProjectAccess(listProjectAccess);
-                    let isAdmin = false;
-                    response.data.roles.forEach((role) => {
-                        if (role.name === "admin") {
-                            isAdmin = true;
-                        }
-                    });
-                    if (isAdmin === true) {
-                        this.props.editAuthLoginAdmin(true);
-                    } else {
-                        this.props.editAuthLoginAdmin(false);
-                    }
-                    if(listProjectAccess.length === 0){
-                        localStorage.setItem('isNoProject', true);
-                        this.props.history.push('/info');
-                    } else {
-                        localStorage.setItem('isNoProject', false);
-                        this.props.editNameContainer(listProjectAccess[0].name_container);
-                        this.props.history.push('/home');
-                        toast.success("Vous êtes connecté !", {
-                            theme: "colored",
-                            position: "top-right",
-                            autoClose: 3000,
-                            hideProgressBar: false,
-                            closeOnClick: true,
-                            pauseOnHover: false,
-                            draggable: true,
-                            progress: undefined,
-                        });
-                    }
-                })
-                .catch(function (error) {
+                } else {
                     toast.error("La connexion n'a pas réussi ! : Veuillez vérifier votre pseudo et votre mot de passe sinon veuillez contacter votre administrateur ! ", {
                         theme: "colored",
                         position: "top-right",
@@ -132,7 +93,8 @@ class Login extends React.Component {
                         draggable: true,
                         progress: undefined,
                     });
-                })
+                }
+            });
         }
     }
 

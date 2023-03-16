@@ -1,11 +1,11 @@
 import React from "react";
-import api from '../api/api';
 import {connect} from "react-redux";
 import {Button, Modal} from "react-bootstrap";
 import {ToastContainer} from "react-toastify";
 import ConfigAccessUserAdd from "./users-config/ConfigAccessUserAdd";
 import ConfigAccessUserDelete from "./users-config/ConfigAccessUserDelete";
 import ConfigAccessUserPurge from "./users-config/ConfigAccessUserPurge";
+import {userRolesProjects, users} from "../hook/Users-assignment-roles-projects/Users";
 
 class UsersRolesProjectsConfiguration extends React.Component {
 
@@ -42,34 +42,17 @@ class UsersRolesProjectsConfiguration extends React.Component {
     }
 
     loadUsers() {
-        api.post('users', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                this.setState({
-                    users: response.data.users
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        users(localStorage.getItem('token')).then((r) => {this.setState({users: r.users})});
     }
 
     loadUserRolesProjects(user) {
-        api.post('user_assignment', {
-            token: localStorage.getItem('token'),
-            user_id: user.id
-        })
-            .then((response) => {
-                this.setState({
-                    userAccess: response.data.assignment,
-                    selectElement: user,
-                    modalShow: !this.state.modalShow,
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        userRolesProjects(user,localStorage.getItem('token')).then((r) => {
+            this.setState({
+                userAccess: r.userAccess,
+                selectElement: user,
+                modalShow: !this.state.modalShow
+            })}
+        );
     }
 
     onChangeModalShow(element) {

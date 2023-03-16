@@ -1,16 +1,17 @@
 import React from "react";
-import api from '../api/api';
 import Moment from 'moment';
 import {ProgressBar} from 'react-bootstrap';
 import {connect} from "react-redux";
+import {loadListTraceability} from "../hook/Traceability/Traceability";
+import {loadInfoUser} from "../hook/User/User";
 
 class Traceability extends React.Component {
     constructor(props) {
         super(props);
         // Set some state
         this.state = {
-            elements: [],
-            elements_finished: [],
+            traceability: [],
+            traceability_finished: [],
             offset: 0,
             perPage: 10,
             sort_value: 1,
@@ -38,27 +39,11 @@ class Traceability extends React.Component {
     }
 
     loadRolesProjectsUser() {
-        api.post('auth-token/projects', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                let listProjectAccess = [];
-                response.data.projects.forEach((project) => {
-                    if (project.name !== "datalake" && project.name !== "admin") {
-                        listProjectAccess.push({
-                            label: project.name,
-                            name_container: project.name,
-                        })
-                    }
-                });
-                this.setState({
-                    container_name: listProjectAccess[0].name_container,
-                })
-                this.loadTraceability();
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const info = loadInfoUser(localStorage.getItem('token'))
+        info.then((response) => {
+            this.setState({container_name: response.container_name});
+            this.loadTraceability();
+        });
     }
 
     componentWillUnmount() {
@@ -66,33 +51,24 @@ class Traceability extends React.Component {
     }
 
     loadTraceability() {
-        api.post('uploadssh', {
-            container_name: this.props.nameContainer.nameContainer,
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                this.setState({
-                    elements: response.data.file_upload,
-                    elements_finished: response.data.file_upload_finished
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const list = loadListTraceability(this.props.nameContainer.nameContainer, localStorage.getItem('token'))
+        list.then((response) => {
+            this.setState({traceability: response.traceability, traceability_finished: response.traceability_finished});
+        });
     }
 
     render() {
         const TableInProgress = () => {
             let dataTableInProgress = "";
-            if (this.state.elements.length === 0) {
+            if (this.state.traceability.length === 0) {
                 dataTableInProgress = (
                     <tr>
                         <td colSpan="5" align="center"><p>Il n'y a aucun fichier qui est en cours d'upload !</p></td>
                     </tr>
                 );
             }
-            if (this.state.elements.length !== 0) {
-                if (this.state.elements.length === 0) {
+            if (this.state.traceability.length !== 0) {
+                if (this.state.traceability.length === 0) {
                     dataTableInProgress = (
                         <tr>
                             <td colSpan="5" align="center" style={{color: "black !important"}}>Il n'y a aucun fichier
@@ -110,7 +86,7 @@ class Traceability extends React.Component {
                         }
                         return etat;
                     }
-                    dataTableInProgress = this.state.elements.map((element) => (
+                    dataTableInProgress = this.state.traceability.map((element) => (
                         <tr>
                             <td>{element.filename}</td>
                             <td>{element.type_file}</td>
@@ -148,7 +124,7 @@ class Traceability extends React.Component {
 
         const TableFinished = () => {
             let dataTableFinished = "";
-            if (this.state.elements_finished.length === 0) {
+            if (this.state.traceability_finished.length === 0) {
                 dataTableFinished = (
                     <tr>
                         <td colSpan="5" align="center">Il n'y a aucun fichier qui est en upload terminé !</td>
@@ -156,8 +132,8 @@ class Traceability extends React.Component {
 
                 );
             }
-            if (this.state.elements_finished.length !== 0) {
-                dataTableFinished = this.state.elements_finished.map((element) => (
+            if (this.state.traceability_finished.length !== 0) {
+                dataTableFinished = this.state.traceability_finished.map((element) => (
                     <tr>
                         <td>{element.filename}</td>
                         <td>{element.type_file}</td>
@@ -237,8 +213,7 @@ class Traceability extends React.Component {
 const mapStateToProps = (state) => {
     return {
         nameContainer: state.nameContainer,
-        auth: state.auth
     }
 }
 
-export default connect(mapStateToProps, null)(Traceability)
+export default connect(mapStateToProps)(Traceability)

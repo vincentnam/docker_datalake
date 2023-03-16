@@ -1,11 +1,12 @@
 import React from "react";
-import api from '../api/api';
 import {Modal} from 'react-bootstrap';
 import {connect} from "react-redux";
 import ConfigMqttAdd from "./mqtt-config/ConfigMqttAdd";
 import ConfigMqttEdit from "./mqtt-config/ConfigMqttEdit";
 import ConfigMqttChangeStatus from "./mqtt-config/ConfigMqttChangeStatus";
 import {ToastContainer} from 'react-toastify';
+import {loadInfoUser} from "../hook/User/User";
+import {mqttAll, mqttAllStatus} from "../hook/Mqtt/Mqtt";
 
 class MqttConfigList extends React.Component {
     constructor(props) {
@@ -48,61 +49,29 @@ class MqttConfigList extends React.Component {
     }
 
     loadRolesProjectsUser() {
-        api.post('auth-token/projects', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                let listProjectAccess = [];
-                response.data.projects.forEach((project) => {
-                    if (project.name !== "datalake" && project.name !== "admin") {
-                        listProjectAccess.push({
-                            label: project.name,
-                            name_container: project.name,
-                        })
-                    }
-                });
-                this.setState({
-                    container_name: listProjectAccess[0].name_container,
-                })
-                this.loadMqttConfig();
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const info = loadInfoUser(localStorage.getItem('token'))
+        info.then((response) => {
+            this.setState({container_name: response.container_name});
+            this.loadMqttConfig();
+        });
     }
 
     loadMqttConfig() {
-        api.post('mqtt/all', {
-            container_name: this.state.container_name,
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                this.setState({
-                    elements: response.data.list_flux.data
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const mqtt = mqttAll(this.state.container_name, localStorage.getItem('token'))
+        mqtt.then((response) => {
+            this.setState({elements: response.elements});
+        });
     }
 
     loadMqttConfigStatus() {
-        api.post('mqtt/status/actif', {
-            container_name: this.state.container_name,
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                this.setState({
-                    elements: response.data.list_flux.data,
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const mqttStatus = mqttAllStatus(this.state.container_name, localStorage.getItem('token'))
+        mqttStatus.then((response) => {
+            this.setState({elements: response.elements});
+        });
     }
 
     loadFlux() {
-        if (this.state.statusFluxAll === true){
+        if (this.state.statusFluxAll === true) {
             this.loadMqttConfig();
         } else {
             this.loadMqttConfigStatus();
@@ -130,7 +99,7 @@ class MqttConfigList extends React.Component {
     }
 
     onChangeStatusFlux() {
-        if (this.state.statusFluxAll === true){
+        if (this.state.statusFluxAll === true) {
             this.setState({
                 statusFluxAll: !this.state.statusFluxAll,
             });
@@ -251,12 +220,12 @@ class MqttConfigList extends React.Component {
 
         const ModalChangeStatus = () => {
             let message = "";
-            if(this.state.selectElement.status) {
-                message = "Voulez-vous désactiver le flux MQTT : " +this.state.selectElement.name +" ?";
+            if (this.state.selectElement.status) {
+                message = "Voulez-vous désactiver le flux MQTT : " + this.state.selectElement.name + " ?";
             } else {
-                message = "Voulez-vous activer le flux MQTT : " +this.state.selectElement.name +" ?";
+                message = "Voulez-vous activer le flux MQTT : " + this.state.selectElement.name + " ?";
             }
-            
+
             return (
                 <Modal
                     size="lg"
@@ -281,7 +250,7 @@ class MqttConfigList extends React.Component {
         }
 
         const ButtonStatus = () => {
-            if(this.state.statusFluxAll === true) {
+            if (this.state.statusFluxAll === true) {
                 return (
                     <button type="button" className="btn btn-primary buttonModel"
                             onClick={() => this.onChangeStatusFlux()}>Afficher les flux actifs
@@ -314,7 +283,7 @@ class MqttConfigList extends React.Component {
                                 <button type="button" className="btn btn-primary buttonModel"
                                         onClick={() => this.onChangeModalAdd()}>Ajouter un flux MQTT
                                 </button>
-                                <ButtonStatus />
+                                <ButtonStatus/>
                             </div>
                             <div className="main-download">
                                 <div className="mt-4">

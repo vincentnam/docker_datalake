@@ -2,13 +2,14 @@ import React from "react";
 import '../home.css';
 import $ from 'jquery';
 import {config} from '../configmeta/config';
-import api from '../api/api';
 import Filters from "./download-raw-data/Filters";
 import Moment from "moment";
 import DataTable from 'react-data-table-component';
 import {LoadingSpinner} from "./utils/LoadingSpinner";
 import {connect} from "react-redux";
 import {toast, ToastContainer} from "react-toastify";
+import {loadInfoUser} from "../hook/User/User";
+import {downloadZipRaw} from "../hook/Download/Download";
 
 class Home extends React.Component {
     url = process.env.REACT_APP_SERVER_NAME
@@ -58,27 +59,11 @@ class Home extends React.Component {
     }
 
     loadRolesProjectsUser() {
-        api.post('auth-token/projects', {
-            token: localStorage.getItem('token')
-        })
-            .then((response) => {
-                let listProjectAccess = [];
-                response.data.projects.forEach((project) => {
-                    if (project.name !== "datalake" && project.name !== "admin") {
-                        listProjectAccess.push({
-                            label: project.name,
-                            name_container: project.name,
-                        })
-                    }
-                });
-                this.setState({
-                    container_name: listProjectAccess[0].name_container,
-                })
-                this.loadObjectsFromServer();
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        const info = loadInfoUser(localStorage.getItem('token'))
+        info.then((response) => {
+            this.setState({container_name: response.container_name});
+            this.loadObjectsFromServer();
+        });
     }
 
     // TODO : To refactor later
@@ -261,20 +246,15 @@ class Home extends React.Component {
         selectedElements.forEach(element => {
             body.push({
                 'object_id': element.swift_object_id,
-                'container_name': element.swift_container,
+                'container_name': this.props.nameContainer.nameContainer,
                 'token': localStorage.getItem('token')
             })
         })
 
         if (selectedElements.length) {
             this.handleShow();
-            api.post('swift-files', body)
-                .then(function (result) {
-                    let url = result.data.swift_zip
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.click();
-                    window.URL.revokeObjectURL(url);
+            downloadZipRaw(body).then((r) => {
+                if(r.result) {
                     toast.success("Le téléchargement a été effectué avec succès !", {
                         theme: "colored",
                         position: "top-right",
@@ -285,13 +265,9 @@ class Home extends React.Component {
                         draggable: true,
                         progress: undefined,
                     });
-                })
-                .catch(function (error, status) {
-                    console.error(status, error.toString()); // eslint-disable-line
-                }).finally(function () {
-                this.handleClose()
-            }.bind(this))
-
+                }
+            });
+            this.handleClose();
             // empty selected elements
             this.emptySelectedlements()
         } else {
