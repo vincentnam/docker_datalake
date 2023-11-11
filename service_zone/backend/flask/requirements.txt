@@ -9,7 +9,7 @@ pyOpenSSL
 paramiko
 uwsgi
 flask_swagger_ui
-Werkzeug==0.16.1
+Werkzeug==2.2.3
 apispec 
 apispec_webframeworks 
 marshmallow
