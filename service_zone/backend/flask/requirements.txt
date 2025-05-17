@@ -1,5 +1,5 @@
 flask>=1.1,<1.2
-flask_cors==3.0.10
+flask_cors==6.0.0
 markupsafe==2.0.1
 pymongo>=3.11,<3.12
 influxdb_client==1.30.0
