@@ -1,1 +1,0 @@
-export const EDIT_LIST_SIMILARITY = []

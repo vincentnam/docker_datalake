@@ -1,3 +1,0 @@
----
-- name : Openstack keystone with LDAP install
-  import_playbook: openstack_keystone_container_build.yml
