@@ -1,0 +1,27 @@
+FROM debian:bookworm-slim
+
+ARG SWIFT_VERSION=2.34.0
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN groupadd --system swift && useradd --system --create-home --home-dir /home/swift -g swift swift
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip rsync openssh-client curl xfsprogs \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --no-cache-dir "swift==${SWIFT_VERSION}"
+
+RUN mkdir -p /etc/swift /var/log/swift /srv/node /var/cache/swift /opt/swift-scripts \
+  && chown -R swift:swift /etc/swift /var/log/swift /srv/node /var/cache/swift /opt/swift-scripts
+
+COPY entrypoints/start-service.sh /opt/swift-scripts/start-service.sh
+COPY entrypoints/wait-for-files.sh /opt/swift-scripts/wait-for-files.sh
+RUN chmod +x /opt/swift-scripts/*.sh && chown swift:swift /opt/swift-scripts/*.sh
+
+USER swift
+WORKDIR /home/swift
+
+EXPOSE 6000-6012
+VOLUME ["/etc/swift", "/srv/node", "/var/log/swift"]
+
+CMD ["/opt/swift-scripts/start-service.sh"]

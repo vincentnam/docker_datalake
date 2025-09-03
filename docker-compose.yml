@@ -1,0 +1,7 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.base
+    container_name: ubuntu24_app
+
