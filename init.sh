@@ -1,0 +1,8 @@
+#!/bin/bash
+# Script d'init pour Swift: build + génère rings/configs via container
+
+docker build -f Dockerfile.base -t swift-base .
+mkdir -p etc/swift
+# Copie le script init-rings.sh dans le volume (fix pour /etc/swift/init-rings.sh)
+cp init-rings.sh etc/swift/
+docker run -v $(pwd)/etc/swift:/etc/swift swift-base bash /etc/swift/init-rings.sh
