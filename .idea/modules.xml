@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/docker_datalake.iml" filepath="$PROJECT_DIR$/.idea/docker_datalake.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../new_datalake/new_datalake/.idea/new_datalake.iml" filepath="$PROJECT_DIR$/../new_datalake/new_datalake/.idea/new_datalake.iml" />
     </modules>
   </component>
 </project>

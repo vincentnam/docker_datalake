@@ -1,7 +1,256 @@
 services:
-  app:
+  init:
     build:
       context: .
-      dockerfile: Dockerfile.base
-    container_name: ubuntu24_app
+      dockerfile: dockerfiles/Dockerfile.base
+    volumes:
+      - swift_conf:/etc/swift
+    command: /opt/swift-scripts/build-rings.sh
+    networks:
+      - swift_cluster
 
+  proxy-1:
+    hostname: proxy-1
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    entrypoint: ["/opt/swift-scripts/start-proxy.sh"]
+    command: ["swift-proxy-server", "/etc/swift/proxy-server.conf", "verbose"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - swift_conf:/etc/swift:ro
+      - swift_cache:/var/cache/swift
+    healthcheck:
+      test: ["CMD", "swift", "stat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.1.1
+    depends_on:
+      init:
+        condition: service_completed_successfully
+      memcached-1:
+        condition: service_healthy
+
+  memcached-1:
+    hostname: memcached-1
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    entrypoint: ["/opt/swift-scripts/memcached.sh"]
+    command: ["memcached", "-u", "root", "-l", "0.0.0.0"]
+    ports:
+      - "11211:11211"
+    volumes:
+      - swift_conf:/etc/swift:ro
+      - swift_cache:/var/cache/swift
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "11211"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.2.1
+
+  account-1:
+    hostname: account-1
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    entrypoint: ["/opt/swift-scripts/start-service.sh"]
+    command: ["swift-account-server", "/etc/swift/account-server.conf", "verbose"]
+    environment:
+      - DEV=sdb0
+    volumes:
+      - swift_conf:/etc/swift:ro
+      - swift_data:/srv/node
+    privileged: true
+    healthcheck:
+      test: ["CMD-SHELL", "mountpoint -q /srv/node/sdb0 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.3.1
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+  container-1:
+    hostname: container-1
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    entrypoint: ["/opt/swift-scripts/start-service.sh"]
+    command: ["swift-container-server", "/etc/swift/container-server.conf", "verbose"]
+    environment:
+      - DEV=sdb0
+    volumes:
+      - swift_conf:/etc/swift:ro
+      - swift_data:/srv/node
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6001/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.4.1
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+  object-1:
+    hostname: object-1
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    entrypoint: ["/opt/swift-scripts/start-service.sh"]
+    command: ["swift-object-server", "/etc/swift/object-server.conf", "verbose"]
+    environment:
+      - DEV=sda1
+    volumes:
+      - swift_conf:/etc/swift:ro
+      - swift_data:/srv/node
+    privileged: true
+    healthcheck:
+      test: ["CMD-SHELL", "mountpoint -q /srv/node/sda1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.10.1
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+  object-2:
+    hostname: object-2
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    entrypoint: ["/opt/swift-scripts/start-service.sh"]
+    command: ["swift-object-server", "/etc/swift/object-server.conf", "verbose"]
+    environment:
+      - DEV=sda1
+    volumes:
+      - swift_conf:/etc/swift:ro
+      - swift_data:/srv/node
+    privileged: true
+    healthcheck:
+      test: ["CMD-SHELL", "mountpoint -q /srv/node/sda1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.10.2
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+  object-3:
+    hostname: object-3
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    entrypoint: ["/opt/swift-scripts/start-service.sh"]
+    command: ["swift-object-server", "/etc/swift/object-server.conf", "verbose"]
+    environment:
+      - DEV=sda1
+    volumes:
+      - swift_conf:/etc/swift:ro
+      - swift_data:/srv/node
+    privileged: true
+    healthcheck:
+      test: ["CMD-SHELL", "mountpoint -q /srv/node/sda1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.10.3
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+  replicator-1:
+    hostname: replicator-1
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    entrypoint: ["/opt/swift-scripts/start-service.sh"]
+    command: ["swift-object-replicator", "/etc/swift/object-server.conf", "verbose"]
+    volumes:
+      - swift_conf:/etc/swift:ro
+      - swift_data:/srv/node
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.11.1
+    depends_on:
+      object-1:
+        condition: service_healthy
+
+  replicator-2:
+    hostname: replicator-2
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    entrypoint: ["/opt/swift-scripts/start-service.sh"]
+    command: ["swift-object-replicator", "/etc/swift/object-server.conf", "verbose"]
+    volumes:
+      - swift_conf:/etc/swift:ro
+      - swift_data:/srv/node
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.11.2
+    depends_on:
+      object-2:
+        condition: service_healthy
+
+  replicator-3:
+    hostname: replicator-3
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    entrypoint: ["/opt/swift-scripts/start-service.sh"]
+    command: ["swift-object-replicator", "/etc/swift/object-server.conf", "verbose"]
+    volumes:
+      - swift_conf:/etc/swift:ro
+      - swift_data:/srv/node
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.11.3
+    depends_on:
+      object-3:
+        condition: service_healthy
+
+volumes:
+  swift_conf:
+  swift_data:
+  swift_cache:
+
+networks:
+  swift_cluster:
+    driver: overlay
+    attachable: true
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1

@@ -1,0 +1,6 @@
+[default]
+access_key = test:tester
+secret_key = testing
+host_base = localhost:8080
+host_bucket = localhost:8080
+use_https = False

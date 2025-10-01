@@ -1,30 +1,22 @@
-#!/bin/sh
-set -e
+#!/bin/bash
+set -x
+SERVER=${1:-object}
+CONF=${2:-object-server.conf}
+if [[ $SERVER == "account" ]]; then DEV_PATH="sdb0_account" ; elif [[ $SERVER == "container" ]]; then DEV_PATH="sdb0_container" ; else NUM=$(echo $HOSTNAME | grep -o '[0-9]\+$') ; DEV_PATH="sda1_object$NUM" ; fi
+DEV="/srv/node/$DEV_PATH"
 
-SWIFT_CONF_DIR=${SWIFT_CONF_DIR:-/etc/swift}
-ROLE=${SWIFT_ROLE:-object}  # object, container, account
-CONF_FILE=${SWIFT_CONF_DIR}/${ROLE}-server.conf
+##mount -o remount,rw /dev/loop0/ /src/node/sdb0
+#tail -f /dev/null
+#
+while [ ! -f /etc/swift/object.ring.gz ]; do echo "Waiting rings..."; sleep 5; done
+if ! mountpoint -q $DEV; then
+  IMG="$DEV.img"
+  mkdir -p $DEV
 
-# wait for config/rings
-/opt/swift-scripts/wait-for-files.sh ${CONF_FILE} ${SWIFT_CONF_DIR}/${ROLE}.ring.gz || true
-
-if [ ! -f "${CONF_FILE}" ]; then
-  echo "Missing ${CONF_FILE}" >&2
-  exit 1
+  mount -o remount,rw $DEV 2>/dev/null || true
+  chown -R swift:swift $DEV
+  echo "Ready $DEV"
 fi
-
-case "${ROLE}" in
-  object)
-    exec swift-object-server ${CONF_FILE}
-    ;;
-  container)
-    exec swift-container-server ${CONF_FILE}
-    ;;
-  account)
-    exec swift-account-server ${CONF_FILE}
-    ;;
-  *)
-    echo "Unknown SWIFT_ROLE ${ROLE}" >&2
-    exit 2
-    ;;
-esac
+rsyslogd -n &
+su swift
+exec $SERVER $CONF verbose "$@"

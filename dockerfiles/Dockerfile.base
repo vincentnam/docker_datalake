@@ -1,0 +1,39 @@
+FROM debian:bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Create swift system user
+RUN groupadd --system swift && \
+    useradd --system --gid swift --home-dir /var/lib/swift --shell /bin/false swift && \
+    mkdir -p /etc/swift /var/log/swift /var/cache/swift /srv/node /var/lib/swift && \
+    chown -R swift:swift /etc/swift /var/log/swift /var/cache/swift /srv/node /var/lib/swift
+
+# Install Swift and dependencies via APT only (version 2.30.0-4 in bookworm)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        swift \
+        swift-account \
+        swift-container \
+        swift-object \
+        swift-proxy \
+        python3-swiftclient \
+        memcached \
+        xfsprogs \
+        rsync \
+        memcached \
+        netcat-openbsd \
+        curl \
+        rsyslog \
+        ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+COPY ../entrypoints/ /opt/swift-scripts/
+# Expose ports for services
+EXPOSE 8080 11211 6000-6012
+
+# Switch to swift user
+#USER swift
+WORKDIR /var/lib/swift
+
+# Default CMD (overridden in compose)
+CMD ["/bin/bash"]

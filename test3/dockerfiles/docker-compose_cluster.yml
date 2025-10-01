@@ -1,0 +1,81 @@
+services:
+    init:
+      build:
+        context: .
+        dockerfile: Dockerfile.base
+      volumes:
+        - ./conf/:/etc/swift
+        - ./data/:/internal_dev/
+        - ./build_script:/scripts/
+      command: sh /scripts/init.sh
+      privileged: true
+      networks:
+        - swift_cluster
+
+    account-1:
+      hostname: account-1
+      build:
+        context: .
+        dockerfile: dockerfiles/Dockerfile.base
+      entrypoint: ["sh","/scripts/account/account-1.sh"]
+      volumes:
+          - ./conf/:/etc/swift
+          - ./data/:/internal_dev/
+          - ./build_script:/scripts/
+      privileged: true
+      restart: always
+      networks:
+        swift_cluster:
+          ipv4_address: 10.5.3.1
+      depends_on:
+        init:
+          condition: service_completed_successfully
+    object-1:
+      hostname: object-1
+      build:
+        context: .
+        dockerfile: dockerfiles/Dockerfile.base
+      entrypoint: ["sh","/scripts/object/object-1.sh"]
+      volumes:
+          - ./conf/:/etc/swift
+          - ./data/:/internal_dev/
+          - ./build_script:/scripts/
+      privileged: true
+      restart: always
+      networks:
+        swift_cluster:
+          ipv4_address: 10.5.2.1
+      depends_on:
+        init:
+          condition: service_completed_successfully
+    container-1:
+      hostname: container-1
+      build:
+        context: .
+        dockerfile: dockerfiles/Dockerfile.base
+      entrypoint: ["sh","/scripts/container/container-1.sh"]
+      volumes:
+          - ./conf/:/etc/swift
+          - ./data/:/internal_dev/
+          - ./build_script:/scripts/
+      privileged: true
+      restart: always
+      networks:
+        swift_cluster:
+          ipv4_address: 10.5.4.1
+      depends_on:
+        init:
+          condition: service_completed_successfully
+volumes:
+  swift_conf:
+  swift_data:
+  swift_cache:
+
+networks:
+  swift_cluster:
+    driver: overlay
+    attachable: true
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1

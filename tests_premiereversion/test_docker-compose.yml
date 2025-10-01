@@ -1,0 +1,207 @@
+# docker-compose.yml pour OpenStack Swift multi-containers lightweight
+# Supprime auth (TempAuth via proxy pipeline). Répartition: proxy=1, account/container=1, object/replicator=3.
+# Utilisation: docker-compose up -d; swift -A http://localhost:8080/auth/v1.0 -U test:tester -K testing stat
+
+services:
+
+  proxy-1:
+    hostname : proxy-1
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    command: swift-proxy-server /etc/swift/proxy-server.conf
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./etc/swift:/etc/swift:ro
+      - swift_cache:/var/cache/swift
+#    environment:
+#      - SWIFT_REPLICAS=3
+    healthcheck:
+      test: ["CMD", "swift", "stat"]
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.1.1
+
+
+
+
+  account-1:
+    # Le load balancing est automatique, peut être problématique
+    hostname : account-1
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    command: swift-account-server /etc/swift/account-server.conf
+    volumes:
+      - ./etc/swift:/etc/swift:ro
+      - swift_data:/srv/node
+    depends_on:
+      - proxy-1
+    deploy:
+      replicas: 1
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.3.1
+
+
+  container-1:
+    hostname : container-1
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    command: swift-container-server /etc/swift/container-server.conf
+    volumes:
+      - ./etc/swift:/etc/swift:ro
+      - swift_data:/srv/node
+    depends_on:
+      - proxy-1
+    deploy:
+      replicas: 1
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.2.1
+
+
+
+  object-1:
+    hostname : object-1
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    command: swift-object-server /etc/swift/object-server.conf
+    volumes:
+      - ./etc/swift:/etc/swift:ro
+      - swift_data:/srv/node
+    depends_on:
+      - proxy-1
+
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.10.3
+
+
+
+  object-2:
+    hostname : object-2
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    command: swift-object-server /etc/swift/object-server.conf
+    volumes:
+      - ./etc/swift:/etc/swift:ro
+      - swift_data:/srv/node
+    depends_on:
+      - proxy-1
+
+    restart: always
+    networks:
+      swift_cluster:
+
+
+
+
+
+  object-3:
+    hostname : object-3
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    command: swift-object-server /etc/swift/object-server.conf
+    volumes:
+      - ./etc/swift:/etc/swift:ro
+      - swift_data:/srv/node
+    depends_on:
+      - proxy-1
+    restart: always
+    networks:
+      swift_cluster:
+
+
+
+
+  replicator-1:
+    hostname : replicator-1
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    command: swift-object-replicator /etc/swift/object-server.conf
+    volumes:
+      - ./etc/swift:/etc/swift:ro
+      - swift_data:/srv/node
+    depends_on:
+      - object-1
+#    deploy:
+#      replicas: 3
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.11.1
+
+
+
+
+  replicator-2:
+    hostname : replicator-2
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    command: swift-object-replicator /etc/swift/object-server.conf
+    volumes:
+      - ./etc/swift:/etc/swift:ro
+      - swift_data:/srv/node
+    depends_on:
+      - object-2
+#    deploy:
+#      replicas: 3
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.11.2
+
+  replicator-3:
+    hostname : replicator-3
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.base
+    command: swift-object-replicator /etc/swift/object-server.conf
+    volumes:
+      - ./etc/swift:/etc/swift:ro
+      - swift_data:/srv/node
+    depends_on:
+      - object-3
+#    deploy:
+#      replicas: 3
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.11.3
+
+
+
+volumes:
+  swift_data:
+  swift_cache:
+
+networks:
+  swift_cluster:
+    driver: overlay
+    attachable: true
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
+          aux_addresses:
+            proxy-1 : 10.5.1.1
+            container-1: 10.5.2.1
+            user-1: 10.5.3.1
+            object-1: 10.5.10.1
+            object-2: 10.5.10.2
+            object-3: 10.5.10.3
+            replicator-1: 10.5.11.1
+            replicator-2: 10.5.11.2
+            replicator-3: 10.5.11.3
