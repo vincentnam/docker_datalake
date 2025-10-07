@@ -53,7 +53,6 @@ for i in $(seq $NB_MANAGEMENT_NODE); do
       entrypoint: ["sh","/scripts/management/management-$i.sh"]
       volumes:
           - ./conf/:/etc/swift
-          - ./data/:/internal_dev/
           - ./scripts:/scripts/
       privileged: true
       ports:
@@ -213,7 +212,7 @@ for i in $(seq $NB_STORAGE_NODE); do
       entrypoint: ["sh","/scripts/storage/storage-$i.sh"]
       volumes:
           - ./conf/:/etc/swift
-          - ./data/:/internal_dev/
+          - ./data/:/srv/
           - ./scripts:/scripts/
           - ./rsyncd/rsyncd-$i.conf:/etc/rsyncd.conf
       privileged: true
@@ -227,13 +226,29 @@ for i in $(seq $NB_STORAGE_NODE); do
 EOF
   cat << EOF > scripts/storage/storage-$i.sh
 #!/bin/bash
-ls /internal_dev
-mkdir -p /srv/node/swift-storage-d-$i;
 
+
+get_loop_for_device_number() {
+  local number="$1"
+  local output
+  output=$(losetup -l 2>/dev/null | tail -n +2 | awk '{for(i=1; i<=NF; i++) if ($i ~ /swift-storage-d-'"$number"'$/) {print $1; exit}}')
+  echo "${output:-null}"
+}
+
+
+ls /internal_dev
+mkdir -p /srv/node/swift-storage-d-$i /internal_dev
+
+truncate --size 1G /internal_dev/swift-storage-d-$i
 #dd if=/dev/zero of=/internal_dev/swift-storage-d-$i bs=1024k count=10
-losetup --find --show /internal_dev/swift-storage-d-$i
+#dd if=/dev/zero of=/internal_dev/swift-storage-d-$i bs=1024k count=10
+mkfs.xfs -f -L size=512 /internal_dev/swift-storage-d-$i
+losetup -f /internal_dev/swift-storage-d-$i -v
+losetup
+
+
 #/dev/loop0
-mkfs.xfs -f -L size=512 /dev/loop0
+
 
 mount -t xfs -o noatime  /dev/loop0 /srv/node/swift-storage-d-$i
 
