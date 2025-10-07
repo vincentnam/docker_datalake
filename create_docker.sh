@@ -228,12 +228,12 @@ EOF
   cat << EOF > scripts/storage/storage-$i.sh
 #!/bin/bash
 ls /internal_dev
-echo $DEVICE_NAME
+mkdir -p /srv/node/swift-storage-d-$i;
+
 #dd if=/dev/zero of=/internal_dev/swift-storage-d-$i bs=1024k count=10
 losetup --find --show /internal_dev/swift-storage-d-$i
 #/dev/loop0
 mkfs.xfs -f -L size=512 /dev/loop0
-mkdir -p /srv/node/$DEVICE_NAME;
 
 mount -t xfs -o noatime  /dev/loop0 /srv/node/swift-storage-d-$i
 
