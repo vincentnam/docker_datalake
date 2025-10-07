@@ -1,0 +1,65 @@
+services:
+    init:
+      build:
+        context: test4
+        dockerfile: Dockerfile.base
+      volumes:
+        - ./conf/:/etc/swift
+        - ./data/:/internal_dev/
+        - ./scripts:/scripts/
+      command: sh /scripts/init.sh
+      privileged: true
+      networks:
+        - swift_cluster
+
+    management-1:
+      hostname: management-1
+      build:
+        context: test4
+        dockerfile: Dockerfile.base
+      entrypoint: ["sh","/scripts/management/management-1.sh"]
+      volumes:
+          - ./conf/:/etc/swift
+          - ./data/:/internal_dev/
+          - ./scripts:/scripts/
+      privileged: true
+      ports:
+        - "8080:8080"
+      restart: always
+      networks:
+        swift_cluster:
+          ipv4_address: 10.5.10.1
+      depends_on:
+        init:
+          condition: service_completed_successfully
+    storage-1:
+      hostname: storage-1
+      build:
+        context: test4
+        dockerfile: Dockerfile.base
+      entrypoint: ["sh","/scripts/storage/storage-1.sh"]
+      volumes:
+          - ./conf/:/etc/swift
+          - ./data/:/internal_dev/
+          - ./scripts:/scripts/
+          - ./rsyncd/rsyncd-1.conf:/etc/rsyncd.conf
+      privileged: true
+      restart: always
+      networks:
+        swift_cluster:
+          ipv4_address: 10.5.1.1
+      depends_on:
+        init:
+          condition: service_completed_successfully
+volumes:
+  swift_conf:
+  swift_data:
+  swift_cache:
+
+networks:
+  swift_cluster:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
