@@ -262,7 +262,8 @@ rsyslogd
 
 swift-account-server /etc/swift/account/account-$i.conf verbose &
 swift-object-server /etc/swift/object/object-$i.conf verbose &
-swift-container-server /etc/swift/container/container-$i.conf verbose
+swift-container-server /etc/swift/container/container-$i.conf &
+wait
 
 EOF
 
@@ -299,13 +300,13 @@ devices = /srv/node/
 bind_ip = 0.0.0.0
 bind_port = 6201
 workers = 2
-log_facility = LOG_LOCAL3
+log_facility = LOG_LOCAL7
 
 [pipeline:main]
 pipeline = healthcheck recon container-server
 
 [app:container-server]
-use = egg:swift#object
+use = egg:swift#container
 
 [filter:recon]
 use = egg:swift#recon
