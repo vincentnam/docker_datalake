@@ -5,7 +5,7 @@ services:
         dockerfile: Dockerfile.base
       volumes:
         - ./conf/:/etc/swift
-        - ./data/:/internal_dev/
+        - ./data/:/srv/
         - ./scripts:/scripts/
       command: sh /scripts/init.sh
       privileged: true
@@ -20,7 +20,6 @@ services:
       entrypoint: ["sh","/scripts/management/management-1.sh"]
       volumes:
           - ./conf/:/etc/swift
-          - ./data/:/internal_dev/
           - ./scripts:/scripts/
       privileged: true
       ports:
@@ -51,10 +50,7 @@ services:
       depends_on:
         init:
           condition: service_completed_successfully
-volumes:
-  swift_conf:
-  swift_data:
-  swift_cache:
+
 
 networks:
   swift_cluster:

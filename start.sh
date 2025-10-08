@@ -1,9 +1,9 @@
 #!/bin/bash
-
+set -x
 #sudo docker swarm leave --force
 #yes | sudo docker  system prune -a
 # Exécuter la commande initiale et capturer la sortie (stderr et stdout)
-output=$(sudo docker swarm init 2>&1)
+#output=$(sudo docker swarm init 2>&1)
 
 echo $output
 #

@@ -29,7 +29,7 @@ services:
         dockerfile: Dockerfile.base
       volumes:
         - ./conf/:/etc/swift
-        - ./data/:/internal_dev/
+        - ./data/:/srv/
         - ./scripts:/scripts/
       command: sh /scripts/init.sh
       privileged: true
@@ -212,7 +212,7 @@ for i in $(seq $NB_STORAGE_NODE); do
       entrypoint: ["sh","/scripts/storage/storage-$i.sh"]
       volumes:
           - ./conf/:/etc/swift
-          - ./data/:/srv/
+          - ./data/:/internal_dev/
           - ./scripts:/scripts/
           - ./rsyncd/rsyncd-$i.conf:/etc/rsyncd.conf
       privileged: true
@@ -240,17 +240,11 @@ ls /internal_dev
 mkdir -p /srv/node/swift-storage-d-$i /internal_dev
 
 truncate --size 1G /internal_dev/swift-storage-d-$i
-#dd if=/dev/zero of=/internal_dev/swift-storage-d-$i bs=1024k count=10
-#dd if=/dev/zero of=/internal_dev/swift-storage-d-$i bs=1024k count=10
 mkfs.xfs -f -L size=512 /internal_dev/swift-storage-d-$i
 losetup -f /internal_dev/swift-storage-d-$i -v
 losetup
 
-
-#/dev/loop0
-
-
-mount -t xfs -o noatime  /dev/loop0 /srv/node/swift-storage-d-$i
+mount -t xfs -o noatime  /dev/loop0 /srv/node/swift-storage-d-1
 
 #truncate -s $NODE_STORAGE_SIZE /internal_dev/$DEVICE_NAME;
 #echo "    created storage device /internal_dev/$DEVICE_NAME of $NODE_STORAGE_SIZE";
@@ -398,10 +392,7 @@ done
 
 
 cat <<EOF >> docker-compose_cluster.yml
-volumes:
-  swift_conf:
-  swift_data:
-  swift_cache:
+
 
 networks:
   swift_cluster:
