@@ -1,7 +1,7 @@
 services:
     init:
       build:
-        context: .
+        context: ..
         dockerfile: Dockerfile.base
       volumes:
         - ./conf/:/etc/swift
@@ -15,7 +15,7 @@ services:
     management-1:
       hostname: management-1
       build:
-        context: .
+        context: ..
         dockerfile: Dockerfile.base
       entrypoint: ["sh","/scripts/management/management-1.sh"]
       volumes:
@@ -34,7 +34,7 @@ services:
     storage-1:
       hostname: storage-1
       build:
-        context: .
+        context: ..
         dockerfile: Dockerfile.base
       entrypoint: ["sh","/scripts/storage/storage-1.sh"]
       volumes:
