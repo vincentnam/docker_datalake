@@ -1,0 +1,16 @@
+set -x
+swift-ring-builder object.builder create 10 1 1
+swift-ring-builder container.builder create 10 1 1
+swift-ring-builder account.builder create 10 1 1
+swift-ring-builder /etc/swift/account.builder add --region 1 --zone 1 --ip 10.5.1.1 --port 6200 --device swift-storage-d-1 --weight 1
+swift-ring-builder /etc/swift/container.builder add --region 1 --zone 1 --ip 10.5.1.1 --port 6201 --device swift-storage-d-1 --weight 1
+swift-ring-builder /etc/swift/object.builder add --region 1 --zone 1 --ip 10.5.1.1 --port 6202 --device swift-storage-d-1 --weight 1
+swift-ring-builder object.builder rebalance 
+swift-ring-builder account.builder rebalance 
+swift-ring-builder container.builder rebalance
+swift-ring-builder account.builder write_ring
+swift-ring-builder object.builder write_ring
+swift-ring-builder container.builder write_ring
+swift-ring-builder object.builder
+swift-ring-builder account.builder
+swift-ring-builder container.builder

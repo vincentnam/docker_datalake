@@ -1,0 +1,59 @@
+ARG JUPYTERHUB_VERSION
+FROM quay.io/jupyterhub/jupyterhub:$JUPYTERHUB_VERSION
+
+RUN python3 -m pip install --no-cache-dir \
+    dockerspawner \
+    jupyterhub-nativeauthenticator
+
+RUN pip install jupydrive_s3
+
+
+CMD ["jupyterhub", "-f", "/srv/jupyterhub/jupyterhub_config.py"]
+
+
+
+
+
+
+#
+## Utiliser l'image officielle JupyterHub 5.3.0
+#FROM jupyterhub/jupyterhub:5.3.0
+#
+## Installer Node.js pour construire l'application React
+#RUN apt-get update && apt-get install -y curl
+#
+###RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+##RUN apt-get install -y nodejs
+##
+### Installer Nginx pour servir les fichiers statiques
+#RUN apt-get install -y nginx
+#
+## Copier l'application React
+#COPY web_gui /srv/react-app
+#WORKDIR /srv/react-app
+#RUN npm install && npm run build
+#
+## Configurer Nginx
+#RUN echo 'server { \
+#    listen 80; \
+#    location /static/react-app/ { \
+#        alias /srv/react-app/build/; \
+#    } \
+#    location / { \
+#        proxy_pass http://localhost:8000; \
+#        proxy_set_header Host $host; \
+#        proxy_set_header X-Real-IP $remote_addr; \
+#    } \
+#}' > /etc/nginx/sites-available/default
+#
+## Copier les templates personnalisés
+#COPY templates /srv/jupyterhub/templates
+#
+## Copier la configuration JupyterHub
+#COPY jupyterhub_config.py /etc/jupyterhub/jupyterhub_config.py
+#
+## Exposer le port 80
+#EXPOSE 80
+#
+## Lancer Nginx et JupyterHub
+#CMD service nginx start && jupyterhub --config /etc/jupyterhub/jupyterhub_config.py

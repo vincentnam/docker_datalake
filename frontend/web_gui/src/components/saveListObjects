@@ -1,0 +1,717 @@
+// import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
+// import { TreeTable } from "primereact/treetable";
+// import { Column } from "primereact/column";
+// import { ProgressBar } from "primereact/progressbar";
+// import { Toast } from "primereact/toast";
+// import { Dialog } from "primereact/dialog";
+// import { Sidebar } from "primereact/sidebar";
+// import { DndProvider } from "react-dnd";
+// import { HTML5Backend } from "react-dnd-html5-backend";
+// import { useDrag, useDrop } from "react-dnd";
+// import mc from "../util/mc";
+// import prettyBytes from "pretty-bytes";
+// import { orderBy } from "lodash";
+// import history from "../history";
+// import { useLocation, useParams } from "react-router-dom";
+// import { useDropzone } from "react-dropzone";
+// import fileReaderStream from "filereader-stream";
+// import Papa from "papaparse";
+// import JSZip from "jszip";
+// import * as XLSX from "xlsx";
+// // Ajout de wavesurfer.js pour les ondes sonores
+// import WaveSurfer from "wavesurfer.js";
+//
+// const ItemTypes = {
+//   FILE: "file",
+// };
+//
+// const getAsNode = (objectInfo) => {
+//   const { name = "", pathName, displayKey, leaf, children, size, ...dataKeys } = objectInfo;
+//   return {
+//     key: `${pathName}/${name}`.replace(/\/+/g, "/"),
+//     data: {
+//       ...dataKeys,
+//       name: displayKey,
+//       size: size > 0 ? prettyBytes(size) : "",
+//       rawSize: size,
+//     },
+//     leaf: leaf,
+//     children: children,
+//   };
+// };
+//
+// const listObjectsOfPrefix = (bName, pathName, keyPrefix = "") => {
+//   return new Promise((resolve, reject) => {
+//     let objList = [];
+//     try {
+//       const objectsStream = mc.extensions.listObjectsV2WithMetadata(bName, pathName, true, ""); // Ajout de recursive=true
+//       objectsStream.on("data", async (chunk) => {
+//         const { name: objectName = "", prefix } = chunk;
+//         const displayPathName = objectName.indexOf("/") !== -1 ? objectName.substring(pathName.length + 1) : objectName;
+//         let nodeInfo;
+//         if (!prefix) {
+//           nodeInfo = getAsNode({
+//             ...chunk,
+//             name: objectName,
+//             displayKey: displayPathName,
+//             leaf: true,
+//             pathName: keyPrefix || pathName,
+//           });
+//         } else {
+//           let displayPrefix = prefix.substring(0, prefix.length - 1);
+//           displayPrefix = displayPrefix.indexOf("/") !== -1 ? displayPrefix.substring(pathName.length + 1) : displayPrefix;
+//           nodeInfo = getAsNode({
+//             ...chunk,
+//             name: prefix,
+//             displayKey: displayPrefix,
+//             children: null,
+//             leaf: false,
+//             pathName: keyPrefix || pathName,
+//           });
+//         }
+//         if (nodeInfo) {
+//           objList.push(nodeInfo);
+//         }
+//       });
+//       objectsStream.on("error", (err) => {
+//         console.error("Erreur lors de la liste des objets", err);
+//         reject([]);
+//       });
+//       objectsStream.on("end", () => {
+//         resolve(objList);
+//       });
+//     } catch (err) {
+//       console.error("Erreur dans listObjectsOfPrefix", err);
+//       reject([]);
+//     }
+//   });
+// };
+//
+// const ListObjects = forwardRef((props, ref) => {
+//   const { bucketName, path: initialPath, onDelete } = props;
+//   const { search } = useLocation();
+//   const params = new URLSearchParams(search);
+//   const prefixPath = params.get("path") || initialPath || "";
+//   const [objects, setObjects] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [uploadProgress, setUploadProgress] = useState({});
+//   const [showProgressDialog, setShowProgressDialog] = useState(false);
+//   const [sortOrder, setSortOrder] = useState(1);
+//   const [bucketInfo, setBucketInfo] = useState({
+//     creationDate: "2023-01-01",
+//     accessType: "Privé",
+//     totalSize: "0 B",
+//     objectCount: 0,
+//   });
+//   const [selectedNode, setSelectedNode] = useState(null);
+//   const [sidebarVisible, setSidebarVisible] = useState(false);
+//   const [previewHtml, setPreviewHtml] = useState("");
+//   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+//   const toast = useRef(null);
+//   const waveSurferRef = useRef(null);
+//
+//   const showSuccess = (message) => {
+//     toast.current.show({ severity: "success", summary: "Succès", detail: message, life: 3000 });
+//   };
+//
+//   const showError = (message) => {
+//     toast.current.show({ severity: "error", summary: "Erreur", detail: message, life: 3000 });
+//   };
+//
+//   const loadObjectList = async (bucketName, path) => {
+//     try {
+//       const objList = await listObjectsOfPrefix(bucketName, path || "");
+//       return orderBy(objList, ["leaf", "data.name"], ["asc", "desc"]);
+//     } catch (err) {
+//       showError("Impossible de charger la liste des objets.");
+//       return [];
+//     }
+//   };
+//
+//   const loadBucketObjects = async (bucketName, path) => {
+//     setLoading(true);
+//     try {
+//       const objList = await loadObjectList(bucketName, path);
+//       setObjects(objList);
+//
+//       const totalSize = objList.reduce((sum, node) => sum + (node.data.rawSize || 0), 0);
+//       const objectCount = objList.filter((node) => node.leaf).length;
+//       setBucketInfo((prev) => ({
+//         ...prev,
+//         totalSize: prettyBytes(totalSize),
+//         objectCount,
+//       }));
+//     } catch (err) {
+//       console.error("Erreur dans loadBucketObjects", err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+//
+//   useImperativeHandle(ref, () => ({
+//     refresh(b = bucketName, p = prefixPath) {
+//       loadBucketObjects(b, p);
+//     },
+//     refreshChildren(evt) {
+//       onExpand(evt);
+//     },
+//   }));
+//
+//   useEffect(() => {
+//     loadBucketObjects(bucketName, prefixPath);
+//   }, [bucketName, prefixPath]);
+//
+//   const onDrop = async (acceptedFiles) => {
+//     setLoading(true);
+//     setShowProgressDialog(true);
+//     const filesList = Array.from(acceptedFiles);
+//     const progressUpdates = {};
+//     filesList.forEach((file) => {
+//       progressUpdates[file.name] = { progress: 0, status: "uploading" };
+//     });
+//     setUploadProgress(progressUpdates);
+//
+//     for (const file of filesList) {
+//       try {
+//         const readStream = fileReaderStream(file);
+//         const filePath = `${prefixPath ? prefixPath.replace(/\/+$/, "") + "/" : ""}${file.name}`.replace(
+//           /\/+/g,
+//           "/"
+//         );
+//         const uploadDate = new Date().toISOString();
+//
+//         let progress = 0;
+//         const interval = setInterval(() => {
+//           progress += 10;
+//           setUploadProgress((prev) => ({
+//             ...prev,
+//             [file.name]: { ...prev[file.name], progress },
+//           }));
+//           if (progress >= 100) clearInterval(interval);
+//         }, 500);
+//
+//         await mc.putObject(bucketName, filePath, readStream, {
+//           "Content-Type": file.type || "application/octet-stream",
+//           "X-Amz-Meta-App": "SPH-REACT-JS",
+//           "X-Amz-Meta-Upload-Date": uploadDate,
+//         });
+//
+//         clearInterval(interval);
+//         setUploadProgress((prev) => ({
+//           ...prev,
+//           [file.name]: { progress: 100, status: "completed" },
+//         }));
+//         showSuccess(`Fichier ${file.name} téléversé avec succès`);
+//       } catch (err) {
+//         console.error(err);
+//         setUploadProgress((prev) => ({
+//           ...prev,
+//           [file.name]: { progress: 0, status: "error" },
+//         }));
+//         showError(`Échec du téléversement de ${file.name}`);
+//       }
+//     }
+//
+//     setLoading(false);
+//     const allDone = Object.values(uploadProgress).every(
+//       ({ status }) => status === "completed" || status === "error"
+//     );
+//     if (allDone) {
+//       setShowProgressDialog(false);
+//     }
+//     loadBucketObjects(bucketName, prefixPath);
+//   };
+//
+//   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, noClick: true });
+//
+//   const downloadFile = async (path, filename) => {
+//     setLoading(true);
+//     try {
+//       const signedUrl = await mc.presignedGetObject(bucketName, path, 60, {
+//         "response-content-disposition": `attachment; filename="${filename}"`,
+//       });
+//       const link = document.createElement("a");
+//       link.href = signedUrl;
+//       link.target = "_self";
+//       document.body.appendChild(link);
+//       link.click();
+//       document.body.removeChild(link);
+//     } catch (err) {
+//       showError("Impossible de télécharger le fichier");
+//     }
+//     setLoading(false);
+//   };
+//
+//   const getPreviewContent = async (node) => {
+//     const { key, data } = node;
+//     const fileType = data.metadata && data.metadata["content-type"] ? data.metadata["content-type"] : "";
+//     const container = document.createElement("div");
+//
+//     if (fileType.startsWith("image/")) {
+//       try {
+//         const signedUrl = await mc.presignedGetObject(bucketName, key, 60);
+//         container.innerHTML = `<img src="${signedUrl}" alt="Preview" style="max-width: 100%; max-height: 400px;" />`;
+//       } catch (err) {
+//         console.error("Erreur prévisualisation image", err);
+//       }
+//     } else if (fileType === "application/pdf") {
+//       try {
+//         const signedUrl = await mc.presignedGetObject(bucketName, key, 60);
+//         container.innerHTML = `<iframe src="${signedUrl}" style="width: 100%; height: 400px;" />`;
+//       } catch (err) {
+//         console.error("Erreur prévisualisation PDF", err);
+//       }
+//     } else if (fileType === "text/csv") {
+//       try {
+//         const streamChunksBuf = [];
+//         const dataStream = await new Promise((resolve, reject) => {
+//           mc.getObject(bucketName, key, (err, stream) => {
+//             if (err) reject(err);
+//             else resolve(stream);
+//           });
+//         });
+//         dataStream.on("data", (chunk) => streamChunksBuf.push(Buffer.from(chunk)));
+//         const csvContent = await new Promise((resolve) => {
+//           dataStream.on("end", () => resolve(Buffer.concat(streamChunksBuf).toString()));
+//         });
+//         const parsed = Papa.parse(csvContent, { header: true, preview: 5 });
+//         if (parsed.data.length > 0) {
+//           const headers = Object.keys(parsed.data[0]);
+//           let table = '<table style="border-collapse: collapse; width: 100%;">';
+//           table += "<tr>" + headers.map((h) => `<th style="border: 1px solid #ddd; padding: 8px;">${h}</th>`).join("") + "</tr>";
+//           parsed.data.forEach((row) => {
+//             table +=
+//               "<tr>" +
+//               headers.map((h) => `<td style="border: 1px solid #ddd; padding: 8px;">${row[h] || ""}</td>`).join("") +
+//               "</tr>";
+//           });
+//           table += "</table>";
+//           container.innerHTML = table;
+//         }
+//       } catch (err) {
+//         console.error("Erreur prévisualisation CSV", err);
+//       }
+//     } else if (fileType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+//       try {
+//         const streamChunksBuf = [];
+//         const dataStream = await new Promise((resolve, reject) => {
+//           mc.getObject(bucketName, key, (err, stream) => {
+//             if (err) reject(err);
+//             else resolve(stream);
+//           });
+//         });
+//         dataStream.on("data", (chunk) => streamChunksBuf.push(Buffer.from(chunk)));
+//         const xlsxContent = await new Promise((resolve) => {
+//           dataStream.on("end", () => resolve(Buffer.concat(streamChunksBuf)));
+//         });
+//         const workbook = XLSX.read(xlsxContent, { type: "buffer" });
+//         const sheetName = workbook.SheetNames[0];
+//         const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, range: 5 });
+//         const headers = worksheet[0] || [];
+//         let table = '<table style="border-collapse: collapse; width: 100%;">';
+//         table += "<tr>" + headers.map((h) => `<th style="border: 1px solid #ddd; padding: 8px;">${h}</th>`).join("") + "</tr>";
+//         worksheet.slice(1, 6).forEach((row) => {
+//           table +=
+//             "<tr>" +
+//             headers.map((h, i) => `<td style="border: 1px solid #ddd; padding: 8px;">${row[i] || ""}</td>`).join("") +
+//             "</tr>";
+//         });
+//         table += "</table>";
+//         container.innerHTML = table;
+//       } catch (err) {
+//         console.error("Erreur prévisualisation XLSX", err);
+//       }
+//     } else if (fileType.startsWith("audio/")) {
+//       try {
+//         const signedUrl = await mc.presignedGetObject(bucketName, key, 60);
+//         const waveContainer = document.createElement("div");
+//         waveContainer.style.height = "100px";
+//         waveContainer.style.marginBottom = "10px";
+//         const waveSurfer = WaveSurfer.create({
+//           container: waveContainer,
+//           waveColor: "#4a90e2",
+//           progressColor: "#50e3c2",
+//           height: 100,
+//           barWidth: 2,
+//           responsive: true,
+//         });
+//         waveSurfer.load(signedUrl);
+//         const audioElement = document.createElement("audio");
+//         audioElement.controls = true;
+//         audioElement.innerHTML = `<source src="${signedUrl}" type="${fileType}">Votre navigateur ne supporte pas l'audio.</source>`;
+//         container.appendChild(waveContainer);
+//         container.appendChild(audioElement);
+//         waveSurfer.on("ready", () => {
+//           setPreviewHtml(container.innerHTML); // Mettre à jour après chargement
+//         });
+//         waveSurfer.on("error", (err) => console.error("Erreur wavesurfer", err));
+//       } catch (err) {
+//         console.error("Erreur prévisualisation audio", err);
+//       }
+//     } else if (["application/zip", "application/x-tar"].includes(fileType)) {
+//       try {
+//         const streamChunksBuf = [];
+//         const dataStream = await new Promise((resolve, reject) => {
+//           mc.getObject(bucketName, key, (err, stream) => {
+//             if (err) reject(err);
+//             else resolve(stream);
+//           });
+//         });
+//         dataStream.on("data", (chunk) => streamChunksBuf.push(Buffer.from(chunk)));
+//         const zipData = await new Promise((resolve) => {
+//           dataStream.on("end", () => resolve(Buffer.concat(streamChunksBuf)));
+//         });
+//         const zip = await JSZip.loadAsync(zipData);
+//         const fileList = Object.keys(zip.files).join(", ");
+//         container.innerHTML = `<div>Fichiers : ${fileList || "Aucun fichier détecté"}</div>`;
+//       } catch (err) {
+//         console.error("Erreur prévisualisation archive", err);
+//       }
+//     }
+//     return container.innerHTML || `<p>Prévisualisation non disponible pour ce type de fichier.</p>`;
+//   };
+//
+//   const onExpand = async (event) => {
+//     if (!event.node.leaf && !event.node.children) {
+//       const { node: { key: nodePath } } = event;
+//       try {
+//         const children = await listObjectsOfPrefix(bucketName, nodePath);
+//         const updatedNode = { ...event.node, children };
+//         setObjects((prev) => prev.map((node) => (node.key === event.node.key ? updatedNode : node)));
+//       } catch (err) {
+//         console.error("Erreur lors du chargement des enfants", err);
+//         showError("Impossible de charger les fichiers du dossier.");
+//       }
+//     }
+//   };
+//
+//   const rowClassName = (node) => {
+//     return { "p-highlight": false, "object-tree-row": true };
+//   };
+//
+//   const actionTemplate = (node) => {
+//     const fileType = node.data.metadata && node.data.metadata["content-type"] ? node.data.metadata["content-type"] : "";
+//     return (
+//       <div className="flex gap-2">
+//         <button
+//           type="button"
+//           className="bg-white hover:bg-gray-200 flex items-center p-1 rounded"
+//           onClick={() => onDelete?.({ node })}
+//           disabled={!node.leaf}
+//         >
+//           <i className="pi pi-trash"></i>
+//         </button>
+//         {!node.leaf && (
+//           <button
+//             type="button"
+//             className="bg-white hover:bg-gray-200 flex items-center p-1 rounded"
+//             onClick={() => {
+//               history.push(`/buckets/${bucketName}?path=${node.key}`);
+//             }}
+//           >
+//             <i className="pi pi-window-maximize"></i>
+//           </button>
+//         )}
+//         {node.leaf && fileType && (
+//           <button
+//             type="button"
+//             className="bg-white hover:bg-gray-200 flex items-center p-1 rounded"
+//             onClick={() => downloadFile(node.key, node.data.name)}
+//           >
+//             <i className="pi pi-download"></i>
+//           </button>
+//         )}
+//       </div>
+//     );
+//   };
+//
+//   const onSort = (event) => {
+//     const newSortOrder = sortOrder === 1 ? -1 : 1;
+//     setSortOrder(newSortOrder);
+//     const sortedList = orderBy(objects, ["leaf", "data.name"], ["asc", newSortOrder === 1 ? "asc" : "desc"]);
+//     setObjects(sortedList);
+//   };
+//
+//   const createFolder = async () => {
+//     const folderName = prompt("Entrez le nom du dossier :");
+//     if (folderName) {
+//       const folderPath = `${prefixPath ? prefixPath.replace(/\/+$/, "") + "/" : ""}${folderName}/`.replace(/\/+/g, "/");
+//       try {
+//         await mc.putObject(bucketName, folderPath, "", {
+//           "Content-Type": "application/x-directory",
+//         });
+//         showSuccess(`Dossier ${folderName} créé avec succès`);
+//         loadBucketObjects(bucketName, prefixPath);
+//       } catch (err) {
+//         console.error("Erreur lors de la création du dossier", err);
+//         showError("Impossible de créer le dossier.");
+//       }
+//     }
+//   };
+//
+//   const refreshBucket = () => {
+//     loadBucketObjects(bucketName, prefixPath);
+//   };
+//
+//   const FileRow = ({ node }) => {
+//     const [{ isDragging }, drag] = useDrag(() => ({
+//       type: ItemTypes.FILE,
+//       item: { key: node.key },
+//       collect: (monitor) => ({
+//         isDragging: monitor.isDragging(),
+//       }),
+//     }));
+//
+//     return (
+//       <span
+//         ref={drag}
+//         className={`cursor-pointer text-blue-500 hover:text-blue-700 transition-colors duration-200 ${isDragging ? "opacity-50" : ""}`}
+//         onClick={(e) => {
+//           e.stopPropagation(); // Empêche l'événement de TreeTable d'interférer
+//           setSelectedNode(node);
+//           setSidebarVisible(true);
+//         }}
+//       >
+//         {node.data.name}
+//       </span>
+//     );
+//   };
+//
+//   const FolderRow = ({ node }) => {
+//     const [{ isOver }, drop] = useDrop(() => ({
+//       accept: ItemTypes.FILE,
+//       drop: (item) => moveObject(item.key, node.key),
+//       collect: (monitor) => ({
+//         isOver: monitor.isOver(),
+//       }),
+//     }));
+//
+//     return (
+//       <span
+//         ref={drop}
+//         className={`cursor-pointer ${isOver ? "bg-gray-200" : ""}`}
+//         onClick={(e) => {
+//           e.stopPropagation();
+//           history.push(`/buckets/${bucketName}?path=${node.key}`);
+//         }}
+//       >
+//         {node.data.name}
+//       </span>
+//     );
+//   };
+//
+//   const moveObject = async (sourceKey, targetFolderKey) => {
+//     try {
+//       const filename = sourceKey.split("/").pop();
+//       const destinationKey = `${targetFolderKey}/${filename}`.replace(/\/+/g, "/");
+//       await mc.copyObject(bucketName, sourceKey, destinationKey);
+//       await mc.removeObject(bucketName, sourceKey);
+//       showSuccess(`Fichier déplacé avec succès vers ${targetFolderKey}`);
+//       loadBucketObjects(bucketName, prefixPath);
+//     } catch (err) {
+//       console.error("Erreur lors du déplacement du fichier", err);
+//       showError("Impossible de déplacer le fichier.");
+//     }
+//   };
+//
+//   useEffect(() => {
+//     if (selectedNode) {
+//       setIsPreviewLoading(true);
+//       getPreviewContent(selectedNode).then((html) => {
+//         setPreviewHtml(html || "<p>Prévisualisation non disponible.</p>");
+//         setIsPreviewLoading(false);
+//       });
+//     } else {
+//       setPreviewHtml("");
+//     }
+//   }, [selectedNode]);
+//
+//   return (
+//     <DndProvider backend={HTML5Backend}>
+//       <Toast ref={toast} />
+//       <div className="flex flex-col h-full">
+//         <div className="bg-gray-100 p-4 border-b flex justify-between items-center">
+//           <div>
+//             <p>Date de création : {bucketInfo.creationDate}</p>
+//             <p>Type d'accès : {bucketInfo.accessType}</p>
+//             <p>Taille totale : {bucketInfo.totalSize}</p>
+//             <p>Nombre d'objets : {bucketInfo.objectCount}</p>
+//           </div>
+//           <div className="flex gap-2">
+//             <button
+//               type="button"
+//               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+//               onClick={createFolder}
+//             >
+//               Créer un dossier
+//             </button>
+//             <button
+//               type="button"
+//               className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+//               onClick={refreshBucket}
+//             >
+//               Rafraîchir
+//             </button>
+//           </div>
+//         </div>
+//         <div {...getRootProps()} className="relative flex-grow overflow-auto">
+//           <input {...getInputProps()} />
+//           {isDragActive && (
+//             <div className="absolute inset-0 flex items-center justify-center bg-gray-200 bg-opacity-50 z-10">
+//               <p className="text-lg font-semibold">Déposez les fichiers ici...</p>
+//             </div>
+//           )}
+//           <div className="flex-grow overflow-auto min-w-min overflow-x-auto">
+//             <TreeTable
+//               className="object-tree-table"
+//               value={objects}
+//               lazy
+//               onExpand={onExpand}
+//               loading={loading}
+//               scrollable
+//               style={{ width: "100%" }}
+//               rowClassName={rowClassName}
+//               sortField="data.name"
+//               sortOrder={sortOrder}
+//               onSort={onSort}
+//               resizableColumns
+//             >
+//               <Column
+//                 field="name"
+//                 header="Nom"
+//                 expander
+//                 body={(node) =>
+//                   node.leaf ? <FileRow node={node} /> : <FolderRow node={node} />
+//                 }
+//                 className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"
+//               />
+//               <Column
+//                 field="rawSize"
+//                 header="Taille"
+//                 sortable
+//                 body={(node) => node.data.size || "-"}
+//                 className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"
+//               />
+//               <Column
+//                 field="uploadDate"
+//                 header="Date de création"
+//                 body={(node) => {
+//                   const uploadDate =
+//                     node.data.metadata && node.data.metadata["X-Amz-Meta-Upload-Date"]
+//                       ? node.data.metadata["X-Amz-Meta-Upload-Date"]
+//                       : "";
+//                   return uploadDate ? new Date(uploadDate).toLocaleString() : "-";
+//                 }}
+//                 sortable
+//                 className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"
+//               />
+//               <Column
+//                 field="lastModified"
+//                 header="Dernière modification"
+//                 body={(node) =>
+//                   node.data.lastModified
+//                     ? new Date(node.data.lastModified).toLocaleString()
+//                     : "-"
+//                 }
+//                 sortable
+//                 className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"
+//               />
+//               <Column
+//                 field="contentType"
+//                 header="Type de contenu"
+//                 body={(node) => {
+//                   const mimeType =
+//                     node.data.metadata && node.data.metadata["content-type"]
+//                       ? node.data.metadata["content-type"]
+//                       : "-";
+//                   return mimeType;
+//                 }}
+//                 sortable
+//                 className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"
+//               />
+//               <Column
+//                 field="etag"
+//                 header="Clé de stockage"
+//                 body={(node) => node.data.etag || "-"}
+//                 sortable
+//                 className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"
+//               />
+//               <Column
+//                 body={actionTemplate}
+//                 style={{ textAlign: "center", position: "sticky", right: 0, background: "white", zIndex: 1 }}
+//                 className="whitespace-nowrap"
+//               />
+//             </TreeTable>
+//           </div>
+//           <div
+//             className="bg-gray-100 border-t border-gray-300 flex items-center justify-center cursor-pointer sticky bottom-0 z-10 h-16"
+//             onClick={() => document.querySelector('input[type="file"]').click()}
+//           >
+//             <p className="text-sm font-semibold">Glissez-déposez vos fichiers ici ou cliquez pour sélectionner</p>
+//           </div>
+//         </div>
+//       </div>
+//       <Sidebar
+//         visible={sidebarVisible}
+//         position="right"
+//         onHide={() => setSidebarVisible(false)}
+//         className="w-1/3 p-6 bg-white shadow-2xl rounded-l-2xl border-l-4 border-blue-500 transition-all duration-300"
+//         style={{ minWidth: "300px", maxWidth: "50%", resize: "horizontal", overflow: "auto" }}
+//       >
+//         {selectedNode && (
+//           <div className="space-y-6">
+//             <h2 className="text-2xl font-bold text-gray-800 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
+//               {selectedNode.data.name}
+//             </h2>
+//             <button
+//               onClick={() => downloadFile(selectedNode.key, selectedNode.data.name)}
+//               className="bg-gradient-to-r from-blue-500 to-green-500 text-white px-6 py-3 rounded-full hover:from-blue-600 hover:to-green-600 transition-all duration-300 transform hover:scale-105"
+//             >
+//               Télécharger
+//             </button>
+//             <div className="p-4 bg-gray-50 rounded-xl shadow-inner">
+//               {isPreviewLoading ? (
+//                 <p className="text-gray-500 text-center italic">Chargement de la prévisualisation...</p>
+//               ) : (
+//                 <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+//               )}
+//             </div>
+//           </div>
+//         )}
+//       </Sidebar>
+//       <Dialog
+//         header="Progression du téléversement"
+//         visible={showProgressDialog}
+//         style={{ width: "30vw", position: "fixed", right: 0, top: 0 }}
+//         onHide={() => setShowProgressDialog(false)}
+//         draggable={false}
+//         resizable={false}
+//       >
+//         <div className="p-4">
+//           {Object.keys(uploadProgress).length > 0 ? (
+//             Object.entries(uploadProgress).map(([fileName, { progress, status }]) => (
+//               <div key={fileName} className="mb-4">
+//                 <div className="flex justify-between mb-1">
+//                   <span>{fileName}</span>
+//                   <span>
+//                     {status === "completed"
+//                       ? "Terminé"
+//                       : status === "error"
+//                       ? "Erreur"
+//                       : `${progress}%`}
+//                   </span>
+//                 </div>
+//                 <ProgressBar value={progress} style={{ height: "20px" }} />
+//               </div>
+//             ))
+//           ) : (
+//             <p>Aucun téléversement en cours.</p>
+//           )}
+//         </div>
+//       </Dialog>
+//     </DndProvider>
+//   );
+// });
+//
+// export default ListObjects;
+

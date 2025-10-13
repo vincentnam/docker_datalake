@@ -1,0 +1,110 @@
+/* src/App.css */
+
+/* Variables CSS */
+:root {
+  --primary-pink: #8a8a8a;
+  /* Pink vif */
+  --dark-pink: #BE185D;
+  /* Pink sombre */
+  --purple-accent: rgb(216, 151, 94) /* Violet pour les hovers */;
+  --neutral-dark: #1F2937;
+  /* Gris sombre pour texte */
+  --neutral-light: #F3F4F6 /* Gris clair pour fond */;
+  --text-dark: #1F2937;
+  /* Texte sombre pour contraste */
+  --text-light: #F3F4F6;
+  /* Texte clair */
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+/* Styles globaux */
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--neutral-light);
+}
+
+.container {
+  max-width: 1200px;
+}
+
+/* Amélioration des liens */
+a {
+  text-decoration: none;
+}
+
+/* Scrollbar stylée */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--neutral-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #8a8a8a;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #575656;
+}
+
+/* TreeTable */
+.p-treetable.object-tree-table .object-tree-row td {
+  height: 48px;
+  padding: 0;
+}
+
+.p-treetable.object-tree-table .p-treetable-tbody > tr > td {
+  height: 48px;
+  padding: 0.1rem;
+}
+
+/* Header */
+header {
+  color: var(--text-dark); /* Texte sombre pour contraste sur fond jaune */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* drop-shadow-lg */
+}
+
+/* Support pour le thème sombre */
+[data-theme="dark"] {
+  --neutral-light: #1F2937;
+  --text-dark: #D1D5DB; /* Gris clair pour texte en mode sombre */
+}
+
+header[data-theme="dark"] {
+  color: var(--text-dark);
+}
+

@@ -1,0 +1,8 @@
+.minio
+config
+dags
+jupyterhub-data
+plugins
+logs
+.idea
+.env

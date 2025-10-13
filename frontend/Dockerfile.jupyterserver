@@ -1,0 +1,19 @@
+FROM quay.io/jupyter/base-notebook:latest
+
+# Installer minio avec mamba
+RUN mamba install --yes -c conda-forge minio && \
+    mamba clean --all -f -y && \
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
+RUN touch /home/jovyan/test.txt
+# Réinstaller le kernel Jupyter pour s'assurer qu'il utilise l'environnement mis à jour
+RUN python -m ipykernel install --user --name python3 --display-name "Python 3 (ipykernel)"
+
+# Configurer Jupyter Notebook
+RUN jupyter notebook --generate-config && \
+    echo "c.NotebookApp.allow_origin = '*'" >> ~/.jupyter/jupyter_notebook_config.py && \
+    echo "c.NotebookApp.allow_origin_pat = '.*'" >> ~/.jupyter/jupyter_notebook_config.py && \
+    echo "c.NotebookApp.allow_credentials = True" >> ~/.jupyter/jupyter_notebook_config.py && \
+    echo "c.NotebookApp.disable_check_xsrf = True" >> ~/.jupyter/jupyter_notebook_config.py
+
+#CA LANCE PAS CETTE IMAGE ? Je sais pas pourquoi on verra plus tard
