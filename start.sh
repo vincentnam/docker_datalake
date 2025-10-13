@@ -1,3 +1,5 @@
+
+
 (cd ./openstackSwift/; ./start.sh) &
-(cd ./web_gui/; ./start.sh -br )&
+(cd ./frontend/web_gui/; ./start.sh -br )&
 wait
