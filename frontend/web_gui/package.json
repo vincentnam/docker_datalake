@@ -4,9 +4,10 @@
   "private": true,
   "dependencies": {
     "@datalayer/jupyter-react": "^1.0.1",
-    "@emotion/react": "^11.10.4",
-    "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^5.16.4",
+    "@emotion/react": "^11.10.4",
+    "@aws-sdk/client-s3": "^3.910.0",
+    "@tailwindcss/typography": "^0.5.16",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.10.0",

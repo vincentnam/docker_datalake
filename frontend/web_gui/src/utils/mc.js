@@ -6,7 +6,6 @@ const mc = new minio.Client(
             port: 8080,
             accessKey: "test:tester",
             secretKey: "testing",
-            signatureVersion: "v4",
     },
 
 

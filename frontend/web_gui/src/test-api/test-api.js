@@ -12,7 +12,7 @@ try {
     {
       endPoint: "localhost",
       useSSL: false,
-      port: 9000,
+      port: 8080,
       accessKey: "test:tester",
       secretKey: "testing"
     },

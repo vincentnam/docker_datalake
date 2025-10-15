@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+
 #sudo docker swarm leave --force
 #yes | sudo docker  system prune -a
 # Exécuter la commande initiale et capturer la sortie (stderr et stdout)
@@ -60,11 +60,11 @@ cp config_cluster.env scripts/config_cluster.env
 #
 #
 #
-./create_docker.sh
+./create_conf.sh
 
 
 
 #
 #
 #sudo docker stack deploy -c docker-compose_cluster.yml swift_cluster
-sudo docker compose -f docker-compose_cluster.yml up --build
+#sudo docker compose -f docker-compose_cluster.yml up --build

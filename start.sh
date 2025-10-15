@@ -1,5 +1,9 @@
 
+set -x
+./create_docker.sh
 
-(cd ./openstackSwift/; ./start.sh) &
-(cd ./frontend/web_gui/; ./start.sh -br )&
-wait
+(cd ./openstackSwift/; ./init.sh) &
+#(cd ./frontend/; sh ./start.sh -br ) &
+
+
+sudo docker compose -f docker-compose_datalake.yml up

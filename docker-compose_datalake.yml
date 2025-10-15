@@ -1,0 +1,110 @@
+services:
+  initswift:
+    build:
+      context: ./openstackSwift/
+      dockerfile: Dockerfile.base
+    volumes:
+      - ./openstackSwift/conf/:/etc/swift
+      - ./openstackSwift/data/:/srv/
+      - ./openstackSwift/scripts:/scripts/
+    command: sh /scripts/init.sh
+    privileged: true
+    networks:
+      - swift_cluster
+
+  management-1:
+    hostname: management-1
+    build:
+      context: ./openstackSwift/
+      dockerfile: Dockerfile.base
+    entrypoint: ["sh","/scripts/management/management-1.sh"]
+    volumes:
+        - ./openstackSwift/conf/:/etc/swift
+        - ./openstackSwift/scripts:/scripts/
+    privileged: true
+#    ports:
+#      - "8080:8080"
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.10.1
+    depends_on:
+      initswift:
+        condition: service_completed_successfully
+  storage-1:
+    hostname: storage-1
+    build:
+      context: openstackSwift/
+      dockerfile: Dockerfile.base
+    entrypoint: ["sh","/scripts/storage/storage-1.sh"]
+    volumes:
+        - ./openstackSwift/conf/:/etc/swift
+        - ./openstackSwift/data/:/internal_dev/
+        - ./openstackSwift/scripts:/scripts/
+        - ./openstackSwift/rsyncd/rsyncd-1.conf:/etc/rsyncd.conf
+    privileged: true
+    restart: always
+    networks:
+      swift_cluster:
+        ipv4_address: 10.5.1.1
+    depends_on:
+      initswift:
+        condition: service_completed_successfully
+
+
+  web_gui:
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile.web_gui
+    image: web_gui
+    container_name: web_gui
+    volumes:
+      - ./frontend/web_gui:/opt/app/web_gui
+    ports :
+      - 3000:3000
+    networks:
+        swift_cluster:
+          ipv4_address: 10.5.255.1
+
+
+  nginx-proxy:
+    build:
+      context: ./RESTapi/
+      dockerfile: Dockerfile.nginx
+    restart: always
+    volumes:
+      - ./RESTapi/nginx/default.conf:/tmp/default.conf
+    environment:
+      - FLASK_SERVER_ADDR=flask-app:8000
+    ports:
+      - "80:80"
+    depends_on:
+      - flask-app
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:80/health-check || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    command: /app/start.sh
+  flask-app:
+    build:
+      context: ./RESTapi/
+      dockerfile: Dockerfile.flask
+    restart: always
+    ports:
+      - '8000:8000'
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:8000/flask-health-check || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    command: gunicorn -w 3 -t 60 -b 0.0.0.0:8000 app:app
+
+
+networks:
+  swift_cluster:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1

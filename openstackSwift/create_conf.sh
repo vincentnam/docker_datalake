@@ -21,22 +21,6 @@ policy_type = replication
 EOF
 
 
-cat <<EOF > docker-compose_cluster.yml
-services:
-    init:
-      build:
-        context: .
-        dockerfile: Dockerfile.base
-      volumes:
-        - ./conf/:/etc/swift
-        - ./data/:/srv/
-        - ./scripts:/scripts/
-      command: sh /scripts/init.sh
-      privileged: true
-      networks:
-        - swift_cluster
-
-EOF
 export $(grep -v '^#' ./config_cluster.env | sed 's/\r$//' | xargs)
 
 NODE_STORAGE_SIZE="1GB"
@@ -44,27 +28,6 @@ NODE_STORAGE_SIZE="1GB"
 for i in $(seq $NB_MANAGEMENT_NODE); do
 
 
-  cat << EOF >> docker-compose_cluster.yml
-    management-$i:
-      hostname: management-$i
-      build:
-        context: .
-        dockerfile: Dockerfile.base
-      entrypoint: ["sh","/scripts/management/management-$i.sh"]
-      volumes:
-          - ./conf/:/etc/swift
-          - ./scripts:/scripts/
-      privileged: true
-      ports:
-        - "8080:8080"
-      restart: always
-      networks:
-        swift_cluster:
-          ipv4_address: 10.5.10.$i
-      depends_on:
-        init:
-          condition: service_completed_successfully
-EOF
   cat << EOF > scripts/management/management-$i.sh
 DEVICE_NAME="swift-account-d-$i"
 #
@@ -171,6 +134,7 @@ use = egg:swift#symlink
 # To enable, add the s3api middleware to the pipeline before tempauth
 [filter:s3api]
 use = egg:swift#s3api
+#cors_preflight_allow_origin = http://10.5.255.1:3000,http://localhost:3000
 cors_preflight_allow_origin = *
 
 # Example to create root secret: `openssl rand -base64 32`
@@ -203,27 +167,7 @@ done
 
 
 for i in $(seq $NB_STORAGE_NODE); do
-  cat << EOF >> docker-compose_cluster.yml
-    storage-$i:
-      hostname: storage-$i
-      build:
-        context: .
-        dockerfile: Dockerfile.base
-      entrypoint: ["sh","/scripts/storage/storage-$i.sh"]
-      volumes:
-          - ./conf/:/etc/swift
-          - ./data/:/internal_dev/
-          - ./scripts:/scripts/
-          - ./rsyncd/rsyncd-$i.conf:/etc/rsyncd.conf
-      privileged: true
-      restart: always
-      networks:
-        swift_cluster:
-          ipv4_address: 10.5.1.$i
-      depends_on:
-        init:
-          condition: service_completed_successfully
-EOF
+
   cat << EOF > scripts/storage/storage-$i.sh
 #!/bin/bash
 
@@ -391,14 +335,3 @@ done
 
 
 
-cat <<EOF >> docker-compose_cluster.yml
-
-
-networks:
-  swift_cluster:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 10.5.0.0/16
-          gateway: 10.5.0.1
-EOF
