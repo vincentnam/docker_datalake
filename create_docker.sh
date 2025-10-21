@@ -16,6 +16,9 @@ EOF
 ###################################
 cat <<EOF >> docker-compose_datalake.yml
   initswift:
+    profiles:
+      - backend
+      - storage
     build:
       context: ./openstackSwift/
       dockerfile: Dockerfile.base
@@ -38,6 +41,9 @@ for i in $(seq $NB_MANAGEMENT_NODE); do
 
   cat << EOF >> docker-compose_datalake.yml
   management-$i:
+    profiles:
+      - backend
+      - storage
     hostname: management-$i
     build:
       context: ./openstackSwift/
@@ -63,6 +69,9 @@ done
 for i in $(seq $NB_STORAGE_NODE); do
   cat << EOF >> docker-compose_datalake.yml
   storage-$i:
+    profiles:
+      - backend
+      - storage
     hostname: storage-$i
     build:
       context: openstackSwift/
@@ -95,6 +104,9 @@ cat << EOF >> docker-compose_datalake.yml
 
 
   web_gui:
+    profiles:
+      - frontend
+      - webgui
     build:
       context: ./frontend/
       dockerfile: Dockerfile.web_gui
@@ -115,6 +127,8 @@ EOF
 ###################################
 cat <<EOF >> docker-compose_datalake.yml
   nginx-proxy:
+    profiles:
+      - frontend
     build:
       context: ./RESTapi/
       dockerfile: Dockerfile.nginx
@@ -141,6 +155,9 @@ cat <<EOF >> docker-compose_datalake.yml
       context: ./RESTapi/
       dockerfile: Dockerfile.flask
     restart: always
+    profiles:
+      - frontend
+      - RESTApi
     volumes:
       - "./RESTapi/flask/app.py:/home/app/app.py"
     ports:

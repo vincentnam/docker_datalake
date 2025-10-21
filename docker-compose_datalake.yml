@@ -59,7 +59,7 @@ services:
     image: web_gui
     container_name: web_gui
     volumes:
-      - ./frontend/web_gui:/opt/app/web_gui
+      - ./frontend/web_gui:/opt/app/web_gui/
     ports :
       - 3000:3000
     networks:
