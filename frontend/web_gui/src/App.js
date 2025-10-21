@@ -5,37 +5,80 @@ import BrowseBucket from "./components/BrowseBucket";
 import AppLayout from "./Layout/AppLayout";
 import history from "./history";
 import "./App.css";
-import { S3Client, CreateBucketCommand, ListBucketsCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+
+
 const App = () => {
 const [buckets, setBuckets] = useState([]);
   const [status, setStatus] = useState('Initializing...');
 
+
   useEffect(() => {
-    const s3 = new S3Client({
-      region: 'us-east-1',
-      endpoint: '10.5.10.1:8080',
-      credentials: {
-        accessKeyId: 'test:tester',
-        secretAccessKey: 'testing',
-      },
-      forcePathStyle: true,
+  const fetchBuckets = async () => {
+    try {
+      console.log("PIPI")
+      const token = localStorage.getItem('jwtToken');  // Récupérez JWT stocké (ex. post-login)
+      const response = await fetch('http://localhost:5000/buckets', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-    });
+      console.log("PIPI")
+      console.log("PIPI")
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      console.log(data)
+      console.log(data.buckets)
+      console.log("COUCOU")
+      setBuckets([...data.buckets]);
+      console.log("APRES COUCOU")
+      console.log(data.buckets)
+      console.log(buckets)
+      setStatus('Buckets listés');
+      console.log(buckets)
+      console.log("PIPI")
+    } catch (err) {
 
-    const fetchBuckets = async () => {
-      try {
-        const data = await s3.send(new ListBucketsCommand({}));
-        setBuckets(data.Buckets || []);
-        setStatus('Buckets listés');
-      } catch (err) {
-        setStatus(`Erreur: ${err.name} - ${err.message}`);
-        console.error('Erreur complète:', err); // Log détaillé
-      }
-    };
+      setStatus(`Erreur: ${err.message}`);
+      console.error('Erreur complète:', err);
+    }
+  };
 
-    fetchBuckets();
-    console.log('Buckets', buckets);
-  }, []);
+  fetchBuckets();
+  console.log('Buckets', buckets);
+}, [buckets]);
+
+
+
+
+  // useEffect(() => {
+  //   const s3 = new S3Client({
+  //     region: 'us-east-1',
+  //     endpoint: '10.5.10.1:8080',
+  //     credentials: {
+  //       accessKeyId: 'test:tester',
+  //       secretAccessKey: 'testing',
+  //     },
+  //     forcePathStyle: true,
+  //
+  //   });
+  //
+  //   const fetchBuckets = async () => {
+  //     try {
+  //       const data = await s3.send(new ListBucketsCommand({}));
+  //       setBuckets(data.Buckets || []);
+  //       setStatus('Buckets listés');
+  //     } catch (err) {
+  //       setStatus(`Erreur: ${err.name} - ${err.message}`);
+  //       console.error('Erreur complète:', err); // Log détaillé
+  //     }
+  //   };
+  //
+  //   fetchBuckets();
+  //   console.log('Buckets', buckets);
+  // }, []);
 
   return (
     <div>
