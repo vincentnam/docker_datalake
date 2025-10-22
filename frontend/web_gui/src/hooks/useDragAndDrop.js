@@ -1,6 +1,5 @@
 import { useState } from "react";
-import fileReaderStream from "filereader-stream";
-import mc from "../utils/mc";
+import { uploadObject } from "../utils/s3client";
 
 const useDragAndDrop = (bucketName, prefixPath, loadBucketObjects, toastRef) => {
   const [uploadProgress, setUploadProgress] = useState({});
@@ -25,27 +24,16 @@ const useDragAndDrop = (bucketName, prefixPath, loadBucketObjects, toastRef) => 
 
     for (const file of filesList) {
       try {
-        const readStream = fileReaderStream(file);
         const filePath = `${prefixPath ? prefixPath.replace(/\/+$/, "") + "/" : ""}${file.name}`.replace(/\/+/g, "/");
         const uploadDate = new Date().toISOString();
 
-        let progress = 0;
-        const interval = setInterval(() => {
-          progress += 10;
+        await uploadObject(bucketName, filePath, file, (progress) => {
           setUploadProgress((prev) => ({
             ...prev,
             [file.name]: { ...prev[file.name], progress },
           }));
-          if (progress >= 100) clearInterval(interval);
-        }, 500);
-
-        await mc.putObject(bucketName, filePath, readStream, {
-          "Content-Type": file.type || "application/octet-stream",
-          "X-Amz-Meta-App": "SPH-REACT-JS",
-          "X-Amz-Meta-Upload-Date": uploadDate,
         });
 
-        clearInterval(interval);
         setUploadProgress((prev) => ({
           ...prev,
           [file.name]: { progress: 100, status: "completed" },
@@ -56,7 +44,7 @@ const useDragAndDrop = (bucketName, prefixPath, loadBucketObjects, toastRef) => 
           ...prev,
           [file.name]: { progress: 0, status: "error" },
         }));
-        showError(`Échec du téléversement de ${file.name}`);
+        showError(`Échec du téléversement de ${file.name}: ${err.message}`);
       }
     }
 

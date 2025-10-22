@@ -17,7 +17,6 @@ const useObjectList = (bucketName, prefixPath) => {
   const [selectedNode, setSelectedNode] = useState(null);
   const [sidebarVisible, setSidebarVisible] = useState(false);
 
-
     // Fonction pour trier récursivement les nœuds
 const sortNodes = (nodes, field, order) => {
   const sortedNodes = orderBy(
@@ -54,6 +53,8 @@ const sortNodes = (nodes, field, order) => {
     setLoading(true);
     try {
       const objList = await loadObjectList(bName, pName);
+      console.log("OBJECT LIST")
+      console.log(objList)
       setObjects(objList);
       const totalSize = objList.reduce((sum, node) => sum + (node.data.rawSize || 0), 0);
       const objectCount = objList.filter((node) => node.leaf).length;

@@ -80,7 +80,7 @@ const ListObjects = forwardRef(({ bucketName, path: initialPath, onDelete }, ref
     "p-highlight": false,
     "object-tree-row": true,
   });
-
+  console.log(bucketInfo)
   return (
     <DndProvider backend={HTML5Backend}>
       <Toast ref={toast} />
@@ -163,7 +163,9 @@ const ListObjects = forwardRef(({ bucketName, path: initialPath, onDelete }, ref
                   header="Date de téléversement"
                   body={(node) => {
 
-                    const uploadDate = node.data.metadata?.["X-Amz-Meta-Upload-Date"] || "";
+                    console.log("node :",  node)
+                    const uploadDate = node.data.creationDate ;
+
                     return uploadDate ? new Date(uploadDate).toLocaleString() : "-";
                   }}
                   sortable
@@ -181,7 +183,7 @@ const ListObjects = forwardRef(({ bucketName, path: initialPath, onDelete }, ref
               <Column
                   field="contentType"
                   header="Type de contenu"
-                  body={(node) => node.data.metadata?.["content-type"] || "-"}
+                  body={(node) => node.data["contentType"] || "-"}
                   sortable
                   sortField="contentType"
                   className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"
@@ -189,7 +191,7 @@ const ListObjects = forwardRef(({ bucketName, path: initialPath, onDelete }, ref
               <Column
                   field="etag"
                   header="Clé de stockage"
-                  body={(node) => node.data.etag || "-"}
+                  body={(node) => node.data.eTag || "-"}
                   sortable
                   sortField="etag"
                   className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"

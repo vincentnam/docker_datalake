@@ -1,109 +1,122 @@
-import mc from "./mc";
 import prettyBytes from "pretty-bytes";
 import { orderBy } from "lodash";
-
+import { listObjects, uploadObject } from "../utils/s3client"; // Ajustez le chemin d'import
 const getAsNode = (objectInfo) => {
-  const { name = "", pathName = "", displayKey, leaf, children, size, ...dataKeys } = objectInfo;
+  const {
+    key = "",
+    prefix = "",
+    displayKey,
+    leaf,
+    children,
+    size,
+    lastModified,
+    contentType,
+    creationDate,
+    metadata = {},
+    eTag,
+    storageClass,
+    ...dataKeys
+  } = objectInfo;
 
+  console.log(metadata)
   return {
     ...objectInfo,
-    key: `${pathName}${name}`.replace(/\/+/g, "/"), // Normaliser les barres obliques
+    key: key || prefix,
     data: {
       ...dataKeys,
-      name: displayKey,
-      size: size > 0 ? prettyBytes(size) : "",
-      rawSize: size,
+      name: displayKey || key.split('/').pop() || 'unknown',
+      size: size > 0 ? prettyBytes(size) : (leaf ? '0 B' : '-'),
+      rawSize: size || 0,
+      lastModified: lastModified ? (typeof lastModified === 'string' ? lastModified : lastModified.toISOString()) : null,
+      creationDate: creationDate || metadata?.CreationDate || null,
+      contentType: contentType || 'application/octet-stream',
+      metadata: metadata,  // Dict complet
+      eTag,  // Ajout pour complétude
+      storageClass: storageClass || 'STANDARD',
     },
-    leaf: leaf,
-    children: children,
+    leaf,
+    children,
   };
 };
+export const listObjectsOfPrefix = async (bucketName, pathName = "") => {
+  try {
+    // Normaliser le préfixe
+    const normalizedPath = pathName ? `${pathName.replace(/^\/+|\/+$/g, "")}/` : "";
 
-export const listObjectsOfPrefix = (bName, pathName = "") => {
-  return new Promise((resolve, reject) => {
-    let objList = [];
+    // Fetch depuis API
+    const response = await listObjects(bucketName, normalizedPath);
+    console.log("response: ", response);
+    let { objects = [], prefixes = [] } = response;  // Fallback array vide si undefined
+
+    // Garde-fou : Assurer arrays
+    if (!Array.isArray(objects)) objects = [];
+    if (!Array.isArray(prefixes)) prefixes = [];
+
+    const objList = [];
     const seenKeys = new Set();
 
-    try {
-      // Normaliser le préfixe pour MinIO (barre oblique finale si non vide)
-      const normalizedPath = pathName ? `${pathName.replace(/^\/+|\/+$/g, "")}/` : "";
-      // console.log(`listObjectsOfPrefix: bucket=${bName}, prefix=${normalizedPath}`);
+    // Transformer objets (fichiers) en nœuds
+    for (const obj of objects) {  // Retiré || [] car déjà fallback
+      const { key: objectKey = "", eTag, size = 0, lastModified, contentType, creationDate, metadata = {} } = obj;
 
-      const objectsStream = mc.extensions.listObjectsV2WithMetadata(bName, normalizedPath, false, "");
+      console.log("object : ", obj)
 
-      objectsStream.on("data", (chunk) => {
-        const { name: objectName = "", prefix = "", size = 0, lastModified, contentType } = chunk;
-        const isFolder = prefix || objectName.endsWith("/");
-        // console.log(chunk);
-        // console.log("cunk");
-        // Nom effectif (préfixe pour dossiers, nom pour fichiers)
-        const effectiveName = prefix || objectName;
-        if (!effectiveName) {
-          console.log("Ignorer chunk invalide:", chunk);
-          return;
-        }
+      if (!objectKey || seenKeys.has(objectKey)) continue;
+      seenKeys.add(objectKey);
 
-        // Ignorer l'objet si c'est le préfixe lui-même
-        if (effectiveName === normalizedPath || (isFolder && effectiveName.replace(/\/+$/, "") === normalizedPath.replace(/\/+$/, ""))) {
-          console.log(`Ignorer préfixe lui-même: ${effectiveName}`);
-          return;
-        }
+      const isFolder = objectKey.endsWith("/");
+      const displayKey = objectKey.replace(normalizedPath, '').replace(/^\/+|\/+$/g, "");
+      if (!displayKey) continue;
 
-        // Calculer le nom d'affichage (partie après le préfixe)
-        let displayKey = effectiveName.replace(/^\/+|\/+$/g, "");
-        if (normalizedPath && displayKey.startsWith(normalizedPath)) {
-          displayKey = displayKey.substring(normalizedPath.length);
-        }
-        if (isFolder && displayKey.endsWith("/")) {
-          displayKey = displayKey.substring(0, displayKey.length - 1);
-        }
-        if (!displayKey) {
-          console.log("displayKey vide, ignoré:", chunk);
-          return;
-        }
-
-        // Clé unique pour éviter les doublons
-        const nodeKey = `${normalizedPath}${displayKey}`.replace(/\/+/g, "/");
-        if (seenKeys.has(nodeKey)) {
-          console.log(`Ignorer doublon: ${nodeKey}`);
-          return;
-        }
-        seenKeys.add(nodeKey);
-
-        const nodeInfo = getAsNode({
-          ...chunk,
-          name: displayKey,
-          displayKey: displayKey,
-          pathName: normalizedPath,
-          size,
-          lastModified,
-          contentType,
-          children: isFolder ? [] : undefined, // Dossiers ont children vide
-          leaf: !isFolder,
-        });
-
-        objList.push(nodeInfo);
-      });
-
-      objectsStream.on("error", (err) => {
-        console.error("Erreur dans objectsStream:", err);
-        reject([]);
-      });
-
-      objectsStream.on("end", () => {
-        console.log(`listObjectsOfPrefix terminé: ${objList.length} objets`, objList);
-        resolve(orderBy(objList, ["leaf", "data.name"], ["asc", "asc"]));
-      });
-    } catch (err) {
-      console.error("Erreur dans listObjectsOfPrefix:", err);
-      reject([]);
+      objList.push(getAsNode({
+        key: objectKey,
+        name: displayKey,
+        displayKey,
+        pathName: normalizedPath,
+        size,
+        eTag,
+        lastModified,
+        contentType,
+        creationDate:metadata.creationdate,
+        metadata,
+        leaf: !isFolder,
+        children: isFolder ? [] : undefined,
+      }));
     }
-  });
+
+    // Transformer prefixes (dossiers) en nœuds
+    for (const p of prefixes) {
+      const { prefix: folderPrefix } = p;
+      if (!folderPrefix || seenKeys.has(folderPrefix)) continue;
+      seenKeys.add(folderPrefix);
+
+      const displayKey = folderPrefix.replace(normalizedPath, '').replace(/\/+$/, '');
+      if (!displayKey) continue;
+
+      objList.push(getAsNode({
+        key: folderPrefix,
+        name: displayKey,
+        displayKey,
+        pathName: normalizedPath,
+        leaf: false,
+        children: [],
+        contentType: 'folder',
+        metadata: {},
+      }));
+    }
+
+    console.log(`listObjectsOfPrefix: ${objList.length} nodes générés`);  // Debug
+    return orderBy(objList, ["leaf", "data.name"], ["asc", "asc"]);
+  } catch (err) {
+    console.error("Erreur dans listObjectsOfPrefix:", err);
+    return [];
+  }
 };
 
 export const loadObjectList = async (bucketName, path) => {
   try {
     const objList = await listObjectsOfPrefix(bucketName, path || "");
+    console.log("OBJLIST : ", objList)
     return orderBy(objList, ["leaf", "data.name"], ["asc", "asc"]);
   } catch (err) {
     console.error("Erreur dans loadObjectList:", err);
@@ -113,7 +126,6 @@ export const loadObjectList = async (bucketName, path) => {
 
 export const createFolder = async (bucketName, prefixPath, folderName) => {
   const folderPath = `${prefixPath ? prefixPath.replace(/\/+$/, "") + "/" : ""}${folderName}/`.replace(/\/+/g, "/");
-  await mc.putObject(bucketName, folderPath, "", {
-    "Content-Type": "application/x-directory",
-  });
+  const emptyBlob = new Blob([], { type: "application/x-directory" });
+  await uploadObject(bucketName, folderPath, emptyBlob);
 };
