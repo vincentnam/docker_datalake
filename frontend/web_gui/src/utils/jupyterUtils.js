@@ -1,13 +1,14 @@
 import axios from 'axios';
 
-const JUPYTERHUB_API_URL = 'http://localhost:8000/hub/api';
-const JUPYTERHUB_TOKEN = '809fc4ba5d964619972e5a4b3f21e911';
+const JUPYTERHUB_URL = process.env.REACT_APP_JUPYTERHUB_URL || 'http://localhost:8000';
+const JUPYTERHUB_TOKEN = process.env.REACT_APP_JUPYTERHUB_TOKEN || '';
 
-const getUserServerApiUrl = (username) => `http://localhost:8000/user/${username}/api`;
+const getJupyterHubApiUrl = () => `${JUPYTERHUB_URL}/hub/api`;
+const getUserServerApiUrl = (username) => `${JUPYTERHUB_URL}/user/${username}/api`;
 
 export const checkJupyterServer = async (username) => {
   try {
-    const response = await axios.get(`${JUPYTERHUB_API_URL}/users/${username}`, {
+    const response = await axios.get(`${getJupyterHubApiUrl()}/users/${username}`, {
       headers: {
         Authorization: `token ${JUPYTERHUB_TOKEN}`,
       },
@@ -24,7 +25,7 @@ export const checkJupyterServer = async (username) => {
 export const startJupyterServer = async (username) => {
   try {
     const response = await axios.post(
-      `${JUPYTERHUB_API_URL}/users/${username}/server`,
+      `${getJupyterHubApiUrl()}/users/${username}/server`,
       {},
       {
         headers: {
@@ -98,11 +99,11 @@ export const getOrCreateSession = async (username, path) => {
 };
 
 export const getKernelWebSocketUrl = (username, kernelId) => {
-  return `ws://localhost:8000/user/${username}/api/kernels/${kernelId}/channels?token=${JUPYTERHUB_TOKEN}`;
+  return `ws://${new URL(JUPYTERHUB_URL).host}/user/${username}/api/kernels/${kernelId}/channels?token=${JUPYTERHUB_TOKEN}`;
 };
 
 export const createNotebook = async (username, notebookName, content) => {
-  const apiUrl = `http://localhost:8000/user/${username}/api/contents/${notebookName}.ipynb`;
+  const apiUrl = `${JUPYTERHUB_URL}/user/${username}/api/contents/${notebookName}.ipynb`;
   try {
     const response = await axios.put(
       apiUrl,
@@ -116,5 +117,5 @@ export const createNotebook = async (username, notebookName, content) => {
 };
 
 export const getNotebookUrl = (username, notebookName) => {
-  return `http://localhost:8000/user/${username}/notebooks/${notebookName}.ipynb`;
+  return `${JUPYTERHUB_URL}/user/${username}/notebooks/${notebookName}.ipynb`;
 };

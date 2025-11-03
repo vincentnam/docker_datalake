@@ -3,6 +3,7 @@ services:
     profiles:
       - backend
       - storage
+      - datalake
     build:
       context: ./openstackSwift/
       dockerfile: Dockerfile.base
@@ -19,6 +20,7 @@ services:
     profiles:
       - backend
       - storage
+      - datalake
     hostname: management-1
     build:
       context: ./openstackSwift/
@@ -41,6 +43,7 @@ services:
     profiles:
       - backend
       - storage
+      - datalake
     hostname: storage-1
     build:
       context: openstackSwift/
@@ -59,12 +62,51 @@ services:
     depends_on:
       initswift:
         condition: service_completed_successfully
+  hub:
+    build:
+      context: ./jupyter/
+      dockerfile: Dockerfile.jupyterhub
+      args:
+        JUPYTERHUB_VERSION: 5.3.0
+    profiles:
+      - datalake
+      - frontend
+      - process
+    restart: always
+    image: jupyterhub
+    container_name: jupyterhub
+    networks:
+      jupyterhub-network:
+      swift_cluster:
+          ipv4_address: 10.5.100.1
+
+    volumes:
+      # The JupyterHub configuration file
+      - ./jupyter/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
+      # Bind Docker socket on the host so we can connect to the daemon from
+      # within the container
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      # Bind Docker volume on host for JupyterHub database and cookie secrets
+      - ./jupyter/jupyterhub-data:/data
+    ports:
+      - 8000:8000
+    environment:
+      # This username will be a JupyterHub admin
+      JUPYTERHUB_ADMIN: admin
+      # All containers will join this network
+      DOCKER_NETWORK_NAME: jupyterhub-network
+      # JupyterHub will spawn this Notebook image for users
+      DOCKER_NOTEBOOK_IMAGE: cors_base-notebook:latest
+      #DOCKER_NOTEBOOK_IMAGE: quay.io/jupyter/base-notebook:latest
+      # Notebook directory inside user image
+      DOCKER_NOTEBOOK_DIR: /home/jovyan/work
 
 
   web_gui:
     profiles:
       - frontend
       - webgui
+      - datalake
     build:
       context: ./frontend/
       dockerfile: Dockerfile.web_gui
@@ -80,6 +122,7 @@ services:
   nginx-proxy:
     profiles:
       - frontend
+      - datalake
     build:
       context: ./RESTapi/
       dockerfile: Dockerfile.nginx
@@ -108,18 +151,18 @@ services:
     restart: always
     profiles:
       - frontend
-      - RESTAPI
+      - RESTApi
+      - datalake
     volumes:
       - "./RESTapi/flask/app.py:/home/app/app.py"
     ports:
       - '5000:5000'
     healthcheck:
-      test: ["CMD-SHELL", "curl --silent --fail localhost:5000/flask-health-check || exit 1"]
+      test: ["CMD-SHELL", "curl --silent --fail localhost:8000/flask-health-check || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 3
     command: gunicorn -w 3 -t 60 -b 0.0.0.0:5000 app:app
-#    command: flask --app app run
     networks:
       swift_cluster:
         ipv4_address: 10.5.255.2
@@ -127,6 +170,8 @@ services:
 
 
 networks:
+  jupyterhub-network:
+    name: jupyterhub-network
   swift_cluster:
     driver: bridge
     ipam:

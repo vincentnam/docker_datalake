@@ -19,6 +19,7 @@ cat <<EOF >> docker-compose_datalake.yml
     profiles:
       - backend
       - storage
+      - datalake
     build:
       context: ./openstackSwift/
       dockerfile: Dockerfile.base
@@ -44,6 +45,7 @@ for i in $(seq $NB_MANAGEMENT_NODE); do
     profiles:
       - backend
       - storage
+      - datalake
     hostname: management-$i
     build:
       context: ./openstackSwift/
@@ -72,6 +74,7 @@ for i in $(seq $NB_STORAGE_NODE); do
     profiles:
       - backend
       - storage
+      - datalake
     hostname: storage-$i
     build:
       context: openstackSwift/
@@ -95,6 +98,52 @@ EOF
 done
 
 ###################################
+# JUPYTER HUB SECTION
+###################################
+
+cat << EOF >> docker-compose_datalake.yml
+  hub:
+    build:
+      context: ./jupyter/
+      dockerfile: Dockerfile.jupyterhub
+      args:
+        JUPYTERHUB_VERSION: 5.3.0
+    profiles:
+      - datalake
+      - frontend
+      - process
+    restart: always
+    image: jupyterhub
+    container_name: jupyterhub
+    networks:
+      jupyterhub-network:
+      swift_cluster:
+          ipv4_address: 10.5.100.1
+
+    volumes:
+      # The JupyterHub configuration file
+      - ./jupyter/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
+      # Bind Docker socket on the host so we can connect to the daemon from
+      # within the container
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      # Bind Docker volume on host for JupyterHub database and cookie secrets
+      - ./jupyter/jupyterhub-data:/data
+    ports:
+      - 8000:8000
+    environment:
+      # This username will be a JupyterHub admin
+      JUPYTERHUB_ADMIN: admin
+      # All containers will join this network
+      DOCKER_NETWORK_NAME: jupyterhub-network
+      # JupyterHub will spawn this Notebook image for users
+      DOCKER_NOTEBOOK_IMAGE: cors_base-notebook:latest
+      #DOCKER_NOTEBOOK_IMAGE: quay.io/jupyter/base-notebook:latest
+      # Notebook directory inside user image
+      DOCKER_NOTEBOOK_DIR: /home/jovyan/work
+EOF
+
+
+###################################
 # WEB GUI SECTION
 ###################################
 
@@ -107,6 +156,7 @@ cat << EOF >> docker-compose_datalake.yml
     profiles:
       - frontend
       - webgui
+      - datalake
     build:
       context: ./frontend/
       dockerfile: Dockerfile.web_gui
@@ -129,6 +179,7 @@ cat <<EOF >> docker-compose_datalake.yml
   nginx-proxy:
     profiles:
       - frontend
+      - datalake
     build:
       context: ./RESTapi/
       dockerfile: Dockerfile.nginx
@@ -158,6 +209,7 @@ cat <<EOF >> docker-compose_datalake.yml
     profiles:
       - frontend
       - RESTApi
+      - datalake
     volumes:
       - "./RESTapi/flask/app.py:/home/app/app.py"
     ports:
@@ -180,6 +232,8 @@ cat <<EOF >> docker-compose_datalake.yml
 
 
 networks:
+  jupyterhub-network:
+    name: jupyterhub-network
   swift_cluster:
     driver: bridge
     ipam:
