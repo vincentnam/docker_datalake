@@ -161,7 +161,7 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
           {selectedNode && (
             <Panel header={selectedNode.data.name} className="flex-grow overflow-y-auto">
               <p>Taille : {selectedNode.data.size || "-"}</p>
-              <p>Type : {selectedNode.data.metadata?.["content-type"] || "-"}</p>
+              <p>Type : {selectedNode.data["contentType"] || "-"}</p>
               <p>
                 Dernière modification :{" "}
                 {selectedNode.data.lastModified
@@ -170,8 +170,8 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
               </p>
               <p>
                 Date de téléversement :{" "}
-                {selectedNode.data.metadata?.["X-Amz-Meta-Upload-Date"]
-                  ? new Date(selectedNode.data.metadata["X-Amz-Meta-Upload-Date"]).toLocaleString()
+                {selectedNode.data.creationDate
+                  ? new Date(selectedNode.data.creationDate).toLocaleString()
                   : "-"}
               </p>
               <PrimaryButton

@@ -1,0 +1,2997 @@
+=== package.json ===
+{
+  "name": "test_web_gui",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@datalayer/jupyter-react": "^1.0.1",
+    "@testing-library/jest-dom": "^5.16.4",
+    "@emotion/react": "^11.10.4",
+    "@aws-sdk/client-s3": "^3.910.0",
+    "@tailwindcss/typography": "^0.5.16",
+    "@testing-library/react": "^13.3.0",
+    "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.10.0",
+    "d3": "^7.9.0",
+    "dayjs": "^1.11.5",
+    "dompurify": "^3.2.6",
+    "filereader-stream": "^2.0.0",
+    "highlight.js": "^11.11.1",
+    "jszip": "^3.10.1",
+    "lodash": "^4.17.21",
+    "marked": "^15.0.12",
+    "match-sorter": "^8.0.3",
+    "node-polyfill-webpack-plugin": "^2.0.1",
+    "papaparse": "^5.5.3",
+    "pretty-bytes": "^6.1.1",
+    "primeicons": "^7.0.0",
+    "primereact": "^10.9.6",
+    "react": "^18.2.0",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
+    "react-dom": "^18.2.0",
+    "react-dropzone": "^14.3.8",
+    "react-hook-form": "^7.39.7",
+    "react-router": "^5.2.0",
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "^5.0.1",
+    "react-table": "^7.8.0",
+    "wavesurfer.js": "^7.9.5",
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5"
+  },
+  "scripts": {
+    "start": "GENERATE_SOURCEMAP=false react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
+    "eject": "react-scripts eject",
+    "stop": "pkill --signal SIGINT myApp"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "assert": "^2.0.0",
+    "autoprefixer": "^10.4.13",
+    "block-stream2": "^2.1.0",
+    "browser-or-node": "^1.3.0",
+    "browserify-fs": "^1.0.0",
+    "buffer": "^6.0.3",
+    "buffer-crc32": "^0.2.13",
+    "crypto-browserify": "^3.12.0",
+    "es6-error": "^4.1.1",
+    "fast-xml-parser": "^3.21.1",
+    "https-browserify": "^1.0.0",
+    "ipaddr.js": "^2.0.1",
+    "json-stream": "^1.0.0",
+    "node-process": "^1.0.1",
+    "os-browserify": "^0.3.0",
+    "path-browserify": "^1.0.1",
+    "postcss": "^8.4.19",
+    "prettier": "2.8.0",
+    "process": "^0.11.10",
+    "react-app-rewired": "^2.2.1",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "tailwindcss": "^3.2.4",
+    "timers-browserify": "^2.0.12",
+    "url": "^0.11.0"
+  }
+}
+-e 
+
+
+=== public/index.html ===
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Web site created using create-react-app"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+    <title>MinIO JS SDK Explorer</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  </body>
+</html>
+-e 
+
+
+=== src/App.css ===
+/* src/App.css */
+
+/* Variables CSS */
+:root {
+  --primary-pink: #8a8a8a;
+  /* Pink vif */
+  --dark-pink: #BE185D;
+  /* Pink sombre */
+  --purple-accent: rgb(216, 151, 94) /* Violet pour les hovers */;
+  --neutral-dark: #1F2937;
+  /* Gris sombre pour texte */
+  --neutral-light: #F3F4F6 /* Gris clair pour fond */;
+  --text-dark: #1F2937;
+  /* Texte sombre pour contraste */
+  --text-light: #F3F4F6;
+  /* Texte clair */
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+/* Styles globaux */
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--neutral-light);
+}
+
+.container {
+  max-width: 1200px;
+}
+
+/* Amélioration des liens */
+a {
+  text-decoration: none;
+}
+
+/* Scrollbar stylée */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--neutral-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #8a8a8a;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #575656;
+}
+
+/* TreeTable */
+.p-treetable.object-tree-table .object-tree-row td {
+  height: 48px;
+  padding: 0;
+}
+
+.p-treetable.object-tree-table .p-treetable-tbody > tr > td {
+  height: 48px;
+  padding: 0.1rem;
+}
+
+/* Header */
+header {
+  color: var(--text-dark); /* Texte sombre pour contraste sur fond jaune */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* drop-shadow-lg */
+}
+
+/* Support pour le thème sombre */
+[data-theme="dark"] {
+  --neutral-light: #1F2937;
+  --text-dark: #D1D5DB; /* Gris clair pour texte en mode sombre */
+}
+
+header[data-theme="dark"] {
+  color: var(--text-dark);
+}
+
+-e 
+
+
+=== src/App.js ===
+import React, { useState, useEffect } from "react";
+import { Router, Route, Switch } from "react-router";
+import ListBuckets from "./components/ListBuckets";
+import BrowseBucket from "./components/BrowseBucket";
+import AppLayout from "./Layout/AppLayout";
+import history from "./history";
+import "./App.css";
+import { getBuckets } from './utils/s3client';  // Ajoutez cet import
+
+const App = () => {
+
+// const [buckets, setBuckets] = useState([]);
+  // const [status, setStatus] = useState('Initializing...');
+  // const [buckets_list, setBucket_list] = useState(null)
+  // const [var_test_func, set_var_test_func]= useState(null);
+  // const API_BASE_URL = 'http://10.5.255.2:5000';
+  //       console.log(getBuckets)
+  // useEffect(() => {
+    localStorage.setItem("jwtToken","TESTTOKEN12354667")
+  //   const fetchBuckets = async () => {
+  //   try {
+  //     console.log("PIPI")
+  //     const token = localStorage.getItem('jwtToken');  // Récupérez JWT stocké (ex. post-login)
+  //     const response = await fetch('http://10.5.255.2:5000/buckets', {
+  //       method: 'GET',
+  //       headers: {
+  //         'Authorization': `Bearer ${token}`,
+  //         'Content-Type': 'application/json',
+  //       },
+  //     });
+  //
+  //
+  //     if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  //     const data = await response.json();
+  //     console.log(data)
+  //
+  //     console.log(data.buckets)
+  //     console.log("COUCOU")
+  //
+  //
+  //     setBuckets(buckets => ([...buckets,...data.buckets]));
+  //     console.log("COUCOU")
+  //     console.log(buckets)
+  //
+  //     setStatus('Buckets listés');
+  //
+  //   } catch (err) {
+  //
+  //     setStatus(`Erreur: ${err.message}`);
+  //     console.error('Erreur complète:', err);
+  //   }
+  // };
+  // fetchBuckets();
+  //
+  //
+  // }, []);
+  //
+  // useEffect(() => {
+  //   console.log('Buckets mis à jour:', buckets);
+  //   setBucket_list(buckets.map((bucket) => (
+  //         <li key={bucket.name}>{bucket.name}</li>
+  //       ))
+  //   )
+  //
+  // }, [buckets]);
+  // useEffect(() => {
+  //   const fetchObjects = async () => {
+  //     try {
+  //       const data = await getBuckets();
+  //       console.log("BITE")
+  //       console.log(data)
+  //       set_var_test_func(data);
+  //     } catch (err) {
+  //       console.error(err);
+  //     }
+  //   };
+  //   fetchObjects();
+  //
+  // }, []);
+  // useEffect(() => {
+  //   console.log("TEST DES FONCTIONS")
+  //   console.log(  var_test_func)
+  //
+  //   console.log("FI?N TEST DES FONCTIONS")
+  // }, [ var_test_func]);
+
+  // useEffect(() => {
+  //   const s3 = new S3Client({
+  //     region: 'us-east-1',
+  //     endpoint: '10.5.10.1:8080',
+  //     credentials: {
+  //       accessKeyId: 'test:tester',
+  //       secretAccessKey: 'testing',
+  //     },
+  //     forcePathStyle: true,
+  //
+  //   });
+  //
+  //   const fetchBuckets = async () => {
+  //     try {
+  //       const data = await s3.send(new ListBucketsCommand({}));
+  //       setBuckets(data.Buckets || []);
+  //       setStatus('Buckets listés');
+  //     } catch (err) {
+  //       setStatus(`Erreur: ${err.name} - ${err.message}`);
+  //       console.error('Erreur complète:', err); // Log détaillé
+  //     }
+  //   };
+  //
+  //   fetchBuckets();
+  //   console.log('Buckets', buckets);
+  // }, []);
+
+  return (
+      <Router history={history}>
+        <AppLayout>
+          <Switch>
+            <Route exact path={["/", "/buckets"]} component={ListBuckets} />
+            <Route exact path="/buckets/:bucketName" component={BrowseBucket} />
+          </Switch>
+        </AppLayout>
+      </Router>
+    // <div>
+    //   <h2>Liste des buckets</h2>
+    //   <p>Statut: {status}</p>
+    //   <ul>
+    //     coucou
+    //     {buckets_list}
+    //     {var_test_func}
+    //   </ul>
+    // </div>
+  );
+};
+
+
+
+
+export default App;-e 
+
+
+=== src/App.test.js ===
+import { render, screen } from '@testing-library/react';
+import App from './App';
+
+
+test('renders learn react link', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/learn react/i);
+  expect(linkElement).toBeInTheDocument();
+});
+-e 
+
+
+=== src/Layout/AppBody.js ===
+const AppBody = ({ children }) => {
+  return (
+    <div className="container mx-auto bg-white/30 backdrop-blur-md rounded-lg shadow-lg p-6 animate-fadeIn">
+      {children}
+    </div>
+  );
+};
+
+export default AppBody;-e 
+
+
+=== src/Layout/AppLayout.js ===
+import React, { Fragment } from "react";
+import Header from "./Header";
+import AppBody from "./AppBody";
+import Footer from "./Footer";
+
+const AppLayout = ({ children }) => {
+  return (
+    <Fragment>
+      <Header />
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
+        <main className="flex-grow p-5 transition-all duration-300 ease-in-out">
+          <AppBody>{children}</AppBody>
+        </main>
+      </div>
+      <Footer />
+    </Fragment>
+  );
+};
+
+export default AppLayout;-e 
+
+
+=== src/Layout/Footer.js ===
+import React from "react";
+//
+const Footer = () => {
+  return (
+    <footer className="fixed bottom-0 h-12 w-full  bg-amber-600 flex items-center justify-center rounded-md bg-clip-padding backdrop-filter backdrop-blur-lg bg-opacity-70 border border-gray-100 drop-shadow-lg animate-slideUp">
+      <div className="container px-4 md:px-0 mx-auto flex justify-between items-center text-sm">
+        <span>MIDOC - Espace de données {new Date().getFullYear()}</span>
+        <div className="space-x-4">
+
+          <a
+            href="https://github.com/vincentnam/docker_datalake"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-red-100 transition-colors duration-300 hover:scale-110 inline-block"
+          >
+            GitHub
+          </a>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;-e 
+
+
+=== src/Layout/Header.js ===
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+
+const Header = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const [theme, setTheme] = useState("light");
+
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  // const toggleTheme = () => {
+  //   const newTheme = theme === "light" ? "dark" : "light";
+  //   setTheme(newTheme);
+  //   document.documentElement.setAttribute("data-theme", newTheme);
+  // };
+
+  return (
+    <header className="w-full h-16 bg-amber-600 rounded-md bg-clip-padding backdrop-filter backdrop-blur-lg bg-opacity-70 border  border-gray-100 drop-shadow-lg sticky top-0 z-50">
+      <div className="container px-4 md:px-0 h-full mx-auto flex justify-between items-center">
+        <Link to="/" className="flex items-center space-x-2 group">
+          <span className="text-xl font-bold hover:scale-110 group-hover:text-red-100 transition-colors duration-300">
+            Lac de données
+          </span>
+        </Link>
+
+        {/* Bouton hamburger */}
+        <button
+          className="md:hidden focus:outline-none neon-button"
+          onClick={toggleMenu}
+          aria-label="Toggle menu"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
+            />
+          </svg>
+        </button>
+
+        {/* Menu */}
+        <nav
+            className={`${
+                isMenuOpen ? "flex" : "hidden"
+            } md:flex flex-col md:flex-row absolute md:static top-16 left-0 w-full md:w-auto bg-pink-700/90 md:bg-transparent p-4 md:p-0 space-y-4 md:space-y-0 md:space-x-6 animate-slideInRight glass-effect`}
+        >
+          <Link
+              to="/buckets"
+              className="opacity-70 hover:scale-110 hover:text-red-100 hover:opacity-100 transition-all duration-300"
+              onClick={() => setIsMenuOpen(false)}
+          >
+            Vos données (Buckets)
+          </Link>
+          {/*<button*/}
+          {/*    onClick={toggleTheme}*/}
+          {/*    className="hover:text-purple-600 transition-all duration-300"*/}
+          {/*>*/}
+          {/*  {theme === "light" ? "Mode sombre" : "Mode clair"}*/}
+          {/*</button>*/}
+        </nav>
+      </div>
+    </header>
+  );
+};
+
+export default Header;-e 
+
+
+=== src/components/BrowseBucket.js ===
+import React, { Fragment, useRef } from "react";
+import { Toast } from "primereact/toast";
+import { useParams } from "react-router-dom";
+import PrimaryButton from "./common/PrimaryButton";
+import ListObjects from "./ListObjects/ListObjects";
+
+import history from "../history";
+
+const BrowseBucket = () => {
+  const { bucketName, prefixPath, onDelete } = useParams();
+  const childRef = useRef(null);
+  const toast = useRef(null);
+
+  return (
+    <Fragment>
+      <div className="flex flex-col gap-4">
+        <div className="bg-white/30 backdrop-blur-md rounded-lg shadow-lg p-6 glass-effect animate-fadeIn">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <PrimaryButton onClick={() => history.goBack()} className="neon-button">
+                <i className="pi pi-angle-left mr-2"></i> Retour
+              </PrimaryButton>
+              <i className="pi pi-server text-cyan-500"></i>
+              <span className="text-lg font-semibold">Objects in</span>
+              <span className="text-pink-800 font-bold">{bucketName}</span>
+            </div>
+
+          </div>
+          <ListObjects bucketName={bucketName} path={prefixPath} ref={childRef} onDelete={onDelete} />
+        </div>
+      </div>
+      <Toast ref={toast} />
+    </Fragment>
+  );
+};
+
+export default BrowseBucket;-e 
+
+
+=== src/components/ListBuckets.js ===
+// import React, { useEffect, useState } from "react";
+// import mc from "../utils/mc";
+// import {getBuckets, removeBucket, createBucket} from "../utils/s3client";
+// import { DataTable } from "primereact/datatable";
+// import { Column } from "primereact/column";
+// import NewBucket from "./NewBucket/NewBucket";
+// import { Toast } from "primereact/toast";
+// import useToast from "../hooks/useToast";
+//
+// const ListBuckets = () => {
+//   const API_BASE_URL = "http://localhost:5000/"
+//   const [buckets, setBuckets] = useState([]);
+//   const [toast, showError, showSuccess] = useToast();
+//   const token = localStorage.getItem('jwtToken');  // Récupérez JWT stocké (ex. post-login)
+//
+//
+//   // const getBuckets = async () => {
+//   //   // const res = await mc.listBuckets();
+//   //
+//   //     const response = await fetch(API_BASE_URL+'buckets', {
+//   //       method: 'GET',
+//   //       signal: AbortSignal.timeout(5000),
+//   //       headers: {
+//   //         'Authorization': `Bearer ${token}`,
+//   //         'Content-Type': 'application/json',
+//   //       },
+//   //     });
+//   //     const res = await response.json();
+//   //   setBuckets(res.buckets);
+//   //   console.log(res.buckets)
+//   // };
+//   //
+//   // const createBucket = async (bucketName) => {
+//   //   const token = localStorage.getItem('jwtToken');
+//   //   const response = await fetch('http://localhost:5000/buckets', {
+//   //     method: 'POST',
+//   //     signal: AbortSignal.timeout(5000),
+//   //     headers: {
+//   //       'Authorization': `Bearer ${token}`,
+//   //       'Content-Type': 'application/json',
+//   //     },
+//   //     body: JSON.stringify({ name: bucketName }),
+//   //   });
+//   //   if (!response.ok) showError(`HTTP ${response.status}` + ":" + response.statusText);
+//   //   return response.json();
+//   // };
+//
+//
+//
+//   const removeBucket =async (node) => {
+//     try {
+//
+//       // await mc.removeBucket(node.name)
+//       const response = await fetch('http://localhost:5000/buckets', {
+//         method: 'GET',
+//         signal: AbortSignal.timeout(5000),
+//         headers: {
+//           'Authorization': `Bearer ${token}`,
+//           'Content-Type': 'application/json',
+//         },
+//       });
+//       showSuccess("Successfully removed bucket")
+//     }catch (er){
+//       showError("Tested Error:",er.message)
+//       console.log("showError")
+//     }
+//
+//     await getBuckets()
+//
+//   }
+//
+//   useEffect(() => {
+//     setBuckets(getBuckets());
+//     console.log(buckets)
+//   }, []);
+//
+//   const bucketsTableHeader=() => {
+//     return (
+//       <div className="flex justify-between align-items-center gap-10">
+//         <h5 className="m-0">Buckets</h5>
+//         <NewBucket onRefresh={getBuckets} />
+//       </div>
+//     )
+//   }
+//
+//
+//   const actionTemplate = (node, column) => {
+//     return <div className="flex gap-2">
+//       <button type="button" className="bg-white hover:bg-gray-200 flex items-center p-1 rounded" onClick={()=>{
+//         removeBucket(node)}
+//       }>
+//         <i className=" pi pi-trash"></i>
+//       </button>
+//
+//     </div>
+//   }
+//
+//
+//
+//   return (
+//     <>
+//       <Toast ref={toast} />
+//       <div className="flex flex-1">
+//       <DataTable value={buckets}   width="100%" style={{flex:1, border:"1px solid #CECEEC" , borderRadius:"5px"}} header={bucketsTableHeader}>
+//         <Column field="name"  width={"80%"} header="Name" body={(rowData)=>{
+//           return <a className="text-pink-700 underline hover:text-blue-800" href={`/buckets/${rowData.name}`} rel="noopener">{rowData.name} </a>;
+//
+//         }}/>
+//         <Column field="creationDate" header="Created At" style={{width:"220px"}} body={(rowData=>{
+//           return <span>
+//             {new Date(rowData.creationDate).toLocaleString()}
+//           </span>
+//         })}></Column>
+//
+//         <Column body={actionTemplate} style={{ textAlign: 'center', width: '80px' }} />
+//
+//       </DataTable>
+//       </div>
+//
+//       </>
+//
+//   );
+// };
+//
+// export default ListBuckets;
+
+import React, { useEffect, useState } from "react";
+import { getBuckets, removeBucket } from "../utils/s3client"; // Assurez-vous que removeBucket est défini dans s3client.js
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import NewBucket from "./NewBucket/NewBucket";
+import { Toast } from "primereact/toast";
+import useToast from "../hooks/useToast";
+
+const ListBuckets = () => {
+  const [buckets, setBuckets] = useState([]);
+  const [toast, showError, showSuccess] = useToast();
+
+  const fetchBuckets = async () => {
+    try {
+      const data = await getBuckets();
+      setBuckets(data);
+    } catch (err) {
+      showError(`Erreur: ${err.message}`);
+    }
+  };
+  //
+  // const removeBucket = async (node) => {
+  //   try {
+  //     await fetch(`http://localhost:5000/buckets/${node.name}`, { // Assumé DELETE /buckets/:name ; adaptez si différent
+  //       method: 'DELETE',
+  //       headers: {
+  //         'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+  //         'Content-Type': 'application/json',
+  //       },
+  //     });
+  //     showSuccess("Successfully removed bucket");
+  //     await fetchBuckets(); // Rafraîchit après suppression
+  //   } catch (err) {
+  //     showError(`Erreur: ${err.message}`);
+  //   }
+  // };
+
+  useEffect(() => {
+    fetchBuckets();
+    console.log(buckets)
+  }, []);
+
+  const bucketsTableHeader = () => (
+    <div className="flex justify-between align-items-center gap-10">
+      <h5 className="m-0">Buckets</h5>
+      <NewBucket onRefresh={fetchBuckets} />
+    </div>
+  );
+  const handleRemoveBucket = async (node) => {
+  try {
+    await removeBucket(node.name || node.Name); // Adaptez au champ (name ou Name)
+    showSuccess("Bucket supprimé avec succès");
+    fetchBuckets(); // Rafraîchit la liste
+  } catch (err) {
+    showError(`Erreur lors de la suppression: ${err.message}`);
+  }
+};
+  const actionTemplate = (node) => (
+    <div className="flex gap-2">
+      <button type="button" className="bg-white hover:bg-gray-200 flex items-center p-1 rounded" onClick={() => handleRemoveBucket(node)}>
+        <i className="pi pi-trash"></i>
+      </button>
+    </div>
+  );
+
+  return (
+    <>
+      <Toast ref={toast} />
+      <div className="flex flex-1">
+        <DataTable value={buckets} style={{ flex: 1, border: "1px solid #CECEEC", borderRadius: "5px" }} header={bucketsTableHeader}>
+          <Column field="name" header="Name" body={(rowData) => (
+            <a className="text-pink-700 underline hover:text-blue-800" href={`/buckets/${rowData.Name}`} rel="noopener noreferrer">{rowData.Name}</a>
+          )} />
+          <Column field="creationDate" header="Created At" style={{ width: "220px" }} body={(rowData) => (
+            <span>{new Date(rowData.CreationDate).toLocaleString()}</span>
+          )} />
+          <Column body={actionTemplate} style={{ textAlign: 'center', width: '80px' }} />
+        </DataTable>
+      </div>
+    </>
+  );
+};
+
+export default ListBuckets;-e 
+
+
+=== src/components/ListObjects/ActionTemplate.js ===
+import React from "react";
+import { downloadFile } from "../../utils/fileUtils";
+import history from "../../history";
+
+const ActionTemplate = ({ node, onDelete, bucketName }) => {
+  const fileType = node.data.metadata?.["content-type"] || "";
+  return (
+    <div className="flex gap-2">
+      <button
+        type="button"
+        className="bg-white hover:bg-gray-200 flex items-center p-1 rounded"
+        onClick={() => onDelete?.({ node })}
+        disabled={!node.leaf}
+      >
+        <i className="pi pi-trash"></i>
+      </button>
+      {!node.leaf && (
+        <button
+          type="button"
+          className="bg-white hover:bg-gray-200 flex items-center p-1 rounded"
+          onClick={() => history.push(`/buckets/${bucketName}?path=${node.key}`)}
+        >
+          <i className="pi pi-window-maximize"></i>
+        </button>
+      )}
+      {node.leaf && fileType && (
+        <button
+          type="button"
+          className="bg-white hover:bg-gray-200 flex items-center p-1 rounded"
+          onClick={() => downloadFile(bucketName, node.key, node.data.name)}
+        >
+          <i className="pi pi-download"></i>
+        </button>
+      )}
+    </div>
+  );
+};
+
+export default ActionTemplate;-e 
+
+
+=== src/components/ListObjects/FileRow.js ===
+import React from "react";
+import { useDrag } from "react-dnd";
+import { ItemTypes } from "../../constants/itemTypes";
+
+const FileRow = ({ node, setSelectedNode, setSidebarVisible }) => {
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: ItemTypes.FILE,
+    item: { key: node.key },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  }));
+
+  return (
+    <span
+      ref={drag}
+      className={`cursor-pointer text-blue-500 hover:text-blue-700 transition-colors duration-200 ${isDragging ? "opacity-50" : ""}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        setSelectedNode(node);
+        setSidebarVisible(true);
+      }}
+    >
+      {node.data.name}
+    </span>
+  );
+};
+
+export default FileRow;-e 
+
+
+=== src/components/ListObjects/FolderRow.js ===
+import React from "react";
+import { useDrop } from "react-dnd";
+import { ItemTypes } from "../../constants/itemTypes";
+import { moveObject } from "../../utils/fileUtils";
+import history from "../../history";
+
+const FolderRow = ({ node, bucketName }) => {
+  const [{ isOver }, drop] = useDrop(() => ({
+    accept: ItemTypes.FILE,
+    drop: (item) => moveObject(bucketName, item.key, node.key),
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+    }),
+  }));
+
+  return (
+    <span
+      ref={drop}
+      className={`cursor-pointer ${isOver ? "bg-gray-200" : ""}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        history.push(`/buckets/${bucketName}?path=${node.key}`);
+      }}
+    >
+      {node.data.name}
+    </span>
+  );
+};
+
+export default FolderRow;-e 
+
+
+=== src/components/ListObjects/ListObjects.js ===
+import React, { forwardRef, useRef, useImperativeHandle } from "react";
+import { TreeTable } from "primereact/treetable";
+import { Column } from "primereact/column";
+import { Toast } from "primereact/toast";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { useLocation, useParams } from "react-router-dom";
+import { useDropzone } from "react-dropzone";
+import FileRow from "./FileRow";
+import FolderRow from "./FolderRow";
+import ActionTemplate from "./ActionTemplate";
+import SidebarPreview from "./SidebarPreview";
+import UploadProgressDialog from "./UploadProgressDialog";
+import useObjectList from "../../hooks/useObjectList";
+import useDragAndDrop from "../../hooks/useDragAndDrop";
+import history from "../../history";
+
+const ListObjects = forwardRef(({ bucketName, path: initialPath, onDelete }, ref) => {
+  const { search } = useLocation();
+  const params = new URLSearchParams(search);
+  const prefixPath = params.get("path") || initialPath || "";
+  const toast = useRef(null);
+
+  /*const {
+    objects,
+    loading,
+    bucketInfo,
+    selectedNode,
+    setSelectedNode,
+    sidebarVisible,
+    setSidebarVisible,
+    loadBucketObjects,
+    createFolder,
+    refreshBucket,
+    onExpand,
+    sortOrder,
+    setSortOrder,
+  } = useObjectList(bucketName, prefixPath);
+*/
+  const {
+    objects,
+    loading,
+    bucketInfo,
+    selectedNode,
+    setSelectedNode,
+    sidebarVisible,
+    setSidebarVisible,
+    loadBucketObjects,
+    createFolder,
+    refreshBucket,
+    onExpand,
+    sortOrder,
+    sortField,
+    setSortOrder,
+    setSortField,
+    onSort,
+  } = useObjectList(bucketName, prefixPath);
+
+
+  const { uploadProgress, showProgressDialog, setShowProgressDialog, onDrop } = useDragAndDrop(
+    bucketName,
+    prefixPath,
+    loadBucketObjects,
+    toast
+  );
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, noClick: true });
+
+  useImperativeHandle(ref, () => ({
+    refresh(b = bucketName, p = prefixPath) {
+      loadBucketObjects(b, p);
+    },
+    refreshChildren(evt) {
+      onExpand(evt);
+    },
+  }));
+
+
+  const rowClassName = (node) => ({
+    "p-highlight": false,
+    "object-tree-row": true,
+  });
+  console.log(bucketInfo)
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <Toast ref={toast} />
+      <div className="flex flex-col h-full">
+        <div className="bg-gray-100 p-4 border-b flex justify-between items-center">
+          <div>
+            <p>Date de création : {bucketInfo.creationDate}</p>
+            <p>Type d'accès : {bucketInfo.accessType}</p>
+            <p>Taille totale : {bucketInfo.totalSize}</p>
+            <p>Nombre d'objets : {bucketInfo.objectCount}</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              onClick={createFolder}
+            >
+              Créer un dossier
+            </button>
+            <button
+              type="button"
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              onClick={refreshBucket}
+            >
+              Rafraîchir
+            </button>
+          </div>
+        </div>
+        <div {...getRootProps()} className="relative flex-grow overflow-auto">
+          <input {...getInputProps()} />
+          {isDragActive && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-200 bg-opacity-50 z-10">
+              <p className="text-lg font-semibold">Déposez les fichiers ici...</p>
+            </div>
+          )}
+          <div className="flex-grow overflow-auto min-w-min overflow-x-auto">
+            <TreeTable
+                tableStyle={{ minWidth: '100%' }}
+                className="object-tree-table"
+                value={objects}
+                lazy
+                onExpand={onExpand}
+                loading={loading}
+
+                style={{width: "100%"}}
+                rowClassName={rowClassName}
+
+                sortMode="single"
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={onSort}
+                reorderableColumns
+                resizableColumns
+                columnResizeMode={"expand"}
+            >
+              <Column
+                  field="name"
+                  header="Nom"
+                  expander
+                  sortable
+                  sortField="name"
+                  body={(node) =>
+
+                      node.leaf ? <FileRow node={node} setSelectedNode={setSelectedNode}
+                                           setSidebarVisible={setSidebarVisible}/> :
+                          <FolderRow node={node} bucketName={bucketName}/>
+                  }
+                  className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"
+              />
+              <Column
+                  field="rawSize"
+                  header="Taille"
+                  sortable
+                  sortField="rawSize"
+                  body={(node) => node.data.size || "-"}
+                  className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"
+              />
+              <Column
+                  field="uploadDate"
+                  header="Date de téléversement"
+                  body={(node) => {
+
+                    const uploadDate = node.data.metadata?.["X-Amz-Meta-Upload-Date"] || "";
+                    return uploadDate ? new Date(uploadDate).toLocaleString() : "-";
+                  }}
+                  sortable
+                  sortField="uploadDate"
+                  className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"
+              />
+              <Column
+                  field="lastModified"
+                  header="Dernière modification"
+                  body={(node) => (node.data.lastModified ? new Date(node.data.lastModified).toLocaleString() : "-")}
+                  sortable
+                  sortField="lastModified"
+                  className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"
+              />
+              <Column
+                  field="contentType"
+                  header="Type de contenu"
+                  body={(node) => node.data.metadata?.["content-type"] || "-"}
+                  sortable
+                  sortField="contentType"
+                  className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"
+              />
+              <Column
+                  field="etag"
+                  header="Clé de stockage"
+                  body={(node) => node.data.etag || "-"}
+                  sortable
+                  sortField="etag"
+                  className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"
+              />
+
+
+              <Column
+                  field="actions"
+                  header="Actions"
+                  body={(node) => <ActionTemplate node={node} onDelete={onDelete} bucketName={bucketName}/>}
+                  alignHeader={"center"}
+                  className="whitespace-nowrap overflow-hidden text-overflow-ellipsis flex-grow"
+              />
+
+            </TreeTable>
+            <div
+
+                className="bg-gray-100 border-t border-gray-300 flex items-center justify-center cursor-pointer sticky bottom-0 z-10 h-16 "
+                onClick={() => document.querySelector('input[type="file"]').click()}
+            >
+              <p className="text-sm font-semibold">Glissez-déposez vos fichiers ici ou cliquez pour sélectionner</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <SidebarPreview
+          visible={sidebarVisible}
+          onHide={() => setSidebarVisible(false)}
+          selectedNode={selectedNode}
+          bucketName={bucketName}
+      />
+      <UploadProgressDialog
+          visible={showProgressDialog}
+          onHide={() => setShowProgressDialog(false)}
+          uploadProgress={uploadProgress}
+      />
+    </DndProvider>
+  );
+});
+
+export default ListObjects;-e 
+
+
+=== src/components/ListObjects/SidebarPreview.js ===
+import React, { useState, useRef } from "react";
+import { Sidebar } from "primereact/sidebar";
+import { Dialog } from "primereact/dialog"; // Importer Dialog pour la popup
+import PrimaryButton from "../common/PrimaryButton";
+import { downloadFile } from "../../utils/fileUtils";
+import usePreview from "../../hooks/usePreview";
+import { checkJupyterServer, startJupyterServer, createNotebook, getNotebookUrl } from "../../utils/jupyterUtils";
+import useToast from "../../hooks/useToast";
+import "../../styles/preview.css";
+import { Panel } from "primereact/panel";
+import { throttle } from "lodash";
+import { Toast } from "primereact/toast";
+import history from "../../history"; // Importer history pour la redirection
+
+const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
+  const { previewHtml, previewComponent, isPreviewLoading, previewError } = usePreview(selectedNode, bucketName);
+  const [sidebarWidth, setSidebarWidth] = useState(384);
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarRef = useRef(null);
+  const [toast, showError, showSuccess] = useToast();
+
+  // États pour la popup de progression
+  const [progress, setProgress] = useState(null);
+  const [progressVisible, setProgressVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const throttledResize = throttle((newWidth) => {
+    requestAnimationFrame(() => setSidebarWidth(newWidth));
+  }, 16);
+
+  const startResizing = (e) => {
+    e.preventDefault();
+    console.log("Démarrage du redimensionnement, position initiale :", e.clientX);
+    setIsResizing(true);
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+
+    const doResize = (e) => {
+      const newWidth = startWidth + (startX - e.clientX);
+      const minWidth = 200;
+      const maxWidth = window.innerWidth * 0.8;
+      const clampedWidth = Math.min(Math.max(newWidth, minWidth), maxWidth);
+      console.log("Nouvelle largeur calculée :", clampedWidth);
+      throttledResize(clampedWidth);
+    };
+
+    const stopResizing = () => {
+      console.log("Arrêt du redimensionnement");
+      setIsResizing(false);
+      document.removeEventListener("mousemove", doResize);
+      document.removeEventListener("mouseup", stopResizing);
+    };
+
+    document.addEventListener("mousemove", doResize);
+    document.addEventListener("mouseup", stopResizing);
+  };
+  // Messages de progression
+  const progressMessages = {
+    checking_server: "Vérification du serveur Jupyter...",
+    starting_server: "Lancement du serveur Jupyter...",
+    creating_notebook: "Création du notebook...",
+    redirecting: "Redirection vers le notebook...",
+    error: "Une erreur est survenue.",
+  };
+
+  // Fonction pour générer le contenu du notebook
+  const generateNotebookContent = (dataInfo) => {
+    /*Pas la bonne image, nécessaire pour enlever "!pip install minio"*/
+    const code = [
+      "!pip install minio \n",
+      "# Code pour télécharger les données depuis MinIO\n",
+      `bucket_name = "${dataInfo.bucketName}"\n`,
+      `object_key = "${dataInfo.key}"\n`,
+      "from minio import Minio\n",
+      'client = Minio("raw_data_storage:9000", access_key="admin", secret_key="adminadmin", secure=False)\n',
+      "client.fget_object(bucket_name, object_key, 'downloaded_file')\n",
+      "# Le fichier est maintenant téléchargé localement sous 'downloaded_file'\n",
+    ];
+
+    return {
+      cells: [
+        {
+          cell_type: "code",
+          execution_count: null,
+          metadata: {},
+          outputs: [],
+          source: code,
+        },
+      ],
+      metadata: {
+        kernelspec: {
+          display_name: "Python 3",
+          language: "python",
+          name: "python3",
+        },
+        language_info: {
+          codemirror_mode: { name: "ipython", version: 3 },
+          file_extension: ".py",
+          mimetype: "text/x-python",
+          name: "python",
+          nbconvert_exporter: "python",
+          pygments_lexer: "ipython3",
+          version: "3.8.5",
+        },
+      },
+      nbformat: 4,
+      nbformat_minor: 4,
+    };
+  };
+
+  // Fonction pour ouvrir le notebook
+  const openInJupyter = async () => {
+    if (!selectedNode || !selectedNode.leaf) {
+      showError("Erreur", "Veuillez sélectionner un fichier");
+      return;
+    }
+
+    setProgressVisible(true);
+    setProgress("checking_server");
+
+    try {
+      const username = "admin"; // Remplacer par l'utilisateur actuel si nécessaire
+      const serverRunning = await checkJupyterServer(username);
+
+      if (!serverRunning) {
+        setProgress("starting_server");
+        await startJupyterServer(username);
+        // Attendre 5 secondes pour s'assurer que le serveur est prêt
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
+
+      setProgress("creating_notebook");
+      const notebookName = `notebook-${Date.now()}`;
+      const content = generateNotebookContent({ bucketName, key: selectedNode.key });
+      await createNotebook(username, notebookName, content);
+
+      setProgress("redirecting");
+      const notebookUrl = getNotebookUrl(username, notebookName);
+      history.push(notebookUrl.replace("http://localhost:8000", "")); // Redirection dans l'historique
+      window.location.href = notebookUrl; // Forcer la navigation pour ouvrir dans le même onglet
+    } catch (err) {
+      setProgress("error");
+      setErrorMessage(err.message);
+      showError("Erreur", err.message);
+    }
+  };
+
+  return (
+    <>
+<Sidebar
+  visible={visible}
+  onHide={onHide}
+  position="right"
+  className="ui-sidebar-lg sidebar-preview"
+  style={{ width: `${sidebarWidth}px`, position: "relative" }}
+  baseZIndex={1000}
+>
+  <div className="resize-handle" onMouseDown={startResizing}></div>
+        <div className="flex flex-col h-full">
+          <div className="resize-handle" onMouseDown={startResizing}></div>
+          {selectedNode && (
+            <Panel header={selectedNode.data.name} className="flex-grow overflow-y-auto">
+              <p>Taille : {selectedNode.data.size || "-"}</p>
+              <p>Type : {selectedNode.data.metadata?.["content-type"] || "-"}</p>
+              <p>
+                Dernière modification :{" "}
+                {selectedNode.data.lastModified
+                  ? new Date(selectedNode.data.lastModified).toLocaleString()
+                  : "-"}
+              </p>
+              <p>
+                Date de téléversement :{" "}
+                {selectedNode.data.metadata?.["X-Amz-Meta-Upload-Date"]
+                  ? new Date(selectedNode.data.metadata["X-Amz-Meta-Upload-Date"]).toLocaleString()
+                  : "-"}
+              </p>
+              <PrimaryButton
+                onClick={() => downloadFile(bucketName, selectedNode.key, selectedNode.data.name)}
+                className="mt-4"
+              >
+                Télécharger
+              </PrimaryButton>
+              <PrimaryButton onClick={openInJupyter} className="mt-4 ml-2">
+                Ouvrir dans Jupyter Notebook
+              </PrimaryButton>
+              {isPreviewLoading ? (
+                <p>Chargement de la prévisualisation...</p>
+              ) : previewError ? (
+                <p>{previewError}</p>
+              ) : (
+                previewComponent
+              )}
+            </Panel>
+          )}
+        </div>
+      </Sidebar>
+      <Dialog
+        header="Progression"
+        visible={progressVisible}
+        onHide={() => setProgressVisible(false)}
+        style={{ width: "50vw" }}
+      >
+        <p>{progressMessages[progress]}</p>
+        {progress === "error" && <p>{errorMessage}</p>}
+      </Dialog>
+      <Toast ref={toast} />
+    </>
+  );
+};
+
+export default SidebarPreview;-e 
+
+
+=== src/components/ListObjects/UploadProgressDialog.js ===
+import React from "react";
+import { Dialog } from "primereact/dialog";
+import { ProgressBar } from "primereact/progressbar";
+
+const UploadProgressDialog = ({ visible, onHide, uploadProgress }) => {
+  return (
+    <Dialog
+      header="Progression du téléversement"
+      visible={visible}
+      style={{ width: "30vw", position: "fixed", right: 0, top: 0 }}
+      onHide={onHide}
+      draggable={false}
+      resizable={false}
+    >
+      <div className="p-4">
+        {Object.keys(uploadProgress).length > 0 ? (
+          Object.entries(uploadProgress).map(([fileName, { progress, status }]) => (
+            <div key={fileName} className="mb-4">
+              <div className="flex justify-between mb-1">
+                <span>{fileName}</span>
+                <span>
+                  {status === "completed" ? "Terminé" : status === "error" ? "Erreur" : `${progress}%`}
+                </span>
+              </div>
+              <ProgressBar value={progress} style={{ height: "20px" }} />
+            </div>
+          ))
+        ) : (
+          <p>Aucun téléversement en cours.</p>
+        )}
+      </div>
+    </Dialog>
+  );
+};
+
+export default UploadProgressDialog;-e 
+
+
+=== src/components/NewBucket/NewBucket.js ===
+import React, { useState } from "react";
+import { Dialog } from "primereact/dialog";
+import { useForm, Controller } from "react-hook-form";
+import { InputText } from "primereact/inputtext";
+import { Checkbox } from "primereact/checkbox";
+import { classNames } from "primereact/utils";
+// import mc from "../../utils/mc";
+import {createBucket} from "../../utils/s3client";
+import { Toast } from "primereact/toast";
+import useToast from "../../hooks/useToast";
+
+
+const NewBucket = ({ onRefresh }) => {
+  const [displayBasic, setDisplayBasic] = useState(false);
+  const [toast, showError, showSuccess] = useToast();
+
+  const defaultValues = {
+    bucketName: "",
+    enableLocking: false,
+    region: "us-east-1"
+  };
+
+  const { control, formState: { errors }, handleSubmit, reset } = useForm({ defaultValues });
+
+  const onSubmit = async (data) => {
+    const { bucketName, enableLocking, region } = data;
+    try {
+      await createBucket(bucketName, region, { ObjectLocking: enableLocking });
+      reset();
+      setDisplayBasic(false);
+      showSuccess(`Created ${bucketName} successfully`);
+      onRefresh?.();
+    } catch (er) {
+      showError(`Error creating ${bucketName} : ${er}`);
+    }
+  };
+
+  const getFormErrorMessage = (name) => {
+    return errors[name] && <small className="p-error">{errors[name].message}</small>;
+  };
+
+  return (
+    <>
+      <Toast ref={toast} />
+      <Dialog header="Create New Bucket" visible={displayBasic} style={{ width: "50vw" }}
+              onHide={() => setDisplayBasic(false)}>
+        <form onSubmit={handleSubmit(onSubmit)} className="p-fluid">
+          <div className="field mt-5">
+            <span className="p-float-label">
+              <Controller name="bucketName" control={control}
+                          rules={{ required: "Name is required." }}
+                          render={({ field, fieldState }) => (
+                            <InputText id={field.name} {...field} autoFocus
+                                       className={classNames({ "p-invalid": fieldState.invalid })} />
+                          )} />
+              <label htmlFor="bucketName"
+                     className={classNames({ "p-error": errors.bucketName })}>Name*</label>
+            </span>
+            {getFormErrorMessage("bucketName")}
+          </div>
+          <div className="mt-10">
+            <span className="p-float-label">
+              <Controller name="region" control={control} render={({ field, fieldState }) => (
+                <InputText id={field.name} {...field} autoFocus
+                           className={classNames({ "p-invalid": fieldState.invalid })} />
+              )} />
+              <label htmlFor="region"
+                     className={classNames({ "p-error": errors.region })}>Region</label>
+            </span>
+          </div>
+          <div className="field-checkbox mt-5">
+            <Controller name="enableLocking" control={control} render={({ field, fieldState }) => (
+              <Checkbox inputId={field.name} onChange={(e) => field.onChange(e.checked)} checked={field.value}
+                        className={classNames({ "p-invalid": fieldState.invalid })} />
+            )} />
+            <label htmlFor="enableLocking" className={classNames({ "p-error": errors.enableLocking })}>Enable Locking</label>
+          </div>
+          <div className="flex gap-5 items-center justify-end mt-5">
+            <button className="h-12 bg-pink-800 border border-gray-100 w-24 text-white rounded" type="submit">Submit</button>
+            <button className="h-12 bg-pink-800 border border-gray-100 w-24 text-white rounded" type="button" onClick={() => setDisplayBasic(false)}>Cancel</button>
+          </div>
+        </form>
+      </Dialog>
+      <button className="px-2 h-8 bg-pink-800 border border-gray-100 text-white rounded" type="button"
+              onClick={() => setDisplayBasic(true)}>Create new Bucket</button>
+    </>
+  );
+};
+export default NewBucket;-e 
+
+
+=== src/components/common/PrimaryButton.js ===
+const PrimaryButton = ({ children, className = "", ...props }) => {
+  return (
+    <button
+      className={`bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors duration-300 neon-button ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
+
+export default PrimaryButton;-e 
+
+
+=== src/constants/itemTypes.js ===
+export const ItemTypes = {
+  FILE: "file",
+};-e 
+
+
+=== src/history.js ===
+import {createBrowserHistory} from "history"
+
+const history = createBrowserHistory()
+
+export default history-e 
+
+
+=== src/hooks/useDragAndDrop.js ===
+import { useState } from "react";
+import { uploadObject } from "../utils/s3client";
+
+const useDragAndDrop = (bucketName, prefixPath, loadBucketObjects, toastRef) => {
+  const [uploadProgress, setUploadProgress] = useState({});
+  const [showProgressDialog, setShowProgressDialog] = useState(false);
+
+  const showSuccess = (message) => {
+    toastRef.current.show({ severity: "success", summary: "Succès", detail: message, life: 3000 });
+  };
+
+  const showError = (message) => {
+    toastRef.current.show({ severity: "error", summary: "Erreur", detail: message, life: 3000 });
+  };
+
+  const onDrop = async (acceptedFiles) => {
+    setShowProgressDialog(true);
+    const filesList = Array.from(acceptedFiles);
+    const progressUpdates = {};
+    filesList.forEach((file) => {
+      progressUpdates[file.name] = { progress: 0, status: "uploading" };
+    });
+    setUploadProgress(progressUpdates);
+
+    for (const file of filesList) {
+      try {
+        const filePath = `${prefixPath ? prefixPath.replace(/\/+$/, "") + "/" : ""}${file.name}`.replace(/\/+/g, "/");
+        const uploadDate = new Date().toISOString();
+
+        await uploadObject(bucketName, filePath, file, (progress) => {
+          setUploadProgress((prev) => ({
+            ...prev,
+            [file.name]: { ...prev[file.name], progress },
+          }));
+        });
+
+        setUploadProgress((prev) => ({
+          ...prev,
+          [file.name]: { progress: 100, status: "completed" },
+        }));
+        showSuccess(`Fichier ${file.name} téléversé avec succès`);
+      } catch (err) {
+        setUploadProgress((prev) => ({
+          ...prev,
+          [file.name]: { progress: 0, status: "error" },
+        }));
+        showError(`Échec du téléversement de ${file.name}: ${err.message}`);
+      }
+    }
+
+    const allDone = Object.values(uploadProgress).every(({ status }) => status === "completed" || status === "error");
+    if (allDone) {
+      setShowProgressDialog(false);
+    }
+    loadBucketObjects(bucketName, prefixPath);
+  };
+
+  return {
+    uploadProgress,
+    showProgressDialog,
+    setShowProgressDialog,
+    onDrop,
+  };
+};
+
+export default useDragAndDrop;-e 
+
+
+=== src/hooks/useObjectList.js ===
+import { useState, useEffect } from "react";
+import { orderBy } from "lodash";
+import { loadObjectList, createFolder, listObjectsOfPrefix } from "../utils/objectUtils";
+import prettyBytes from "pretty-bytes";
+
+const useObjectList = (bucketName, prefixPath) => {
+  const [objects, setObjects] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [sortOrder, setSortOrder] = useState(1); // 1 pour ascendant, -1 pour descendant
+  const [sortField, setSortField] = useState("name"); // Champ de tri par défaut
+  const [bucketInfo, setBucketInfo] = useState({
+    creationDate: "2023-01-01",
+    accessType: "Privé",
+    totalSize: "0 B",
+    objectCount: 0,
+  });
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+  console.log("COUCOU ON LISTE LES OBJETS")
+  console.log(objects)
+
+    // Fonction pour trier récursivement les nœuds
+const sortNodes = (nodes, field, order) => {
+  const sortedNodes = orderBy(
+    nodes,
+    [
+      (node) => !node.leaf,
+      (node) => {
+        if (field === "rawSize") return node.leaf ? node.data[field] || 0 : 0;
+        if (field === "lastModified") return node.data[field] ? new Date(node.data[field]).getTime() : 0;
+        if (field === "uploadDate") {
+          const uploadDate = node.data.metadata?.["X-Amz-Meta-Upload-Date"];
+          return uploadDate ? new Date(uploadDate).getTime() || 0 : 0;
+        }
+        if (field === "contentType") return node.data.metadata?.["content-type"] || "";
+        if (field === "etag") return node.data.etag || "";
+        return (node.data[field] || "").toLowerCase();
+      },
+    ],
+    ["desc", order === 1 ? "asc" : "desc"]
+  );
+
+  return sortedNodes.map((node) => {
+    if (node.children && node.children.length > 0) {
+      return { ...node, children: sortNodes(node.children, field, order) };
+    }
+    return node;
+  });
+};
+  const showToast = (severity, summary, detail) => {
+    console.log(`${severity}: ${summary} - ${detail}`);
+  };
+
+  const loadBucketObjects = async (bName = bucketName, pName = prefixPath) => {
+    setLoading(true);
+    try {
+      const objList = await loadObjectList(bName, pName);
+      console.log("OBJECT LIST")
+      console.log(objList)
+      setObjects(objList);
+      const totalSize = objList.reduce((sum, node) => sum + (node.data.rawSize || 0), 0);
+      const objectCount = objList.filter((node) => node.leaf).length;
+      setBucketInfo((prev) => ({
+        ...prev,
+        totalSize: prettyBytes(totalSize),
+        objectCount,
+      }));
+    } catch (err) {
+      showToast("error", "Erreur", "Impossible de charger la liste des objets.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onExpand = async (event) => {
+    const node = event.node;
+    if (!node.leaf && (!node.children || node.children.length === 0)) {
+      setLoading(true);
+      try {
+        // Utiliser data.name comme préfixe pour éviter les chemins redondants
+        const folderPath = node.key.replace(/^\/+|\/+$/g, "");
+        console.log(`onExpand: bucket=${bucketName}, path=${folderPath}`);
+
+        const children = await listObjectsOfPrefix(bucketName, folderPath);
+        console.log(`Enfants chargés pour ${folderPath}:`, children);
+
+        // Mettre à jour l'arborescence
+        setObjects((prev) => {
+          const updatedObjects = JSON.parse(JSON.stringify(prev)); // Deep clone
+          const updateNode = (nodes) => {
+            for (let n of nodes) {
+              if (n.key === node.key) {
+                n.children = orderBy(children, ["leaf", "data.name"], ["asc", "asc"]);
+                return true;
+              }
+              if (n.children) {
+                if (updateNode(n.children)) return true;
+              }
+            }
+            return false;
+          };
+          if (updateNode(updatedObjects)) {
+            console.log("Arborescence mise à jour:", updatedObjects);
+            return updatedObjects;
+          }
+          return prev;
+        });
+      } catch (err) {
+        console.error("Erreur dans onExpand:", err);
+        showToast("error", "Erreur", "Impossible de charger les fichiers du dossier.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const createFolderHandler = async () => {
+    const folderName = prompt("Entrez le nom du dossier :");
+    if (folderName) {
+      try {
+        await createFolder(bucketName, prefixPath, folderName);
+        showToast("success", "Succès", `Dossier ${folderName} créé avec succès`);
+        loadBucketObjects(bucketName, prefixPath);
+      } catch (err) {
+        showToast("error", "Erreur", "Impossible de créer le dossier.");
+      }
+    }
+  };
+
+  const refreshBucket = () => {
+    loadBucketObjects(bucketName, prefixPath);
+  };
+  const onSort = (event) => {
+    const newSortField = event.sortField === "size" ? "rawSize" : event.sortField === "uploadDate" ? "uploadDate" : event.sortField;
+    const newSortOrder = event.sortOrder;
+    setSortField(newSortField);
+    setSortOrder(newSortOrder);
+    setObjects((prev) => sortNodes(prev, newSortField, newSortOrder));
+  };
+  useEffect(() => {
+    loadBucketObjects(bucketName, prefixPath);
+  }, [bucketName, prefixPath]);
+
+  return {
+    objects,
+    loading,
+    bucketInfo,
+    selectedNode,
+    setSelectedNode,
+    sidebarVisible,
+    setSidebarVisible,
+    loadBucketObjects,
+    createFolder: createFolderHandler,
+    refreshBucket,
+    onExpand,
+    sortOrder,
+    sortField,
+    setSortOrder,
+    setSortField,
+    onSort,
+  };
+};
+
+export default useObjectList;-e 
+
+
+=== src/hooks/usePreview.js ===
+// src/hooks/usePreview.js
+import { useState, useEffect } from "react";
+import { getPreviewContent } from "../utils/previewUtils";
+
+const usePreview = (selectedNode, bucketName) => {
+  const [previewHtml, setPreviewHtml] = useState("");
+  const [previewComponent, setPreviewComponent] = useState(null);
+  const [previewError, setPreviewError] = useState(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+
+  useEffect(() => {
+    if (selectedNode) {
+      setIsPreviewLoading(true);
+      getPreviewContent(bucketName, selectedNode).then(({ component, error }) => {
+        setPreviewComponent(component);
+        setPreviewHtml(""); // Garder pour compatibilité si nécessaire
+        setPreviewError(error);
+        setIsPreviewLoading(false);
+      });
+    } else {
+      setPreviewHtml("");
+      setPreviewComponent(null);
+      setPreviewError(null);
+    }
+  }, [selectedNode, bucketName]);
+
+  return { previewHtml, previewComponent, previewError, isPreviewLoading };
+};
+
+export default usePreview;-e 
+
+
+=== src/hooks/useToast.js ===
+import { useRef } from "react";
+
+
+const useToast= () => {
+  const toast = useRef(null);
+
+
+  const showSuccess = (summary = "", detail = "") => {
+    toast.current.show({ severity: 'success', summary: summary, detail: detail, life: 3000 });
+  }
+  const showError = (summary = "", detail = "") => {
+    toast.current.show({ severity: 'error', summary: summary, detail: detail, life: 3000 });
+  }
+
+  return [toast, showError, showSuccess]
+}
+export default useToast-e 
+
+
+=== src/index.css ===
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+-e 
+
+
+=== src/index.js ===
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import "./index.css"
+import App from './App';
+import reportWebVitals from './reportWebVitals';
+
+import "primereact/resources/themes/lara-light-indigo/theme.css";  //theme
+import "primereact/resources/primereact.min.css";                  //core css
+import "primeicons/primeicons.css";                                //icons
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  //<React.StrictMode>
+    <App />
+  //</React.StrictMode>
+);
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
+-e 
+
+
+=== src/reportWebVitals.js ===
+const reportWebVitals = onPerfEntry => {
+  if (onPerfEntry && onPerfEntry instanceof Function) {
+    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+      getCLS(onPerfEntry);
+      getFID(onPerfEntry);
+      getFCP(onPerfEntry);
+      getLCP(onPerfEntry);
+      getTTFB(onPerfEntry);
+    });
+  }
+};
+
+export default reportWebVitals;
+-e 
+
+
+=== src/setupTests.js ===
+// jest-dom adds custom jest matchers for asserting on DOM nodes.
+// allows you to do things like:
+// expect(element).toHaveTextContent(/react/i)
+// learn more: https://github.com/testing-library/jest-dom
+import '@testing-library/jest-dom';
+-e 
+
+
+=== src/styles/preview.css ===
+.preview-table {
+  @apply w-full border-collapse max-h-[400px] overflow-auto;
+  table-layout:fixed;
+  overflow: auto;
+  width: 100%;
+  word-break: break-all ;
+}
+
+.preview-table-header {
+  @apply border border-gray-300 p-2 font-semibold bg-gray-100 sticky top-0;
+}
+
+.preview-table-cell {
+  @apply border border-gray-300 p-2 ;
+}
+
+.wave-container {
+  @apply h-[100px] mb-2;
+}
+
+.markdown-preview {
+  @apply prose max-w-none p-4;
+}
+
+.metadata-panel {
+  @apply bg-gray-100 p-4 rounded-md;
+}
+
+.metadata-panel p {
+  @apply mb-2 text-sm;
+}
+
+button[data-action="load-more"] {
+  @apply mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600;
+}
+
+.preview-container {
+  border: 1px solid #ccc; /* Bordure grise */
+}
+.code-card code {
+  @apply font-mono text-sm leading-relaxed;
+}
+
+
+
+.card {
+  --grad: rgb(236, 103, 58), rgb(153, 48, 136) ;
+
+  padding:0.5rem;
+    background-image: linear-gradient(to bottom left, #2D2A2E, #1E1E1E); /* Dégradé sombre style IDE */
+  /* background-image: linear-gradient(to bottom left, #e0e4e5, #f2f6f9); */
+  border-radius: 2rem;
+  gap: 0.5rem;
+  display: grid;
+  grid-template: 'title icon' 'content content' 'bar bar' / 1fr auto;
+  font-family: system-ui, sans-serif;
+  color: #D4D4D4; /* Texte clair pour contraste */
+  box-shadow: 
+    inset -2px 2px hsl(0 0 100% / 1),
+    -20px 20px 40px hsl(0 0 0 / .25) ;
+  
+  .title {
+    font-size: 1.5rem;
+    grid-area: title;
+    align-self: end;
+    text-transform: uppercase;
+    font-weight: 500;
+    word-break: break-all;
+    
+  }
+  .icon {
+    grid-area: icon;
+    font-size: 3rem;
+    
+    > i {
+      color: transparent;
+      background: linear-gradient(to right, var(--grad));
+      background-clip: text;
+    }
+  }
+  .content {
+    display: flex;
+  justify-content: center; /* Centre le contenu horizontalement */
+    grid-area: content;
+    & > *:first-child { margin-top: 0rem}
+    & > *:last-child { margin-bottom: 0rem}
+  }
+  &::after {
+    content: "";
+    grid-area: bar;
+    height: 2px;
+    background-image: linear-gradient(90deg, var(--grad));
+    margin-inline: 1.5rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Styles pour l’arborescence des archives */
+.archive-tree-container {
+  @apply border-2 border-gray-400 rounded-lg p-4 bg-white shadow-md; /* Cadre plus épais */
+}
+
+.archive-tree .p-treenode {
+  @apply border-b-2 border-gray-300 last:border-b-0; /* Lignes plus épaisses entre les nœuds */
+}
+
+.file-node {
+  @apply text-blue-600 hover:text-blue-800; /* Style pour les fichiers */
+}
+
+.folder-node {
+  @apply font-semibold text-gray-800; /* Style pour les dossiers */
+}
+
+.archive-tree .p-treenode-content {
+  @apply py-3;
+  /* Plus d'espacement vertical pour chaque nœud */
+}
+
+
+.sidebar-preview {
+  @apply relative flex flex-col h-full;
+  min-width: 200px;
+  z-index: 1001;
+}
+
+.resize-handle {
+  @apply absolute top-0 left-0 w-3 h-full bg-gray-500 cursor-col-resize hover:bg-blue-600;
+  z-index: 1002;
+  transition: background-color 0.2s;
+}-e 
+
+
+=== src/test-api/test-api.js ===
+
+const minio = require("minio")
+let mc
+try {
+  mc = new minio.Client(/*{
+    endPoint: "play.min.io",
+    port: 9000,
+    useSSL: true,
+    accessKey: "Q3AM3UQ867SPQQA43P2F",
+    secretKey: "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG"
+}*/
+    {
+      endPoint: "localhost",
+      useSSL: false,
+      port: 8080,
+      accessKey: "test:tester",
+      secretKey: "testing"
+    },
+    /* {
+       endPoint:"localhost",
+       useSSL: false,
+       port: 20001,
+       accessKey: "my-service-account",
+       secretKey: "my-svc-secret-key",
+       userAgent:window.navigator.userAgent
+     }*/
+    //Assume role example::
+    //https://github.com/minio/minio/blob/master/docs/sts/assume-role.md#testing-an-example-with-assume-rolego
+
+    /*,
+    {
+        endPoint: "localhost",
+        useSSL: false,
+        port: 9000,
+        accessKey: "H3ERY005GCGQ98KM0DP5",
+        secretKey: "MSG+WRmt8O8nxeHinNW8v9QcLT1t7JoL14zO71OH",
+        sessionToken: "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiJIM0VSWTAwNUdDR1E5OEtNMERQNSIsImV4cCI6MTY1NzYyMDA1OSwicGFyZW50IjoibWluaW8ifQ.3ZM7Tg9qMoCV6-sRbmdEc064-Fhtp0eBOBcgetUWx8GfihZZAnInspdiiNZFl_bq43UAh0VHg-etkhkzsvN0EA"
+
+    }*/
+  );
+}catch (err){
+  console.log("Error::",err)
+}
+
+
+mc.setRequestOptions({timeout:500})
+
+
+    const removeObjectTest = () => {
+
+
+      const deleteList = [{name:"non-existent"}]
+
+      for(let i=0;i<3; i++){
+        deleteList.push({
+          name:`${i}.txt`
+        })
+      }
+
+      deleteList.splice(2, 0, { name:"does not exist object2"} )
+      deleteList.splice(1108, 0, { name:"does not exist object1110"} )
+
+      console.log(deleteList)
+      mc.removeObjects("test-bucket", deleteList ,(e, res) => {
+
+        if (e) {
+          return console.log(e)
+        }
+        console.log("Success", res)
+// Note : Inspect the res to find out if an object deletion is success or failure.
+
+      })
+}
+mc.traceOn()
+
+removeObjectTest()
+
+
+
+const testSelObjectContent = () =>{
+
+  const bucketName = 'test-bucket'
+  const objectName = 's3sel/large-data.json'
+  mc
+    .selectObjectContent(bucketName, objectName, {
+      // expression: "SELECT name FROM S3Object WHERE name IN('vEOGnc', '7IhCAC') LIMIT 2", // 2 rows
+      // expression: "SELECT name FROM S3Object WHERE name IN('vEOGnc', 'non-exist') LIMIT 2", // Error: Header Checksum Mismatch, Prelude CRC of 41 does not equal expected CRC of -6437716
+      // expression: "SELECT name FROM S3Object WHERE name IN('vEOGnc') LIMIT 2", // Error: Header Checksum Mismatch, Prelude CRC of 85 does not equal expected CRC of 1861855291
+
+      // expression: "select name from s3object as s where s.name IN ('huAsbq', 'anWuPo') limit 2", // 2 rows
+      // expression: "select name from s3object as s where s.name IN ('huAsbq', 'non-exist') limit 2", //only one row but limit 2
+      // expression: "select name from s3object as s where s.name IN ('huAsbq', 'non-exist') limit 101", //only one row but limit 101 file has only 100 rows
+      // expression: "select name from s3object as s where s.name IN ('huAsbq', 'non-exist') limit 1", //only one row but limit 101 file has only 100 rows
+      // expression: 'select name from s3object as s  LIMIT 500',
+      // expression: "select name from s3object as s where s.name IN ('huAsbq', 'anWuPo') limit 5",
+      // expression: "select name from s3object as s where s.name IN ('huAsbq', 'anWuPo') limit 1",
+      // expression: 'select name from s3object as s  LIMIT 5',
+      // expression: "select name from s3object as s  where s.name LIKE 'd%'", // 3 results following are limit in incremental to non existent.
+      // expression: "select name from s3object as s  where s.name LIKE 'd%' limit 1",
+      // expression: "select name from s3object as s  where s.name LIKE 'd%' limit 2",
+      // expression: "select name from s3object as s  where s.name LIKE 'd%' limit 3",
+      // expression: "select name from s3object as s  where s.name LIKE 'd%' limit 4",
+      // expression: "select name from s3object as s  where s.name LIKE 'd%' limit 5",
+      // expression: "select name from S3Object as s where s.name IN ('huAsbq', 'AbapuL') limit 2",
+      // expression: "select * from s3object as s where  s.type LIKE 'U%' limit 1",
+
+      inputSerialization: { JSON: { Type: 'LINES' } },
+      outputSerialization: { JSON: { RecordDelimiter: '\n' } },
+      expressionType: 'SQL',
+    })
+    .then((res) => {
+      console.log(res.records.toString())
+      console.log('Success')
+    })
+    .catch((err) => {
+      if (err) {
+        return console.log('Unable to process select object content.', err.message)
+      }
+    })
+
+}
+
+-e 
+
+
+=== src/utils.js ===
+import React from "react"
+
+export const isImage = (contentType, fileNameWithExtension) =>{
+    return contentType.includes("image") || fileNameWithExtension.includes("image")
+}
+
+
+export const getFileIcon = (obj) =>{
+    const {
+        name:fileName
+    } =obj
+
+    const extension = fileName.substr(fileName.lastIndexOf('.') + 1);
+    return <span className={`fiv-viv fiv-icon-${extension}`}></span>
+}-e 
+
+
+=== src/utils/fileUtils.js ===
+import mc from ".//mc";
+
+export const downloadFile = async (bucketName, path, filename) => {
+  try {
+    const signedUrl = await mc.presignedGetObject(bucketName, path, 60, {
+      "response-content-disposition": `attachment; filename="${filename}"`,
+    });
+    const link = document.createElement("a");
+    link.href = signedUrl;
+    link.target = "_self";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    throw new Error("Impossible de télécharger le fichier");
+  }
+};
+
+export const moveObject = async (bucketName, sourceKey, targetFolderKey) => {
+  try {
+    const filename = sourceKey.split("/").pop();
+    const destinationKey = `${targetFolderKey}/${filename}`.replace(/\/+/g, "/");
+    await mc.copyObject(bucketName, sourceKey, destinationKey);
+    await mc.removeObject(bucketName, sourceKey);
+  } catch (err) {
+    throw new Error("Impossible de déplacer le fichier.");
+  }
+};-e 
+
+
+=== src/utils/jupyterUtils.js ===
+import axios from 'axios';
+
+const JUPYTERHUB_API_URL = 'http://localhost:8000/hub/api';
+const JUPYTERHUB_TOKEN = '809fc4ba5d964619972e5a4b3f21e911';
+
+const getUserServerApiUrl = (username) => `http://localhost:8000/user/${username}/api`;
+
+export const checkJupyterServer = async (username) => {
+  try {
+    const response = await axios.get(`${JUPYTERHUB_API_URL}/users/${username}`, {
+      headers: {
+        Authorization: `token ${JUPYTERHUB_TOKEN}`,
+      },
+    });
+    return response.data.servers && Object.keys(response.data.servers).length > 0;
+  } catch (err) {
+    if (err.response?.status === 404) {
+      return false;
+    }
+    throw new Error(`Erreur lors de la vérification du serveur JupyterHub : ${err.response?.data?.message || err.message}`);
+  }
+};
+
+export const startJupyterServer = async (username) => {
+  try {
+    const response = await axios.post(
+      `${JUPYTERHUB_API_URL}/users/${username}/server`,
+      {},
+      {
+        headers: {
+          Authorization: `token ${JUPYTERHUB_TOKEN}`,
+        },
+      }
+    );
+    return response.status === 201 || response.status === 202;
+  } catch (err) {
+    throw new Error(`Échec du lancement du serveur JupyterHub : ${err.response?.data?.message || err.message}`);
+  }
+};
+
+export const listNotebooks = async (username, path = '') => {
+  try {
+    const apiUrl = `${getUserServerApiUrl(username)}/contents/${path}`;
+    const response = await axios.get(apiUrl, {
+      headers: {
+        Authorization: `token ${JUPYTERHUB_TOKEN}`,
+      },
+    });
+    return response.data.content;
+  } catch (err) {
+    throw new Error(`Erreur lors de la récupération des notebooks : ${err.response?.data?.message || err.message}`);
+  }
+};
+
+export const getNotebookContent = async (username, path) => {
+  try {
+    const apiUrl = `${getUserServerApiUrl(username)}/contents/${path}`;
+    const response = await axios.get(apiUrl, {
+      headers: {
+        Authorization: `token ${JUPYTERHUB_TOKEN}`,
+      },
+    });
+    if (response.data.type === 'notebook') {
+      return response.data.content;
+    } else {
+      throw new Error('Le chemin spécifié n\'est pas un notebook');
+    }
+  } catch (err) {
+    throw new Error(`Erreur lors de la récupération du contenu du notebook : ${err.response?.data?.message || err.message}`);
+  }
+};
+
+export const getOrCreateSession = async (username, path) => {
+  try {
+    const apiUrl = `${getUserServerApiUrl(username)}/sessions`;
+    const sessionsResponse = await axios.get(apiUrl, {
+      headers: {
+        Authorization: `token ${JUPYTERHUB_TOKEN}`,
+      },
+    });
+    const sessions = sessionsResponse.data;
+    const existingSession = sessions.find(session => session.path === path);
+    if (existingSession) {
+      return existingSession;
+    }
+    const createResponse = await axios.post(apiUrl, {
+      path: path,
+      type: 'notebook',
+    }, {
+      headers: {
+        Authorization: `token ${JUPYTERHUB_TOKEN}`,
+      },
+    });
+    return createResponse.data;
+  } catch (err) {
+    throw new Error(`Erreur lors de la gestion de la session : ${err.response?.data?.message || err.message}`);
+  }
+};
+
+export const getKernelWebSocketUrl = (username, kernelId) => {
+  return `ws://localhost:8000/user/${username}/api/kernels/${kernelId}/channels?token=${JUPYTERHUB_TOKEN}`;
+};
+
+export const createNotebook = async (username, notebookName, content) => {
+  const apiUrl = `http://localhost:8000/user/${username}/api/contents/${notebookName}.ipynb`;
+  try {
+    const response = await axios.put(
+      apiUrl,
+      { type: "notebook", content },
+      { headers: { Authorization: `token ${JUPYTERHUB_TOKEN}` } }
+    );
+    return response.data;
+  } catch (err) {
+    throw new Error(`Erreur lors de la création du notebook : ${err.message}`);
+  }
+};
+
+export const getNotebookUrl = (username, notebookName) => {
+  return `http://localhost:8000/user/${username}/notebooks/${notebookName}.ipynb`;
+};-e 
+
+
+=== src/utils/mc.js ===
+// import * as minio from "minio";
+// const mc = new minio.Client(
+//     {
+//             endPoint: "localhost",
+//             useSSL: false,
+//             port: 8080,
+//             accessKey: "test:tester",
+//             secretKey: "testing",
+//     },
+//
+//
+// );
+// export default mc
+-e 
+
+
+=== src/utils/objectUtils.js ===
+import prettyBytes from "pretty-bytes";
+import { orderBy } from "lodash";
+import { listObjects, uploadObject } from "../utils/s3client"; // Ajustez le chemin d'import
+
+const getAsNode = (objectInfo) => {
+  const { name = "", pathName = "", displayKey, leaf, children, size, lastModified, contentType, ...dataKeys } = objectInfo;
+
+  return {
+    ...objectInfo,
+    key: `${pathName}${name}`.replace(/\/+/g, "/"),
+    data: {
+      ...dataKeys,
+      name: displayKey,
+      size: size > 0 ? prettyBytes(size) : "",
+      rawSize: size,
+    },
+    leaf: leaf,
+    children: children,
+  };
+};
+
+export const listObjectsOfPrefix = async (bName, pathName = "") => {
+  try {
+    // Normaliser le préfixe
+    const normalizedPath = pathName ? `${pathName.replace(/^\/+|\/+$/g, "")}/` : "";
+    const objList = [];
+    const seenKeys = new Set();
+
+    const objects = await listObjects(bName, normalizedPath);
+    for (const chunk of objects) {
+      console.log("OBJECT :", chunk)
+      const { key: objectName = "", size = 0, lastModified, contentType } = chunk;
+      console.log({ key: objectName, size, lastModified, contentType } )
+      const isFolder = objectName.endsWith("/");
+      const effectiveName = objectName;
+
+      if (!effectiveName) {
+        console.log("Ignorer chunk invalide:", chunk);
+        continue;
+      }
+
+      // Ignorer l'objet si c'est le préfixe lui-même
+      if (effectiveName === normalizedPath || (isFolder && effectiveName.replace(/\/+$/, "") === normalizedPath.replace(/\/+$/, ""))) {
+        console.log(`Ignorer préfixe lui-même: ${effectiveName}`);
+        continue;
+      }
+
+      // Calculer le nom d'affichage (partie après le préfixe)
+      let displayKey = effectiveName.replace(/^\/+|\/+$/g, "");
+      if (normalizedPath && displayKey.startsWith(normalizedPath)) {
+        displayKey = displayKey.substring(normalizedPath.length);
+      }
+      if (isFolder && displayKey.endsWith("/")) {
+        displayKey = displayKey.substring(0, displayKey.length - 1);
+      }
+      if (!displayKey) {
+        console.log("displayKey vide, ignoré:", chunk);
+        continue;
+      }
+
+      // Clé unique pour éviter les doublons
+      const nodeKey = `${normalizedPath}${displayKey}`.replace(/\/+/g, "/");
+      if (seenKeys.has(nodeKey)) {
+        console.log(`Ignorer doublon: ${nodeKey}`);
+        continue;
+      }
+      seenKeys.add(nodeKey);
+
+      const nodeInfo = getAsNode({
+        ...chunk,
+        name: displayKey,
+        displayKey: displayKey,
+        pathName: normalizedPath,
+        size,
+        lastModified,
+        contentType,
+        children: isFolder ? [] : undefined,
+        leaf: !isFolder,
+      });
+      // console.log("OUSQIDQSDKJQSLKDJQS : ", nodeInfo)
+      objList.push(nodeInfo);
+    }
+
+    console.log(`listObjectsOfPrefix terminé: ${objList.length} objets`, objList);
+    return orderBy(objList, ["leaf", "data.name"], ["asc", "asc"]);
+  } catch (err) {
+    console.error("Erreur dans listObjectsOfPrefix:", err);
+    return [];
+  }
+};
+
+export const loadObjectList = async (bucketName, path) => {
+  try {
+    const objList = await listObjectsOfPrefix(bucketName, path || "");
+    return orderBy(objList, ["leaf", "data.name"], ["asc", "asc"]);
+  } catch (err) {
+    console.error("Erreur dans loadObjectList:", err);
+    throw new Error("Impossible de charger la liste des objets.");
+  }
+};
+
+export const createFolder = async (bucketName, prefixPath, folderName) => {
+  const folderPath = `${prefixPath ? prefixPath.replace(/\/+$/, "") + "/" : ""}${folderName}/`.replace(/\/+/g, "/");
+  const emptyBlob = new Blob([], { type: "application/x-directory" });
+  await uploadObject(bucketName, folderPath, emptyBlob);
+};-e 
+
+
+=== src/utils/previewUtils.js ===
+import React from "react";
+import { marked } from "marked";
+import DOMPurify from "dompurify";
+import mc from "./mc";
+import Papa from "papaparse";
+import JSZip from "jszip";
+import * as XLSX from "xlsx";
+import WaveSurfer from "wavesurfer.js";
+import hljs from "highlight.js";
+import "highlight.js/styles/vs2015.css";
+import { Tree } from "primereact/tree"; // Importer Tree de PrimeReact
+import prettyBytes from "pretty-bytes"; // Pour formater la taille des fichiers
+
+
+
+// Cache pour les prévisualisations
+const previewCache = new Map();
+
+// Composant pour gérer les erreurs
+const ErrorPreview = ({ error }) => (
+  <div className="text-red-500 p-4">
+    Impossible de générer la prévisualisation : {error}
+  </div>
+);
+
+// Composant pour Markdown
+const MarkdownPreview = ({ content }) => (
+  <div
+    className="markdown-preview border border-blue-500 p-4"
+    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(content)) }}
+  />
+);
+
+// Composant pour Vidéo
+const VideoPreview = ({ signedUrl }) => (
+  <video className="max-w-full h-auto" width="320" height="240" controls>
+    <source src={signedUrl} type="video/mp4" />
+    Votre navigateur ne supporte pas la balise vidéo.
+  </video>
+);
+
+// Composant pour CSV
+const CsvPreview = ({ headers, rows }) => (
+  <table className="preview-table w-full border-collapse">
+    <thead>
+      <tr>
+        {headers.map((header) => (
+          <th key={header} className="preview-table-header border p-2 bg-gray-100">
+            {header}
+          </th>
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((row, index) => (
+        <tr key={index}>
+          {headers.map((header) => (
+            <td key={header} className="preview-table-cell border p-2">
+              {row[header] || ""}
+            </td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+);
+
+// Composant pour Image
+const ImagePreview = ({ signedUrl }) => (
+  <img src={signedUrl} alt="Prévisualisation" className="max-w-full h-auto" />
+);
+
+// Composant pour PDF
+const PdfPreview = ({ signedUrl }) => (
+  <iframe src={signedUrl} className="w-full h-[600px]" />
+);
+
+// Composant pour Excel
+const ExcelPreview = ({ headers, rows }) => (
+  <table className="preview-table w-full border-collapse">
+    <thead>
+      <tr>
+        {headers.map((header) => (
+          <th key={header} className="preview-table-header border p-2 bg-gray-100">
+            {header}
+          </th>
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((row, index) => (
+        <tr key={index}>
+          {headers.map((header, i) => (
+            <td key={i} className="preview-table-cell border p-2">
+              {row[i] || ""}
+            </td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+);
+
+// Composant pour Audio
+const AudioPreview = ({ signedUrl, waveContainerRef }) => {
+  React.useEffect(() => {
+    const waveSurfer = WaveSurfer.create({
+      container: waveContainerRef.current,
+      waveColor: "#4a90e2",
+      progressColor: "#50e3c2",
+      height: 100,
+      barWidth: 2,
+      responsive: true,
+    });
+    waveSurfer.load(signedUrl);
+    waveSurfer.on("error", (err) => console.error("Erreur wavesurfer", err));
+    return () => waveSurfer.destroy();
+  }, [signedUrl]);
+
+  return (
+    <div>
+      <div ref={waveContainerRef} className="wave-container" />
+      <audio controls src={signedUrl}>
+        Votre navigateur ne supporte pas l'audio.
+      </audio>
+    </div>
+  );
+};
+
+
+
+
+
+// Fonction pour construire une arborescence à partir d'un fichier ZIP
+const buildZipTree = (zip) => {
+  const tree = [];
+  const folders = {};
+
+  Object.keys(zip.files).forEach((filePath) => {
+    const parts = filePath.split("/").filter((p) => p);
+    let currentLevel = tree;
+
+    parts.forEach((part, index) => {
+      const isFile = index === parts.length - 1 && !zip.files[filePath].dir;
+      const key = parts.slice(0, index + 1).join("/");
+
+      let node = currentLevel.find((n) => n.key === key);
+
+      if (!node) {
+        node = {
+          key,
+          label: part,
+          icon: isFile ? "pi pi-file" : "pi pi-folder",
+          data: isFile
+            ? { type: "file", size: zip.files[filePath]._data?.uncompressedSize || 0 }
+            : { type: "folder" },
+          children: [],
+          className: isFile ? "file-node" : "folder-node", // Ajout de classes pour stylisation
+        };
+        currentLevel.push(node);
+      }
+
+      if (!isFile) {
+        currentLevel = node.children;
+      }
+    });
+  });
+
+  return tree;
+};
+
+
+
+
+
+
+
+
+
+
+
+// Composant pour Zip avec arborescence
+const ZipPreview = ({ treeData }) => {
+  const nodeTemplate = (node) => {
+    if (node.data.type === "file") {
+      return (
+        <span>
+          {node.label} ({prettyBytes(node.data.size)})
+        </span>
+      );
+    }
+    return <span>{node.label}</span>;
+  };
+
+  return (
+    <div className="p-4">
+      <h3>Contenu de l'archive</h3>
+      <Tree value={treeData} nodeTemplate={nodeTemplate} />
+    </div>
+  );
+};
+// Composant pour Texte (avec Highlight.js)
+const TextPreview = ({ content }) => {
+  const highlighted = hljs.highlightAuto(content).value;
+  return (
+    <div className="card border border-blue-500">
+      <div className="content">
+        <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", maxWidth: "100%", overflowX: "auto", padding: "1rem" }}>
+          <code className="language-auto" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(highlighted) }} />
+        </pre>
+      </div>
+    </div>
+  );
+};
+
+// Composant par défaut pour les types non supportés
+const DefaultPreview = () => (
+  <div className="p-4">Prévisualisation non disponible pour ce type de fichier.</div>
+);
+
+export const getPreviewContent = async (bucketName, node) => {
+  const { key, data } = node;
+  const fileType = data.metadata?.["content-type"] || "";
+  const cacheKey = `${bucketName}:${key}:${data.lastModified || ""}`;
+
+  if (previewCache.has(cacheKey)) {
+    return previewCache.get(cacheKey);
+  }
+
+  try {
+    // 1. Markdown
+    if (fileType === "text/markdown" || key.endsWith(".md")) {
+      const streamChunksBuf = [];
+      const dataStream = await new Promise((resolve, reject) => {
+        mc.getObject(bucketName, key, (err, stream) => {
+          if (err) reject(err);
+          else resolve(stream);
+        });
+      });
+      dataStream.on("data", (chunk) => streamChunksBuf.push(Buffer.from(chunk)));
+      const mdContent = await new Promise((resolve) => {
+        dataStream.on("end", () => resolve(Buffer.concat(streamChunksBuf).toString()));
+      });
+      const result = { component: <MarkdownPreview content={mdContent} />, error: null, data: null };
+      previewCache.set(cacheKey, result);
+      return result;
+    }
+    // 2. Vidéo
+    else if (fileType.startsWith("video/")) {
+      const signedUrl = await mc.presignedGetObject(bucketName, key, 60);
+      const result = { component: <VideoPreview signedUrl={signedUrl} />, error: null, data: null };
+      previewCache.set(cacheKey, result);
+      return result;
+    }
+    // 3. CSV
+    else if (fileType === "text/csv" || key.endsWith(".csv")) {
+      try {
+        const streamChunksBuf = [];
+        const dataStream = await new Promise((resolve, reject) => {
+          mc.getObject(bucketName, key, (err, stream) => {
+            if (err) reject(err);
+            else resolve(stream);
+          });
+        });
+        dataStream.on("data", (chunk) => streamChunksBuf.push(Buffer.from(chunk)));
+        const csvContent = await new Promise((resolve) => {
+          dataStream.on("end", () => resolve(Buffer.concat(streamChunksBuf).toString()));
+        });
+        const parsed = Papa.parse(csvContent, { header: true, preview: 10 });
+        if (parsed.data.length > 0) {
+          const headers = Object.keys(parsed.data[0]);
+          const result = {
+            component: <CsvPreview headers={headers} rows={parsed.data} />,
+            error: null,
+            data: { headers, rows: parsed.data },
+          };
+          previewCache.set(cacheKey, result);
+          return result;
+        }
+      } catch (err) {
+        console.error("Erreur prévisualisation CSV", err);
+        return { component: <ErrorPreview error={err.message} />, error: err.message, data: null };
+      }
+    }
+    // 4. Image
+    else if (fileType.startsWith("image/")) {
+      const signedUrl = await mc.presignedGetObject(bucketName, key, 60);
+      const result = { component: <ImagePreview signedUrl={signedUrl} />, error: null, data: null };
+      previewCache.set(cacheKey, result);
+      return result;
+    }
+    // 5. PDF
+    else if (fileType === "application/pdf") {
+      const signedUrl = await mc.presignedGetObject(bucketName, key, 60);
+      const result = { component: <PdfPreview signedUrl={signedUrl} />, error: null, data: null };
+      previewCache.set(cacheKey, result);
+      return result;
+    }
+    // 6. Excel
+    else if (fileType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+      const streamChunksBuf = [];
+      const dataStream = await new Promise((resolve, reject) => {
+        mc.getObject(bucketName, key, (err, stream) => {
+          if (err) reject(err);
+          else resolve(stream);
+        });
+      });
+      dataStream.on("data", (chunk) => streamChunksBuf.push(Buffer.from(chunk)));
+      const xlsxContent = await new Promise((resolve) => {
+        dataStream.on("end", () => resolve(Buffer.concat(streamChunksBuf)));
+      });
+      const workbook = XLSX.read(xlsxContent, { type: "buffer" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, range: 5 });
+      const headers = worksheet[0] || [];
+      const result = {
+        component: <ExcelPreview headers={headers} rows={worksheet.slice(1, 6)} />,
+        error: null,
+        data: null,
+      };
+      previewCache.set(cacheKey, result);
+      return result;
+    }
+    // 7. Audio
+    else if (fileType.startsWith("audio/")) {
+      try {
+        const signedUrl = await mc.presignedGetObject(bucketName, key, 60);
+        const waveContainerRef = React.createRef();
+        const result = {
+          component: <AudioPreview signedUrl={signedUrl} waveContainerRef={waveContainerRef} />,
+          error: null,
+          data: null,
+        };
+        previewCache.set(cacheKey, result);
+        return result;
+      } catch (err) {
+        console.error("Erreur prévisualisation audio", err);
+        return { component: <ErrorPreview error={err.message} />, error: err.message, data: null };
+      }
+    }
+    // 8. Zip/Tar
+    // 8. Zip/Tar
+    else if (["application/zip", "application/x-tar", "application/x-zip-compressed"].includes(fileType)) {
+      const streamChunksBuf = [];
+      const dataStream = await new Promise((resolve, reject) => {
+        mc.getObject(bucketName, key, (err, stream) => {
+          if (err) reject(err);
+          else resolve(stream);
+        });
+      });
+      dataStream.on("data", (chunk) => streamChunksBuf.push(Buffer.from(chunk)));
+      const archiveData = await new Promise((resolve) => {
+        dataStream.on("end", () => resolve(Buffer.concat(streamChunksBuf)));
+      });
+
+      if (fileType === "application/zip" || fileType === "application/x-zip-compressed") {
+        try {
+          const zip = await JSZip.loadAsync(archiveData);
+          const treeData = buildZipTree(zip);
+          const result = { component: <ZipPreview treeData={treeData} />, error: null, data: null };
+          previewCache.set(cacheKey, result);
+          return result;
+        } catch (err) {
+          const result = {
+            component: <ErrorPreview error="Erreur lors du chargement de l'archive ZIP" />,
+            error: err.message,
+            data: null,
+          };
+          previewCache.set(cacheKey, result);
+          return result;
+        }
+      } else if (fileType === "application/x-tar") {
+        const result = {
+          component: <div>Prévisualisation non disponible pour les fichiers TAR.</div>,
+          error: null,
+          data: null,
+        };
+        previewCache.set(cacheKey, result);
+        return result;
+      }
+    }
+        /*else if (["application/zip", "application/x-tar"].includes(fileType)) {
+      const streamChunksBuf = [];
+      const dataStream = await new Promise((resolve, reject) => {
+        mc.getObject(bucketName, key, (err, stream) => {
+          if (err) reject(err);
+          else resolve(stream);
+        });
+      });
+      dataStream.on("data", (chunk) => streamChunksBuf.push(Buffer.from(chunk)));
+      const zipData = await new Promise((resolve) => {
+        dataStream.on("end", () => resolve(Buffer.concat(streamChunksBuf)));
+      });
+      const zip = await JSZip.loadAsync(zipData);
+      const fileList = Object.keys(zip.files).join(", ");
+      const result = { component: <ZipPreview fileList={fileList} />, error: null, data: null };
+      previewCache.set(cacheKey, result);
+      return result;
+    }*/
+    // 9. Default (y compris texte)
+    else {
+      if (fileType.startsWith("text/")) {
+        const streamChunksBuf = [];
+        const dataStream = await new Promise((resolve, reject) => {
+          mc.getObject(bucketName, key, (err, stream) => {
+            if (err) reject(err);
+            else resolve(stream);
+          });
+        });
+        dataStream.on("data", (chunk) => streamChunksBuf.push(Buffer.from(chunk)));
+        const textContent = await new Promise((resolve) => {
+          dataStream.on("end", () => resolve(Buffer.concat(streamChunksBuf).toString()));
+        });
+        const result = { component: <TextPreview content={textContent} />, error: null, data: null };
+        previewCache.set(cacheKey, result);
+        return result;
+      } else {
+        const result = { component: <DefaultPreview />, error: null, data: null };
+        previewCache.set(cacheKey, result);
+        return result;
+      }
+    }
+  } catch (err) {
+    console.error("Erreur prévisualisation", err);
+    return { component: <ErrorPreview error={err.message} />, error: err.message, data: null };
+  } finally {
+    if (previewCache.size > 50) {
+      const oldestKey = previewCache.keys().next().value;
+      previewCache.delete(oldestKey);
+    }
+  }
+};-e 
+
+
+=== src/utils/s3client.js ===
+// src/utils/s3client.js
+
+const API_BASE_URL = 'http://localhost:5000'; // Ajustez si nécessaire
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('jwtToken');
+  if (!token) throw new Error('JWT token manquant');
+  return {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+};
+
+/**
+ * Récupère la liste des buckets.
+ * @returns {Promise<Array<{name: string}>>} Liste des buckets.
+ */
+export const getBuckets = async () => {
+  const response = await fetch(API_BASE_URL+`/buckets`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const data = await response.json();
+  console.log(data)
+  return data.buckets || [];
+};
+
+/**
+ * Crée un nouveau bucket avec options avancées.
+ * @param {string} bucketName - Nom du bucket.
+ * @param {string} [region='us-east-1'] - Région du bucket (défaut: 'us-east-1').
+ * @param {Object} [options={}] - Options supplémentaires (ex. { ObjectLocking: true }).
+ * @returns {Promise<Object>} Réponse de création.
+ */
+export const createBucket = async (bucketName, region = 'us-east-1', options = {}) => {
+  const response = await fetch(`${API_BASE_URL}/buckets`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ name: bucketName, region, objectLocking: options.ObjectLocking, ...options }),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+};
+
+/**
+ * Supprime un bucket.
+ * @param {string} bucketName - Nom du bucket à supprimer.
+ * @returns {Promise<Object>} Réponse de suppression.
+ */
+export const removeBucket = async (bucketName) => {
+  const response = await fetch(`${API_BASE_URL}/buckets/${bucketName}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+};
+/**
+ * Liste les objets dans un bucket.
+ * @param {string} bucketName - Nom du bucket.
+ * @param {string} [prefix=''] - Préfixe pour filtrer.
+ * @returns {Promise<Array<{key: string, size: number}>>} Liste des objets.
+ */
+export const listObjects = async (bucketName, prefix = '') => {
+  const response = await fetch(`${API_BASE_URL}/buckets/${bucketName}/objects?prefix=${encodeURIComponent(prefix)}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+  console.log("COUCOU LISTOBJECT")
+  console.log(response.body)
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const data = await response.json();
+  console.log("listObjects : DATA.OBJECT =", data.objects)
+  return data.objects || [];
+};
+
+/**
+ * Upload un fichier dans un bucket.
+ * @param {string} bucketName - Nom du bucket.
+ * @param {string} key - Chemin de l'objet.
+ * @param {File} file - Fichier à uploader.
+ * @param {Function} [onProgress] - Callback pour progression.
+ * @returns {Promise<Object>} Réponse d'upload.
+ */
+export const uploadObject = async (bucketName, key, file, onProgress) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('key', key);
+  formData.append('contentType', file.type || 'binary/octet-stream');  // Ajout du mime type du fichier
+  formData.append('creationDate', new Date().toISOString());  // Date de création au format ISO
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', `${API_BASE_URL}/buckets/${bucketName}/objects`);
+  xhr.setRequestHeader('Authorization', getAuthHeaders().Authorization);
+
+  if (onProgress) {
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress((event.loaded / event.total) * 100);
+    };
+  }
+
+  return new Promise((resolve, reject) => {
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve(JSON.parse(xhr.responseText));
+      else reject(new Error(`HTTP ${xhr.status}`));
+    };
+    xhr.onerror = reject;
+    xhr.send(formData);
+  });
+};
+/**
+ * Télécharge un objet depuis un bucket.
+ * @param {string} bucketName - Nom du bucket.
+ * @param {string} key - Chemin de l'objet.
+ * @returns {Promise<Blob>} Contenu du fichier sous forme de Blob.
+ */
+export const downloadObject = async (bucketName, key) => {
+  const response = await fetch(`${API_BASE_URL}/buckets/${bucketName}/objects/${encodeURIComponent(key)}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.blob();
+};
+
+/**
+ * Supprime un objet dans un bucket.
+ * @param {string} bucketName - Nom du bucket.
+ * @param {string} key - Chemin de l'objet.
+ * @returns {Promise<Object>} Réponse de suppression.
+ */
+export const deleteObject = async (bucketName, key) => {
+  const response = await fetch(`${API_BASE_URL}/buckets/${bucketName}/objects/${encodeURIComponent(key)}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+};-e 
+
+
