@@ -30,7 +30,7 @@ cat <<EOF >> docker-compose_datalake.yml
     command: sh /scripts/init.sh
     privileged: true
     networks:
-      - swift_cluster
+      - swift-cluster
 
 EOF
 export $(grep -v '^#' ./conf.env | sed 's/\r$//' | xargs)
@@ -59,7 +59,7 @@ for i in $(seq $NB_MANAGEMENT_NODE); do
 #      - "8080:8080"
     restart: always
     networks:
-      swift_cluster:
+      swift-cluster:
         ipv4_address: 10.5.10.$i
     depends_on:
       initswift:
@@ -88,7 +88,7 @@ for i in $(seq $NB_STORAGE_NODE); do
     privileged: true
     restart: always
     networks:
-      swift_cluster:
+      swift-cluster:
         ipv4_address: 10.5.1.$i
     depends_on:
       initswift:
@@ -116,8 +116,7 @@ cat << EOF >> docker-compose_datalake.yml
     image: jupyterhub
     container_name: jupyterhub
     networks:
-      jupyterhub-network:
-      swift_cluster:
+      swift-cluster:
           ipv4_address: 10.5.100.1
 
     volumes:
@@ -134,7 +133,7 @@ cat << EOF >> docker-compose_datalake.yml
       # This username will be a JupyterHub admin
       JUPYTERHUB_ADMIN: admin
       # All containers will join this network
-      DOCKER_NETWORK_NAME: jupyterhub-network
+      DOCKER_NETWORK_NAME: swift-cluster
       # JupyterHub will spawn this Notebook image for users
       DOCKER_NOTEBOOK_IMAGE: cors_base-notebook:latest
       #DOCKER_NOTEBOOK_IMAGE: quay.io/jupyter/base-notebook:latest
@@ -167,7 +166,7 @@ cat << EOF >> docker-compose_datalake.yml
     ports :
       - 3000:3000
     networks:
-        swift_cluster:
+        swift-cluster:
           ipv4_address: 10.5.255.1
 EOF
 
@@ -199,7 +198,7 @@ cat <<EOF >> docker-compose_datalake.yml
       retries: 3
     command: /app/start.sh
     networks:
-      swift_cluster:
+      swift-cluster:
         ipv4_address: 10.5.255.254
   flask-app:
     build:
@@ -221,7 +220,7 @@ cat <<EOF >> docker-compose_datalake.yml
       retries: 3
     command: gunicorn -w 3 -t 60 -b 0.0.0.0:5000 app:app
     networks:
-      swift_cluster:
+      swift-cluster:
         ipv4_address: 10.5.255.2
 
 EOF
@@ -232,9 +231,10 @@ cat <<EOF >> docker-compose_datalake.yml
 
 
 networks:
-  jupyterhub-network:
-    name: jupyterhub-network
-  swift_cluster:
+#  jupyterhub-network:
+#    name: jupyterhub-network
+  swift-cluster:
+    name: swift-cluster
     driver: bridge
     ipam:
       config:

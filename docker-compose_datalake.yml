@@ -14,7 +14,7 @@ services:
     command: sh /scripts/init.sh
     privileged: true
     networks:
-      - swift_cluster
+      - swift-cluster
 
   management-1:
     profiles:
@@ -34,7 +34,7 @@ services:
 #      - "8080:8080"
     restart: always
     networks:
-      swift_cluster:
+      swift-cluster:
         ipv4_address: 10.5.10.1
     depends_on:
       initswift:
@@ -57,7 +57,7 @@ services:
     privileged: true
     restart: always
     networks:
-      swift_cluster:
+      swift-cluster:
         ipv4_address: 10.5.1.1
     depends_on:
       initswift:
@@ -76,8 +76,7 @@ services:
     image: jupyterhub
     container_name: jupyterhub
     networks:
-      jupyterhub-network:
-      swift_cluster:
+      swift-cluster:
           ipv4_address: 10.5.100.1
 
     volumes:
@@ -94,7 +93,7 @@ services:
       # This username will be a JupyterHub admin
       JUPYTERHUB_ADMIN: admin
       # All containers will join this network
-      DOCKER_NETWORK_NAME: jupyterhub-network
+      DOCKER_NETWORK_NAME: swift-cluster
       # JupyterHub will spawn this Notebook image for users
       DOCKER_NOTEBOOK_IMAGE: cors_base-notebook:latest
       #DOCKER_NOTEBOOK_IMAGE: quay.io/jupyter/base-notebook:latest
@@ -117,7 +116,7 @@ services:
     ports :
       - 3000:3000
     networks:
-        swift_cluster:
+        swift-cluster:
           ipv4_address: 10.5.255.1
   nginx-proxy:
     profiles:
@@ -142,7 +141,7 @@ services:
       retries: 3
     command: /app/start.sh
     networks:
-      swift_cluster:
+      swift-cluster:
         ipv4_address: 10.5.255.254
   flask-app:
     build:
@@ -164,15 +163,16 @@ services:
       retries: 3
     command: gunicorn -w 3 -t 60 -b 0.0.0.0:5000 app:app
     networks:
-      swift_cluster:
+      swift-cluster:
         ipv4_address: 10.5.255.2
 
 
 
 networks:
-  jupyterhub-network:
-    name: jupyterhub-network
-  swift_cluster:
+#  jupyterhub-network:
+#    name: jupyterhub-network
+  swift-cluster:
+    name: swift-cluster
     driver: bridge
     ipam:
       config:
