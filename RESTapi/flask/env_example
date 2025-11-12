@@ -1,0 +1,4 @@
+KEYCLOAK_URL="base url to keycloak"
+KEYCLOAK_REALM="Realm string"
+KEYCLOAK_CLIENT_ID="Client ID string"
+FLASK_SECRET="change_me"
