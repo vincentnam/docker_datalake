@@ -3,3 +3,4 @@ gunicorn==20.0.4
 jinja2
 flask_cors
 boto3
+Flask-OIDC

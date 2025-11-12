@@ -5,10 +5,10 @@ RUN python3 -m pip install --no-cache-dir \
     dockerspawner \
     jupyterhub-nativeauthenticator
 
-RUN pip install jupydrive_s3
 
 
-CMD ["jupyterhub", "-f", "/srv/jupyterhub/jupyterhub_config.py"]
+
+CMD ["jupyterhub","--debug", "-f", "/srv/jupyterhub/jupyterhub_config.py"]
 
 
 

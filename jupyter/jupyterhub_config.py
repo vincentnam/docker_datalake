@@ -140,6 +140,9 @@ c.JupyterHub.tornado_settings = {
         'Access-Control-Allow-Headers': 'Authorization, Content-Type'
     }
 }
+
+c.NotebookApp.disable_check_xsrf = True
+
 # Allowed admins
 admin = os.environ.get("JUPYTERHUB_ADMIN")
 if admin:

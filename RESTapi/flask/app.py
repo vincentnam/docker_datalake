@@ -3,27 +3,65 @@
 
 
 # app.py - API REST Flask pour proxy S3 (Swift compat)
-from flask import Flask, request, jsonify, send_file, abort
+from flask import Flask, request, jsonify, send_file, abort, g, session
 from flask_cors import CORS
 import boto3
 from botocore.exceptions import ClientError
 import io
 from datetime import datetime
+from flask_oidc import OpenIDConnect
 import os
 
+
+
+
+
+
 app = Flask(__name__)
+
+app.config.update({
+    'SECRET_KEY': os.getenv('FLASK_SECRET'),
+    'OIDC_CLIENT_SECRETS': {
+        'client_id': os.getenv('KEYCLOAK_CLIENT_ID'),
+        'client_secret': os.getenv('KEYCLOAK_CLIENT_SECRET'),
+        'issuer': f"{os.getenv('KEYCLOAK_URL')}/realms/{os.getenv('KEYCLOAK_REALM')}"
+    },
+    'OIDC_ID_TOKEN_COOKIE_SECURE': False,  # Dev only
+
+    'OIDC_OPENID_REALM': os.getenv('KEYCLOAK_REALM'),
+    'OIDC_SCOPES': ['openid', 'email', 'profile'],
+    'OVERWRITE_REDIRECT_URI': 'http://localhost:5000/oidc_callback',
+})
+
+oidc = OpenIDConnect(app)
+
+
+
+
+
 CORS(app, resources={r"/buckets": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]},
                      r"/buckets/*": {"origins": "*", "methods": ["GET", "POST", "DELETE", "OPTIONS"]}})
 app.config['DEBUG'] = True
 # Config S3 client (Swift endpoint)
 s3_client = boto3.client(
     's3',
-    endpoint_url='http://10.5.10.1:8080',  # Swift SAIO endpoint
+    endpoint_url='http://10.5.10.1:8080',  # Swift endpoint - management node
     aws_access_key_id='test:tester',  # Temp auth Swift
     aws_secret_access_key='testing',
     region_name='us-east-1',
     config=boto3.session.Config(signature_version='s3v4', s3={'addressing_style': 'path'})
 )
+
+@app.route('/')
+def index():
+    if oidc.user_loggedin:
+        return 'Welcome %s' % session["oidc_auth_profile"].get('email')
+    else:
+        return 'Not logged in'
+
+
+
+
 @app.route('/buckets', methods=['GET'])
 def list_buckets():
     try:
