@@ -3,7 +3,8 @@
 
 
 # app.py - API REST Flask pour proxy S3 (Swift compat)
-from flask import Flask, request, jsonify, send_file, abort, g, session
+from functools import wraps
+from flask import Flask, request, jsonify, send_file, abort, g, session, redirect, url_for, current_app
 from flask_cors import CORS
 import boto3
 from botocore.exceptions import ClientError
@@ -11,36 +12,88 @@ import io
 from datetime import datetime
 from flask_oidc import OpenIDConnect
 import os
+import requests
+from dotenv import load_dotenv
 
+from keycloak import KeycloakOpenID
+load_dotenv()
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get("Authorization")
+        username = request.headers.get("X-Username") or request.headers.get("Username")
+        password = request.headers.get("X-Password") or request.headers.get("Password")
 
+        token = None
 
+        # === CAS 1 : Token Bearer ===
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
 
+            try:
+                # Validation automatique du token
+                userinfo = keycloak_openid.userinfo(token)
+                g.user = {
+                    "id": userinfo.get("sub"),
+                    "username": userinfo.get("preferred_username"),
+                    "email": userinfo.get("email"),
+                    "roles": userinfo.get("realm_access", {}).get("roles", []),
+                    "source": "token"
+                }
+                return f(*args, **kwargs)
+            except Exception as e:
+                current_app.logger.warning(f"Token invalide: {e}")
+                return jsonify({"error": "Token invalide ou expiré"}), 401
 
+        # === CAS 2 : Username + Password dans headers ===
+        elif username and password:
+            try:
+                # Obtention du token via Keycloak
+                token_data = keycloak_openid.token(
+                    username=username,
+                    password=password,
+                    grant_type=["password"]
+                )
+                access_token = token_data["access_token"]
+
+                # Validation + userinfo
+                userinfo = keycloak_openid.userinfo(access_token)
+                g.user = {
+                    "id": userinfo.get("sub"),
+                    "username": userinfo.get("preferred_username"),
+                    "email": userinfo.get("email"),
+                    "roles": userinfo.get("realm_access", {}).get("roles", []),
+                    "source": "credentials",
+                    "access_token": access_token  # optionnel
+                }
+                return f(*args, **kwargs)
+            except Exception as e:
+                current_app.logger.warning(f"Échec login: {e}")
+                return jsonify({"error": "Identifiants incorrects"}), 401
+
+        # === AUCUN MOYEN D'AUTH ===
+        else:
+            return jsonify({
+                "error": "Authentification requise",
+                "hint": "Bearer token ou X-Username + X-Password"
+            }), 401
+
+    return decorated_function
 app = Flask(__name__)
 
-app.config.update({
-    'SECRET_KEY': os.getenv('FLASK_SECRET'),
-    'OIDC_CLIENT_SECRETS': {
-        'client_id': os.getenv('KEYCLOAK_CLIENT_ID'),
-        'client_secret': os.getenv('KEYCLOAK_CLIENT_SECRET'),
-        'issuer': f"{os.getenv('KEYCLOAK_URL')}/realms/{os.getenv('KEYCLOAK_REALM')}"
-    },
-    'OIDC_ID_TOKEN_COOKIE_SECURE': False,  # Dev only
 
-    'OIDC_OPENID_REALM': os.getenv('KEYCLOAK_REALM'),
-    'OIDC_SCOPES': ['openid', 'email', 'profile'],
-    'OVERWRITE_REDIRECT_URI': 'http://localhost:5000/oidc_callback',
-})
-
-oidc = OpenIDConnect(app)
-
-
+keycloak_openid = KeycloakOpenID(server_url=os.getenv("KEYCLOAK_ISSUER"),
+                                 client_id=os.getenv("KEYCLOAK_CLIENT_ID"),
+                                 realm_name=os.getenv('KEYCLOAK_REALM'),
+                                 client_secret_key=os.getenv('KEYCLOAK_CLIENT_SECRET'))
 
 
 
 CORS(app, resources={r"/buckets": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]},
                      r"/buckets/*": {"origins": "*", "methods": ["GET", "POST", "DELETE", "OPTIONS"]}})
+
+
 app.config['DEBUG'] = True
 # Config S3 client (Swift endpoint)
 s3_client = boto3.client(
@@ -52,14 +105,48 @@ s3_client = boto3.client(
     config=boto3.session.Config(signature_version='s3v4', s3={'addressing_style': 'path'})
 )
 
+
+@app.route('/api/login', methods=['GET'])
+
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    # if not username or not password:
+    #     return jsonify({'error': 'Username and password required'}), 400
+
+    # payload = {
+    #     'grant_type': 'password',
+    #     'client_id': "REST_API",
+    #     'client_secret': "JDlkD6DktrbirbiclJPksQ4wlAabEknT",
+    #     'username': "test",
+    #     'password': "test1",
+    #     'scope': 'openid profile email'
+    # }
+
+
+
+    token = keycloak_openid.token("test1","test")
+    return token
+    # response = requests.post("http://neosso.univ-tlse3.fr/realms/MIDOC/protocol/openid-connect/token", data=payload)
+    # if response.status_code == 200:
+    #     return jsonify(response.json())
+    # else:
+    #     app.logger.info(response.json())
+    #     return jsonify({'error': 'Authentication failed'}), response.status_code
+
+
 @app.route('/')
+@login_required
 def index():
-    if oidc.user_loggedin:
-        return 'Welcome %s' % session["oidc_auth_profile"].get('email')
+    # g.user est rempli par le décorateur @login_required
+    app.logger.info(f"Utilisateur connecté : {g.user}")
+
+    # Vérifie que l'utilisateur est bien authentifié
+    if g.user and g.user.get("username"):
+        return f'Bienvenue {g.user["username"]} ! (email: {g.user.get("email", "N/A")})'
     else:
-        return 'Not logged in'
-
-
+        return 'Utilisateur inconnu (authentification échouée)', 500
 
 
 @app.route('/buckets', methods=['GET'])

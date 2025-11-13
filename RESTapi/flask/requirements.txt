@@ -4,3 +4,7 @@ jinja2
 flask_cors
 boto3
 Flask-OIDC
+dotenv
+python-keycloak
+PyJWT[crypto]
+python-dotenv
