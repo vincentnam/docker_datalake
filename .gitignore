@@ -5,3 +5,4 @@ dockerswarm_token.md
 */backups/
 */jupyter/jupyterhub-data/
 */openstackSwift/conf/
+*.env

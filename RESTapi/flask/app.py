@@ -106,50 +106,22 @@ s3_client = boto3.client(
 )
 
 
-@app.route('/api/login', methods=['GET'])
-
-def login():
-    data = request.json
-    username = data.get('username')
-    password = data.get('password')
-    # if not username or not password:
-    #     return jsonify({'error': 'Username and password required'}), 400
-
-    # payload = {
-    #     'grant_type': 'password',
-    #     'client_id': "REST_API",
-    #     'client_secret': "JDlkD6DktrbirbiclJPksQ4wlAabEknT",
-    #     'username': "test",
-    #     'password': "test1",
-    #     'scope': 'openid profile email'
-    # }
-
-
-
-    token = keycloak_openid.token("test1","test")
-    return token
-    # response = requests.post("http://neosso.univ-tlse3.fr/realms/MIDOC/protocol/openid-connect/token", data=payload)
-    # if response.status_code == 200:
-    #     return jsonify(response.json())
-    # else:
-    #     app.logger.info(response.json())
-    #     return jsonify({'error': 'Authentication failed'}), response.status_code
-
-
 @app.route('/')
 @login_required
-def index():
-    # g.user est rempli par le décorateur @login_required
-    app.logger.info(f"Utilisateur connecté : {g.user}")
-
-    # Vérifie que l'utilisateur est bien authentifié
-    if g.user and g.user.get("username"):
-        return f'Bienvenue {g.user["username"]} ! (email: {g.user.get("email", "N/A")})'
-    else:
-        return 'Utilisateur inconnu (authentification échouée)', 500
-
+def check_login():
+    # g.user est TOUJOURS rempli ici → authentification réussie
+    return jsonify({
+        "status": "authenticated",
+        "user": {
+            "id": g.user["id"],
+            "username": g.user["username"],
+            "email": g.user.get("email"),
+            "source": g.user.get("source", "unknown")
+        }
+    }), 200
 
 @app.route('/buckets', methods=['GET'])
+@login_required
 def list_buckets():
     try:
         response = s3_client.list_buckets()  # Appel à boto3 pour lister les buckets
@@ -177,6 +149,7 @@ def list_buckets():
         abort(500, description=str(e))  # Gestion d'erreur standard
 
 @app.route('/buckets/<bucket>', methods=['DELETE'])
+@login_required
 def delete_bucket(bucket):
     try:
         app.logger.info('Deleting bucket {}'.format(bucket))
@@ -187,6 +160,7 @@ def delete_bucket(bucket):
         app.logger.info(e)
         abort(404 if 'NoSuchBucket' in str(e) else 500, description=str(e))
 @app.route('/buckets', methods=['POST'])
+@login_required
 def create_bucket():
     data = request.json
 
@@ -225,6 +199,7 @@ def create_bucket():
 #         app.logger.info(e)
 #         abort(404 if 'NoSuchBucket' in str(e) else 500, description=str(e))
 @app.route('/buckets/<bucket>/objects', methods=['POST'])
+@login_required
 def upload_object(bucket):
     if 'file' not in request.files:
         abort(400, description='No file uploaded')
@@ -248,6 +223,7 @@ def upload_object(bucket):
 
 
 @app.route('/buckets/<bucket>/objects', methods=['GET'])
+@login_required
 def list_objects(bucket):
     prefix = request.args.get('prefix', '')
     delimiter = request.args.get('delimiter', '/')
@@ -308,6 +284,7 @@ def list_objects(bucket):
         app.logger.info(e)
         abort(404 if 'NoSuchBucket' in str(e) else 500, description=str(e))
 @app.route('/buckets/<bucket>/objects/<key>', methods=['GET'])
+@login_required
 def download_object(bucket, key):
     try:
         response = s3_client.get_object(Bucket=bucket, Key=key)
@@ -317,6 +294,7 @@ def download_object(bucket, key):
         abort(404 if 'NoSuchKey' in str(e) else 500, description=str(e))
 
 @app.route('/buckets/<bucket>/objects/<key>', methods=['DELETE'])
+@login_required
 def delete_object(bucket, key):
     try:
         s3_client.delete_object(Bucket=bucket, Key=key)
