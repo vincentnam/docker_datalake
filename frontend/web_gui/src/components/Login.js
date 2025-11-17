@@ -22,13 +22,14 @@ const Login = () => {
     setError('');
 
     try {
-      // Appel direct sans wrapper
-      const response = await fetch(`${API_BASE}/api/login`, {
-        method: 'POST',
+      // Appel avec headers X-Username et X-Password au lieu du body
+      console.log(username, password);
+      const response = await fetch(`${API_BASE}/`, {
+        method: 'GET', // Changé en GET pour matcher la route Flask par défaut; utilisez POST si la route est mise à jour
         headers: {
-          'Content-Type': 'application/json',
+          'X-Username': username,
+          'X-Password': password,
         },
-        body: JSON.stringify({ username, password }),
       });
 
       const data = await response.json();
@@ -36,14 +37,16 @@ const Login = () => {
       if (!response.ok) {
         throw new Error(data.error || 'Login échoué');
       }
-
-      // Stockage du token
+      console.log(data);
+      console.log(data);
+      // Stockage du token (note: le backend doit renvoyer data.access_token; sinon, ajustez ici)
       localStorage.setItem('jwtToken', data.access_token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
       // Redirection
       history.push('/buckets');
     } catch (err) {
+      console.log("Erreur lors du login");
       setError(err.message || 'Identifiants incorrects');
       console.error('Login error:', err);
     } finally {

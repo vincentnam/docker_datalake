@@ -10,13 +10,14 @@ import boto3
 from botocore.exceptions import ClientError
 import io
 from datetime import datetime
-from flask_oidc import OpenIDConnect
+# from flask_oidc import OpenIDConnect
 import os
 import requests
 from dotenv import load_dotenv
 
 from keycloak import KeycloakOpenID
 load_dotenv()
+
 
 def login_required(f):
     @wraps(f)
@@ -26,13 +27,13 @@ def login_required(f):
         password = request.headers.get("X-Password") or request.headers.get("Password")
 
         token = None
+        current_app.logger.info(request.headers)  # Log headers for debugging (remove in production if sensitive)
 
-        # === CAS 1 : Token Bearer ===
+        # Case 1: Bearer Token
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
-
             try:
-                # Validation automatique du token
+                # Validate token and get userinfo
                 userinfo = keycloak_openid.userinfo(token)
                 g.user = {
                     "id": userinfo.get("sub"),
@@ -41,42 +42,61 @@ def login_required(f):
                     "roles": userinfo.get("realm_access", {}).get("roles", []),
                     "source": "token"
                 }
-                return f(*args, **kwargs)
+                # Call the protected function
+                response = f(*args, **kwargs)
+                return response
             except Exception as e:
-                current_app.logger.warning(f"Token invalide: {e}")
-                return jsonify({"error": "Token invalide ou expiré"}), 401
+                current_app.logger.warning(f"Invalid token: {e}")
+                return jsonify({"error": "Invalid or expired token"}), 401
 
-        # === CAS 2 : Username + Password dans headers ===
+        # Case 2: Username + Password in headers
         elif username and password:
             try:
-                # Obtention du token via Keycloak
+                # Obtain token via Keycloak password grant
                 token_data = keycloak_openid.token(
                     username=username,
                     password=password,
-                    grant_type=["password"]
+                    grant_type="password"  # Simplified to string as per common usage
                 )
                 access_token = token_data["access_token"]
 
-                # Validation + userinfo
+                # Validate and get userinfo
                 userinfo = keycloak_openid.userinfo(access_token)
+
                 g.user = {
                     "id": userinfo.get("sub"),
                     "username": userinfo.get("preferred_username"),
                     "email": userinfo.get("email"),
                     "roles": userinfo.get("realm_access", {}).get("roles", []),
                     "source": "credentials",
-                    "access_token": access_token  # optionnel
+                    "access_token": access_token  # Stored in g for potential use in route
                 }
-                return f(*args, **kwargs)
-            except Exception as e:
-                current_app.logger.warning(f"Échec login: {e}")
-                return jsonify({"error": "Identifiants incorrects"}), 401
 
-        # === AUCUN MOYEN D'AUTH ===
+                # Call the protected function
+                response = f(*args, **kwargs)
+
+                # If response is JSON, add the access_token to the body; otherwise, add to headers
+                if isinstance(response, tuple) and len(response) >= 2 and response[1] == 200:  # Assuming success
+                    if isinstance(response[0], dict):  # JSON response
+                        response[0]["access_token"] = access_token
+                    else:
+                        # Fallback: add to headers
+                        headers = response[2] if len(response) > 2 else {}
+                        headers["X-Access-Token"] = access_token
+                        response = (response[0], response[1], headers)
+                elif hasattr(response, 'headers'):  # Werkzeug response object
+                    response.headers["X-Access-Token"] = access_token
+
+                return response
+            except Exception as e:
+                current_app.logger.warning(f"Login failure: {type(e).__name__} - {e}")
+                return jsonify({"error": "Invalid credentials"}), 401
+
+        # No authentication provided
         else:
             return jsonify({
-                "error": "Authentification requise",
-                "hint": "Bearer token ou X-Username + X-Password"
+                "error": "Authentication required",
+                "hint": "Use Bearer token or X-Username + X-Password headers"
             }), 401
 
     return decorated_function
@@ -91,6 +111,7 @@ keycloak_openid = KeycloakOpenID(server_url=os.getenv("KEYCLOAK_ISSUER"),
 
 
 CORS(app, resources={r"/buckets": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]},
+                    r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]},
                      r"/buckets/*": {"origins": "*", "methods": ["GET", "POST", "DELETE", "OPTIONS"]}})
 
 
@@ -117,7 +138,8 @@ def check_login():
             "username": g.user["username"],
             "email": g.user.get("email"),
             "source": g.user.get("source", "unknown")
-        }
+        },
+        "access_token": g.user["access_token"]
     }), 200
 
 @app.route('/buckets', methods=['GET'])

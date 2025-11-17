@@ -8,3 +8,5 @@ dotenv
 python-keycloak
 PyJWT[crypto]
 python-dotenv
+requests
+python-keycloak

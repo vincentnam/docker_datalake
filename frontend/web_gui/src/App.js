@@ -11,8 +11,8 @@ import { getBuckets } from './utils/s3client';  // Ajoutez cet import
 const App = () => {
 
 
-    localStorage.setItem("jwtToken","TESTTOKEN12354667")
-
+    // localStorage.setItem("jwtToken","TESTTOKEN12354667")
+    console.log(localStorage.getItem("jwtToken"))
   return (
       <Router history={history}>
         <AppLayout>
