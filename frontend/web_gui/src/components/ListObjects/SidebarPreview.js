@@ -10,7 +10,7 @@ import "../../styles/preview.css";
 import { Panel } from "primereact/panel";
 import { throttle } from "lodash";
 import { Toast } from "primereact/toast";
-import history from "../../history"; // Importer history pour la redirection
+import { useNavigate } from "react-router-dom"; // Importer useNavigate
 
 const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
   const { previewHtml, previewComponent, isPreviewLoading, previewError } = usePreview(selectedNode, bucketName);
@@ -18,6 +18,7 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef(null);
   const [toast, showError, showSuccess] = useToast();
+  const navigate = useNavigate();
 
   // États pour la popup de progression
   const [progress, setProgress] = useState(null);
@@ -136,7 +137,7 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
 
       setProgress("redirecting");
       const notebookUrl = getNotebookUrl(username, notebookName);
-      history.push(notebookUrl.replace("http://localhost:8000", "")); // Redirection dans l'historique
+      navigate(notebookUrl.replace("http://localhost:8000", "")); // Redirection dans l'historique
       window.location.href = notebookUrl; // Forcer la navigation pour ouvrir dans le même onglet
     } catch (err) {
       setProgress("error");

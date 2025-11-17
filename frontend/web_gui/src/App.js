@@ -1,37 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { Router, Route, Switch } from "react-router";
+import React from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import ListBuckets from "./components/ListBuckets";
 import BrowseBucket from "./components/BrowseBucket";
 import AppLayout from "./Layout/AppLayout";
-import history from "./history";
 import "./App.css";
 import Login from "./components/Login";
-import { getBuckets } from './utils/s3client';  // Ajoutez cet import
-
+import PrivateRoute from "./components/Authentication/PrivateRoute";
 const App = () => {
-
-
-    // localStorage.setItem("jwtToken","TESTTOKEN12354667")
-    console.log(localStorage.getItem("jwtToken"))
+  console.log(localStorage.getItem("jwtToken"));
   return (
-      <Router history={history}>
-        <AppLayout>
-          <Switch>
-            <Route exact path={[ "/"]} component={Login} />
-            <Route exact path={[ "/buckets"]} component={ListBuckets} />
-            <Route exact path="/buckets/:bucketName" component={BrowseBucket} />
-          </Switch>
-        </AppLayout>
-      </Router>
-    // <div>
-    //   <h2>Liste des buckets</h2>
-    //   <p>Statut: {status}</p>
-    //   <ul>
-    //     coucou
-    //     {buckets_list}
-    //     {var_test_func}
-    //   </ul>
-    // </div>
+    <BrowserRouter>
+      <AppLayout>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/buckets" element={<PrivateRoute requiredRoles={['user']}><ListBuckets /></PrivateRoute>} />
+          <Route path="/buckets/:bucketName" element={<PrivateRoute requiredRoles={['user']}><BrowseBucket /></PrivateRoute>} />
+        </Routes>
+      </AppLayout>
+    </BrowserRouter>
   );
 };
 

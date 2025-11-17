@@ -1,9 +1,21 @@
 // src/utils/s3client.js
+import {getAuthData} from "./authUtils";
 
 const API_BASE_URL = 'http://localhost:5000'; // Ajustez si nécessaire
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('jwtToken');
+  const authData = getAuthData()
+
+  //   const authDataStr = localStorage.getItem('authData');
+  // let authData = null;
+  // if (authDataStr) {
+  //   try {
+  //     authData = JSON.parse(authDataStr);
+  //   } catch (e) {
+  //     console.error('Invalid auth data in storage');
+  //   }
+  // }
+  let token = authData.access_token;
   if (!token) throw new Error('JWT token manquant');
   return {
     'Authorization': `Bearer ${token}`,

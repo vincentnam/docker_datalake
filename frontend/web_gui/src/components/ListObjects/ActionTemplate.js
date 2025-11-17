@@ -1,9 +1,10 @@
 import React from "react";
 import { downloadFile } from "../../utils/fileUtils";
-import history from "../../history";
+import { useNavigate } from "react-router-dom";
 
 const ActionTemplate = ({ node, onDelete, bucketName }) => {
   const fileType = node.data.metadata?.["content-type"] || "";
+  const navigate = useNavigate();
   return (
     <div className="flex gap-2">
       <button
@@ -18,7 +19,7 @@ const ActionTemplate = ({ node, onDelete, bucketName }) => {
         <button
           type="button"
           className="bg-white hover:bg-gray-200 flex items-center p-1 rounded"
-          onClick={() => history.push(`/buckets/${bucketName}?path=${node.key}`)}
+          onClick={() => navigate(`/buckets/${bucketName}?path=${node.key}`)}
         >
           <i className="pi pi-window-maximize"></i>
         </button>

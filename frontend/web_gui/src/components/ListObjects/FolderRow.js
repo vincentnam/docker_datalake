@@ -2,9 +2,10 @@ import React from "react";
 import { useDrop } from "react-dnd";
 import { ItemTypes } from "../../constants/itemTypes";
 import { moveObject } from "../../utils/fileUtils";
-import history from "../../history";
+import { useNavigate } from "react-router-dom";
 
 const FolderRow = ({ node, bucketName }) => {
+  const navigate = useNavigate();
   const [{ isOver }, drop] = useDrop(() => ({
     accept: ItemTypes.FILE,
     drop: (item) => moveObject(bucketName, item.key, node.key),
@@ -19,7 +20,7 @@ const FolderRow = ({ node, bucketName }) => {
       className={`cursor-pointer ${isOver ? "bg-gray-200" : ""}`}
       onClick={(e) => {
         e.stopPropagation();
-        history.push(`/buckets/${bucketName}?path=${node.key}`);
+        navigate(`/buckets/${bucketName}?path=${node.key}`);
       }}
     >
       {node.data.name}

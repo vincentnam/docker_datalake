@@ -13,7 +13,7 @@ import SidebarPreview from "./SidebarPreview";
 import UploadProgressDialog from "./UploadProgressDialog";
 import useObjectList from "../../hooks/useObjectList";
 import useDragAndDrop from "../../hooks/useDragAndDrop";
-import history from "../../history";
+
 
 const ListObjects = forwardRef(({ bucketName, path: initialPath, onDelete }, ref) => {
   const { search } = useLocation();

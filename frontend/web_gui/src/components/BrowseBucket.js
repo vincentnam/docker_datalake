@@ -1,23 +1,22 @@
 import React, { Fragment, useRef } from "react";
 import { Toast } from "primereact/toast";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate} from "react-router-dom";
 import PrimaryButton from "./common/PrimaryButton";
 import ListObjects from "./ListObjects/ListObjects";
 
-import history from "../history";
 
 const BrowseBucket = () => {
   const { bucketName, prefixPath, onDelete } = useParams();
   const childRef = useRef(null);
   const toast = useRef(null);
-
+  const navigate = useNavigate();
   return (
     <Fragment>
       <div className="flex flex-col gap-4">
         <div className="bg-white/30 backdrop-blur-md rounded-lg shadow-lg p-6 glass-effect animate-fadeIn">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <PrimaryButton onClick={() => history.goBack()} className="neon-button">
+              <PrimaryButton onClick={() => navigate(-1)} className="neon-button">
                 <i className="pi pi-angle-left mr-2"></i> Retour
               </PrimaryButton>
               <i className="pi pi-server text-cyan-500"></i>

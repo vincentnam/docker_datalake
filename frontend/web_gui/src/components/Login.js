@@ -1,6 +1,6 @@
-// src/pages/Login.js
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import {setAuthData} from "../utils/authUtils";
 
 const API_BASE = 'http://localhost:5000'; // ← Change si besoin
 
@@ -9,7 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,13 +38,13 @@ const Login = () => {
         throw new Error(data.error || 'Login échoué');
       }
       console.log(data);
-      console.log(data);
       // Stockage du token (note: le backend doit renvoyer data.access_token; sinon, ajustez ici)
-      localStorage.setItem('jwtToken', data.access_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      setAuthData(data);
+      // localStorage.setItem('authData', JSON.stringify(data));
+      localStorage.setItem('user', JSON.stringify(data.user.username));
 
       // Redirection
-      history.push('/buckets');
+      navigate('/buckets');
     } catch (err) {
       console.log("Erreur lors du login");
       setError(err.message || 'Identifiants incorrects');
@@ -85,9 +85,7 @@ const Login = () => {
           </button>
         </form>
 
-        <p style={styles.footer}>
-          Compte test : <code>test1</code> / <code>test</code>
-        </p>
+
       </div>
     </div>
   );
