@@ -6,7 +6,10 @@ import AppLayout from "./Layout/AppLayout";
 import "./App.css";
 import Login from "./components/Login";
 import PrivateRoute from "./components/Authentication/PrivateRoute";
+
+
 const App = () => {
+
   console.log(localStorage.getItem("jwtToken"));
   return (
     <BrowserRouter>

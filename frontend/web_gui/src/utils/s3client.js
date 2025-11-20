@@ -1,20 +1,12 @@
 // src/utils/s3client.js
 import {getAuthData} from "./authUtils";
 
-const API_BASE_URL = 'http://localhost:5000'; // Ajustez si nécessaire
+const API_BASE_URL = process.env.REACT_APP_FLASK_APP_URL || 'http://localhost:5000';
+console.log("API URL: " + API_BASE_URL);
 
 const getAuthHeaders = () => {
   const authData = getAuthData()
 
-  //   const authDataStr = localStorage.getItem('authData');
-  // let authData = null;
-  // if (authDataStr) {
-  //   try {
-  //     authData = JSON.parse(authDataStr);
-  //   } catch (e) {
-  //     console.error('Invalid auth data in storage');
-  //   }
-  // }
   let token = authData.access_token;
   if (!token) throw new Error('JWT token manquant');
   return {

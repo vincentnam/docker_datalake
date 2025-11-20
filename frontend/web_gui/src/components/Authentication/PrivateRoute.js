@@ -9,14 +9,6 @@ const PrivateRoute = ({ children, requiredRoles = [] }) => {
     return <Navigate to="/" replace />;
   }
 
-  // Role-based check (optional, uncomment and adjust as needed)
-  // const hasAccess = requiredRoles.every(role =>
-  //   authData.roles?.includes(role) // Assuming roles in authData
-  // );
-  // if (!hasAccess) {
-  //   return <Navigate to="/" replace />;
-  // }
-
   return children;
 };
 

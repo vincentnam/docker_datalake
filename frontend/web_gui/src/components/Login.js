@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {setAuthData} from "../utils/authUtils";
 
-const API_BASE = 'http://localhost:5000'; // ← Change si besoin
+const API_BASE = process.env.REACT_APP_FLASK_APP_URL || 'http://localhost:5000';
 
 const Login = () => {
   const [username, setUsername] = useState('');

@@ -2,7 +2,7 @@
 # Be careful to spaces in docker compose sections when modified
 ###################################
 
-
+export $(grep -v '^#' ./conf.env | sed 's/\r$//' | xargs)
 #!/bin/bash
 ###################################
 # FILE CREATION
@@ -25,7 +25,7 @@ cat <<EOF >> docker-compose_datalake.yml
       dockerfile: Dockerfile.base
     volumes:
       - ./openstackSwift/conf/:/etc/swift
-      - ./openstackSwift/data/:/srv/
+      - OpenstackSwiftData:/srv/
       - ./openstackSwift/scripts:/scripts/
     command: sh /scripts/init.sh
     privileged: true
@@ -33,7 +33,7 @@ cat <<EOF >> docker-compose_datalake.yml
       - swift-cluster
 
 EOF
-export $(grep -v '^#' ./conf.env | sed 's/\r$//' | xargs)
+
 
 
 
@@ -82,7 +82,7 @@ for i in $(seq $NB_STORAGE_NODE); do
     entrypoint: ["sh","/scripts/storage/storage-$i.sh"]
     volumes:
         - ./openstackSwift/conf/:/etc/swift
-        - ./openstackSwift/data/:/internal_dev/
+        - OpenstackSwiftData:/internal_dev/
         - ./openstackSwift/scripts:/scripts/
         - ./openstackSwift/rsyncd/rsyncd-$i.conf:/etc/rsyncd.conf
     privileged: true
@@ -212,7 +212,7 @@ cat <<EOF >> docker-compose_datalake.yml
     volumes:
       - "./RESTapi/flask/app.py:/home/app/app.py"
     ports:
-      - '5000:5000'
+      - '$FLASK_PORT:5000'
     healthcheck:
       test: ["CMD-SHELL", "curl --silent --fail localhost:8000/flask-health-check || exit 1"]
       interval: 10s
@@ -223,6 +223,18 @@ cat <<EOF >> docker-compose_datalake.yml
       swift-cluster:
         ipv4_address: 10.5.255.2
 
+EOF
+
+
+
+###################################
+# NETWORK SECTION
+###################################
+cat <<EOF >> docker-compose_datalake.yml
+
+volumes:
+  OpenstackSwiftData:
+    name: OpenstackSwiftData
 EOF
 ###################################
 # NETWORK SECTION
