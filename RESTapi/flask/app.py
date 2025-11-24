@@ -17,9 +17,10 @@ from dotenv import load_dotenv
 
 from keycloak import KeycloakOpenID
 load_dotenv()
-
+app = Flask(__name__)
 
 def login_required(f):
+    app.logger.info("COUCOU")
     @wraps(f)
     def decorated_function(*args, **kwargs):
         auth_header = request.headers.get("Authorization")
@@ -100,7 +101,7 @@ def login_required(f):
             }), 401
 
     return decorated_function
-app = Flask(__name__)
+
 
 
 keycloak_openid = KeycloakOpenID(server_url=os.getenv("KEYCLOAK_ISSUER"),
