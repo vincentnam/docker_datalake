@@ -2,7 +2,7 @@
 # Be careful to spaces in docker compose sections when modified
 ###################################
 
-export $(grep -v '^#' ./conf.env | sed 's/\r$//' | xargs)
+
 #!/bin/bash
 ###################################
 # FILE CREATION
@@ -25,15 +25,16 @@ cat <<EOF >> docker-compose_datalake.yml
       dockerfile: Dockerfile.base
     volumes:
       - ./openstackSwift/conf/:/etc/swift
-      - OpenstackSwiftData:/srv/
+      - ./openstackSwift/data/:/srv/
       - ./openstackSwift/scripts:/scripts/
     command: sh /scripts/init.sh
+    user: "${UID:-1000}:${GID:-1000}"
     privileged: true
     networks:
       - swift-cluster
 
 EOF
-
+export $(grep -v '^#' ./conf.env | sed 's/\r$//' | xargs)
 
 
 
@@ -55,6 +56,7 @@ for i in $(seq $NB_MANAGEMENT_NODE); do
         - ./openstackSwift/conf/:/etc/swift
         - ./openstackSwift/scripts:/scripts/
     privileged: true
+    user: "${UID:-1000}:${GID:-1000}"
 #    ports:
 #      - "8080:8080"
     restart: always
@@ -80,9 +82,10 @@ for i in $(seq $NB_STORAGE_NODE); do
       context: openstackSwift/
       dockerfile: Dockerfile.base
     entrypoint: ["sh","/scripts/storage/storage-$i.sh"]
+    user: "${UID:-1000}:${GID:-1000}"
     volumes:
         - ./openstackSwift/conf/:/etc/swift
-        - OpenstackSwiftData:/internal_dev/
+        - ./openstackSwift/data/:/internal_dev/
         - ./openstackSwift/scripts:/scripts/
         - ./openstackSwift/rsyncd/rsyncd-$i.conf:/etc/rsyncd.conf
     privileged: true
@@ -112,6 +115,7 @@ cat << EOF >> docker-compose_datalake.yml
       - datalake
       - frontend
       - process
+    user: "\${UID:-1000}:\${GID:-1000}"
     restart: always
     image: jupyterhub
     container_name: jupyterhub
@@ -161,6 +165,7 @@ cat << EOF >> docker-compose_datalake.yml
       dockerfile: Dockerfile.web_gui
     image: web_gui
     container_name: web_gui
+    user: "${UID:-1000}:${GID:-1000}"
     volumes:
       - ./frontend/web_gui:/opt/app/web_gui/
     ports :
@@ -183,6 +188,7 @@ cat <<EOF >> docker-compose_datalake.yml
       context: ./RESTapi/
       dockerfile: Dockerfile.nginx
     restart: always
+    user: "${UID:-1000}:${GID:-1000}"
     volumes:
       - ./RESTapi/nginx/default.conf:/tmp/default.conf
     environment:
@@ -205,6 +211,7 @@ cat <<EOF >> docker-compose_datalake.yml
       context: ./RESTapi/
       dockerfile: Dockerfile.flask
     restart: always
+    user: "${UID:-1000}:${GID:-1000}"
     profiles:
       - frontend
       - RESTApi
@@ -212,7 +219,7 @@ cat <<EOF >> docker-compose_datalake.yml
     volumes:
       - "./RESTapi/flask/app.py:/home/app/app.py"
     ports:
-      - '$FLASK_PORT:5000'
+      - '5000:5000'
     healthcheck:
       test: ["CMD-SHELL", "curl --silent --fail localhost:8000/flask-health-check || exit 1"]
       interval: 10s
@@ -225,16 +232,16 @@ cat <<EOF >> docker-compose_datalake.yml
 
 EOF
 
-
-
 ###################################
-# NETWORK SECTION
+# VOLUME SECTION
 ###################################
 cat <<EOF >> docker-compose_datalake.yml
+
 
 volumes:
   OpenstackSwiftData:
     name: OpenstackSwiftData
+
 EOF
 ###################################
 # NETWORK SECTION
