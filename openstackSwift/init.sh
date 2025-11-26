@@ -50,7 +50,7 @@ echo $output
 
 
 
-sudo  rm -rf conf scripts/account scripts/objects scripts/container scripts/proxy
+rm -rf conf scripts/account scripts/objects scripts/container scripts/proxy
 mkdir -p conf/account conf/object conf/container conf/proxy
 mkdir -p scripts/storage scripts/management
 mkdir -p rsyncd
