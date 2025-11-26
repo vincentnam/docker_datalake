@@ -180,32 +180,52 @@ EOF
 # REST API SECTION / ACCESS TO SERVICES
 ###################################
 cat <<EOF >> docker-compose_datalake.yml
+#  nginx-proxy:
+#    profiles:
+#      - frontend
+#      - datalake
+#    build:
+#      context: ./RESTapi/
+#      dockerfile: Dockerfile.nginx
+#    restart: always
+#    #user: "\${UID:-1000}:\${GID:-1000}"
+#    volumes:
+#      - ./RESTapi/nginx/default.conf:/tmp/default.conf
+#    environment:
+#      - FLASK_SERVER_ADDR=flask-app:8000
+#    ports:
+#      - "80:80"
+#    depends_on:
+#      - flask-app
+#    healthcheck:
+#      test: ["CMD-SHELL", "curl --silent --fail localhost:80/health-check || exit 1"]
+#      interval: 10s
+#      timeout: 10s
+#      retries: 3
+#    command: /app/start.sh
+#    networks:
+#      swift-cluster:
+#        ipv4_address: 10.5.255.254
+
   nginx-proxy:
-    profiles:
-      - frontend
-      - datalake
     build:
       context: ./RESTapi/
       dockerfile: Dockerfile.nginx
-    restart: always
-    #user: "\${UID:-1000}:\${GID:-1000}"
-    volumes:
-      - ./RESTapi/nginx/default.conf:/tmp/default.conf
-    environment:
-      - FLASK_SERVER_ADDR=flask-app:8000
+    container_name: nginx_proxy
+    restart: unless-stopped
+    profiles:
+      - frontend
+      - datalake
     ports:
-      - "80:80"
+      - "7000:80"
     depends_on:
+      - web_gui
       - flask-app
-    healthcheck:
-      test: ["CMD-SHELL", "curl --silent --fail localhost:80/health-check || exit 1"]
-      interval: 10s
-      timeout: 10s
-      retries: 3
-    command: /app/start.sh
     networks:
       swift-cluster:
         ipv4_address: 10.5.255.254
+
+
   flask-app:
     build:
       context: ./RESTapi/
