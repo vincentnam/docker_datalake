@@ -11,5 +11,5 @@ chmod +x create_conf.sh
 (cd ./openstackSwift/; ./init.sh) &
 #(cd ./frontend/; sh ./start.sh -br ) &
 
-sudo docker build -t cors_base-notebook:latest -f ./jupyter/Dockerfile.jupyterserver ./jupyter/
-sudo docker compose -f docker-compose_datalake.yml --profile datalake up --build
+docker build -t cors_base-notebook:latest -f ./jupyter/Dockerfile.jupyterserver ./jupyter/
+docker compose -f docker-compose_datalake.yml --profile datalake up --build

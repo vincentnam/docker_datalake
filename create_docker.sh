@@ -28,7 +28,7 @@ cat <<EOF >> docker-compose_datalake.yml
       - ./openstackSwift/data/:/srv/
       - ./openstackSwift/scripts:/scripts/
     command: sh /scripts/init.sh
-    user: "\${UID:-1000}:\${GID:-1000}"
+    #user: "\${UID:-1000}:\${GID:-1000}"
     privileged: true
     networks:
       - swift-cluster
@@ -56,7 +56,7 @@ for i in $(seq $NB_MANAGEMENT_NODE); do
         - ./openstackSwift/conf/:/etc/swift
         - ./openstackSwift/scripts:/scripts/
     privileged: true
-    user: "\${UID:-1000}:\${GID:-1000}"
+    #user: "\${UID:-1000}:\${GID:-1000}"
 #    ports:
 #      - "8080:8080"
     restart: always
@@ -82,7 +82,7 @@ for i in $(seq $NB_STORAGE_NODE); do
       context: openstackSwift/
       dockerfile: Dockerfile.base
     entrypoint: ["sh","/scripts/storage/storage-$i.sh"]
-    user: "\${UID:-1000}:\${GID:-1000}"
+    #user: "\${UID:-1000}:\${GID:-1000}"
     volumes:
         - ./openstackSwift/conf/:/etc/swift
         - ./openstackSwift/data/:/internal_dev/
@@ -115,7 +115,7 @@ cat << EOF >> docker-compose_datalake.yml
       - datalake
       - frontend
       - process
-    user: "\${UID:-1000}:\${GID:-1000}"
+    #user: "\${UID:-1000}:\${GID:-1000}"
     restart: always
     image: jupyterhub
     container_name: jupyterhub
@@ -131,8 +131,8 @@ cat << EOF >> docker-compose_datalake.yml
       - /var/run/docker.sock:/var/run/docker.sock:rw
       # Bind Docker volume on host for JupyterHub database and cookie secrets
       - ./jupyter/jupyterhub-data:/data
-    ports:
-      - 8000:8000
+#    ports:
+#      - 8000:8000
     environment:
       # This username will be a JupyterHub admin
       JUPYTERHUB_ADMIN: admin
@@ -165,11 +165,11 @@ cat << EOF >> docker-compose_datalake.yml
       dockerfile: Dockerfile.web_gui
     image: web_gui
     container_name: web_gui
-    user: "\${UID:-1000}:\${GID:-1000}"
+    #user: "\${UID:-1000}:\${GID:-1000}"
     volumes:
       - ./frontend/web_gui:/opt/app/web_gui/
-    ports :
-      - $REACT_APP_PORT:3000
+#    ports :
+#      - $REACT_APP_PORT:3000
     networks:
         swift-cluster:
           ipv4_address: 10.5.255.1
@@ -188,7 +188,7 @@ cat <<EOF >> docker-compose_datalake.yml
 #      context: ./RESTapi/
 #      dockerfile: Dockerfile.nginx
 #    restart: always
-#    user: "\${UID:-1000}:\${GID:-1000}"
+#    #user: "\${UID:-1000}:\${GID:-1000}"
 #    volumes:
 #      - ./RESTapi/nginx/default.conf:/tmp/default.conf
 #    environment:
@@ -206,20 +206,40 @@ cat <<EOF >> docker-compose_datalake.yml
 #    networks:
 #      swift-cluster:
 #        ipv4_address: 10.5.255.254
+
+  nginx-proxy:
+    build:
+      context: ./RESTapi/
+      dockerfile: Dockerfile.nginx
+    container_name: nginx_proxy
+    restart: unless-stopped
+    profiles:
+      - frontend
+      - datalake
+    ports:
+      - "7000:80"
+    depends_on:
+      - web_gui
+      - flask-app
+    networks:
+      swift-cluster:
+        ipv4_address: 10.5.255.254
+
+
   flask-app:
     build:
       context: ./RESTapi/
       dockerfile: Dockerfile.flask
     restart: always
-    user: "\${UID:-1000}:\${GID:-1000}"
+    #user: "\${UID:-1000}:\${GID:-1000}"
     profiles:
       - frontend
       - RESTApi
       - datalake
     volumes:
       - "./RESTapi/flask/app.py:/home/app/app.py"
-    ports:
-      - '$FLASK_PORT:5000'
+#    ports:
+#      - '$FLASK_PORT:5000'
     healthcheck:
       test: ["CMD-SHELL", "curl --silent --fail localhost:8000/flask-health-check || exit 1"]
       interval: 10s
