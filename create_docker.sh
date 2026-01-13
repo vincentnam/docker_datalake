@@ -1,9 +1,10 @@
+#!/bin/bash
 ###################################
 # Be careful to spaces in docker compose sections when modified
 ###################################
 
 
-#!/bin/bash
+
 ###################################
 # FILE CREATION
 ###################################

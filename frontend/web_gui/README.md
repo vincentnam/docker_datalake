@@ -1,5 +1,5 @@
 # Getting Started with Create React App
-
+// #TODO : CHANGER LE NOM DE L'APP
 // #BUG : MP4 La vidéo marche plus
 // A ajouter : Resize de la fenêtre de preview
 // BUG : Bouton supprimer non fonctionnel

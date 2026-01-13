@@ -1,3 +1,5 @@
+#!/bin/bash
+
 cat << EOF > conf/swift.conf
 
 [swift-hash]
