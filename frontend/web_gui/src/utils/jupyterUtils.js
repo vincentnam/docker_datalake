@@ -1,10 +1,16 @@
 import axios from 'axios';
 
-const JUPYTERHUB_URL = process.env.REACT_APP_JUPYTERHUB_URL || 'http://localhost:8000';
+// Le prefix du Hub est fixe dans ton setup (relatif au domaine actuel)
+const HUB_PREFIX = '/hub';
+
+// Token : toujours via env, mais assure-toi qu'il est injecté côté serveur ou via un proxy sécurisé en prod
 const JUPYTERHUB_TOKEN = process.env.REACT_APP_JUPYTERHUB_TOKEN || '';
 
-const getJupyterHubApiUrl = () => `${JUPYTERHUB_URL}/hub/api`;
-const getUserServerApiUrl = (username) => `${JUPYTERHUB_URL}/user/${username}/api`;
+// API du Hub (pour check users, spawn, etc.)
+const getJupyterHubApiUrl = () => `${HUB_PREFIX}/api`;
+
+// API du single-user server (pour contents, sessions, kernels, etc.)
+const getUserServerApiUrl = (username) => `${HUB_PREFIX}/user/${username}/api`;
 
 export const checkJupyterServer = async (username) => {
   try {
@@ -99,11 +105,13 @@ export const getOrCreateSession = async (username, path) => {
 };
 
 export const getKernelWebSocketUrl = (username, kernelId) => {
-  return `ws://${new URL(JUPYTERHUB_URL).host}/user/${username}/api/kernels/${kernelId}/channels?token=${JUPYTERHUB_TOKEN}`;
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = window.location.host;
+  return `${protocol}//${host}${HUB_PREFIX}/user/${username}/api/kernels/${kernelId}/channels?token=${JUPYTERHUB_TOKEN}`;
 };
 
 export const createNotebook = async (username, notebookName, content) => {
-  const apiUrl = `${JUPYTERHUB_URL}/user/${username}/api/contents/${notebookName}.ipynb`;
+  const apiUrl = `${getUserServerApiUrl(username)}/contents/${notebookName}.ipynb`;
   try {
     const response = await axios.put(
       apiUrl,
@@ -117,5 +125,6 @@ export const createNotebook = async (username, notebookName, content) => {
 };
 
 export const getNotebookUrl = (username, notebookName) => {
-  return `${JUPYTERHUB_URL}/user/${username}/notebooks/${notebookName}.ipynb`;
+  return `${HUB_PREFIX}/user/${username}/notebooks/${notebookName}.ipynb`;
 };
+

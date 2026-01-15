@@ -108,44 +108,44 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
       nbformat_minor: 4,
     };
   };
-
-  // Fonction pour ouvrir le notebook
   const openInJupyter = async () => {
-    if (!selectedNode || !selectedNode.leaf) {
-      showError("Erreur", "Veuillez sélectionner un fichier");
-      return;
+  if (!selectedNode || !selectedNode.leaf) {
+    showError("Erreur", "Veuillez sélectionner un fichier");
+    return;
+  }
+
+  setProgressVisible(true);
+  setProgress("checking_server");
+
+  try {
+    const username = "admin"; // Remplacer par l'utilisateur actuel si nécessaire
+    const serverRunning = await checkJupyterServer(username);
+
+    if (!serverRunning) {
+      setProgress("starting_server");
+      await startJupyterServer(username);
+      // Attendre 5 secondes pour s'assurer que le serveur est prêt
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
 
-    setProgressVisible(true);
-    setProgress("checking_server");
+    setProgress("creating_notebook");
+    const notebookName = `notebook-${Date.now()}`;
+    const content = generateNotebookContent({ bucketName, key: selectedNode.key });
+    await createNotebook(username, notebookName, content);
 
-    try {
-      const username = "admin"; // Remplacer par l'utilisateur actuel si nécessaire
-      const serverRunning = await checkJupyterServer(username);
-
-      if (!serverRunning) {
-        setProgress("starting_server");
-        await startJupyterServer(username);
-        // Attendre 5 secondes pour s'assurer que le serveur est prêt
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-      }
-
-      setProgress("creating_notebook");
-      const notebookName = `notebook-${Date.now()}`;
-      const content = generateNotebookContent({ bucketName, key: selectedNode.key });
-      await createNotebook(username, notebookName, content);
-
-      setProgress("redirecting");
-      const notebookUrl = getNotebookUrl(username, notebookName);
-      navigate(notebookUrl.replace("http://localhost:8000", "")); // Redirection dans l'historique
-      window.location.href = notebookUrl; // Forcer la navigation pour ouvrir dans le même onglet
-    } catch (err) {
-      setProgress("error");
-      setErrorMessage(err.message);
-      showError("Erreur", err.message);
-    }
-  };
-
+    setProgress("redirecting");
+    const notebookUrl = getNotebookUrl(username, notebookName);
+    // Redirection dans l'historique (relatif)
+    navigate(notebookUrl); 
+    // Forcer la navigation pour ouvrir dans le même onglet (relatif → navigateur ajoute le domaine)
+    window.location.href = notebookUrl; 
+  } catch (err) {
+    setProgress("error");
+    setErrorMessage(err.message);
+    showError("Erreur", err.message);
+  }
+};
+ 
   return (
     <>
 <Sidebar
