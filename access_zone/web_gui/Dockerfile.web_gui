@@ -1,6 +1,6 @@
 FROM node:24-bookworm
 
-COPY web_gui /opt/app
+COPY react /opt/app
 
 WORKDIR /opt/app/web_gui
 

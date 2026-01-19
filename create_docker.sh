@@ -2,7 +2,11 @@
 ###################################
 # Be careful to spaces in docker compose sections when modified
 ###################################
-
+OPENSTACKSWIFT_PATH="./rawdata_zone/openstackSwift"
+JUPYTER_PATH="./process_zone/jupyter"
+WEBGUI_PATH="./access_zone/web_gui"
+REST_API_PATH="./access_zone/flask"
+NGINX_PATH="./access_zone/nginx"
 
 
 ###################################
@@ -22,12 +26,12 @@ cat <<EOF >> docker-compose_datalake.yml
       - storage
       - datalake
     build:
-      context: ./openstackSwift/
+      context: $OPENSTACKSWIFT_PATH
       dockerfile: Dockerfile.base
     volumes:
-      - ./openstackSwift/conf/:/etc/swift
-      - ./openstackSwift/data/:/srv/
-      - ./openstackSwift/scripts:/scripts/
+      - $OPENSTACKSWIFT_PATH/conf/:/etc/swift
+      - $OPENSTACKSWIFT_PATH/data/:/srv/
+      - $OPENSTACKSWIFT_PATH/scripts:/scripts/
     command: sh /scripts/init.sh
     #user: "\${UID:-1000}:\${GID:-1000}"
     privileged: true
@@ -50,12 +54,12 @@ for i in $(seq $NB_MANAGEMENT_NODE); do
       - datalake
     hostname: management-$i
     build:
-      context: ./openstackSwift/
+      context: $OPENSTACKSWIFT_PATH
       dockerfile: Dockerfile.base
     entrypoint: ["sh","/scripts/management/management-$i.sh"]
     volumes:
-        - ./openstackSwift/conf/:/etc/swift
-        - ./openstackSwift/scripts:/scripts/
+        - $OPENSTACKSWIFT_PATH/conf/:/etc/swift
+        - $OPENSTACKSWIFT_PATH/scripts:/scripts/
     privileged: true
     #user: "\${UID:-1000}:\${GID:-1000}"
 #    ports:
@@ -80,15 +84,15 @@ for i in $(seq $NB_STORAGE_NODE); do
       - datalake
     hostname: storage-$i
     build:
-      context: openstackSwift/
+      context: $OPENSTACKSWIFT_PATH
       dockerfile: Dockerfile.base
     entrypoint: ["sh","/scripts/storage/storage-$i.sh"]
     #user: "\${UID:-1000}:\${GID:-1000}"
     volumes:
-        - ./openstackSwift/conf/:/etc/swift
-        - ./openstackSwift/data/:/internal_dev/
-        - ./openstackSwift/scripts:/scripts/
-        - ./openstackSwift/rsyncd/rsyncd-$i.conf:/etc/rsyncd.conf
+        - $OPENSTACKSWIFT_PATH/conf/:/etc/swift
+        - $OPENSTACKSWIFT_PATH/data/:/internal_dev/
+        - $OPENSTACKSWIFT_PATH/scripts:/scripts/
+        - $OPENSTACKSWIFT_PATH/rsyncd/rsyncd-$i.conf:/etc/rsyncd.conf
     privileged: true
     restart: always
     networks:
@@ -108,7 +112,7 @@ done
 cat << EOF >> docker-compose_datalake.yml
   hub:
     build:
-      context: ./jupyter/
+      context: $JUPYTER_PATH
       dockerfile: Dockerfile.jupyterhub
       args:
         JUPYTERHUB_VERSION: 5.3.0
@@ -126,12 +130,12 @@ cat << EOF >> docker-compose_datalake.yml
 
     volumes:
       # The JupyterHub configuration file
-      - ./jupyter/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
+      - $JUPYTER_PATH/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
       # Bind Docker socket on the host so we can connect to the daemon from
       # within the container
       - /var/run/docker.sock:/var/run/docker.sock:rw
       # Bind Docker volume on host for JupyterHub database and cookie secrets
-      - ./jupyter/jupyterhub-data:/data
+      - $JUPYTER_PATH/jupyterhub-data:/data
 #    ports:
 #      - 8000:8000
     environment:
@@ -154,23 +158,18 @@ EOF
 
 
 cat << EOF >> docker-compose_datalake.yml
-
-
   web_gui:
     profiles:
       - frontend
       - webgui
       - datalake
     build:
-      context: ./frontend/
+      context: $WEBGUI_PATH
       dockerfile: Dockerfile.web_gui
     image: web_gui
     container_name: web_gui
-    #user: "\${UID:-1000}:\${GID:-1000}"
     volumes:
-      - ./frontend/web_gui:/opt/app/web_gui/
-#    ports :
-#      - $REACT_APP_PORT:3000
+      - $WEBGUI_PATH/web_gui:/opt/app/web_gui/
     networks:
         swift-cluster:
           ipv4_address: 10.5.255.1
@@ -181,36 +180,9 @@ EOF
 # REST API SECTION / ACCESS TO SERVICES
 ###################################
 cat <<EOF >> docker-compose_datalake.yml
-#  nginx-proxy:
-#    profiles:
-#      - frontend
-#      - datalake
-#    build:
-#      context: ./RESTapi/
-#      dockerfile: Dockerfile.nginx
-#    restart: always
-#    #user: "\${UID:-1000}:\${GID:-1000}"
-#    volumes:
-#      - ./RESTapi/nginx/default.conf:/tmp/default.conf
-#    environment:
-#      - FLASK_SERVER_ADDR=flask-app:8000
-#    ports:
-#      - "80:80"
-#    depends_on:
-#      - flask-app
-#    healthcheck:
-#      test: ["CMD-SHELL", "curl --silent --fail localhost:80/health-check || exit 1"]
-#      interval: 10s
-#      timeout: 10s
-#      retries: 3
-#    command: /app/start.sh
-#    networks:
-#      swift-cluster:
-#        ipv4_address: 10.5.255.254
-
   nginx-proxy:
     build:
-      context: ./RESTapi/
+      context: $NGINX_PATH
       dockerfile: Dockerfile.nginx
     container_name: nginx_proxy
     restart: unless-stopped
@@ -229,7 +201,7 @@ cat <<EOF >> docker-compose_datalake.yml
 
   flask-app:
     build:
-      context: ./RESTapi/
+      context: $REST_API_PATH
       dockerfile: Dockerfile.flask
     restart: always
     #user: "\${UID:-1000}:\${GID:-1000}"
@@ -238,9 +210,7 @@ cat <<EOF >> docker-compose_datalake.yml
       - RESTApi
       - datalake
     volumes:
-      - "./RESTapi/flask/app.py:/home/app/app.py"
-#    ports:
-#      - '$FLASK_PORT:5000'
+      - "$REST_API_PATH/app.py:/home/app/app.py"
     healthcheck:
       test: ["CMD-SHELL", "curl --silent --fail localhost:8000/flask-health-check || exit 1"]
       interval: 10s
@@ -252,6 +222,9 @@ cat <<EOF >> docker-compose_datalake.yml
         ipv4_address: 10.5.255.2
 
 EOF
+
+
+
 
 ###################################
 # VOLUME SECTION
