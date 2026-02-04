@@ -1,0 +1,72 @@
+services:
+  mariadb:
+    image: mariadb:10.9
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_DATABASE=keystone
+      - MYSQL_USER=keystone
+      - MYSQL_PASSWORD=keystone_db_pass
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      swift-clusterTEST:
+        ipv4_address: 10.5.3.3
+
+  memcached:
+    image: memcached:alpine
+    networks:
+      swift-clusterTEST:
+        ipv4_address: 10.5.3.4
+
+  keystone:
+    image: keystone:master-ubuntu_jammy
+    container_name: keystone
+    restart: always
+    ports:
+      - "5000:5000"
+      - "35357:35357"   # Admin endpoint
+    volumes:
+      - ./etc/keystone:/etc/keystone:rw
+      - ./etc/apache2/ports.conf:/etc/apache2/ports.conf:ro
+      - ./etc/apache2/sites-available/keystone.conf:/etc/apache2/sites-available/keystone.conf:ro
+      - ./scripts/init-keystone.sh:/entrypoint.sh:ro
+      - keystone_data:/var/lib/keystone
+      - ./keystone/wsgi.py:/var/lib/openstack/lib/python3.10/site-packages/keystone/server/wsgi.py
+    command: /entrypoint.sh
+    depends_on:
+      - mariadb
+      - memcached
+    networks:
+      swift-clusterTEST:
+        ipv4_address: 10.5.3.1
+
+  horizon:
+    image: horizon:master-ubuntu_jammy
+    container_name: horizon
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./etc/horizon/local_settings.py:/local_settings.py:ro
+      - ./scripts/init-horizon.sh:/entrypoint.sh:ro
+      - ./horizon/000-default.conf:/etc/apache2/sites-available/000-default.conf:ro
+    command: /entrypoint.sh
+    depends_on:
+      - keystone
+    networks:
+      swift-clusterTEST:
+        ipv4_address: 10.5.3.2
+
+volumes:
+  mariadb_data:
+  keystone_data:
+
+
+networks:
+  swift-clusterTEST:
+    name: swift-cluster
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
