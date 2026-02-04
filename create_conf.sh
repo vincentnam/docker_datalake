@@ -1,7 +1,5 @@
 #!/bin/bash
-###################################
-# OPENSTACK SWIFT
-###################################
+
 
 export $(grep -v '^#' ./conf.env | sed 's/\r$//' | xargs)
 OPENSTACKSWIFT_PATH="./rawdata_zone/openstackSwift"
@@ -9,6 +7,18 @@ JUPYTER_PATH="./process_zone/jupyter"
 WEBGUI_PATH="./access_zone/web_gui"
 REST_API_PATH="./access_zone/flask"
 NGINX_PATH="./access_zone/nginx"
+
+
+
+###################################
+# OPENSTACK SWIFT
+###################################
+
+cat << EOF > $OPENSTACKSWIFT_PATH/config_cluster.env
+NB_MANAGEMENT_NODE=$NB_MANAGEMENT_NODE
+NB_STORAGE_NODE=$NB_STORAGE_NODE
+EOF
+
 
 ####################################
 ## WEB GUI SECTION
