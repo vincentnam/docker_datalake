@@ -6,3 +6,5 @@ dockerswarm_token.md
 */jupyter/jupyterhub-data/
 */openstackSwift/conf/
 *.env
+.idea/*
+rawdata_zone/openstackKeystone/loci/
