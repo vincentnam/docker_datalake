@@ -70,6 +70,6 @@ docker build . \
     --build-arg PIP_OPTS="--no-build-isolation" \
     --tag horizon:master-$BASE_DISTRO_NAME
 
-echo "Terminé !"
+echo "Keystone and Horizon build finished"
 
-docker compose up
+#docker compose up

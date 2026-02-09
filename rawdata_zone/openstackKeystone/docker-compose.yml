@@ -11,7 +11,7 @@ services:
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
-      swift-clusterTEST:
+      swift-cluster:
         ipv4_address: 10.5.3.3
     healthcheck:
       test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
@@ -24,7 +24,7 @@ services:
   memcached:
     image: memcached:alpine
     networks:
-      swift-clusterTEST:
+      swift-cluster:
         ipv4_address: 10.5.3.4
 
   keystone:
@@ -48,7 +48,7 @@ services:
         memcached:
           condition: service_started   # memcached est prêt quasi immédiatement
     networks:
-      swift-clusterTEST:
+      swift-cluster:
         ipv4_address: 10.5.3.1
 
   horizon:
@@ -65,7 +65,7 @@ services:
     depends_on:
       - keystone
     networks:
-      swift-clusterTEST:
+      swift-cluster:
         ipv4_address: 10.5.3.2
 
 volumes:
@@ -74,7 +74,7 @@ volumes:
 
 
 networks:
-  swift-clusterTEST:
+  swift-cluster:
     name: swift-cluster
     driver: bridge
     ipam:

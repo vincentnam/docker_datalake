@@ -3,6 +3,8 @@
 # Be careful to spaces in docker compose sections when modified
 ###################################
 OPENSTACKSWIFT_PATH="./rawdata_zone/openstackSwift"
+OPENSTACKKEYSTONE_PATH="./rawdata_zone/openstackKeystone"
+
 JUPYTER_PATH="./process_zone/jupyter"
 WEBGUI_PATH="./access_zone/web_gui"
 REST_API_PATH="./access_zone/flask"
@@ -104,6 +106,84 @@ for i in $(seq $NB_STORAGE_NODE); do
 EOF
 
 done
+
+###################################
+# OPENSTACK KEYSTONE SECTION
+###################################
+#TODO: Config var for Keystone
+
+
+cat << EOF >> docker-compose_datalake.yml
+
+  mariadb:
+    image: mariadb:10.9
+    container_name: mariadb
+    hostname: mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_DATABASE=keystone
+      - MYSQL_USER=keystone
+      - MYSQL_PASSWORD=keystone_db_pass
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      swift-cluster:
+        ipv4_address: 10.5.3.3
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  memcached:
+    image: memcached:alpine
+    networks:
+      swift-cluster:
+        ipv4_address: 10.5.3.4
+
+  keystone:
+    image: keystone:master-ubuntu_jammy
+    container_name: keystone
+    restart: always
+    ports:
+      - "5000:5000"
+      - "35357:35357"   # Admin endpoint
+    volumes:
+      - $OPENSTACKKEYSTONE_PATH/conf/etc/keystone:/etc/keystone:rw
+      - $OPENSTACKKEYSTONE_PATH/conf/apache2/keystone/ports.conf:/etc/apache2/ports.conf:ro
+      - $OPENSTACKKEYSTONE_PATH/conf/apache2/keystone/sites-available/keystone.conf:/etc/apache2/sites-available/keystone.conf:ro
+      - $OPENSTACKKEYSTONE_PATH/conf/python/keystone/wsgi/wsgi.py:/var/lib/openstack/lib/python3.10/site-packages/keystone/server/wsgi.py
+      - $OPENSTACKKEYSTONE_PATH/scripts/init-keystone.sh:/entrypoint.sh:ro
+      - keystone_data:/var/lib/keystone
+    command: /entrypoint.sh
+    depends_on:
+        mariadb:
+          condition: service_healthy
+        memcached:
+          condition: service_started   # memcached est prêt quasi immédiatement
+    networks:
+      swift-cluster:
+        ipv4_address: 10.5.3.1
+
+  horizon:
+    image: horizon:master-ubuntu_jammy
+    container_name: horizon
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - $OPENSTACKKEYSTONE_PATH/conf/etc/horizon/local_settings.py:/local_settings.py:ro
+      - $OPENSTACKKEYSTONE_PATH/conf/apache2/horizon/000-default.conf:/etc/apache2/sites-available/000-default.conf:ro
+      - $OPENSTACKKEYSTONE_PATH/scripts/init-horizon.sh:/entrypoint.sh:ro
+    command: /entrypoint.sh
+    depends_on:
+      - keystone
+    networks:
+      swift-cluster:
+        ipv4_address: 10.5.3.2
+
+EOF
 
 ###################################
 # JUPYTER HUB SECTION
@@ -235,6 +315,9 @@ cat <<EOF >> docker-compose_datalake.yml
 volumes:
   OpenstackSwiftData:
     name: OpenstackSwiftData
+  mariadb_data:
+  keystone_data:
+
 
 EOF
 ###################################

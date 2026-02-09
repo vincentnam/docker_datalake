@@ -3,6 +3,9 @@
 
 export $(grep -v '^#' ./conf.env | sed 's/\r$//' | xargs)
 OPENSTACKSWIFT_PATH="./rawdata_zone/openstackSwift"
+OPENSTACKKEYSTONE_PATH="./rawdata_zone/openstackKeystone"
+
+
 JUPYTER_PATH="./process_zone/jupyter"
 WEBGUI_PATH="./access_zone/web_gui"
 REST_API_PATH="./access_zone/flask"
