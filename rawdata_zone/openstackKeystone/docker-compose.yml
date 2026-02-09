@@ -1,6 +1,8 @@
 services:
   mariadb:
     image: mariadb:10.9
+    container_name: mariadb
+    hostname: mariadb
     environment:
       - MYSQL_ROOT_PASSWORD=secret
       - MYSQL_DATABASE=keystone
@@ -11,6 +13,13 @@ services:
     networks:
       swift-clusterTEST:
         ipv4_address: 10.5.3.3
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
 
   memcached:
     image: memcached:alpine
@@ -34,8 +43,10 @@ services:
       - keystone_data:/var/lib/keystone
     command: /entrypoint.sh
     depends_on:
-      - mariadb
-      - memcached
+        mariadb:
+          condition: service_healthy
+        memcached:
+          condition: service_started   # memcached est prêt quasi immédiatement
     networks:
       swift-clusterTEST:
         ipv4_address: 10.5.3.1
@@ -48,7 +59,7 @@ services:
       - "8080:80"
     volumes:
       - ./conf/etc/horizon/local_settings.py:/local_settings.py:ro
-      - ./conf/apache/horizon/000-default.conf:/etc/apache2/sites-available/000-default.conf:ro
+      - ./conf/apache2/horizon/000-default.conf:/etc/apache2/sites-available/000-default.conf:ro
       - ./scripts/init-horizon.sh:/entrypoint.sh:ro
     command: /entrypoint.sh
     depends_on:

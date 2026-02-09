@@ -1,11 +1,6 @@
 #!/bin/bash
 set -e
 
-echo "Attente de MariaDB (port 3306)..."
-until printf "" 2>/dev/null > /dev/tcp/mariadb/3306; do
-    sleep 2
-done
-echo "MariaDB prête."
 # Configuration Apache (toujours, idempotent)
 a2enmod wsgi
 a2dissite 000-default || true
