@@ -16,10 +16,12 @@ set -euo pipefail
 : "${SWIFT_ROLE:=admin}"
 : "${REGION:=RegionOne}"
 
+
+# TODO : Create endpoint for each management existing in the architecture
 # URLs Swift (adaptées à ton compose)
-SWIFT_PUBLIC="http://swift-proxy:8080/v1/AUTH_\$(tenant_id)s"
-SWIFT_INTERNAL="http://swift-proxy:8080/v1/AUTH_\$(tenant_id)s"
-SWIFT_ADMIN="http://swift-proxy:8080"
+SWIFT_PUBLIC="http://management-1:8080/v1/AUTH_\$(tenant_id)s"
+SWIFT_INTERNAL="http://management-1:8080/v1/AUTH_\$(tenant_id)s"
+SWIFT_ADMIN="http://management-1:8080"
 
 # ─── Attente Keystone prêt ───────────────────────────────────────────────────
 echo "Attente que Keystone soit prêt..."
