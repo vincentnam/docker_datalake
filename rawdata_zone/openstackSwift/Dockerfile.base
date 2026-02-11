@@ -26,6 +26,7 @@ RUN apt-get update && \
         curl \
         rsyslog \
         iproute2 \
+        python3-keystonemiddleware \
         ca-certificates && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

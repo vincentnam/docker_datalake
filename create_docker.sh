@@ -37,6 +37,9 @@ cat <<EOF >> docker-compose_datalake.yml
     command: sh /scripts/init.sh
     #user: "\${UID:-1000}:\${GID:-1000}"
     privileged: true
+    depends_on:
+      keystone:
+        condition: service_healthy
     networks:
       - swift-cluster
 
@@ -146,9 +149,9 @@ cat << EOF >> docker-compose_datalake.yml
     image: keystone:master-ubuntu_jammy
     container_name: keystone
     restart: always
-    ports:
-      - "5000:5000"
-      - "35357:35357"   # Admin endpoint
+#    ports:
+#      - "5000:5000"
+#      - "35357:35357"   # Admin endpoint
     volumes:
       - $OPENSTACKKEYSTONE_PATH/conf/etc/keystone:/etc/keystone:rw
       - $OPENSTACKKEYSTONE_PATH/conf/apache2/keystone/ports.conf:/etc/apache2/ports.conf:ro
@@ -165,6 +168,38 @@ cat << EOF >> docker-compose_datalake.yml
     networks:
       swift-cluster:
         ipv4_address: 10.5.3.1
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:5000/healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+      start_interval: 2s
+  keystone_bootstrap:
+    build:
+      context: $OPENSTACKKEYSTONE_PATH
+      dockerfile: Dockerfile.openstackClientBootstrap
+    environment:
+      - OS_AUTH_URL=http://keystone:5000/v3
+      - OS_USERNAME=admin
+      - OS_PASSWORD=admin
+      - OS_PROJECT_NAME=admin
+      - OS_USER_DOMAIN_NAME=Default
+      - OS_PROJECT_DOMAIN_NAME=Default
+      - SWIFT_PASSWORD=testing           # change si besoin
+    profiles:
+      - datalake
+      - frontend
+      - process
+    container_name: keystone_bootstrap
+    networks:
+      swift-cluster:
+          ipv4_address: 10.5.3.30
+    command: sh /bootstrap_keystone.sh
+    depends_on:
+      keystone:
+        condition: service_healthy
+
 
   horizon:
     image: horizon:master-ubuntu_jammy

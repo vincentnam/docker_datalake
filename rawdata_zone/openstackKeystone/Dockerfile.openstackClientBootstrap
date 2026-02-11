@@ -1,0 +1,6 @@
+FROM python:3.13-alpine
+
+RUN python3 -m pip install python-openstackclient && apk add zsh
+ADD scripts/bootstrap_keystone.sh /bootstrap_keystone.sh
+
+#openstack --os-auth-url http://keystone:5000/v3  --os-project-name service --os-user-domain-name Default  --os-project-domain-name Default --os-username swift   --os-password swift_password token issue

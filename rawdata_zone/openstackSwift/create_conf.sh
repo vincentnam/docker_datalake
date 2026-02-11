@@ -63,7 +63,8 @@ log_name = proxy-server
 user = swift
 
 [pipeline:main]
-pipeline = catch_errors gatekeeper healthcheck proxy-logging cache etag-quoter listing_formats bulk tempurl ratelimit s3api tempauth staticweb copy container-quotas account-quotas slo dlo versioned_writes symlink proxy-logging proxy-server
+pipeline = catch_errors gatekeeper healthcheck proxy-logging cache listing_formats bulk tempurl ratelimit authtoken s3api s3token keystoneauth staticweb copy container-quotas account-quotas slo dlo versioned_writes symlink proxy-logging proxy-server
+
 
 [filter:catch_errors]
 use = egg:swift#catch_errors
@@ -92,13 +93,41 @@ use = egg:swift#slo
 [filter:tempurl]
 use = egg:swift#tempurl
 
-[filter:tempauth]
-use = egg:swift#tempauth
-user_admin_admin = admin .admin .reseller_admin
-user_test_tester = testing .admin
-user_test_tester2 = testing2 .admin
-user_test_tester3 = testing3
-user_test2_tester2 = testing2 .admin
+
+[filter:authtoken]
+paste.filter_factory = keystonemiddleware.auth_token:filter_factory
+www_authenticate_uri = http://keystone:5000/v3
+auth_url = http://keystone:5000/v3
+auth_type = password
+project_name = service
+username = swift
+password = swift
+user_domain_name = Default
+project_domain_name = Default
+memcached_servers = memcached:11211
+token_cache_time = 3600
+include_service_catalog = false
+service_type = object-store
+delay_auth_decision = 0
+log_name = authtoken-swift
+
+
+[filter:s3token]
+use = egg:swift#s3token
+auth_port = 5000
+auth_protocol = http
+auth_host = keystone
+auth_uri = http://keystone:5000/v3
+signing_dir = /var/cache/swift/s3token
+memcached_servers = memcached:11211
+auth_version = v3
+
+
+[filter:keystoneauth]
+use = egg:swift#keystoneauth
+operator_roles = admin, swiftoperator, ResellerAdmin
+reseller_prefix = AUTH_
+
 
 [filter:staticweb]
 use = egg:swift#staticweb

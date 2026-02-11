@@ -56,6 +56,7 @@ docker build . \
     --build-arg PROJECT=keystone \
     --build-arg PROFILES=apache \
     --build-arg PIP_OPTS="--no-build-isolation" \
+    --build-arg DIST_PACKAGES="python3-openstackclient curl" \
     --tag keystone:master-$BASE_DISTRO_NAME
 
 echo "Keystone construit."
