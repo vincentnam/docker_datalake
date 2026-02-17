@@ -38,7 +38,7 @@ echo "Construction de l'image locale : requirements image"
     --target requirements \
     --build-arg FROM=base:$BASE_DISTRO_NAME \
     --build-arg PROJECT=requirements \
-    --build-arg PIP_WHEEL_ARGS="--no-build-isolation" \
+    --build-arg PIP_WHEEL_ARGS="" \
     --build-arg PIP_PACKAGES="setuptools==67.2.0 cython" \
     --tag requirements:$BASE_DISTRO_NAME
 
@@ -55,7 +55,7 @@ docker build . \
     --build-arg WHEELS=requirements:$BASE_DISTRO_NAME\
     --build-arg PROJECT=keystone \
     --build-arg PROFILES=apache \
-    --build-arg PIP_OPTS="--no-build-isolation" \
+    --build-arg PIP_OPTS="" \
     --build-arg DIST_PACKAGES="python3-openstackclient curl" \
     --tag keystone:master-$BASE_DISTRO_NAME
 
@@ -68,7 +68,7 @@ docker build . \
     --build-arg PROJECT=horizon \
     --build-arg PROFILES=apache \
     --build-arg PIP_PACKAGES=pymemcache \
-    --build-arg PIP_OPTS="--no-build-isolation" \
+    --build-arg PIP_OPTS="" \
     --tag horizon:master-$BASE_DISTRO_NAME
 
 echo "Keystone and Horizon build finished"
