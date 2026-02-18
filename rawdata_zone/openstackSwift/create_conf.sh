@@ -50,6 +50,7 @@ rsyslogd
 
 swift-proxy-server /etc/swift/proxy/proxy-$i.conf verbose
 EOF
+SWIFT_USER_PASSWORD=$(openssl rand -base64 12)
 
   cat << EOF > conf/proxy/proxy-$i.conf
 [DEFAULT]
@@ -63,7 +64,7 @@ log_name = proxy-server
 user = swift
 
 [pipeline:main]
-pipeline = catch_errors gatekeeper healthcheck proxy-logging cache listing_formats bulk tempurl ratelimit authtoken s3api s3token keystoneauth staticweb copy container-quotas account-quotas slo dlo versioned_writes symlink proxy-logging proxy-server
+pipeline = catch_errors gatekeeper healthcheck proxy-logging cache listing_formats bulk tempurl ratelimit s3api s3token authtoken keystoneauth staticweb copy container-quotas account-quotas slo dlo versioned_writes symlink proxy-logging proxy-server
 
 
 [filter:catch_errors]
@@ -93,7 +94,6 @@ use = egg:swift#slo
 [filter:tempurl]
 use = egg:swift#tempurl
 
-
 [filter:authtoken]
 paste.filter_factory = keystonemiddleware.auth_token:filter_factory
 www_authenticate_uri = http://keystone:5000/v3
@@ -108,20 +108,53 @@ memcached_servers = memcached:11211
 token_cache_time = 3600
 include_service_catalog = false
 service_type = object-store
-delay_auth_decision = 0
+delay_auth_decision = true
 log_name = authtoken-swift
-
 
 [filter:s3token]
 use = egg:swift#s3token
-auth_port = 5000
-auth_protocol = http
-auth_host = keystone
 auth_uri = http://keystone:5000/v3
-signing_dir = /var/cache/swift/s3token
-memcached_servers = memcached:11211
 auth_version = v3
+admin_user = swift
+admin_password = testing
+admin_tenant_name = service
+admin_user_domain_name = Default
+admin_project_domain_name = Default
+memcached_servers = memcached:11211
 
+
+#[filter:authtoken]
+#paste.filter_factory = keystonemiddleware.auth_token:filter_factory
+#www_authenticate_uri = http://keystone:5000/v3
+#auth_url = http://keystone:5000/v3
+#auth_type = password
+#project_name = service
+#username = swift
+#password = testing
+#user_domain_name = Default
+#project_domain_name = Default
+#memcached_servers = memcached:11211
+#token_cache_time = 3600
+#include_service_catalog = false
+#service_type = object-store
+#delay_auth_decision = 1
+#log_name = authtoken-swift
+#
+#
+#[filter:s3token]
+#use = egg:swift#s3token
+#auth_port = 5000
+#auth_protocol = http
+#auth_host = keystone
+#auth_uri = http://keystone:5000/v3
+#signing_dir = /var/cache/swift/s3token
+#memcached_servers = memcached:11211
+#auth_version = v3
+#admin_user = swift
+#admin_password = $SWIFT_USER_PASSWORD
+#admin_tenant_name = swift
+#project_domain_name = Default
+#user_domain_name = Default
 
 [filter:keystoneauth]
 use = egg:swift#keystoneauth
@@ -167,6 +200,9 @@ use = egg:swift#symlink
 use = egg:swift#s3api
 #cors_preflight_allow_origin = http://10.5.255.1:3000,http://localhost:3000
 cors_preflight_allow_origin = *
+allow_multipart_uploads = true
+# S'assurer que les ACLs sont bien appliquées
+check_bucket_owner = true
 
 # Example to create root secret: `openssl rand -base64 32`
 [filter:keymaster]
