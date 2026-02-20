@@ -18,4 +18,8 @@ CACHES = {
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'  # Or 'cached_db' if you want DB fallback
 SESSION_CACHE_ALIAS = 'default'
 
-
+WEBSSO_ENABLED = True
+WEBSSO_CHOICES = (
+    ("openid", "Keycloak SSO"),
+)
+WEBSSO_INITIAL_CHOICE = "openid"

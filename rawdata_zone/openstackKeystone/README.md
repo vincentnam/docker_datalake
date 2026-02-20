@@ -29,7 +29,7 @@ methods = password,token,openid
 
 [federation]
 remote_id_attribute = HTTP_OIDC_ISS
-trusted_dashboard = https://<VOTRE_HORIZON_URL>/auth/websso/
+trusted_dashboard = https://horizon/auth/websso/
 
 
 
@@ -58,23 +58,28 @@ mapping.json :
 
 
 [
-    {
-        "local": [
-            {
-                "group": {
-                    "name": "{0}",
-                    "domain": { "name": "Default" }
-                }
-            }
-        ],
-        "remote": [
-            {
-                "type": "HTTP_OIDC_GROUPS"
-            }
-        ]
-    }
+  {
+    "local": [
+      {
+        "user": {
+          "name": "{0}",
+          "email": "{1}"
+        }
+      },
+      {
+        "group": {
+          "name": "{2}",
+          "domain": { "name": "Default" }
+        }
+      }
+    ],
+    "remote": [
+      { "type": "HTTP_OIDC_PREFERRED_USERNAME" },
+      { "type": "HTTP_OIDC_EMAIL" },
+      { "type": "HTTP_OIDC_GROUPS" }
+    ]
+  }
 ]
-
 
 Keycloak, les opérations à faire :
 
@@ -102,47 +107,45 @@ openstack federation protocol create openid --mapping keycloak_mapping --identit
 import openstack
 from keycloak import KeycloakAdmin
 
-# --- CONFIGURATION ---
-KEYCLOAK_URL = "https://keycloak.example.com/auth/"
-KEYCLOAK_REALM = "mon-realm"
-KEYCLOAK_USER = "admin-keycloak"
-KEYCLOAK_PASS = "password"
-OPENSTACK_CLOUD = "admin-openstack" # Nom dans votre clouds.yaml
+# CONFIG
+KEYCLOAK_URL = "https://VOTRE_IP:7000/keycloak/"
+REALM = "mon-realm"
+KC_USER = "admin"
+KC_PASS = "adminpassword"
+OPENSTACK_CLOUD = "admin"
 
-# 1. Connexion à Keycloak
 keycloak_admin = KeycloakAdmin(server_url=KEYCLOAK_URL,
-                               username=KEYCLOAK_USER,
-                               password=KEYCLOAK_PASS,
-                               realm_name=KEYCLOAK_REALM,
-                               verify=True)
+                               username=KC_USER,
+                               password=KC_PASS,
+                               realm_name=REALM,
+                               verify=False)  # ou True avec cert
 
-# 2. Connexion à OpenStack
 conn = openstack.connect(cloud=OPENSTACK_CLOUD)
 
-# 3. Récupérer tous les groupes de Keycloak
-kc_groups = keycloak_admin.get_groups()
+print("🔄 Synchronisation Keycloak → OpenStack...")
 
-print("Synchronisation en cours...")
-
-for group in kc_groups:
-    group_name = group['name']
-    
-    # On filtre (optionnel) : ne traiter que les groupes qui commencent par "projet-"
-    if not group_name.startswith("projet-"):
+for group in keycloak_admin.get_groups():
+    name = group['name']
+    if not name.startswith("projet-"):
         continue
 
-    # 4. Vérifier si le projet existe déjà dans OpenStack
-    os_project = conn.identity.find_project(group_name)
+    # Projet
+    project = conn.identity.find_project(name)
+    if not project:
+        project = conn.identity.create_project(name=name, domain_id="default")
+        print(f" Projet créé : {name}")
 
-    if os_project:
-        print(f"[OK] Le projet '{group_name}' existe déjà.")
-    else:
-        # 5. Créer le projet s'il n'existe pas
-        print(f"[CRÉATION] Projet '{group_name}' introuvable. Création en cours...")
-        try:
-            new_project = conn.identity.create_project(name=group_name, domain_id="default")
-            print(f" -> Projet '{group_name}' créé avec l'ID {new_project.id}")
-        except Exception as e:
-            print(f" -> Erreur lors de la création de '{group_name}': {e}")
+    # Groupe Keystone (même nom)
+    keystone_group = conn.identity.find_group(name, domain_id="default")
+    if not keystone_group:
+        keystone_group = conn.identity.create_group(name=name, domain_id="default")
+        print(f" Groupe Keystone créé : {name}")
 
-print("Synchronisation terminée.")
+    # Rôle member sur le projet
+    role = conn.identity.find_role("member")
+    conn.identity.assign_role_to_group_on_project(
+        role.id, keystone_group.id, project.id
+    )
+    print(f" Rôle member assigné à {name}")
+
+print(" Synchronisation terminée !")
