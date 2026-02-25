@@ -151,7 +151,7 @@ if [ "$TEST" = true ]; then
       - "2015:80"    # Web GUI\
       - "5000:5000"  # Keystone\
       - "5001:5001"  # flask\
-      - "8080:8080"  # Swift - Horizon\
+      - "8081:8080"  # Swift - Horizon\
     volumes:\
       - .\/debug\/Caddyfile:\/etc\/caddy\/Caddyfile:ro\
     networks:\
