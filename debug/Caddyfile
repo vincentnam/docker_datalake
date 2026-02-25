@@ -1,0 +1,23 @@
+# Horizon Dashboard (Port 2015 à l'extérieur)
+:80 {
+    log {
+        output file /var/log/caddy/horizon.log
+    }
+    # On envoie tout à Horizon sans changer le path
+    reverse_proxy horizon:80
+}
+
+# API Keystone (Port 5000 à l'extérieur)
+:5000 {
+    reverse_proxy keystone:5000
+}
+
+# Swift API (Port 8080 à l'extérieur)
+:8080 {
+    reverse_proxy management-1:8080
+}
+
+# Flask API (Port 5001 à l'extérieur pour ne pas entrer en conflit)
+:5001 {
+    reverse_proxy flask-app:5000
+}
