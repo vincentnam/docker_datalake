@@ -346,6 +346,8 @@ EOF
 ###################################
 cat <<EOF >> docker-compose_datalake.yml
 
+#END SERVICE SECTION
+######################
 
 volumes:
   OpenstackSwiftData:
