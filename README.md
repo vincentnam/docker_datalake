@@ -8,3 +8,6 @@ Potential security breach :
     - Swift container in privileged mode 
         - #TODO give defined list of privilege instead of full privileged mode  
     - Remove hardcoded secret
+
+
+curl -H "Authorization: Bearer gAAAAABpoat_E62omkMt_iIW3O7etR8a8CUPTt7r33sefp_wNLRsgBW4h8jORAzwGhwnLO-pNXd45BKvMJ5vpEJ64qeJBQxDjJF7hB27QdYzM7jvMoWN-oHAn58WelrveFEqoB8zjs5BEimX3If-QofMGAMleM8RktpFB3E-LZRSKX79O-eDauA" http://localhost:3001/buckets

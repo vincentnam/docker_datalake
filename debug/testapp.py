@@ -1,466 +1,4 @@
-# from flask import Flask, request, jsonify, g
-# from keystoneauth1.identity import v3
-# from keystoneauth1 import session
-# from keystoneclient.v3 import client as keystone_client
-# from keystoneclient.v3 import auth as auth_module
-# import os
-#
-# app = Flask(__name__)
-#
-# # Si Flask est hors Docker -> localhost:5000, sinon -> keystone:5000
-# KEYSTONE_URL = os.getenv("KEYSTONE_URL", "http://localhost:5000/v3")
-#
-#
-# @app.route('/login', methods=['POST'])
-# def login():
-#     print("TAMERE")
-#     # print(request.headers)
-#     auth_data = request.json
-#     username = auth_data.get('username')
-#     password = auth_data.get('password')
-#     print(username, password)
-#     # return "ouais"
-#     if not username or not password:
-#         return jsonify({"error": "Credentials missing"}), 400
-#
-#     try:
-#
-#         # 1. Création de l'identité (Authentification Password)
-#         auth = v3.Password(
-#             auth_url="http://localhost:5000/v3",
-#             username=username,
-#             password=password,
-#             user_domain_name='Default',
-#             project_domain_name='Default',
-#             project_name='admin'  # On se scope sur un projet initial pour obtenir un token complet
-#         )
-#
-#         # 2. Création de la session Keystone
-#         sess = session.Session(auth=auth)
-#         keystone = keystone_client.Client(session=sess, include_metadata=True, endpoint_override="http://localhost:5000/v3")
-#
-#
-#         print("keystone")
-#         print(dir(keystone))
-#         print("sess")
-#         print(dir(sess))
-#         print("AUTH")
-#         print(dir(auth))
-#         print("project list")
-#         print(dir(keystone.projects))
-#         print(keystone.projects.list())
-#         print(dir(keystone.projects.list()))
-#         # print(keystone.projects.list().data)
-#         for i in keystone.projects.list().data:
-#             print(i)
-#         # 3. Récupération des infos utilisateur & Projets
-#         token = sess.get_token()  # déclenche l'auth si besoin → str
-#
-#         # Récupère l'objet AccessInfoV3
-#         access_info = auth.auth_ref  # ← le bon endroit après get_token()
-#         keystone.projects.list(user=access_info.user_id)
-#         # ────────────────────────────────────────────────
-#         # 3. Extraction des infos (attributs corrects)
-#         # ────────────────────────────────────────────────
-#         user_id = access_info.user_id
-#         project_id = access_info.project_id
-#         project_name = access_info.project_name
-#         roles = access_info.role_names  # ← liste des noms de rôles
-#         expires = access_info.expires  # ← datetime.datetime
-#
-#         # Optionnel : formatted strings
-#         expires_str = expires.isoformat() if expires else "N/A"
-#         roles_str = ", ".join(roles) if roles else "aucun rôle visible"
-#
-#         print(f"Token (début)   : {token[:20]}...")
-#         print(f"User ID         : {user_id}")
-#         print(f"Project         : {project_name} ({project_id})")
-#         print(f"Roles           : {roles_str}")
-#         print(f"Expire le       : {expires_str}")
-#
-#         # user_id = token.user_id
-#         # Récupération de la liste des projets auxquels l'utilisateur a accès
-#         # projects = keystone.projects.list(user=user_id)
-#         print("HE BAMBIN OH")
-#         # resp = keystone.projects.list()
-#         # print(resp)
-#
-#         project_list = []
-#         for p in keystone.projects.list():
-#             project_list.append({
-#                 "id": p.id,
-#                 "name": p.name,
-#                 "description": getattr(p, 'description', '')
-#             })
-#
-#         # 4. Récupération des métadonnées (Roles sur le projet actuel)
-#         roles = [role['name'] for role in token_info.role_names]
-#
-#         return jsonify({
-#             "status": "authenticated",
-#             "user": {
-#                 "id": user_id,
-#                 "username": username,
-#                 "roles": roles,
-#                 "projects": project_list
-#             },
-#             "token": sess.get_token(),  # Le token pour les futurs appels
-#             "catalog": token_info.service_catalog.catalog  # Liste des services (Swift, etc.)
-#         }), 200
-#
-#     except Exception as e:
-#         app.logger.error(f"Erreur Keystone : {str(e)}")
-#         return jsonify({"error": "Login failed", "details": str(e)}), 401
-#
-#
-# if __name__ == '__main__':
-#     app.run(host="0.0.0.0",debug=True, port=3001)
-
-
-
-
-
-
-
-
-
-
-
-#
-# # app.py - API REST Flask pour proxy S3 (Swift compat)
-# from functools import wraps
-# from flask import Flask, request, jsonify, send_file, abort, g, session, redirect, url_for, current_app
-# from flask_cors import CORS
-# import boto3
-# from botocore.exceptions import ClientError
-# import io
-# from datetime import datetime
-# # from flask_oidc import OpenIDConnect
-# import os
-# import requests
-# from dotenv import load_dotenv
-#
-# from flask import g, request, jsonify, current_app
-# from keystoneauth1.identity import v3
-# from keystoneauth1 import session
-# load_dotenv()
-# KEYSTONE_URL = os.getenv("KEYSTONE_URL", "http://localhost:5000/v3")
-#
-# app = Flask(__name__)
-#
-# def login_required(f):
-#     @wraps(f)
-#     def decorated_function(*args, **kwargs):
-#         app.logger.info("COUCOU")
-#         auth_header = request.headers.get("Authorization")
-#         username = request.headers.get("X-Username") or request.headers.get("Username")
-#         password = request.headers.get("X-Password") or request.headers.get("Password")
-#
-#         token = None
-#         current_app.logger.info(request.headers)  # Log headers for debugging
-#
-#         AUTH_URL = "http://localhost:5000/v3"  # ← même que ton exemple /login
-#
-#         # Case 1: Bearer Token (Keystone token)
-#         if auth_header and auth_header.startswith("Bearer "):
-#             token = auth_header.split(" ")[1]
-#             try:
-#                 auth = v3.Token(auth_url=AUTH_URL, token=token)
-#                 sess = session.Session(auth=auth)
-#                 sess.get_token()  # force validation
-#                 access_info = auth.auth_ref
-#
-#                 g.user = {
-#                     "id": access_info.user_id,
-#                     "username": access_info.username,
-#                     "roles": access_info.role_names or [],
-#                     "project_id": access_info.project_id,
-#                     "project_name": access_info.project_name,
-#                     "source": "token"
-#                 }
-#                 response = f(*args, **kwargs)
-#                 return response
-#             except Exception as e:
-#                 current_app.logger.warning(f"Invalid token: {e}")
-#                 return jsonify({"error": "Invalid or expired token"}), 401
-#
-#         # Case 2: Username + Password in headers (exactement comme ton /login)
-#         elif username and password:
-#             try:
-#                 auth = v3.Password(
-#                     auth_url=AUTH_URL,
-#                     username=username,
-#                     password=password,
-#                     user_domain_name='Default',
-#                     project_domain_name='Default',
-#                     project_name='admin'  # même scoping que ton exemple
-#                 )
-#                 sess = session.Session(auth=auth)
-#                 access_token = sess.get_token()
-#                 access_info = auth.auth_ref
-#
-#                 g.user = {
-#                     "id": access_info.user_id,
-#                     "username": access_info.username,
-#                     "roles": access_info.role_names or [],
-#                     "project_id": access_info.project_id,
-#                     "project_name": access_info.project_name,
-#                     "source": "credentials",
-#                     "access_token": access_token
-#                 }
-#
-#                 response = f(*args, **kwargs)
-#
-#                 # Injection du token dans la réponse (même logique que ton Keycloak)
-#                 if isinstance(response, tuple) and len(response) >= 2 and response[1] in (200, 201):
-#                     if isinstance(response[0], dict):
-#                         response[0]["access_token"] = access_token
-#                     else:
-#                         headers = dict(response[2]) if len(response) > 2 else {}
-#                         headers["X-Access-Token"] = access_token
-#                         response = (response[0], response[1], headers)
-#                 elif hasattr(response, 'headers'):
-#                     response.headers["X-Access-Token"] = access_token
-#
-#                 return response
-#             except Exception as e:
-#                 current_app.logger.warning(f"Login failure: {type(e).__name__} - {e}")
-#                 return jsonify({"error": "Invalid credentials"}), 401
-#
-#         # No auth
-#         else:
-#             return jsonify({
-#                 "error": "Authentication required",
-#                 "hint": "Use Bearer token or X-Username + X-Password headers"
-#             }), 401
-#
-#     return decorated_function
-#
-#
-#
-#
-# CORS(app, resources={r"/buckets": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]},
-#                     r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]},
-#                      r"/buckets/*": {"origins": "*", "methods": ["GET", "POST", "DELETE", "OPTIONS"]}})
-#
-#
-# app.config['DEBUG'] = True
-# # Config S3 client (Swift endpoint)
-# s3_client = boto3.client(
-#     's3',
-#     endpoint_url='http://10.5.10.1:8080',  # Swift endpoint - management node
-#     aws_access_key_id='test:tester',  # Temp auth Swift
-#     aws_secret_access_key='testing',
-#     region_name='us-east-1',
-#     config=boto3.session.Config(signature_version='s3v4', s3={'addressing_style': 'path'})
-# )
-#
-#
-# @app.route('/')
-# @login_required
-# def check_login():
-#     # g.user est TOUJOURS rempli ici → authentification réussie
-#     return jsonify({
-#         "status": "authenticated",
-#         "user": {
-#             "id": g.user["id"],
-#             "username": g.user["username"],
-#             "email": g.user.get("email"),
-#             "source": g.user.get("source", "unknown")
-#         },
-#         "access_token": g.user["access_token"]
-#     }), 200
-#
-# @app.route('/buckets', methods=['GET'])
-# @login_required
-# def list_buckets():
-#     try:
-#         response = s3_client.list_buckets()  # Appel à boto3 pour lister les buckets
-#         app.logger.info(response)  # Log de la réponse complète pour debug
-#
-#         # Extraction enrichie des buckets avec nom et date de création (convertie en ISO pour JSON)
-#         buckets = [
-#             {
-#                 'Name': b['Name'],
-#                 'CreationDate': b['CreationDate'].isoformat() if 'CreationDate' in b else None
-#             }
-#             for b in response.get('Buckets', [])  # Utilise get() pour éviter KeyError si absent
-#         ]
-#
-#         # Extraction de l'owner avec display_name et ID
-#         owner = {
-#             'DisplayName': response.get('Owner', {}).get('DisplayName'),
-#             'ID': response.get('Owner', {}).get('ID')
-#         } if 'Owner' in response else None
-#
-#         # Retour JSON enrichi : buckets avec détails, et owner
-#         return jsonify({'buckets': buckets, 'owner': owner})
-#     except ClientError as e:
-#         app.logger.info(e)  # Log de l'erreur pour traçabilité
-#         abort(500, description=str(e))  # Gestion d'erreur standard
-#
-# @app.route('/buckets/<bucket>', methods=['DELETE'])
-# @login_required
-# def delete_bucket(bucket):
-#     try:
-#         app.logger.info('Deleting bucket {}'.format(bucket))
-#         s3_client.delete_bucket(Bucket=bucket)
-#
-#         return jsonify({'message': f'Bucket {bucket} deleted'}), 200
-#     except ClientError as e:
-#         app.logger.info(e)
-#         abort(404 if 'NoSuchBucket' in str(e) else 500, description=str(e))
-# @app.route('/buckets', methods=['POST'])
-# @login_required
-# def create_bucket():
-#     data = request.json
-#
-#     app.logger.info(data)
-#
-#     app.logger.info(request)
-#     bucket_name = data.get('name')
-#     region = data.get('region', 'us-east-1')
-#     object_locking = bool(data.get('objectLocking', False))  # Convert to bool
-#     if not bucket_name:
-#         abort(400, description='Bucket name required')
-#     try:
-#         config = {'LocationConstraint': region} if region else {}
-#         s3_client.create_bucket(
-#             Bucket=bucket_name,
-#             CreateBucketConfiguration=config,
-#             ObjectLockEnabledForBucket=object_locking
-#         )
-#         return jsonify({'message': f'Bucket {bucket_name} created'}), 201
-#     except ClientError as e:
-#         app.logger.info(e)
-#         app.logger.info(e.response['Error']['Message'])
-#
-#         abort(409 if 'BucketAlreadyExists' in str(e) or "BucketAlreadyOwnedByYou" in str(e) else 500, description=str(e) + ":" + str(e.response))
-#
-#
-# @app.route('/buckets/<bucket>/objects', methods=['POST'])
-# @login_required
-# def upload_object(bucket):
-#     if 'file' not in request.files:
-#         abort(400, description='No file uploaded')
-#     file = request.files['file']
-#     key = request.form.get('key', file.filename)
-#     content_type = request.form.get('contentType', 'application/octet-stream')
-#     creation_date = request.form.get('creationDate', datetime.now().isoformat())  # Fallback UTC
-#
-#     try:
-#         s3_client.put_object(
-#             Bucket=bucket,
-#             Key=key,
-#             Body=file.stream.read(),
-#             ContentType=content_type,
-#             Metadata={'CreationDate': creation_date}  # Stockage en metadata
-#         )
-#         return jsonify({'message': f'Object {key} uploaded'}), 201
-#     except ClientError as e:
-#         app.logger.info(e)
-#         abort(500, description=str(e))
-#
-#
-# @app.route('/buckets/<bucket>/objects', methods=['GET'])
-# @login_required
-# def list_objects(bucket):
-#     prefix = request.args.get('prefix', '')
-#     delimiter = request.args.get('delimiter', '/')
-#     try:
-#         response = s3_client.list_objects_v2(Bucket=bucket, Prefix=prefix, Delimiter=delimiter)
-#
-#         objects = []
-#         for obj in response.get('Contents', []):
-#             key = obj['Key']
-#             try:
-#                 head_response = s3_client.head_object(Bucket=bucket, Key=key)
-#
-#                 obj_data = {
-#                     'key': key,
-#                     'size': obj['Size'],
-#                     'lastModified': obj['LastModified'].isoformat() if 'LastModified' in obj else None,
-#                     'eTag': obj.get('ETag', head_response.get('ETag')),
-#                     'storageClass': obj.get('StorageClass', head_response.get('StorageClass', 'STANDARD'))
-#                 }
-#
-#                 metadata = {
-#                     'contentType': head_response.get('ContentType', 'application/octet-stream'),
-#                     'contentLength': head_response.get('ContentLength', obj['Size']),
-#                     'cacheControl': head_response.get('CacheControl'),
-#                     'contentDisposition': head_response.get('ContentDisposition'),
-#                     'contentEncoding': head_response.get('ContentEncoding'),
-#                     'contentLanguage': head_response.get('ContentLanguage'),
-#                     'expires': head_response.get('Expires'),
-#                     'serverSideEncryption': head_response.get('ServerSideEncryptionAlgorithm'),
-#                     'ssekmsKeyId': head_response.get('SSEKMSKeyId'),
-#                     'metadata': head_response.get('Metadata', {}),  # User metadata incl. CreationDate
-#                     'versionId': head_response.get('VersionId'),
-#                     'websiteRedirectLocation': head_response.get('WebsiteRedirectLocation'),
-#                     'objectLockMode': head_response.get('ObjectLockMode'),
-#                     'objectLockLegalHoldStatus': head_response.get('ObjectLockLegalHoldStatus'),
-#                     'objectLockRetainUntilDate': head_response.get('ObjectLockRetainUntilDate')
-#                 }
-#
-#                 full_obj = {**obj_data, **{k: v for k, v in metadata.items() if v is not None}}
-#
-#             except ClientError as head_err:
-#                 app.logger.warning(f"HEAD failed for {key}: {head_err}")
-#                 full_obj = {
-#                     'key': key,
-#                     'size': obj['Size'],
-#                     'lastModified': obj['LastModified'].isoformat() if 'LastModified' in obj else None,
-#                     'eTag': obj.get('ETag'),
-#                     'storageClass': obj.get('StorageClass', 'STANDARD'),
-#                     'contentType': 'application/octet-stream'
-#                 }
-#
-#             objects.append(full_obj)
-#
-#         app.logger.info(objects)
-#         prefixes = [{'prefix': p['Prefix']} for p in response.get('CommonPrefixes', [])]
-#         return jsonify({'objects': objects, 'prefixes': prefixes})
-#     except ClientError as e:
-#         app.logger.info(e)
-#         abort(404 if 'NoSuchBucket' in str(e) else 500, description=str(e))
-# @app.route('/buckets/<bucket>/objects/<key>', methods=['GET'])
-# @login_required
-# def download_object(bucket, key):
-#     try:
-#         response = s3_client.get_object(Bucket=bucket, Key=key)
-#         return send_file(io.BytesIO(response['Body'].read()), as_attachment=True, download_name=key)
-#     except ClientError as e:
-#         app.logger.info(e)
-#         abort(404 if 'NoSuchKey' in str(e) else 500, description=str(e))
-#
-# @app.route('/buckets/<bucket>/objects/<key>', methods=['DELETE'])
-# @login_required
-# def delete_object(bucket, key):
-#     try:
-#         s3_client.delete_object(Bucket=bucket, Key=key)
-#         return jsonify({'message': f'Object {key} deleted'})
-#     except ClientError as e:
-#         app.logger.info(e)
-#         abort(404 if 'NoSuchKey' in str(e) else 500, description=str(e))
-#
-# if __name__ == '__main__':
-#     app.run(host="0.0.0.0",debug=True, port=3001)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# app.py - API REST Flask pour proxy S3 (Swift compat) - VERSION KEYSTONE + BOTO3 DYNAMIQUE
+# app.py - API REST Flask pour proxy S3 (Swift compat) - VERSION CLEAN
 from functools import wraps
 from flask import Flask, request, jsonify, send_file, abort, g, current_app
 from flask_cors import CORS
@@ -470,34 +8,117 @@ import io
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+import json
 
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
 from keystoneclient.v3 import client as keystone_client
+
 load_dotenv()
 KEYSTONE_URL = os.getenv("KEYSTONE_URL", "http://localhost:5000/v3")
+S3_ENDPOINT = os.getenv("S3_ENDPOINT", "http://10.5.10.1:8080")
 
 app = Flask(__name__)
+CORS(app, resources={r"/buckets": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]},
+                     r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]},
+                     r"/buckets/*": {"origins": "*", "methods": ["GET", "POST", "DELETE", "OPTIONS"]}})
+app.config['DEBUG'] = True
 
+
+# -----------------------
+# Helpers
+# -----------------------
+def _make_session_from_auth(auth):
+    """Crée une session Keystone à partir d'un objet auth."""
+    return session.Session(auth=auth)
+
+
+def _inject_token_in_response(response, token):
+    """
+    Si la vue retourne (body, status) ou Response-like, injecte le token
+    dans le body dict ou dans les headers (comportement existant conservé).
+    """
+    try:
+        if isinstance(response, tuple) and len(response) >= 2 and response[1] in (200, 201):
+            body = response[0]
+            status = response[1]
+            headers = dict(response[2]) if len(response) > 2 else {}
+            if isinstance(body, dict):
+                body["access_token"] = token
+                body["projects"] = g.user.get("projects", [])
+                body["ec2_credentials"] = g.user.get("ec2_credentials")
+                return jsonify(body), status
+            headers["X-Access-Token"] = token
+            return response[0], status, headers
+        elif hasattr(response, 'headers'):
+            response.headers["X-Access-Token"] = token
+            return response
+    except Exception:
+        current_app.logger.exception("Failed to inject token into response")
+    return response
+
+
+# -----------------------
+# Enrich user info
+# -----------------------
+def enrich_user_info(user_dict, sess):
+    """Enrichit user_dict avec projects et ec2_credentials (blob parsé si possible)."""
+    keystone = keystone_client.Client(session=sess, include_metadata=True, endpoint_override=KEYSTONE_URL)
+
+    # Projects
+    try:
+        projects = list(keystone.projects.list(user=user_dict["id"]).data)
+        user_dict["projects"] = [
+            {"id": p.id, "name": p.name, "description": getattr(p, 'description', None), "enabled": getattr(p, 'enabled', True)}
+            for p in projects
+        ]
+    except Exception as e:
+        current_app.logger.warning(f"Failed to fetch projects: {e}")
+        user_dict["projects"] = []
+
+    # EC2 credentials (take first if present) and parse blob
+    try:
+        creds = list(keystone.credentials.list(user=user_dict["id"], type="ec2").data)
+        if creds:
+            ec2 = creds[0].to_dict()
+            blob = ec2.get("blob")
+            parsed = {}
+            try:
+                if isinstance(blob, str):
+                    parsed = json.loads(blob)
+                elif isinstance(blob, dict):
+                    parsed = blob
+            except Exception:
+                current_app.logger.warning("Failed to parse EC2 blob")
+            ec2["blob"] = parsed
+            user_dict["ec2_credentials"] = ec2
+        else:
+            user_dict["ec2_credentials"] = None
+    except Exception as e:
+        current_app.logger.warning(f"Failed to fetch EC2 credentials: {e}")
+        user_dict["ec2_credentials"] = None
+
+
+# -----------------------
+# Auth decorator
+# -----------------------
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        app.logger.info("COUCOU")
+        current_app.logger.info("COUCOU")
         auth_header = request.headers.get("Authorization")
         username = request.headers.get("X-Username") or request.headers.get("Username")
         password = request.headers.get("X-Password") or request.headers.get("Password")
 
-        current_app.logger.info(request.headers)
+        AUTH_URL = KEYSTONE_URL
 
-        AUTH_URL = "http://localhost:5000/v3"
-
-        # ====================== CASE 1 : Bearer Token ======================
+        # CASE 1: Bearer token
         if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split(" ")[1]
+            token = auth_header.split(" ", 1)[1].strip()
             try:
                 auth = v3.Token(auth_url=AUTH_URL, token=token)
-                sess = session.Session(auth=auth)
-                sess.get_token()
+                sess = _make_session_from_auth(auth)
+                sess.get_token()  # validate
                 access_info = auth.auth_ref
 
                 g.user = {
@@ -511,16 +132,14 @@ def login_required(f):
                     "projects": [],
                     "ec2_credentials": None
                 }
-                enrich_user_info(g.user, sess)   # enrichissement complet
-
-                response = f(*args, **kwargs)
-                return response
+                enrich_user_info(g.user, sess)
+                return f(*args, **kwargs)
             except Exception as e:
                 current_app.logger.warning(f"Invalid token: {e}")
                 return jsonify({"error": "Invalid or expired token"}), 401
 
-        # ====================== CASE 2 : Username + Password ======================
-        elif username and password:
+        # CASE 2: Username + Password
+        if username and password:
             try:
                 auth = v3.Password(
                     auth_url=AUTH_URL,
@@ -530,7 +149,7 @@ def login_required(f):
                     project_domain_name='Default',
                     project_name='admin'
                 )
-                sess = session.Session(auth=auth)
+                sess = _make_session_from_auth(auth)
                 access_token = sess.get_token()
                 access_info = auth.auth_ref
 
@@ -545,119 +164,101 @@ def login_required(f):
                     "projects": [],
                     "ec2_credentials": None
                 }
-                enrich_user_info(g.user, sess)   # enrichissement complet
+
+                enrich_user_info(g.user, sess)
 
                 response = f(*args, **kwargs)
-
-                # Injection enrichie dans la réponse (par défaut)
-                if isinstance(response, tuple) and len(response) >= 2 and response[1] in (200, 201):
-                    if isinstance(response[0], dict):
-                        response[0]["access_token"] = access_token
-                        response[0]["projects"] = g.user["projects"]
-                        response[0]["ec2_credentials"] = g.user["ec2_credentials"]
-                    else:
-                        headers = dict(response[2]) if len(response) > 2 else {}
-                        headers["X-Access-Token"] = access_token
-                        response = (response[0], response[1], headers)
-                elif hasattr(response, 'headers'):
-                    response.headers["X-Access-Token"] = access_token
-
-                return response
+                # inject token + projects + ec2_credentials into response body or headers
+                return _inject_token_in_response(response, access_token)
             except Exception as e:
                 current_app.logger.warning(f"Login failure: {type(e).__name__} - {e}")
                 return jsonify({"error": "Invalid credentials"}), 401
 
         # No auth
-        else:
-            return jsonify({
-                "error": "Authentication required",
-                "hint": "Use Bearer token or X-Username + X-Password headers"
-            }), 401
+        return jsonify({"error": "Authentication required", "hint": "Use Bearer token or X-Username + X-Password headers"}), 401
 
     return decorated_function
 
 
-# ====================== HELPER ======================
-def enrich_user_info(user_dict, sess):
-    """Enrichit g.user avec toutes les infos Keystone (projects + EC2)"""
-    keystone = keystone_client.Client(session=sess, include_metadata=True, endpoint_override="http://localhost:5000/v3")
-
-    # Liste des projets de l'utilisateur
-    try:
-        projects = list(keystone.projects.list(user=user_dict["id"]))   # ← list() force la conversion
-        user_dict["projects"] = [
-            {
-                "id": p.id,
-                "name": p.name,
-                "description": getattr(p, 'description', None),
-                "enabled": getattr(p, 'enabled', True)
-            } for p in projects
-        ]
-    except Exception as e:
-        current_app.logger.warning(f"Failed to fetch projects: {e}")
-        user_dict["projects"] = []
-
-    # EC2 credentials
-    try:
-        creds = list(keystone.credentials.list(user=user_dict["id"], type="ec2"))   # ← list() + type="ec2"
-        user_dict["ec2_credentials"] = creds[0].to_dict() if creds else {"message": "No EC2 credentials found"}
-    except Exception as e:
-        current_app.logger.warning(f"Failed to fetch EC2 credentials: {e}")
-        user_dict["ec2_credentials"] = {"message": "No EC2 credentials found"}
-
-
-# ====================== FONCTIONS FUTURES (commentées) ======================
-# def get_user_roles(keystone, user_id):
-#     return keystone.roles.list(user=user_id)
-#
-# def get_user_domains(keystone, user_id):
-#     return keystone.domains.list(user=user_id)
-#
-# def get_user_groups(keystone, user_id):
-#     return keystone.groups.list(user=user_id)
-#
-# def get_project_scoped_token(sess, project_id):
-#     # exemple pour générer un token scoped sur un projet spécifique
-#     pass
-
-
-
-CORS(app, resources={r"/buckets": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]},
-                    r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]},
-                     r"/buckets/*": {"origins": "*", "methods": ["GET", "POST", "DELETE", "OPTIONS"]}})
-
-app.config['DEBUG'] = True
-
-# ====================== CLIENT BOTO3 DYNAMIQUE KEYSTONE ======================
+# -----------------------
+# S3 client factory
+# -----------------------
 def get_s3_client():
-    """Retourne un client boto3 frais avec le token Keystone de l'utilisateur authentifié."""
+    """
+    Retourne un client boto3.
+    Priorité :
+      1) EC2 credentials (access + secret) si disponibles dans g.user["ec2_credentials"]
+      2) Fallback : token Keystone (aws_access_key_id=token, aws_session_token=token)
+    """
     if not hasattr(g, 'user') or 'access_token' not in g.user:
         abort(401, description="Authentication required")
+
     token = g.user['access_token']
+
+    # Try EC2 credentials first
+    ec2 = g.user.get('ec2_credentials')
+    if ec2 and isinstance(ec2, dict):
+        blob = ec2.get('blob') or {}
+        access_key = None
+        secret_key = None
+        try:
+            if isinstance(blob, dict):
+                access_key = blob.get('access') or blob.get('access_key') or blob.get('accessKey')
+                secret_key = blob.get('secret') or blob.get('secret_key') or blob.get('secretKey')
+            elif isinstance(blob, str):
+                parsed = json.loads(blob)
+                access_key = parsed.get('access')
+                secret_key = parsed.get('secret')
+        except Exception as e:
+            current_app.logger.warning(f"Failed to parse EC2 blob in get_s3_client: {e}")
+
+        if access_key and secret_key:
+            current_app.logger.info("Using EC2 credentials for S3 client (access/secret).")
+            return boto3.client(
+                's3',
+                endpoint_url=S3_ENDPOINT,
+                aws_access_key_id=access_key,
+                aws_secret_access_key=secret_key,
+                region_name='us-east-1',
+                config=boto3.session.Config(signature_version='s3v4', s3={'addressing_style': 'path'})
+            )
+
+    # Fallback: use Keystone token (some middlewares accept aws_session_token)
+    current_app.logger.info("No EC2 credentials found, falling back to Keystone token for S3 client.")
     return boto3.client(
         's3',
-        endpoint_url='http://10.5.10.1:8080',
-        aws_access_key_id=token,          # Token Keystone utilisé comme access_key (standard Swift S3 + Keystone)
+        endpoint_url=S3_ENDPOINT,
+        aws_access_key_id=token,
         aws_secret_access_key='',
+        aws_session_token=token,
         region_name='us-east-1',
         config=boto3.session.Config(signature_version='s3v4', s3={'addressing_style': 'path'})
     )
-# =============================================================================
 
+
+# -----------------------
+# Routes
+# -----------------------
 @app.route('/')
 @login_required
 def check_login():
-    print(g.user)
+    current_app.logger.debug("check_login g.user: %s", {k: v for k, v in g.user.items() if k != "access_token"})
     return jsonify({
         "status": "authenticated",
         "user": {
             "id": g.user["id"],
             "username": g.user["username"],
             "email": g.user.get("email"),
-            "source": g.user.get("source", "unknown")
+            "source": g.user.get("source", "unknown"),
+            "roles": g.user.get("roles", []),
+            "project_id": g.user.get("project_id"),
+            "project_name": g.user.get("project_name"),
+            "projects": g.user.get("projects", []),
+            "ec2_credentials": g.user.get("ec2_credentials")
         },
         "access_token": g.user["access_token"]
     }), 200
+
 
 @app.route('/buckets', methods=['GET'])
 @login_required
@@ -667,40 +268,35 @@ def list_buckets():
         response = client.list_buckets()
 
         buckets = [
-            {
-                'Name': b['Name'],
-                'CreationDate': b['CreationDate'].isoformat() if 'CreationDate' in b else None
-            }
+            {'Name': b['Name'], 'CreationDate': b['CreationDate'].isoformat() if 'CreationDate' in b else None}
             for b in response.get('Buckets', [])
         ]
-
-        owner = {
-            'DisplayName': response.get('Owner', {}).get('DisplayName'),
-            'ID': response.get('Owner', {}).get('ID')
-        } if 'Owner' in response else None
+        owner = {'DisplayName': response.get('Owner', {}).get('DisplayName'),
+                 'ID': response.get('Owner', {}).get('ID')} if 'Owner' in response else None
 
         return jsonify({'buckets': buckets, 'owner': owner})
     except ClientError as e:
-        app.logger.info(e)
+        current_app.logger.exception("Error listing buckets")
         abort(500, description=str(e))
+
 
 @app.route('/buckets/<bucket>', methods=['DELETE'])
 @login_required
 def delete_bucket(bucket):
     try:
-        app.logger.info('Deleting bucket {}'.format(bucket))
+        current_app.logger.info('Deleting bucket %s', bucket)
         client = get_s3_client()
         client.delete_bucket(Bucket=bucket)
         return jsonify({'message': f'Bucket {bucket} deleted'}), 200
     except ClientError as e:
-        app.logger.info(e)
+        current_app.logger.info(e)
         abort(404 if 'NoSuchBucket' in str(e) else 500, description=str(e))
+
 
 @app.route('/buckets', methods=['POST'])
 @login_required
 def create_bucket():
-    data = request.json
-    app.logger.info(data)
+    data = request.json or {}
     bucket_name = data.get('name')
     region = data.get('region', 'us-east-1')
     object_locking = bool(data.get('objectLocking', False))
@@ -709,16 +305,14 @@ def create_bucket():
     try:
         client = get_s3_client()
         config = {'LocationConstraint': region} if region else {}
-        client.create_bucket(
-            Bucket=bucket_name,
-            CreateBucketConfiguration=config,
-            ObjectLockEnabledForBucket=object_locking
-        )
+        client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration=config,
+                             ObjectLockEnabledForBucket=object_locking)
         return jsonify({'message': f'Bucket {bucket_name} created'}), 201
     except ClientError as e:
-        app.logger.info(e)
-        app.logger.info(e.response['Error']['Message'])
-        abort(409 if 'BucketAlreadyExists' in str(e) or "BucketAlreadyOwnedByYou" in str(e) else 500, description=str(e) + ":" + str(e.response))
+        current_app.logger.info(e)
+        abort(409 if 'BucketAlreadyExists' in str(e) or "BucketAlreadyOwnedByYou" in str(e) else 500,
+              description=str(e) + ":" + str(getattr(e, 'response', None)))
+
 
 @app.route('/buckets/<bucket>/objects', methods=['POST'])
 @login_required
@@ -729,20 +323,15 @@ def upload_object(bucket):
     key = request.form.get('key', file.filename)
     content_type = request.form.get('contentType', 'application/octet-stream')
     creation_date = request.form.get('creationDate', datetime.now().isoformat())
-
     try:
         client = get_s3_client()
-        client.put_object(
-            Bucket=bucket,
-            Key=key,
-            Body=file.stream.read(),
-            ContentType=content_type,
-            Metadata={'CreationDate': creation_date}
-        )
+        client.put_object(Bucket=bucket, Key=key, Body=file.stream.read(),
+                          ContentType=content_type, Metadata={'CreationDate': creation_date})
         return jsonify({'message': f'Object {key} uploaded'}), 201
     except ClientError as e:
-        app.logger.info(e)
+        current_app.logger.exception("Upload failed")
         abort(500, description=str(e))
+
 
 @app.route('/buckets/<bucket>/objects', methods=['GET'])
 @login_required
@@ -757,50 +346,34 @@ def list_objects(bucket):
         for obj in response.get('Contents', []):
             key = obj['Key']
             try:
-                head_response = client.head_object(Bucket=bucket, Key=key)
+                head = client.head_object(Bucket=bucket, Key=key)
                 obj_data = {
                     'key': key,
                     'size': obj['Size'],
                     'lastModified': obj['LastModified'].isoformat() if 'LastModified' in obj else None,
-                    'eTag': obj.get('ETag', head_response.get('ETag')),
-                    'storageClass': obj.get('StorageClass', head_response.get('StorageClass', 'STANDARD'))
+                    'eTag': obj.get('ETag', head.get('ETag')),
+                    'storageClass': obj.get('StorageClass', head.get('StorageClass', 'STANDARD'))
                 }
                 metadata = {
-                    'contentType': head_response.get('ContentType', 'application/octet-stream'),
-                    'contentLength': head_response.get('ContentLength', obj['Size']),
-                    'cacheControl': head_response.get('CacheControl'),
-                    'contentDisposition': head_response.get('ContentDisposition'),
-                    'contentEncoding': head_response.get('ContentEncoding'),
-                    'contentLanguage': head_response.get('ContentLanguage'),
-                    'expires': head_response.get('Expires'),
-                    'serverSideEncryption': head_response.get('ServerSideEncryptionAlgorithm'),
-                    'ssekmsKeyId': head_response.get('SSEKMSKeyId'),
-                    'metadata': head_response.get('Metadata', {}),
-                    'versionId': head_response.get('VersionId'),
-                    'websiteRedirectLocation': head_response.get('WebsiteRedirectLocation'),
-                    'objectLockMode': head_response.get('ObjectLockMode'),
-                    'objectLockLegalHoldStatus': head_response.get('ObjectLockLegalHoldStatus'),
-                    'objectLockRetainUntilDate': head_response.get('ObjectLockRetainUntilDate')
+                    'contentType': head.get('ContentType', 'application/octet-stream'),
+                    'contentLength': head.get('ContentLength', obj['Size']),
+                    'metadata': head.get('Metadata', {})
                 }
                 full_obj = {**obj_data, **{k: v for k, v in metadata.items() if v is not None}}
             except ClientError as head_err:
-                app.logger.warning(f"HEAD failed for {key}: {head_err}")
-                full_obj = {
-                    'key': key,
-                    'size': obj['Size'],
-                    'lastModified': obj['LastModified'].isoformat() if 'LastModified' in obj else None,
-                    'eTag': obj.get('ETag'),
-                    'storageClass': obj.get('StorageClass', 'STANDARD'),
-                    'contentType': 'application/octet-stream'
-                }
+                current_app.logger.warning("HEAD failed for %s: %s", key, head_err)
+                full_obj = {'key': key, 'size': obj['Size'],
+                            'lastModified': obj['LastModified'].isoformat() if 'LastModified' in obj else None,
+                            'eTag': obj.get('ETag'), 'storageClass': obj.get('StorageClass', 'STANDARD'),
+                            'contentType': 'application/octet-stream'}
             objects.append(full_obj)
 
-        app.logger.info(objects)
         prefixes = [{'prefix': p['Prefix']} for p in response.get('CommonPrefixes', [])]
         return jsonify({'objects': objects, 'prefixes': prefixes})
     except ClientError as e:
-        app.logger.info(e)
+        current_app.logger.exception("List objects failed")
         abort(404 if 'NoSuchBucket' in str(e) else 500, description=str(e))
+
 
 @app.route('/buckets/<bucket>/objects/<key>', methods=['GET'])
 @login_required
@@ -810,8 +383,9 @@ def download_object(bucket, key):
         response = client.get_object(Bucket=bucket, Key=key)
         return send_file(io.BytesIO(response['Body'].read()), as_attachment=True, download_name=key)
     except ClientError as e:
-        app.logger.info(e)
+        current_app.logger.exception("Download failed")
         abort(404 if 'NoSuchKey' in str(e) else 500, description=str(e))
+
 
 @app.route('/buckets/<bucket>/objects/<key>', methods=['DELETE'])
 @login_required
@@ -821,8 +395,93 @@ def delete_object(bucket, key):
         client.delete_object(Bucket=bucket, Key=key)
         return jsonify({'message': f'Object {key} deleted'})
     except ClientError as e:
-        app.logger.info(e)
+        current_app.logger.exception("Delete object failed")
         abort(404 if 'NoSuchKey' in str(e) else 500, description=str(e))
+
+
+@app.route('/debug/list-buckets-test', methods=['GET'])
+def debug_list_buckets():
+    """
+    Test rapide : s'authentifie en Password (admin/admin), enrichit g.user,
+    crée un client S3 et retourne la liste des buckets.
+    """
+    try:
+        # 1) Authentification Keystone avec admin/admin
+        auth = v3.Password(
+            auth_url=KEYSTONE_URL,
+            username='admin',
+            password='admin',
+            user_domain_name='Default',
+            project_domain_name='Default',
+            project_name='admin'
+        )
+        sess = session.Session(auth=auth)
+        token = sess.get_token()
+        access_info = auth.auth_ref
+
+        # 2) Remplir g.user comme le décorateur le ferait
+        g.user = {
+            "id": access_info.user_id,
+            "username": access_info.username,
+            "roles": access_info.role_names or [],
+            "project_id": access_info.project_id,
+            "project_name": access_info.project_name,
+            "source": "credentials",
+            "access_token": token,
+            "projects": [],
+            "ec2_credentials": None
+        }
+
+        # 3) Enrichir (projects + ec2) avec ta fonction existante
+        enrich_user_info(g.user, sess)
+
+        # 4) Créer client S3 et lister les buckets (réutilise get_s3_client)
+        client = get_s3_client()
+        resp = client.list_buckets()
+
+        buckets = [
+            {"Name": b.get("Name"), "CreationDate": b.get("CreationDate").isoformat() if b.get("CreationDate") else None}
+            for b in resp.get("Buckets", [])
+        ]
+        owner = {"DisplayName": resp.get("Owner", {}).get("DisplayName"), "ID": resp.get("Owner", {}).get("ID")} if resp.get("Owner") else None
+
+        return jsonify({"status": "ok", "buckets": buckets, "owner": owner, "ec2_credentials_present": bool(g.user.get("ec2_credentials"))}), 200
+
+    except Exception as e:
+        current_app.logger.exception("Debug list-buckets failed")
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+
+from swiftclient.client import Connection
+
+conn = Connection(
+    authurl='http://localhost:5000/v3',
+    user='swift',
+    key='testing',
+    os_options={'project_name': 'service', 'user_domain_name': 'Default', 'project_domain_name': 'Default'},
+    auth_version='3'
+)
+
+# lister containers
+containers = conn.get_account()[1]
+print([c['name'] for c in containers])
+
+
+# ########################################
+#
+# # CA MARCHE :
+# from swiftclient import client as swiftclient
+# conn = swiftclient.Connection("http://keystone:5000/v3",
+#                                          "admin",
+#                                          "admin",
+#                               os_options={'project_name': 'admin', 'user_domain_name': 'Default', 'project_domain_name': 'Default'},
+#                                          auth_version="3")
+# #########################################
+#
+
+
+
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=3001)

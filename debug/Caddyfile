@@ -14,10 +14,15 @@
 
 # Swift API (Port 8080 à l'extérieur)
 :8080 {
-    reverse_proxy management-1:8080
+    reverse_proxy management-1:8080 {
+        header_up Host {host}
+
+    }
 }
+
 
 # Flask API (Port 5001 à l'extérieur pour ne pas entrer en conflit)
 :5001 {
     reverse_proxy flask-app:5000
 }
+
