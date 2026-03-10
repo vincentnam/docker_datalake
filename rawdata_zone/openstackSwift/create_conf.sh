@@ -25,7 +25,7 @@ EOF
 
 export $(grep -v '^#' ./config_cluster.env | sed 's/\r$//' | xargs)
 
-NODE_STORAGE_SIZE="1GB"
+#NODE_STORAGE_SIZE="1GB"
 
 for i in $(seq $NB_MANAGEMENT_NODE); do
 
@@ -230,7 +230,7 @@ done
 
 
 
-
+# TODO: Mount just created loop dev and not /dev/loop0
 
 
 for i in $(seq $NB_STORAGE_NODE); do
@@ -250,12 +250,15 @@ get_loop_for_device_number() {
 ls /internal_dev
 mkdir -p /srv/node/swift-storage-d-$i /internal_dev
 
-truncate --size 1G /internal_dev/swift-storage-d-$i
+truncate --size $NODE_STORAGE_SIZE /internal_dev/swift-storage-d-$i
 mkfs.xfs -f -L size=512 /internal_dev/swift-storage-d-$i
 losetup -f /internal_dev/swift-storage-d-$i -v
 losetup
 
 mount -t xfs -o noatime  /dev/loop0 /srv/node/swift-storage-d-1
+
+# TODO: Mount just created loop dev and not /dev/loop0
+
 
 #truncate -s $NODE_STORAGE_SIZE /internal_dev/$DEVICE_NAME;
 #echo "    created storage device /internal_dev/$DEVICE_NAME of $NODE_STORAGE_SIZE";

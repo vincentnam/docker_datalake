@@ -15,6 +15,7 @@ COMPOSE_FILE="docker-compose_datalake.yml"
 cleanup_function() {
   echo "Cleaning up containers before exiting..."
   sudo docker compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
+  # TODO: ADD LOSETUP CLEAN (Multiple deployment create multiple loop dev even if truncate file are deleted)
   exit 0
 }
 
