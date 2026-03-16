@@ -4,8 +4,8 @@
 export $(grep -v '^#' /scripts/config_cluster.env | sed 's/\r$//' | xargs)
 env
 POLICIES="object container account"
-
-NODE_STORAGE_SIZE="1GB"
+#
+#NODE_STORAGE_SIZE="1GB"
 
 touch docker-compose.test.yml
 
