@@ -470,7 +470,7 @@ import io
 from datetime import datetime
 import os
 from dotenv import load_dotenv
-
+import json
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
 from keystoneclient.v3 import client as keystone_client
@@ -608,13 +608,30 @@ def enrich_user_info(user_dict, sess):
 
     # EC2 credentials
     try:
-        creds = list(keystone.credentials.list(user=user_dict["id"], type="ec2").data)   # ← list() + type="ec2"
-        # print("CREDS : ")
-        # print(creds)
-        user_dict["ec2_credentials"] = creds[0].to_dict() if creds else {"message": "No EC2 credentials found"}
+        creds = list(keystone.credentials.list(user=user_dict["id"], type="ec2").data)
+        if creds:
+            # to_dict() renvoie un dict mais blob peut être une string JSON
+            ec2 = creds[0].to_dict()
+            blob = ec2.get('blob')
+            try:
+                if isinstance(blob, str):
+                    parsed_blob = json.loads(blob)
+                elif isinstance(blob, dict):
+                    parsed_blob = blob
+                else:
+                    parsed_blob = {}
+            except Exception:
+                parsed_blob = {}
+
+            # Remplace le champ blob par la version parsée pour faciliter l'utilisation ensuite
+            ec2['blob'] = parsed_blob
+            user_dict["ec2_credentials"] = ec2
+        else:
+            user_dict["ec2_credentials"] = None
     except Exception as e:
         current_app.logger.warning(f"Failed to fetch EC2 credentials: {e}")
-        user_dict["ec2_credentials"] = {"message": "No EC2 credentials found"}
+        user_dict["ec2_credentials"] = None
+
 
 
 # ====================== FONCTIONS FUTURES (commentées) ======================
@@ -639,21 +656,59 @@ CORS(app, resources={r"/buckets": {"origins": "*", "methods": ["GET", "POST", "O
 
 app.config['DEBUG'] = True
 
-# ====================== CLIENT BOTO3 DYNAMIQUE KEYSTONE ======================
-def get_s3_client(token):
-    """Retourne un client boto3 frais avec le token Keystone de l'utilisateur authentifié."""
+def get_s3_client():
+    """
+    Retourne un client boto3.
+    Priorité :
+      1) EC2 credentials (access + secret) si disponibles dans g.user["ec2_credentials"]
+      2) Fallback : token Keystone (aws_access_key_id=token, aws_session_token=token)
+    """
     if not hasattr(g, 'user') or 'access_token' not in g.user:
         abort(401, description="Authentication required")
+
     token = g.user['access_token']
+
+    # 1) EC2 credentials si présentes et parsées par enrich_user_info
+    ec2 = g.user.get('ec2_credentials')
+    if ec2 and isinstance(ec2, dict):
+        blob = ec2.get('blob') or {}
+        # blob a été parsé dans enrich_user_info ; sinon essayer de parser ici
+        access_key = None
+        secret_key = None
+        try:
+            if isinstance(blob, dict):
+                access_key = blob.get('access') or blob.get('access_key') or blob.get('accessKey')
+                secret_key = blob.get('secret') or blob.get('secret_key') or blob.get('secretKey')
+            else:
+                # fallback parsing si blob est string (au cas où enrich_user_info ne l'a pas parsé)
+                parsed = json.loads(blob) if isinstance(blob, str) else {}
+                access_key = parsed.get('access')
+                secret_key = parsed.get('secret')
+        except Exception as e:
+            current_app.logger.warning(f"Failed to parse EC2 blob in get_s3_client: {e}")
+
+        if access_key and secret_key:
+            current_app.logger.info("Using EC2 credentials for S3 client (access/secret).")
+            return boto3.client(
+                's3',
+                endpoint_url='http://10.5.10.1:8080',
+                aws_access_key_id=access_key,
+                aws_secret_access_key=secret_key,
+                region_name='us-east-1',
+                config=boto3.session.Config(signature_version='s3v4', s3={'addressing_style': 'path'})
+            )
+
+    # 2) Fallback : token Keystone
+    current_app.logger.info("No EC2 credentials found, falling back to Keystone token for S3 client.")
     return boto3.client(
         's3',
         endpoint_url='http://10.5.10.1:8080',
-        aws_access_key_id=token,          # Token Keystone utilisé comme access_key (standard Swift S3 + Keystone)
+        aws_access_key_id=token,
         aws_secret_access_key='',
+        aws_session_token=token,
         region_name='us-east-1',
         config=boto3.session.Config(signature_version='s3v4', s3={'addressing_style': 'path'})
     )
-# =============================================================================
 
 @app.route('/')
 @login_required
