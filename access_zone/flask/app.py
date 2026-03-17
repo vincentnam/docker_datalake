@@ -17,16 +17,20 @@ from datalake_objectstoreclient import get_storage
 load_dotenv()
 
 app = Flask(__name__)
+
 CORS(app, resources={r"/buckets": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]},
                      r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]},
                      r"/buckets/*": {"origins": "*", "methods": ["GET", "POST", "DELETE", "OPTIONS"]}})
 app.config['DEBUG'] = True
 
 OBJECT_STORAGE_BACKEND = os.getenv("OBJECT_STORAGE_BACKEND", "swift").lower()  # "s3" ou "swift"
-KEYSTONE_URL = os.getenv("KEYSTONE_URL", "http://localhost:5000/v3")
+KEYSTONE_URL = os.getenv("KEYSTONE_URL", "http://keystone:5000/v3")
 S3_ENDPOINT = os.getenv("S3_ENDPOINT", "http://10.5.10.1:8080")
 AUTHENTICATION_BACKEND = os.getenv("AUTHENTICATION_BACKEND","keystone").lower()
-authentication_client = get_auth(AUTHENTICATION_BACKEND)
+authentication_client = get_auth(AUTHENTICATION_BACKEND,current_app=app)
+
+
+
 
 # -----------------------
 # Routes
@@ -34,7 +38,7 @@ authentication_client = get_auth(AUTHENTICATION_BACKEND)
 @app.route('/')
 @authentication_client.login_required
 def check_login():
-    current_app.logger.debug("check_login g.user: %s", {k: v for k, v in g.user.items() if k != "access_token"})
+    # current_app.logger.debug("check_login g.user: %s", {k: v for k, v in g.user.items() if k != "access_token"})
     return jsonify({
         "status": "authenticated",
         "user": {
@@ -48,28 +52,51 @@ def check_login():
             "projects": g.user.get("projects", []),
             "ec2_credentials": g.user.get("ec2_credentials")
         },
-        "access_token": g.user["access_token"]
+        "access_token": g.user["access_token"],
+        "preauthurl": g.user.get("preauthurl")
     }), 200
+
+
 
 
 @app.route('/buckets', methods=['GET'])
 @authentication_client.login_required
 def list_buckets():
-    print("BITE")
-    print(g)
-    try:
 
-        client = get_storage(OBJECT_STORAGE_BACKEND, authentication_client)
-        print("CA MARCHE PAS")
+    try:
+        # password =         request.headers.get("Password") or         request.headers.get("X-Password")
+        client = get_storage(OBJECT_STORAGE_BACKEND, authentication_client,token=g.user["access_token"], preauthurl=g.user["preauthurl"],  current_app = current_app)
+        # client = get_storage(OBJECT_STORAGE_BACKEND, authentication_client,user=g.user["username"], password=password, project_name = g.user["project_name"],  current_app = current_app)
+
         response = client.list_buckets()
 
-        buckets = [
-            {'Name': b['Name'], 'CreationDate': b['CreationDate'].isoformat() if 'CreationDate' in b else None}
-            for b in response.get('Buckets', [])
-        ]
-        owner = {'DisplayName': response.get('Owner', {}).get('DisplayName'),
-                 'ID': response.get('Owner', {}).get('ID')} if 'Owner' in response else None
+        if OBJECT_STORAGE_BACKEND =="s3":
+            buckets = [
+                {'Name': b['Name'], 'CreationDate': b['CreationDate'].isoformat() if 'CreationDate' in b else None}
+                for b in response.get('Buckets', [])
+            ]
+            owner = {'DisplayName': response.get('Owner', {}).get('DisplayName'),
+                     'ID': response.get('Owner', {}).get('ID')} if 'Owner' in response else None
+        elif OBJECT_STORAGE_BACKEND =="swift":
+            headers, containers = client.list_buckets()  # ← ta fonction
+            # current_app.logger.info(client.list_buckets())
+            # current_app.logger.info(f"Swift account headers: {headers}")
+            # current_app.logger.info(f"Nombre de containers: {len(containers)}")
+            # current_app.logger.info(f"Containers: {containers}")
+            buckets = [
+                {
+                    'Name': container['name'],
+                    'CreationDate': "#TODO:AddCreationDate",  # Swift ne fournit pas ça nativement
+                    'count': container.get('count', 0),
+                    'bytes': container.get('bytes', 0)
+                }
+                for container in containers
+            ]
+            owner = None
 
+
+        else :
+            abort(400, description="Error in object storage backend (%s)"%OBJECT_STORAGE_BACKEND)
         return jsonify({'buckets': buckets, 'owner': owner})
     except ClientError as e:
         current_app.logger.exception("Error listing buckets")
@@ -88,7 +115,7 @@ def delete_bucket(bucket):
         current_app.logger.info(e)
         abort(404 if 'NoSuchBucket' in str(e) else 500, description=str(e))
 
-print("bicuit")
+
 
 @app.route('/buckets', methods=['POST'])
 @authentication_client.login_required
@@ -277,10 +304,12 @@ def debug_list_buckets():
 
 
 
+
 @app.route("/flask-health-check", methods=["GET"])
 def health():
     return jsonify({"status": "ok"}), 200
 
 
+
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", debug=True, port=3001)
+    app.run(host="0.0.0.0", debug=True, port=5000)

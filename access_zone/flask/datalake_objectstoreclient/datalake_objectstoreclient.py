@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 class ObjectStorageClient(ABC):
 
     @abstractmethod
-    def __init__(self, authentication_client=None, user=None,password=None, token=None, *args, **kwargs):
+    def __init__(self, authentication_client=None, user=None,password=None, token=None, preauthurl=None, *args, **kwargs):
         pass
     # === API UNIFIÉE (même signature partout) ===
     @abstractmethod

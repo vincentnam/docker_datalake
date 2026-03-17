@@ -2,8 +2,8 @@
 
 from .datalake_authclient import AuthenticationClient
 from functools import wraps
-from flask import request, g, jsonify
-import flask
+from flask import request, g, jsonify, current_app
+
 import json
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
@@ -12,11 +12,11 @@ from keystoneclient.v3 import client as keystone_client
 
 class KeystoneClient(AuthenticationClient):
 
-    def __init__(self):
+    def __init__(self, current_app):
         import os
 
-        self.current_app = flask.current_app
-        self.KEYSTONE_URL = os.getenv("KEYSTONE_URL", "http://localhost:5000/v3")
+        self.current_app = current_app
+        self.KEYSTONE_URL = os.getenv("KEYSTONE_URL", "http://keystone:5000/v3")
         self.S3_ENDPOINT = os.getenv("S3_ENDPOINT", "http://10.5.10.1:8080")
 
     def _make_session_from_auth(self, auth):
@@ -28,6 +28,7 @@ class KeystoneClient(AuthenticationClient):
         Si la vue retourne (body, status) ou Response-like, injecte le token
         dans le body dict ou dans les headers (comportement existant conservé).
         """
+
 
         try:
             if isinstance(response, tuple) and len(response) >= 2 and response[1] in (200, 201):
@@ -45,6 +46,7 @@ class KeystoneClient(AuthenticationClient):
                 response.headers["X-Access-Token"] = token
                 return response
         except Exception:
+            pass
             self.current_app.logger.exception("Failed to inject token into response")
         return response
 
@@ -77,6 +79,7 @@ class KeystoneClient(AuthenticationClient):
                     elif isinstance(blob, dict):
                         parsed = blob
                 except Exception:
+
                     self.current_app.logger.warning("Failed to parse EC2 blob")
                 ec2["blob"] = parsed
                 user_dict["ec2_credentials"] = ec2
@@ -89,16 +92,18 @@ class KeystoneClient(AuthenticationClient):
     def login_required(self, f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            print(request.headers)
+
             auth_header = request.headers.get("Authorization")
             username = request.headers.get("X-Username") or request.headers.get("Username")
             password = request.headers.get("X-Password") or request.headers.get("Password")
-            print(request.headers)
-            print(username)
-            print(password)
+            try :
+                project_name = request.headers.get("Project")
+            except:
+                project_name = "service"
+
+
             AUTH_URL = self.KEYSTONE_URL
-            print("BIT1")
-            print(AUTH_URL)
+
             # CASE 1: Bearer token
             if auth_header and auth_header.startswith("Bearer "):
                 token = auth_header.split(" ", 1)[1].strip()
@@ -127,7 +132,7 @@ class KeystoneClient(AuthenticationClient):
 
             # CASE 2: Username + Password
             if username and password:
-                print("MIKONOS")
+
                 try:
                     auth = v3.Password(
                         auth_url=AUTH_URL,
@@ -135,12 +140,19 @@ class KeystoneClient(AuthenticationClient):
                         password=password,
                         user_domain_name='Default',
                         project_domain_name='Default',
-                        project_name='admin'
+                        project_name=project_name
                     )
                     sess = self._make_session_from_auth(auth)
                     access_token = sess.get_token()
                     access_info = auth.auth_ref
-                    print("CA MARCHE")
+
+
+                    preauthurl = None
+                    for ep in sess.auth.auth_ref.service_catalog.get_endpoints().get('object-store', []):
+                        if ep['interface'] in ('public', 'internal'):
+                            preauthurl = ep['url']
+                            break
+
                     g.user = {
                         "id": access_info.user_id,
                         "username": access_info.username,
@@ -149,22 +161,23 @@ class KeystoneClient(AuthenticationClient):
                         "project_name": access_info.project_name,
                         "source": "credentials",
                         "access_token": access_token,
+                        "preauthurl":preauthurl,
                         "projects": [],
                         "ec2_credentials": None
                     }
 
                     self._enrich_user_info(g.user, sess)
-                    print("CA MARCHE")
+
                     response = f(*args, **kwargs)
-                    print("CA MARCHE")
-                    print(response)
+
                     # inject token + projects + ec2_credentials into response body or headers
                     return self._inject_token_in_response(response, access_token)
                 except Exception as e:
-                    self.current_app.logger.warning(f"Login failure: {type(e).__name__} - {e}")
+                    print(e)
+                    self.current_app.logger.info(f"Login failure: {type(e).__name__} - {e}")
                     return jsonify({"error": "Invalid credentials"}), 401
 
-            print("BIT10 ")
+
             # No auth
             return jsonify({"error": "Authentication required",
                             "hint": "Use Bearer token or X-Username + X-Password headers"}), 401
