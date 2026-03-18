@@ -1,9 +1,34 @@
 from datalake_objectstoreclient import ObjectStorageClient
 
-
+#TODO : Implement S3 storage
 class S3Storage(ObjectStorageClient):
+
+    def head_bucket(self, name, *args, **kwargs):
+        pass
+
     def __init__(self,user=None, password=None, token=None):
         pass
+
+    def list_buckets(self, *args, **kwargs):
+        response = self.client.list_buckets()  # Appel Boto3
+
+        buckets = [
+            {
+                'Name': b['Name'],
+                'CreationDate': b['CreationDate'].isoformat() if 'CreationDate' in b else None,
+                'Count': None,  # Non présent par défaut en S3 sans appel supplémentaire
+                'Bytes': None
+            }
+            for b in response.get('Buckets', [])
+        ]
+
+        return {
+            'Buckets': buckets,
+            'Owner': response.get('Owner')
+        }
+
+
+
     def create_bucket(self, name, region="us-east-1", object_locking=False):
         pass
 
@@ -25,7 +50,7 @@ class S3Storage(ObjectStorageClient):
     def head_object(self, bucket, key):
         pass
 
-    def get_s3_client():
+    def get_s3_client(self):
         """
         Retourne un client boto3.
         Priorité :

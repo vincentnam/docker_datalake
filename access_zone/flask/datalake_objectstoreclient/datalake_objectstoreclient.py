@@ -37,3 +37,7 @@ class ObjectStorageClient(ABC):
     @abstractmethod
     def head_object(self, bucket, key, *args, **kwargs):
         pass
+
+    @abstractmethod
+    def head_bucket(self, name, *args, **kwargs):
+        pass
