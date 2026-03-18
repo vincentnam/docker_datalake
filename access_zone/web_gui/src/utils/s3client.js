@@ -1,99 +1,75 @@
-// src/utils/s3client.js
-import {getAuthData} from "./authUtils";
+import { apiFetch, getApiBaseUrl } from './apiClient';
+import { getActiveProject, getAuthData } from './authUtils';
 
-const API_BASE_URL = process.env.REACT_APP_FLASK_APP_URL || 'http://localhost:5000';
-console.log("API URL: " + API_BASE_URL);
+const API_BASE_URL = getApiBaseUrl();
 
-const getAuthHeaders = () => {
-  const authData = getAuthData()
-
-  let token = authData.access_token;
-  if (!token) throw new Error('JWT token manquant');
-  return {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  };
+const assertAuthenticated = () => {
+  const token = getAuthData()?.access_token;
+  if (!token) {
+    throw new Error('Token d\'authentification manquant');
+  }
 };
 
-/**
- * Récupère la liste des buckets.
- * @returns {Promise<Array<{name: string}>>} Liste des buckets.
- */
 export const getBuckets = async () => {
-  const response = await fetch(API_BASE_URL+`/buckets`, {
-    method: 'GET',
-    headers: getAuthHeaders(),
-  });
+  assertAuthenticated();
+  const response = await apiFetch('/buckets', { method: 'GET' });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
   const data = await response.json();
-  console.log(data)
   return data.buckets || [];
 };
 
-/**
- * Crée un nouveau bucket avec options avancées.
- * @param {string} bucketName - Nom du bucket.
- * @param {string} [region='us-east-1'] - Région du bucket (défaut: 'us-east-1').
- * @param {Object} [options={}] - Options supplémentaires (ex. { ObjectLocking: true }).
- * @returns {Promise<Object>} Réponse de création.
- */
-export const createBucket = async (bucketName, region = 'us-east-1', options = {}) => {
-  const response = await fetch(`${API_BASE_URL}/buckets`, {
+export const createBucket = async (bucketName) => {
+  assertAuthenticated();
+  const safeBucketName = encodeURIComponent(bucketName);
+  const response = await apiFetch(`/buckets/${safeBucketName}`, {
     method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify({ name: bucketName, region, objectLocking: options.ObjectLocking, ...options }),
+    body: JSON.stringify({}),
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
   return response.json();
 };
 
-/**
- * Supprime un bucket.
- * @param {string} bucketName - Nom du bucket à supprimer.
- * @returns {Promise<Object>} Réponse de suppression.
- */
 export const removeBucket = async (bucketName) => {
-  const response = await fetch(`${API_BASE_URL}/buckets/${bucketName}`, {
+  assertAuthenticated();
+  const safeBucketName = encodeURIComponent(bucketName);
+  const response = await apiFetch(`/buckets/${safeBucketName}`, {
     method: 'DELETE',
-    headers: getAuthHeaders(),
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
   return response.json();
 };
-/**
- * Liste les objets dans un bucket.
- * @param {string} bucketName - Nom du bucket.
- * @param {string} [prefix=''] - Préfixe pour filtrer.
- * @returns {Promise<Array<{key: string, size: number}>>} Liste des objets.
- */
+
 export const listObjects = async (bucketName, prefix = '') => {
-  const response = await fetch(`${API_BASE_URL}/buckets/${bucketName}/objects?prefix=${encodeURIComponent(prefix)}&delimiter=/`, {
-    method: 'GET',
-    headers: getAuthHeaders(),
-  });
+  assertAuthenticated();
+  const safeBucketName = encodeURIComponent(bucketName);
+  const response = await apiFetch(
+    `/buckets/${safeBucketName}/objects?prefix=${encodeURIComponent(prefix)}&delimiter=/`,
+    {
+      method: 'GET',
+    }
+  );
+
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const data = await response.json();
-  console.log("listObjects : DATA.OBJECTS =", data.objects);  // Debug metadata
   return { objects: data.objects || [], prefixes: data.prefixes || [] };
 };
-/**
- * Upload un fichier dans un bucket.
- * @param {string} bucketName - Nom du bucket.
- * @param {string} key - Chemin de l'objet.
- * @param {File} file - Fichier à uploader.
- * @param {Function} [onProgress] - Callback pour progression.
- * @returns {Promise<Object>} Réponse d'upload.
- */
+
 export const uploadObject = async (bucketName, key, file, onProgress) => {
+  assertAuthenticated();
+  const authData = getAuthData();
+
   const formData = new FormData();
   formData.append('file', file);
   formData.append('key', key);
   formData.append('contentType', file.type || 'application/octet-stream');
-  formData.append('creationDate', new Date().toISOString());  // Pour metadata en backend
 
   const xhr = new XMLHttpRequest();
-  xhr.open('POST', `${API_BASE_URL}/buckets/${bucketName}/objects`);
-  xhr.setRequestHeader('Authorization', getAuthHeaders().Authorization);
+  xhr.open('POST', `${API_BASE_URL}/buckets/${encodeURIComponent(bucketName)}/objects`);
+  xhr.setRequestHeader('Authorization', `Bearer ${authData.access_token}`);
+  xhr.setRequestHeader('Project', getActiveProject());
 
   if (onProgress) {
     xhr.upload.onprogress = (event) => {
@@ -110,32 +86,27 @@ export const uploadObject = async (bucketName, key, file, onProgress) => {
     xhr.send(formData);
   });
 };
-/**
- * Télécharge un objet depuis un bucket.
- * @param {string} bucketName - Nom du bucket.
- * @param {string} key - Chemin de l'objet.
- * @returns {Promise<Blob>} Contenu du fichier sous forme de Blob.
- */
+
 export const downloadObject = async (bucketName, key) => {
-  const response = await fetch(`${API_BASE_URL}/buckets/${bucketName}/objects/${encodeURIComponent(key)}`, {
-    method: 'GET',
-    headers: getAuthHeaders(),
-  });
+  assertAuthenticated();
+  const response = await apiFetch(
+    `/buckets/${encodeURIComponent(bucketName)}/objects/${encodeURIComponent(key)}`,
+    { method: 'GET' }
+  );
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
   return response.blob();
 };
 
-/**
- * Supprime un objet dans un bucket.
- * @param {string} bucketName - Nom du bucket.
- * @param {string} key - Chemin de l'objet.
- * @returns {Promise<Object>} Réponse de suppression.
- */
 export const deleteObject = async (bucketName, key) => {
-  const response = await fetch(`${API_BASE_URL}/buckets/${bucketName}/objects/${encodeURIComponent(key)}`, {
-    method: 'DELETE',
-    headers: getAuthHeaders(),
-  });
+  assertAuthenticated();
+  const response = await apiFetch(
+    `/buckets/${encodeURIComponent(bucketName)}/objects/${encodeURIComponent(key)}`,
+    {
+      method: 'DELETE',
+    }
+  );
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
   return response.json();
 };

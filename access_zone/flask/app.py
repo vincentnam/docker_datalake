@@ -38,6 +38,7 @@ authentication_client = get_auth(AUTHENTICATION_BACKEND,current_app=app)
 @app.route('/')
 @authentication_client.login_required
 def check_login():
+
     # current_app.logger.debug("check_login g.user: %s", {k: v for k, v in g.user.items() if k != "access_token"})
     return jsonify({
         "status": "authenticated",

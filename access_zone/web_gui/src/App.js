@@ -9,8 +9,6 @@ import PrivateRoute from "./components/Authentication/PrivateRoute";
 
 
 const App = () => {
-
-  console.log(localStorage.getItem("jwtToken"));
   return (
     <BrowserRouter>
       <AppLayout>

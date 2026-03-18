@@ -93,7 +93,9 @@ class KeystoneClient(AuthenticationClient):
         @wraps(f)
         def decorated_function(*args, **kwargs):
 
-            auth_header = request.headers.get("Authorization")
+            authorization = request.headers.get("Authorization")
+            authurl = request.headers.get("X-Preauthurl") or request.headers.get("Preauthurl")
+
             username = request.headers.get("X-Username") or request.headers.get("Username")
             password = request.headers.get("X-Password") or request.headers.get("Password")
             try :
@@ -101,18 +103,26 @@ class KeystoneClient(AuthenticationClient):
             except:
                 project_name = "service"
 
-
-            AUTH_URL = self.KEYSTONE_URL
-
             # CASE 1: Bearer token
-            if auth_header and auth_header.startswith("Bearer "):
-                token = auth_header.split(" ", 1)[1].strip()
+            if authorization and authorization.startswith("Bearer "):
+                token = authorization.split(" ", 1)[1].strip()
                 try:
-                    auth = v3.Token(auth_url=AUTH_URL, token=token)
-                    sess = self._make_session_from_auth(auth)
-                    sess.get_token()  # validate
-                    access_info = auth.auth_ref
+                    # Si on a un nom de projet, on demande à Keystone de "scoper" le token
+                    auth_kwargs = {
+                        "auth_url": self.KEYSTONE_URL,
+                        "token": token
+                    }
+                    if project_name:
+                        auth_kwargs.update({
+                            "project_name": project_name,
+                            "project_domain_name": "Default"
+                        })
 
+                    auth = v3.Token(**auth_kwargs)
+                    sess = self._make_session_from_auth(auth)
+                    access_info = auth.get_access(sess)  # Validation réelle ici
+
+                    # On prépare l'objet utilisateur
                     g.user = {
                         "id": access_info.user_id,
                         "username": access_info.username,
@@ -121,21 +131,36 @@ class KeystoneClient(AuthenticationClient):
                         "project_name": access_info.project_name,
                         "source": "token",
                         "access_token": token,
-                        "projects": [],
-                        "ec2_credentials": None
+                        "preauthurl": authurl
                     }
+
+                    # Si on est scopé, on essaie de trouver l'URL Swift si elle n'est pas fournie
+                    if g.user["project_id"] and not g.user["preauthurl"]:
+                        try:
+                            endpoints = access_info.service_catalog.get_endpoints(service_type='object-store')
+                            for ep in endpoints.get('object-store', []):
+                                if ep['interface'] in ('public', 'internal'):
+                                    g.user["preauthurl"] = ep['url']
+                                    break
+                        except:
+                            pass
+
+                    # On enrichit les projets dispos (utile pour la GUI au login)
                     self._enrich_user_info(g.user, sess)
                     return f(*args, **kwargs)
+
                 except Exception as e:
-                    self.current_app.logger.warning(f"Invalid token: {e}")
+                    self.current_app.logger.warning(f"Token validation failed: {e}")
                     return jsonify({"error": "Invalid or expired token"}), 401
 
+
+            # curl -X GET      -H "Authorization: Bearer gAAAAABpusSQsq7Rsxk3Ck-YM2jWr0pmsyEM8ummpdMjlD8smlsovQFVuYh5hjsRqSD33bjXCZlnQWG1S8ck1qvQKSSpRXOu9IuNCkyCbU-4LnkB86esLP39kgLoFD7HaU7sAmfc6ae9qzWQJUisdX9CLGmKqB78SsEjT5isq2bouU-EUKyFx-U"      -H "X-Preauthurl: http://management-1:8080/v1/AUTH_5ed1adce5246426bac2bf10ca69bcce2"      -H "Content-Type: application/json"      http://localhost:7000/api/buckets
             # CASE 2: Username + Password
             if username and password:
 
                 try:
                     auth = v3.Password(
-                        auth_url=AUTH_URL,
+                        auth_url=self.KEYSTONE_URL,
                         username=username,
                         password=password,
                         user_domain_name='Default',

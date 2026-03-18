@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {setAuthData} from "../utils/authUtils";
-
-const API_BASE = process.env.REACT_APP_FLASK_APP_URL || 'http://localhost:5000';
+import { setActiveProject, setAuthData, setSessionCredentials } from '../utils/authUtils';
+import { loginWithCredentials } from '../utils/apiClient';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -22,31 +21,28 @@ const Login = () => {
     setError('');
 
     try {
-      // Appel avec headers X-Username et X-Password au lieu du body
-      console.log(username, password);
-      const response = await fetch(`${API_BASE}/`, {
-        method: 'GET', // Changé en GET pour matcher la route Flask par défaut; utilisez POST si la route est mise à jour
-        headers: {
-          'X-Username': username,
-          'X-Password': password,
-        },
+      const unscopedData = await loginWithCredentials({ username, password });
+      setSessionCredentials(username, password);
+      localStorage.setItem('user', JSON.stringify(unscopedData?.user?.username || username));
+
+      const availableProjects = unscopedData?.user?.projects || [];
+      const preferredProject = unscopedData?.user?.project_name || availableProjects?.[0]?.name;
+
+      if (!preferredProject) {
+        throw new Error('Aucun projet disponible pour creer un token scoped');
+      }
+
+      const scopedData = await loginWithCredentials({
+        username,
+        password,
+        project: preferredProject,
       });
 
-      const data = await response.json();
+      setAuthData(scopedData);
+      setActiveProject(preferredProject);
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Login échoué');
-      }
-      console.log(data);
-      // Stockage du token (note: le backend doit renvoyer data.access_token; sinon, ajustez ici)
-      setAuthData(data);
-      // localStorage.setItem('authData', JSON.stringify(data));
-      localStorage.setItem('user', JSON.stringify(data.user.username));
-
-      // Redirection
       navigate('/buckets');
     } catch (err) {
-      console.log("Erreur lors du login");
       setError(err.message || 'Identifiants incorrects');
       console.error('Login error:', err);
     } finally {
@@ -84,8 +80,6 @@ const Login = () => {
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
-
-
       </div>
     </div>
   );
@@ -143,12 +137,6 @@ const styles = {
     fontSize: '14px',
     textAlign: 'center',
     margin: '0',
-  },
-  footer: {
-    marginTop: '24px',
-    textAlign: 'center',
-    color: '#777',
-    fontSize: '14px',
   },
 };
 

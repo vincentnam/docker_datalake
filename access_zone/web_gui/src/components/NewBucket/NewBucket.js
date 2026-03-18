@@ -23,9 +23,9 @@ const NewBucket = ({ onRefresh }) => {
   const { control, formState: { errors }, handleSubmit, reset } = useForm({ defaultValues });
 
   const onSubmit = async (data) => {
-    const { bucketName, enableLocking, region } = data;
+    const { bucketName } = data;
     try {
-      await createBucket(bucketName, region, { ObjectLocking: enableLocking });
+      await createBucket(bucketName);
       reset();
       setDisplayBasic(false);
       showSuccess(`Created ${bucketName} successfully`);
