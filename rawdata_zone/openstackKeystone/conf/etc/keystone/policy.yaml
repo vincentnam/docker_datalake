@@ -1,0 +1,69 @@
+# =============================================
+# policy.yaml - Keystone (march 2026)
+# Uses default Keystone roles: admin, member, reader
+# =============================================
+
+# --- BASE RULES --------------------------------------------------------------
+"admin_required": "role:admin or is_admin:1"
+"owner": "user_id:%(user_id)s"
+"admin_or_owner": "rule:admin_required or rule:owner"
+
+# Project-scoped default roles
+"project_member": "role:member"
+"project_reader": "role:reader"
+
+# Match action target project with token project
+"member_on_target_project": "rule:project_member and token.project.id:%(target.project.id)s"
+"reader_on_target_project": "rule:project_reader and token.project.id:%(target.project.id)s"
+
+# Project manager behavior with default role "member"
+"project_manager_required": "rule:member_on_target_project"
+
+# Reader or member on same target project
+"project_read_access": "rule:reader_on_target_project or rule:member_on_target_project"
+
+# Grant management by project member, but never for global admin role
+"project_grant_manage_required": "rule:member_on_target_project and not target.role.name:'admin'"
+
+# --- USERS -------------------------------------------------------------------
+# User creation/deletion stays global-admin only (domain/global resource)
+"identity:create_user": "rule:admin_required"
+"identity:list_users": "rule:admin_required or rule:project_manager_required"
+"identity:get_user": "rule:admin_required or rule:project_manager_required or rule:owner"
+"identity:update_user": "rule:admin_required or rule:project_manager_required or rule:owner"
+"identity:delete_user": "rule:admin_required"
+"identity:change_password": "rule:admin_or_owner"
+
+# --- ROLE ASSIGNMENTS --------------------------------------------------------
+"identity:create_grant": "rule:admin_required or rule:project_grant_manage_required"
+"identity:delete_grant": "rule:admin_required or rule:project_grant_manage_required"
+"identity:list_grants": "rule:admin_required or rule:project_manager_required"
+"identity:check_grant": "rule:admin_required or rule:project_manager_required"
+
+# --- PROJECTS ----------------------------------------------------------------
+"identity:create_project": "rule:admin_required"
+"identity:list_projects": "rule:admin_required or rule:project_read_access"
+"identity:get_project": "rule:admin_required or rule:project_read_access"
+"identity:update_project": "rule:admin_required or rule:project_manager_required"
+"identity:delete_project": "rule:admin_required"
+
+# --- ROLES (global definitions) ----------------------------------------------
+"identity:list_roles": "rule:admin_required or rule:project_manager_required"
+"identity:get_role": "rule:admin_required"
+"identity:create_role": "rule:admin_required"
+"identity:update_role": "rule:admin_required"
+"identity:delete_role": "rule:admin_required"
+
+# --- SWIFT / S3 --------------------------------------------------------------
+# reader: read only
+# member: read + write + delete in the project
+"swift:container:read": "rule:project_read_access or rule:admin_required"
+"swift:container:write": "rule:member_on_target_project or rule:admin_required"
+"swift:container:delete": "rule:member_on_target_project or rule:admin_required"
+
+"swift:object:read": "rule:project_read_access or rule:admin_required"
+"swift:object:write": "rule:member_on_target_project or rule:admin_required"
+"swift:object:delete": "rule:member_on_target_project or rule:admin_required"
+
+# Fallback
+"default": "rule:admin_required"

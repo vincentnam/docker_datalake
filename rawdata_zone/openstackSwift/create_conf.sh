@@ -64,8 +64,7 @@ log_name = proxy-server
 user = swift
 
 [pipeline:main]
-pipeline = catch_errors gatekeeper healthcheck proxy-logging cache listing_formats bulk tempurl ratelimit s3api s3token authtoken keystoneauth staticweb copy container-quotas account-quotas slo dlo versioned_writes symlink proxy-logging proxy-server
-
+pipeline = catch_errors gatekeeper healthcheck proxy-logging cache listing_formats bulk tempurl ratelimit authtoken keystoneauth staticweb copy container-quotas account-quotas slo dlo versioned_writes symlink proxy-logging proxy-server
 
 [filter:catch_errors]
 use = egg:swift#catch_errors
@@ -81,9 +80,6 @@ use = egg:swift#bulk
 
 [filter:ratelimit]
 use = egg:swift#ratelimit
-
-[filter:crossdomain]
-use = egg:swift#crossdomain
 
 [filter:dlo]
 use = egg:swift#dlo
@@ -111,56 +107,11 @@ service_type = object-store
 delay_auth_decision = true
 log_name = authtoken-swift
 
-[filter:s3token]
-use = egg:swift#s3token
-auth_uri = http://keystone:5000/v3
-auth_version = v3
-admin_user = swift
-admin_password = testing
-admin_tenant_name = service
-admin_user_domain_name = Default
-admin_project_domain_name = Default
-memcached_servers = memcached:11211
-
-
-#[filter:authtoken]
-#paste.filter_factory = keystonemiddleware.auth_token:filter_factory
-#www_authenticate_uri = http://keystone:5000/v3
-#auth_url = http://keystone:5000/v3
-#auth_type = password
-#project_name = service
-#username = swift
-#password = testing
-#user_domain_name = Default
-#project_domain_name = Default
-#memcached_servers = memcached:11211
-#token_cache_time = 3600
-#include_service_catalog = false
-#service_type = object-store
-#delay_auth_decision = 1
-#log_name = authtoken-swift
-#
-#
-#[filter:s3token]
-#use = egg:swift#s3token
-#auth_port = 5000
-#auth_protocol = http
-#auth_host = keystone
-#auth_uri = http://keystone:5000/v3
-#signing_dir = /var/cache/swift/s3token
-#memcached_servers = memcached:11211
-#auth_version = v3
-#admin_user = swift
-#admin_password = $SWIFT_USER_PASSWORD
-#admin_tenant_name = swift
-#project_domain_name = Default
-#user_domain_name = Default
-
 [filter:keystoneauth]
 use = egg:swift#keystoneauth
-operator_roles = admin, swiftoperator, ResellerAdmin
+operator_roles = admin, bucket_owner, project_admin, swiftoperator, ResellerAdmin
 reseller_prefix = AUTH_
-
+is_admin = false
 
 [filter:staticweb]
 use = egg:swift#staticweb
@@ -173,10 +124,6 @@ use = egg:swift#container_quotas
 
 [filter:cache]
 use = egg:swift#memcache
-
-[filter:etag-quoter]
-use = egg:swift#etag_quoter
-enable_by_default = false
 
 [filter:gatekeeper]
 use = egg:swift#gatekeeper
@@ -195,32 +142,123 @@ use = egg:swift#listing_formats
 [filter:symlink]
 use = egg:swift#symlink
 
-# To enable, add the s3api middleware to the pipeline before tempauth
-[filter:s3api]
-use = egg:swift#s3api
-#cors_preflight_allow_origin = http://10.5.255.1:3000,http://localhost:3000
-cors_preflight_allow_origin = *
-allow_multipart_uploads = true
-# S'assurer que les ACLs sont bien appliquées
-check_bucket_owner = true
-
-# Example to create root secret: `openssl rand -base64 32`
-[filter:keymaster]
-use = egg:swift#keymaster
-encryption_root_secret = 2dv+rC3v87jdnGwxY+z0jg6xm2BaJM71QXbdMTAOrkQ=
-
-# To enable use of encryption add both middlewares to pipeline, example:
-# <other middleware> keymaster encryption proxy-logging proxy-server
-[filter:encryption]
-use = egg:swift#encryption
-
 [app:proxy-server]
 use = egg:swift#proxy
 allow_account_management = true
 account_autocreate = true
 EOF
 
-
+#TODO: Version of S3 api + S3 authentication based on Keystone to test
+#[DEFAULT]
+ #bind_ip = 0.0.0.0
+ #bind_port = 8080
+ #log_address = /dev/log
+ #log_facility = LOG_LOCAL2
+ #log_headers = false
+ #log_level = DEBUG
+ #log_name = proxy-server
+ #user = swift
+ #
+ #[pipeline:main]
+ #pipeline = catch_errors gatekeeper healthcheck proxy-logging cache listing_formats bulk tempurl ratelimit s3api s3token authtoken keystoneauth staticweb copy container-quotas account-quotas slo dlo versioned_writes symlink proxy-logging proxy-server
+ #
+ #[filter:catch_errors]
+ #use = egg:swift#catch_errors
+ #
+ #[filter:healthcheck]
+ #use = egg:swift#healthcheck
+ #
+ #[filter:proxy-logging]
+ #use = egg:swift#proxy_logging
+ #
+ #[filter:bulk]
+ #use = egg:swift#bulk
+ #
+ #[filter:ratelimit]
+ #use = egg:swift#ratelimit
+ #
+ #[filter:dlo]
+ #use = egg:swift#dlo
+ #
+ #[filter:slo]
+ #use = egg:swift#slo
+ #
+ #[filter:tempurl]
+ #use = egg:swift#tempurl
+ #
+ #[filter:authtoken]
+ #paste.filter_factory = keystonemiddleware.auth_token:filter_factory
+ #www_authenticate_uri = http://keystone:5000/v3
+ #auth_url = http://keystone:5000/v3
+ #auth_type = password
+ #project_name = service
+ #username = swift
+ #password = testing
+ #user_domain_name = Default
+ #project_domain_name = Default
+ #memcached_servers = memcached:11211
+ #token_cache_time = 3600
+ #include_service_catalog = false
+ #service_type = object-store
+ #delay_auth_decision = true
+ #log_name = authtoken-swift
+ #
+ #[filter:s3token]
+ #use = egg:swift#s3token
+ #auth_uri = http://keystone:5000/v3
+ #auth_version = v3
+ #admin_user = swift
+ #admin_password = testing
+ #admin_tenant_name = service
+ #admin_user_domain_name = Default
+ #admin_project_domain_name = Default
+ #memcached_servers = memcached:11211
+ #
+ #[filter:keystoneauth]
+ #use = egg:swift#keystoneauth
+ #operator_roles = admin, bucket_owner, project_admin, swiftoperator, ResellerAdmin
+ #reseller_prefix = AUTH_
+ #is_admin = false
+ #
+ #[filter:staticweb]
+ #use = egg:swift#staticweb
+ #
+ #[filter:account-quotas]
+ #use = egg:swift#account_quotas
+ #
+ #[filter:container-quotas]
+ #use = egg:swift#container_quotas
+ #
+ #[filter:cache]
+ #use = egg:swift#memcache
+ #
+ #[filter:gatekeeper]
+ #use = egg:swift#gatekeeper
+ #
+ #[filter:versioned_writes]
+ #use = egg:swift#versioned_writes
+ #allow_versioned_writes = true
+ #allow_object_versioning = true
+ #
+ #[filter:copy]
+ #use = egg:swift#copy
+ #
+ #[filter:listing_formats]
+ #use = egg:swift#listing_formats
+ #
+ #[filter:symlink]
+ #use = egg:swift#symlink
+ #
+ #[filter:s3api]
+ #use = egg:swift#s3api
+ #cors_preflight_allow_origin = *
+ #allow_multipart_uploads = true
+ #check_bucket_owner = true
+ #
+ #[app:proxy-server]
+ #use = egg:swift#proxy
+ #allow_account_management = true
+ #account_autocreate = true
 
 
 

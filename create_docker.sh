@@ -149,6 +149,9 @@ cat << EOF >> docker-compose_datalake.yml
     image: keystone:master-ubuntu_jammy
     container_name: keystone
     restart: always
+    profiles:
+      - datalake
+      - authentication
 #    ports:
 #      - "5000:5000"
 #      - "35357:35357"   # Admin endpoint
@@ -191,6 +194,7 @@ cat << EOF >> docker-compose_datalake.yml
       - datalake
       - frontend
       - process
+      - authentication
     container_name: keystone_bootstrap
     networks:
       swift-cluster:
@@ -205,6 +209,9 @@ cat << EOF >> docker-compose_datalake.yml
     image: horizon:master-ubuntu_jammy
     container_name: horizon
     restart: always
+    profiles:
+      - authentication
+      - datalake
     ports:
       - "8080:80"
     volumes:
@@ -278,6 +285,7 @@ cat << EOF >> docker-compose_datalake.yml
       - frontend
       - webgui
       - datalake
+      - authentication
     build:
       context: $WEBGUI_PATH
       dockerfile: Dockerfile.web_gui
@@ -304,6 +312,7 @@ cat <<EOF >> docker-compose_datalake.yml
     profiles:
       - frontend
       - datalake
+      - authentication
     ports:
       - "7000:80"
     depends_on:
@@ -324,6 +333,7 @@ cat <<EOF >> docker-compose_datalake.yml
       - frontend
       - RESTApi
       - datalake
+      - authentication
     volumes:
       - "$REST_API_PATH/app.py:/home/app/app.py"
     healthcheck:

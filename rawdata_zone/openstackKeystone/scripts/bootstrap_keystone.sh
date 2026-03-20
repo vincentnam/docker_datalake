@@ -11,7 +11,7 @@ set -euo pipefail
 : "${OS_PROJECT_DOMAIN_NAME:=Default}"
 
 : "${SWIFT_USER:=swift}"
-: "${SWIFT_PASSWORD:=swift}"
+: "${SWIFT_PASSWORD:=testing}"
 : "${SWIFT_PROJECT:=service}"
 : "${SWIFT_ROLE:=admin}"
 : "${REGION:=RegionOne}"
@@ -30,6 +30,15 @@ until openstack token issue >/dev/null 2>&1; do
     sleep 5
 done
 echo "Keystone OK !"
+
+
+#openstack role create reader || true
+#openstack role create writer || true
+openstack role create project_admin || true
+openstack role create project_owner || true
+
+# Nécessaire pour Horizon
+openstack role create user || true
 
 # ─── Création idempotente ────────────────────────────────────────────────────
 echo "Création projet service"
