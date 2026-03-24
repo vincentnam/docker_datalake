@@ -23,7 +23,6 @@ const BrowseBucket = () => {
               <span className="text-lg font-semibold">Objects in</span>
               <span className="text-pink-800 font-bold">{bucketName}</span>
             </div>
-
           </div>
           <ListObjects bucketName={bucketName} path={prefixPath} ref={childRef} onDelete={onDelete} />
         </div>

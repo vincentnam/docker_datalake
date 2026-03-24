@@ -1,48 +1,51 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+// src/Layout/Header.js
+import React, { useState, useEffect, useMemo } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LogOut, Server, Menu, X, ChevronDown } from "lucide-react";
 import {
-  clearAuthData,
-  getActiveProject,
   getAuthData,
+  getActiveProject,
   getAvailableProjects,
   getSessionCredentials,
-  setActiveProject,
   setAuthData,
-} from '../utils/authUtils';
-import { loginWithCredentials } from '../utils/apiClient';
+  setActiveProject,
+  clearAuthData,
+} from "../utils/authUtils";
+import { loginWithCredentials } from "../utils/apiClient";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSwitchingProject, setIsSwitchingProject] = useState(false);
   const [activeProject, setActiveProjectState] = useState(getActiveProject());
+
   const location = useLocation();
   const navigate = useNavigate();
 
   const authData = getAuthData();
-  const isAuthenticated = Boolean(authData?.status === 'authenticated' && authData?.access_token);
-  const projects = useMemo(() => getAvailableProjects(), [authData?.access_token]);
+  const isAuthenticated = Boolean(
+    authData?.status === "authenticated" && authData?.access_token
+  );
+  const projects = useMemo(
+    () => getAvailableProjects(),
+    [authData?.access_token]
+  );
 
   useEffect(() => {
     setActiveProjectState(getActiveProject());
-  }, [authData?.access_token, location.pathname]);
+  }, [location.pathname]);
 
-  const toggleMenu = () => setIsMenuOpen((prev) => !prev);
-
-  const handleProjectChange = async (event) => {
-    const nextProject = event.target.value;
-    if (!nextProject || nextProject === activeProject) {
-      return;
-    }
+  const handleProjectChange = async (e) => {
+    const nextProject = e.target.value;
+    if (!nextProject || nextProject === activeProject) return;
 
     const credentials = getSessionCredentials();
     if (!credentials?.username || !credentials?.password) {
       clearAuthData();
-      navigate('/');
+      navigate("/");
       return;
     }
 
     setIsSwitchingProject(true);
-
     try {
       const refreshedAuthData = await loginWithCredentials({
         username: credentials.username,
@@ -53,88 +56,64 @@ const Header = () => {
       setAuthData(refreshedAuthData);
       setActiveProject(nextProject);
       setActiveProjectState(nextProject);
-      navigate('/buckets');
+
+      // On prévient le composant ListBuckets du changement
+      window.dispatchEvent(new Event("projectChanged"));
     } catch (error) {
-      console.error('Erreur changement de projet:', error);
-      setActiveProjectState(activeProject);
+      console.error("Erreur changement:", error);
     } finally {
       setIsSwitchingProject(false);
     }
   };
 
-  const handleLogout = () => {
-    clearAuthData();
-    navigate('/');
-  };
-
   return (
-    <header className="w-full h-16 bg-amber-600 rounded-md bg-clip-padding backdrop-filter backdrop-blur-lg bg-opacity-70 border border-gray-100 drop-shadow-lg sticky top-0 z-50">
-      <div className="container px-4 md:px-0 h-full mx-auto flex justify-between items-center">
-        <Link to={isAuthenticated ? '/buckets' : '/'} className="flex items-center space-x-2 group">
-          <span className="text-xl font-bold hover:scale-110 group-hover:text-red-100 transition-colors duration-300">
-            Lac de donnees
+    <header className="sticky top-0 z-50 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 border-b border-white/10 shadow-xl">
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className="w-9 h-9 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30">
+            <Server className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-xl font-bold tracking-tight text-white uppercase italic">
+            Lac de Données
           </span>
         </Link>
 
-        <button
-          className="md:hidden focus:outline-none neon-button"
-          onClick={toggleMenu}
-          aria-label="Toggle menu"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d={isMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'}
-            />
-          </svg>
-        </button>
-
-        <nav
-          className={`${
-            isMenuOpen ? 'flex' : 'hidden'
-          } md:flex flex-col md:flex-row absolute md:static top-16 left-0 w-full md:w-auto bg-pink-700/90 md:bg-transparent p-4 md:p-0 space-y-4 md:space-y-0 md:space-x-6 animate-slideInRight glass-effect`}
-        >
+        <nav className="hidden md:flex items-center gap-6">
           {isAuthenticated && (
             <>
-              <div className="flex items-center gap-2">
-                <label htmlFor="project-select" className="text-sm text-white md:text-inherit">
+              {/* Sélecteur de Projet */}
+              <div className="relative flex items-center gap-2">
+                <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">
                   Projet
-                </label>
+                </span>
                 <select
-                  id="project-select"
-                  className="rounded px-2 py-1 text-sm text-black"
                   value={activeProject}
                   onChange={handleProjectChange}
                   disabled={isSwitchingProject}
+                  className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white text-sm font-bold px-4 py-2 rounded-xl border border-white/20 outline-none appearance-none pr-10 transition-all cursor-pointer"
                 >
-                  {projects.length > 0 ? (
-                    projects.map((project) => (
-                      <option key={project.id || project.name} value={project.name}>
-                        {project.name}
-                      </option>
-                    ))
-                  ) : (
-                    <option value={activeProject}>{activeProject}</option>
-                  )}
+                  {projects.map((p) => (
+                    <option
+                      key={p.name}
+                      value={p.name}
+                      className="text-gray-900"
+                    >
+                      {p.name}
+                    </option>
+                  ))}
                 </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70 pointer-events-none" />
               </div>
 
-              <Link
-                to="/buckets"
-                className="opacity-70 hover:scale-110 hover:text-red-100 hover:opacity-100 transition-all duration-300"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Vos donnees (Buckets)
-              </Link>
-
               <button
-                type="button"
-                className="opacity-70 hover:scale-110 hover:text-red-100 hover:opacity-100 transition-all duration-300 text-left"
-                onClick={handleLogout}
+                onClick={() => {
+                  clearAuthData();
+                  navigate("/");
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-black/10 hover:bg-black/20 rounded-xl text-white text-sm font-medium transition-all"
               >
-                Deconnexion
+                <LogOut size={16} />
+                Quitter
               </button>
             </>
           )}

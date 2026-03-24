@@ -19,6 +19,7 @@
     "highlight.js": "^11.11.1",
     "jszip": "^3.10.1",
     "lodash": "^4.17.21",
+    "lucide-react": "^1.0.1",
     "marked": "^15.0.12",
     "match-sorter": "^8.0.3",
     "node-polyfill-webpack-plugin": "^2.0.1",
