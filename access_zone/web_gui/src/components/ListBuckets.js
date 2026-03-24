@@ -137,12 +137,13 @@ const ListBuckets = () => {
           >
             <Column
               header="NOM DU BUCKET"
-              body={(r) => (
+              body={(rowData) => (
                 <div className="flex items-center gap-3 py-2">
                   <Folder className="w-4 h-4 text-amber-500" />
                   <span className="font-bold text-gray-700 tracking-tight">
-                    {r.Name}
+                    <a className="text-pink-700 underline hover:text-blue-800" href={`/buckets/${rowData.Name}`} rel="noopener noreferrer">{rowData.Name}</a>
                   </span>
+
                   <ExternalLink
                     size={12}
                     className="text-gray-300 opacity-0 group-hover:opacity-100"
