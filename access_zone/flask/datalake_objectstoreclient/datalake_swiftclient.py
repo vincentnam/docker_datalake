@@ -1,4 +1,5 @@
-from datalake_authclient import KeystoneClient
+from datalake_authclient import KeystoneClient, OpenstackSDKAuthClient
+
 from datetime import datetime
 
 from datalake_objectstoreclient import ObjectStorageClient
@@ -29,8 +30,8 @@ class SwiftStorage(ObjectStorageClient):
         # self.current_app.logger.info( str(user),  str(password),  str(token),  str(project_name))
 
         # self.current_app.logger.info(authentication_client)
-        assert isinstance(authentication_client,
-                          KeystoneClient), "Wrong authentication system : need Openstack Keystone authentication system with Openstack Swift"
+        assert isinstance(authentication_client, KeystoneClient) or isinstance(authentication_client,
+                                                                               OpenstackSDKAuthClient), "Wrong authentication system : need Openstack Keystone authentication system with Openstack Swift"
 
         if token is not None and preauthurl is not None:
             # TODO : BUG : Log avec un token ne permet pas de récupérer les données pour accéder à swift a priori : token retourne pas les buckets / user-password retourner la liste des buckets
