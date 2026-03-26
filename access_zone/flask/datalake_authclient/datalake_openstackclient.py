@@ -44,7 +44,7 @@ class OpenstackSDKAuthClient(AuthenticationClient):
     def _enrich_user_info(self, user_dict, conn):
         """Enrichit user_dict avec projects et ec2_credentials en utilisant l'OpenStack SDK."""
 
-        # 1. UTILISER user_projects AU LIEU DE projects
+
         try:
             projects = list(conn.identity.user_projects(user_dict["id"]))
             user_dict["projects"] = [
@@ -197,3 +197,134 @@ class OpenstackSDKAuthClient(AuthenticationClient):
                             "hint": "Use Bearer token or X-Username + X-Password headers"}), 401
 
         return decorated_function
+
+    def _get_conn(self, project_name=None):
+        """
+        Crée une connexion fraîche avec le token actuel.
+        Optionnel : forcer un project_name différent.
+        """
+        if not hasattr(g, 'user') or not g.user.get('access_token'):
+            raise ValueError("Aucun token disponible dans g.user. Utilisez @login_required")
+
+        auth_kwargs = {
+            "auth_url": self.KEYSTONE_URL,
+            "token": g.user["access_token"],
+            "auth_type": "v3token",
+        }
+
+        # Si on veut forcer un projet différent (ex: admin project)
+        if project_name:
+            auth_kwargs.update({
+                "project_name": project_name,
+                "project_domain_name": "Default"
+            })
+        elif g.user.get("project_name"):
+            auth_kwargs.update({
+                "project_name": g.user["project_name"],
+                "project_domain_name": "Default"
+            })
+
+        return openstack.connect(**auth_kwargs)
+
+    # ------------------------------------------------------------------
+    # 1. Liste des utilisateurs
+    # ------------------------------------------------------------------
+    def _list_users(self):
+        """Liste tous les utilisateurs Keystone with all information : admin / test purpose"""
+        conn = self._get_conn()
+        users = list(conn.identity.users())
+        return [u.to_dict() for u in users]
+
+
+    def list_users(self):
+        """Liste tous les utilisateurs Keystone (name + id)"""
+        conn = self._get_conn()
+        users = list(conn.identity.users())
+        return [{"name":u.to_dict()["name"],"id":u.to_dict()["id"]} for u in users]
+
+    def list_roles(self):
+        conn = self._get_conn()
+        return [(x.to_dict()["name"],x.to_dict()["id"])  for x in list(conn.identity.roles())]
+
+    def add_user_project(self,user,project_name):
+        conn = self._get_conn()
+        conn.identity.assign_project_role_to_user(conn.identity.find_project(project_name),user,conn.identity.get_role("member"))
+
+    def remove_role_user_project(self,user,role,project_name):
+        conn = self._get_conn()
+        try:
+            conn.identity.find_project(project_name).unassign_role_from_user(user,role)
+        except Exception as e:
+            self.current_app.logger.warning("ERROR" + e)
+
+    def add_user_to_project(self, user_name: str, project_name: str, role_name: str = "member"):
+        """Ajoute un utilisateur à un projet avec un rôle (par défaut: member)"""
+        conn = self._get_conn()
+        project_id = conn.identity.find_project(project_name)
+        if not project_id:
+            return "Noproject"
+        role = conn.identity.find_role(role_name)
+        if not role:
+            return "Norole"
+        user = conn.identity.find_user(user_name)
+        if not user:
+            return "Nouser"
+        # self.current_app.logger.warning(( project_id["name"] in [x["name"] for x in list(conn.identity.user_projects(user["id"]))] ))
+
+        if project_id["name"] in [x["name"] for x in list(conn.identity.user_projects(user["id"]))]:
+            return "UserAlreadyIn"
+        self.current_app.logger.warning(user)
+
+        return conn.identity.assign_project_role_to_user(role=role.id, user=user, project=project_id)
+
+
+    # ------------------------------------------------------------------
+    # 2. Liste des rôles
+    # ------------------------------------------------------------------
+    # def list_roles(self):
+    #     """Liste tous les rôles existants"""
+    #     conn = self._get_conn()
+    #     roles = list(conn.identity.roles())
+    #     return [r.to_dict() for r in roles]
+
+    # ------------------------------------------------------------------
+    # 3. Ajouter un user à un projet
+    # ------------------------------------------------------------------
+
+    # ------------------------------------------------------------------
+    # 4. Ajouter un rôle spécifique à un user dans un projet
+    # ------------------------------------------------------------------
+    def add_role_to_user_in_project(self, user_id: str, project_id: str, role_id: str):
+        """Ajoute un rôle précis à un utilisateur sur un projet"""
+        conn = self._get_conn()
+        conn.identity.grant_role(role=role_id, user=user_id, project=project_id)
+        return {"message": f"Rôle {role_id} ajouté à l'utilisateur {user_id} sur le projet {project_id}"}
+
+    # ------------------------------------------------------------------
+    # 5. Supprimer un user d'un projet (révoque tous ses rôles sur ce projet)
+    # ------------------------------------------------------------------
+    def remove_user_from_project(self, user_id: str, project_id: str):
+        """Supprime complètement un utilisateur d'un projet"""
+        conn = self._get_conn()
+        assignments = list(conn.identity.role_assignments(
+            user=user_id, project=project_id, effective=True
+        ))
+
+        for assignment in assignments:
+            if assignment.role_id:
+                conn.identity.revoke_role(
+                    role=assignment.role_id,
+                    user=user_id,
+                    project=project_id
+                )
+
+        return {"message": f"Utilisateur {user_id} supprimé du projet {project_id}"}
+
+    # ------------------------------------------------------------------
+    # 6. Retirer un rôle spécifique d'un user dans un projet
+    # ------------------------------------------------------------------
+    def remove_role_from_user_in_project(self, user_id: str, project_id: str, role_id: str):
+        """Retire un rôle précis d'un utilisateur sur un projet"""
+        conn = self._get_conn()
+        conn.identity.revoke_role(role=role_id, user=user_id, project=project_id)
+        return {"message": f"Rôle {role_id} retiré de l'utilisateur {user_id} sur le projet {project_id}"}

@@ -311,6 +311,43 @@ def head_object(bucket, key):
 def health():
     return jsonify({"status": "ok"}), 200
 
+@app.route('/users', methods=['GET'])
+@authentication_client.login_required
+def get_users_list():
+    client = authentication_client
+    return client.list_users()
+
+@app.route('/roles', methods=['GET'])
+@authentication_client.login_required
+def get_roles():
+    """
+    Return the role of user in the current project (in authenticated project).
+
+    Returns:
+        list[(string,string)] : [(name,id),...] : list of information about role of the user in the project
+    """
+    client = authentication_client
+    return client.list_roles()
+
+@app.route('/projects/<project_name>/users', methods=['POST'])
+@authentication_client.login_required
+def add_user_to_project(project_name):
+    try :
+        user = request.headers["UserToAdd"]
+        client = authentication_client
+        adduser_resp = client.add_user_to_project(user,project_name)
+        if adduser_resp is True:
+            return jsonify(201, "User added to project "+project_name)
+        elif adduser_resp =="Nouser" :
+            return jsonify(403, "User "+user+" doesn't exist.")
+        elif adduser_resp =="Noproject" :
+            return jsonify(403, "Project "+ project_name+" doesn't exist.")
+        elif adduser_resp =="UserAlreadyIn":
+            return jsonify(304, "User "+user+" is already in project "+project_name+".")
+        return jsonify(403, "User not added to project.")
+    except Exception as e :
+        return jsonify(401, "Error" + str(e))
+
 
 
 if __name__ == '__main__':
