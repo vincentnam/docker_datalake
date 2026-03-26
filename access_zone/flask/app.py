@@ -337,16 +337,16 @@ def add_user_to_project(project_name):
         client = authentication_client
         adduser_resp = client.add_user_to_project(user,project_name)
         if adduser_resp is True:
-            return jsonify(201, "User added to project "+project_name)
+            return jsonify({"message": f"User added to project {project_name}"}), 201
         elif adduser_resp =="Nouser" :
-            return jsonify(403, "User "+user+" doesn't exist.")
+            return jsonify({"error": f"User {user} doesn't exist."}), 404
         elif adduser_resp =="Noproject" :
-            return jsonify(403, "Project "+ project_name+" doesn't exist.")
+            return jsonify({"error": f"Project {project_name} doesn't exist."}), 404
         elif adduser_resp =="UserAlreadyIn":
-            return jsonify(304, "User "+user+" is already in project "+project_name+".")
-        return jsonify(403, "User not added to project.")
+            return jsonify({"message": f"User {user} is already in project {project_name}."}), 304
+        return jsonify({"error": "User not added to project."}), 403
     except Exception as e :
-        return jsonify(401, "Error" + str(e))
+        return jsonify({"error": str(e)}), 401
 
 
 
