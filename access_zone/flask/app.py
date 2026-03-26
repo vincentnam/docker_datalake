@@ -26,10 +26,10 @@ app.config['DEBUG'] = True
 OBJECT_STORAGE_BACKEND = os.getenv("OBJECT_STORAGE_BACKEND", "swift").lower()  # "s3" ou "swift"
 KEYSTONE_URL = os.getenv("KEYSTONE_URL", "http://keystone:5000/v3")
 S3_ENDPOINT = os.getenv("S3_ENDPOINT", "http://10.5.10.1:8080")
-AUTHENTICATION_BACKEND = os.getenv("AUTHENTICATION_BACKEND","keystone").lower()
-authentication_client = get_auth(AUTHENTICATION_BACKEND,current_app=app)
+AUTHENTICATION_BACKEND = os.getenv("AUTHENTICATION_BACKEND","openstack").lower()
+authentication_client = get_auth(AUTHENTICATION_BACKEND)
 
-
+print(authentication_client)
 
 
 # -----------------------
@@ -76,6 +76,7 @@ def list_buckets():
 
 
     '''
+
     #TODO: Project with project id instead of project name (with swift backend) result in authentication error - fix needed
     try:
         # password =         request.headers.get("Password") or         request.headers.get("X-Password")
