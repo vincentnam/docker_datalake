@@ -333,20 +333,100 @@ def get_roles():
 @authentication_client.login_required
 def add_user_to_project(project_name):
     try :
-        user = request.headers["UserToAdd"]
+        if not hasattr(authentication_client, "add_user_to_project"):
+            return jsonify({"error": "Operation not supported by authentication backend"}), 501
+        payload = request.get_json(silent=True) or {}
+        user = payload.get("username") or request.headers.get("UserToAdd")
+        role = payload.get("role", "member")
+        if not user:
+            return jsonify({"error": "Missing username"}), 400
         client = authentication_client
-        adduser_resp = client.add_user_to_project(user,project_name)
+        adduser_resp = client.add_user_to_project(user, project_name, role)
         if adduser_resp is True:
             return jsonify({"message": f"User added to project {project_name}"}), 201
         elif adduser_resp =="Nouser" :
             return jsonify({"error": f"User {user} doesn't exist."}), 404
         elif adduser_resp =="Noproject" :
             return jsonify({"error": f"Project {project_name} doesn't exist."}), 404
+        elif adduser_resp == "Norole":
+            return jsonify({"error": f"Role {role} doesn't exist."}), 404
         elif adduser_resp =="UserAlreadyIn":
             return jsonify({"message": f"User {user} is already in project {project_name}."}), 304
         return jsonify({"error": "User not added to project."}), 403
     except Exception as e :
         return jsonify({"error": str(e)}), 401
+
+
+@app.route('/projects/<project_name>/members', methods=['GET'])
+@authentication_client.login_required
+def get_project_members(project_name):
+    try:
+        if not hasattr(authentication_client, "list_project_members"):
+            return jsonify({"error": "Operation not supported by authentication backend"}), 501
+        client = authentication_client
+        members = client.list_project_members(project_name)
+        current_app.logger.warning(members)
+        if members == "Noproject":
+            return jsonify({"error": f"Project {project_name} doesn't exist."}), 404
+        return jsonify({"project": project_name, "members": members}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/projects/<project_name>/roles', methods=['GET'])
+@authentication_client.login_required
+def get_project_roles(project_name):
+    try:
+        if not hasattr(authentication_client, "list_roles_for_project"):
+            return jsonify({"error": "Operation not supported by authentication backend"}), 501
+        client = authentication_client
+        roles = client.list_roles_for_project(project_name)
+        return jsonify({"project": project_name, "roles": roles}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/projects/<project_name>/users/<user_id>/roles', methods=['PUT'])
+@authentication_client.login_required
+def update_user_roles(project_name, user_id):
+    try:
+        if not hasattr(authentication_client, "set_user_roles_in_project"):
+            return jsonify({"error": "Operation not supported by authentication backend"}), 501
+        payload = request.get_json(silent=True) or {}
+        roles = payload.get("roles", [])
+        if not isinstance(roles, list):
+            return jsonify({"error": "roles must be a list"}), 400
+
+        client = authentication_client
+        resp = client.set_user_roles_in_project(project_name, user_id, roles)
+
+        if resp == "Noproject":
+            return jsonify({"error": f"Project {project_name} doesn't exist."}), 404
+        if resp == "Nouser":
+            return jsonify({"error": f"User {user_id} doesn't exist."}), 404
+        if isinstance(resp, dict) and resp.get("status") == "Norole":
+            return jsonify({"error": "Unknown roles", "unknown_roles": resp.get("unknown_roles", [])}), 400
+
+        return jsonify(resp), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/projects/<project_name>/users/<user_id>', methods=['DELETE'])
+@authentication_client.login_required
+def remove_user_from_project(project_name, user_id):
+    try:
+        if not hasattr(authentication_client, "remove_user_from_project_by_name"):
+            return jsonify({"error": "Operation not supported by authentication backend"}), 501
+        client = authentication_client
+        resp = client.remove_user_from_project_by_name(project_name, user_id)
+        if resp == "Noproject":
+            return jsonify({"error": f"Project {project_name} doesn't exist."}), 404
+        if resp == "Nouser":
+            return jsonify({"error": f"User {user_id} doesn't exist."}), 404
+        return jsonify(resp), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 

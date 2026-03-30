@@ -244,7 +244,64 @@ class OpenstackSDKAuthClient(AuthenticationClient):
 
     def list_roles(self):
         conn = self._get_conn()
+
+        self.current_app.logger.warning(conn)
+        self.current_app.logger.warning(conn)
+
         return [(x.to_dict()["name"],x.to_dict()["id"])  for x in list(conn.identity.roles())]
+
+    def list_roles_for_project(self, project_name: str):
+        conn = self._get_conn(project_name=project_name)
+        roles = list(conn.identity.roles())
+        return [{"id": role.id, "name": role.name} for role in roles]
+
+    def list_project_members(self, project_name: str):
+        conn = self._get_conn(project_name=project_name)
+        project = conn.identity.find_project(project_name)
+        if not project:
+            return "Noproject"
+
+        role_by_id = {role.id: role.name for role in conn.identity.roles()}
+        user_by_id = {user.id: user.name for user in conn.identity.users()}
+
+        members = {}
+        assignments = conn.identity.role_assignments(scope_project_id=project.id, effective=True)
+        for assignment in assignments:
+            payload = assignment.to_dict() if hasattr(assignment, "to_dict") else {}
+
+            scope = payload.get("scope", {}) if isinstance(payload, dict) else {}
+            scoped_project = scope.get("project", {}) if isinstance(scope, dict) else {}
+            scoped_project_id = scoped_project.get("id")
+            if scoped_project_id and scoped_project_id != project.id:
+                continue
+
+            user_id = getattr(assignment, "user_id", None)
+            if not user_id and isinstance(payload.get("user"), dict):
+                user_id = payload["user"].get("id")
+            if not user_id and isinstance(getattr(assignment, "user", None), dict):
+                user_id = assignment.user.get("id")
+
+            role_id = getattr(assignment, "role_id", None)
+            if not role_id and isinstance(payload.get("role"), dict):
+                role_id = payload["role"].get("id")
+            if not role_id and isinstance(getattr(assignment, "role", None), dict):
+                role_id = assignment.role.get("id")
+
+            if not user_id:
+                continue
+
+            if user_id not in members:
+                members[user_id] = {
+                    "id": user_id,
+                    "name": user_by_id.get(user_id, user_id),
+                    "roles": []
+                }
+
+            role_name = role_by_id.get(role_id, role_id)
+            if role_name and role_name not in members[user_id]["roles"]:
+                members[user_id]["roles"].append(role_name)
+
+        return list(members.values())
 
     def add_user_project(self,user,project_name):
         conn = self._get_conn()
@@ -276,6 +333,61 @@ class OpenstackSDKAuthClient(AuthenticationClient):
         self.current_app.logger.warning(user)
 
         return conn.identity.assign_project_role_to_user(role=role.id, user=user, project=project_id)
+
+    def set_user_roles_in_project(self, project_name: str, user_id: str, role_names):
+        conn = self._get_conn(project_name=project_name)
+        project = conn.identity.find_project(project_name)
+        if not project:
+            return "Noproject"
+
+        users = list(conn.identity.users())
+        user = next((u for u in users if u.id == user_id), None)
+        if not user:
+            return "Nouser"
+
+        roles_map = {role.name: role.id for role in conn.identity.roles()}
+        unknown_roles = [name for name in role_names if name not in roles_map]
+        if unknown_roles:
+            return {"status": "Norole", "unknown_roles": unknown_roles}
+
+        assignments = list(conn.identity.role_assignments(user=user.id, project=project.id))
+        current_role_ids = {a.role_id for a in assignments if getattr(a, "role_id", None)}
+        target_role_ids = {roles_map[name] for name in role_names}
+
+        for role_id in current_role_ids - target_role_ids:
+            conn.identity.revoke_role(role=role_id, user=user.id, project=project.id)
+
+        for role_id in target_role_ids - current_role_ids:
+            conn.identity.grant_role(role=role_id, user=user.id, project=project.id)
+
+        return {"message": f"Roles updated for user {user.id} in project {project.name}"}
+
+    def remove_user_from_project_by_name(self, project_name: str, user_id: str):
+        conn = self._get_conn(project_name=project_name)
+        project = conn.identity.find_project(project_name)
+        if not project:
+            return "Noproject"
+
+        users = list(conn.identity.users())
+        user = next((u for u in users if u.id == user_id), None)
+        if not user:
+            return "Nouser"
+
+        assignments = list(conn.identity.role_assignments(user=user.id, scope_project_id=project.id, effective=True))
+        for assignment in assignments:
+            role_id = getattr(assignment, "role_id", None)
+            payload = assignment.to_dict() if hasattr(assignment, "to_dict") else {}
+            scope = payload.get("scope", {}) if isinstance(payload, dict) else {}
+            scoped_project = scope.get("project", {}) if isinstance(scope, dict) else {}
+            scoped_project_id = scoped_project.get("id")
+            if scoped_project_id and scoped_project_id != project.id:
+                continue
+            if not role_id and isinstance(payload.get("role"), dict):
+                role_id = payload["role"].get("id")
+            if role_id:
+                conn.identity.revoke_role(role=role_id, user=user.id, project=project.id)
+
+        return {"message": f"User {user.id} removed from project {project.name}"}
 
 
     # ------------------------------------------------------------------

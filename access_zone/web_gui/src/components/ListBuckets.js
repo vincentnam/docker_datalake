@@ -5,6 +5,7 @@ import { getActiveProject, getAuthData } from "../utils/authUtils";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import NewBucket from "./NewBucket/NewBucket";
+import ProjectAdministration from "./ProjectAdministration";
 import { Toast } from "primereact/toast";
 import useToast from "../hooks/useToast";
 import {
@@ -173,6 +174,12 @@ const ListBuckets = () => {
             />
           </DataTable>
         </div>
+
+        <ProjectAdministration
+          projectName={projectData.name}
+          showSuccess={showSuccess}
+          showError={showError}
+        />
 
         {/* 2. SECTION CALCUL & APPS (Placeholders) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
