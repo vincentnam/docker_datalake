@@ -1,69 +1,75 @@
 # =============================================
-# policy.yaml - Keystone (march 2026)
-# Uses default Keystone roles: admin, member, reader
+# Keystone RBAC policy for Swift bucket governance
+# Roles model:
+# - admin         : global administrator (reserved)
+# - bucket_owner  : can appoint bucket_admin and has bucket_admin rights
+# - bucket_admin  : can manage grants except admin/bucket_owner grants
+# - member        : writer (default Keystone role)
+# - reader        : reader (default Keystone role)
 # =============================================
 
 # --- BASE RULES --------------------------------------------------------------
-"admin_required": "role:admin or is_admin:1"
+"global_admin_required": "role:admin or is_admin:1"
 "owner": "user_id:%(user_id)s"
-"admin_or_owner": "rule:admin_required or rule:owner"
+"admin_or_owner": "rule:global_admin_required or rule:owner"
 
-# Project-scoped default roles
-"project_member": "role:member"
-"project_reader": "role:reader"
+# Project-scoped role checks
+"same_target_project": "token.project.id:%(target.project.id)s"
+"bucket_owner_on_target_project": "role:bucket_owner and rule:same_target_project"
+"bucket_admin_on_target_project": "role:bucket_admin and rule:same_target_project"
+"writer_on_target_project": "role:member and rule:same_target_project"
+"reader_on_target_project": "role:reader and rule:same_target_project"
 
-# Match action target project with token project
-"member_on_target_project": "rule:project_member and token.project.id:%(target.project.id)s"
-"reader_on_target_project": "rule:project_reader and token.project.id:%(target.project.id)s"
+"project_read_access": "rule:reader_on_target_project or rule:writer_on_target_project or rule:bucket_admin_on_target_project or rule:bucket_owner_on_target_project"
+"project_write_access": "rule:writer_on_target_project or rule:bucket_admin_on_target_project or rule:bucket_owner_on_target_project"
+"project_role_manager": "rule:bucket_admin_on_target_project or rule:bucket_owner_on_target_project"
 
-# Project manager behavior with default role "member"
-"project_manager_required": "rule:member_on_target_project"
-
-# Reader or member on same target project
-"project_read_access": "rule:reader_on_target_project or rule:member_on_target_project"
-
-# Grant management by project member, but never for global admin role
-"project_grant_manage_required": "rule:member_on_target_project and not target.role.name:'admin'"
+# Bucket owner can manage everyone except global-admin and owner grants.
+# Bucket admin cannot touch admin/bucket_owner grants.
+"bucket_owner_grant_manage_required": "rule:bucket_owner_on_target_project and not target.role.name:'admin' and not target.role.name:'bucket_owner'"
+"bucket_admin_grant_manage_required": "rule:bucket_admin_on_target_project and not target.role.name:'admin' and not target.role.name:'bucket_owner'"
+"project_grant_manage_required": "rule:bucket_owner_grant_manage_required or rule:bucket_admin_grant_manage_required"
 
 # --- USERS -------------------------------------------------------------------
-# User creation/deletion stays global-admin only (domain/global resource)
-"identity:create_user": "rule:admin_required"
-"identity:list_users": "rule:admin_required or rule:project_manager_required"
-"identity:get_user": "rule:admin_required or rule:project_manager_required or rule:owner"
-"identity:update_user": "rule:admin_required or rule:project_manager_required or rule:owner"
-"identity:delete_user": "rule:admin_required"
+# User lifecycle remains global-admin only.
+"identity:create_user": "rule:global_admin_required"
+"identity:list_users": "rule:global_admin_required or role:bucket_owner or role:bucket_admin"
+"identity:get_user": "rule:global_admin_required or rule:owner or role:bucket_owner or role:bucket_admin"
+"identity:update_user": "rule:global_admin_required or rule:owner"
+"identity:delete_user": "rule:global_admin_required"
 "identity:change_password": "rule:admin_or_owner"
 
 # --- ROLE ASSIGNMENTS --------------------------------------------------------
-"identity:create_grant": "rule:admin_required or rule:project_grant_manage_required"
-"identity:delete_grant": "rule:admin_required or rule:project_grant_manage_required"
-"identity:list_grants": "rule:admin_required or rule:project_manager_required"
-"identity:check_grant": "rule:admin_required or rule:project_manager_required"
+"identity:create_grant": "rule:global_admin_required or rule:project_grant_manage_required"
+"identity:delete_grant": "rule:global_admin_required or rule:project_grant_manage_required"
+"identity:list_grants": "rule:global_admin_required or rule:project_role_manager"
+"identity:check_grant": "rule:global_admin_required or rule:project_role_manager"
+"identity:list_role_assignments": "rule:global_admin_required or role:bucket_owner or role:bucket_admin"
 
 # --- PROJECTS ----------------------------------------------------------------
-"identity:create_project": "rule:admin_required"
-"identity:list_projects": "rule:admin_required or rule:project_read_access"
-"identity:get_project": "rule:admin_required or rule:project_read_access"
-"identity:update_project": "rule:admin_required or rule:project_manager_required"
-"identity:delete_project": "rule:admin_required"
+"identity:create_project": "rule:global_admin_required"
+"identity:list_projects": "rule:global_admin_required or role:bucket_owner or role:bucket_admin"
+"identity:get_project": "rule:global_admin_required or rule:project_read_access"
+"identity:update_project": "rule:global_admin_required or rule:project_role_manager"
+"identity:delete_project": "rule:global_admin_required"
+"identity:list_projects_for_user": "rule:global_admin_required or rule:owner"
+"identity:list_user_projects": "rule:global_admin_required or rule:owner"
 
 # --- ROLES (global definitions) ----------------------------------------------
-"identity:list_roles": "rule:admin_required or rule:project_manager_required"
-"identity:get_role": "rule:admin_required"
-"identity:create_role": "rule:admin_required"
-"identity:update_role": "rule:admin_required"
-"identity:delete_role": "rule:admin_required"
+"identity:list_roles": "rule:global_admin_required or role:bucket_owner or role:bucket_admin"
+"identity:get_role": "rule:global_admin_required or role:bucket_owner or role:bucket_admin"
+"identity:create_role": "rule:global_admin_required"
+"identity:update_role": "rule:global_admin_required"
+"identity:delete_role": "rule:global_admin_required"
 
-# --- SWIFT / S3 --------------------------------------------------------------
-# reader: read only
-# member: read + write + delete in the project
-"swift:container:read": "rule:project_read_access or rule:admin_required"
-"swift:container:write": "rule:member_on_target_project or rule:admin_required"
-"swift:container:delete": "rule:member_on_target_project or rule:admin_required"
+# --- SWIFT / S3 (documentary mapping for external checks) --------------------
+"swift:container:read": "rule:project_read_access or rule:global_admin_required"
+"swift:container:write": "rule:project_write_access or rule:global_admin_required"
+"swift:container:delete": "rule:project_write_access or rule:global_admin_required"
 
-"swift:object:read": "rule:project_read_access or rule:admin_required"
-"swift:object:write": "rule:member_on_target_project or rule:admin_required"
-"swift:object:delete": "rule:member_on_target_project or rule:admin_required"
+"swift:object:read": "rule:project_read_access or rule:global_admin_required"
+"swift:object:write": "rule:project_write_access or rule:global_admin_required"
+"swift:object:delete": "rule:project_write_access or rule:global_admin_required"
 
 # Fallback
-"default": "rule:admin_required"
+"default": "rule:global_admin_required"

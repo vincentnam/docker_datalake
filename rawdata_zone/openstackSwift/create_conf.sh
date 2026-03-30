@@ -109,7 +109,9 @@ log_name = authtoken-swift
 
 [filter:keystoneauth]
 use = egg:swift#keystoneauth
-operator_roles = admin, bucket_owner, project_admin, swiftoperator, ResellerAdmin
+operator_roles = admin, bucket_owner, bucket_admin, member
+project_reader_roles = reader
+reseller_admin_role = admin
 reseller_prefix = AUTH_
 is_admin = false
 
@@ -216,7 +218,9 @@ EOF
  #
  #[filter:keystoneauth]
  #use = egg:swift#keystoneauth
- #operator_roles = admin, bucket_owner, project_admin, swiftoperator, ResellerAdmin
+ #operator_roles = admin, bucket_owner, bucket_admin, member
+ #project_reader_roles = reader
+ #reseller_admin_role = admin
  #reseller_prefix = AUTH_
  #is_admin = false
  #
@@ -440,6 +444,5 @@ EOF
 
 
 done
-
 
 
