@@ -31,6 +31,32 @@ authentication_client = get_auth(AUTHENTICATION_BACKEND)
 
 print(authentication_client)
 
+PROJECT_MANAGEABLE_ROLES = {"reader", "member", "bucket_admin", "bucket_owner"}
+
+
+def _extract_http_status_code(exc, default=500):
+    status = getattr(exc, "status_code", None) or getattr(exc, "http_status", None)
+    if not status and getattr(exc, "response", None) is not None:
+        status = getattr(exc.response, "status_code", None)
+    if not status:
+        message = str(exc).lower()
+        if "forbidden" in message:
+            status = 403
+        elif "unauthorized" in message:
+            status = 401
+        elif "not found" in message:
+            status = 404
+        elif "conflict" in message:
+            status = 409
+        else:
+            status = default
+    return int(status)
+
+
+def _error_response(exc, default=500):
+    status = _extract_http_status_code(exc, default=default)
+    return jsonify({"error": str(exc)}), status
+
 
 # -----------------------
 # Routes
@@ -314,8 +340,11 @@ def health():
 @app.route('/users', methods=['GET'])
 @authentication_client.login_required
 def get_users_list():
-    client = authentication_client
-    return client.list_users()
+    try:
+        client = authentication_client
+        return jsonify(client.list_users()), 200
+    except Exception as e:
+        return _error_response(e)
 
 @app.route('/roles', methods=['GET'])
 @authentication_client.login_required
@@ -326,35 +355,53 @@ def get_roles():
     Returns:
         list[(string,string)] : [(name,id),...] : list of information about role of the user in the project
     """
-    client = authentication_client
-    return client.list_roles()
+    try:
+        client = authentication_client
+        return jsonify(client.list_roles()), 200
+    except Exception as e:
+        return _error_response(e)
 
 @app.route('/projects/<project_name>/users', methods=['POST'])
 @authentication_client.login_required
 def add_user_to_project(project_name):
-    try :
+    try:
         if not hasattr(authentication_client, "add_user_to_project"):
             return jsonify({"error": "Operation not supported by authentication backend"}), 501
         payload = request.get_json(silent=True) or {}
-        user = payload.get("username") or request.headers.get("UserToAdd")
+        current_app.logger.warning(payload)
+        # TODO: Change to header to unify
+        user = payload.get("username")
         role = payload.get("role", "member")
+        # current_app.logger.warning(role)
+        #
+        # role = role.strip() if isinstance(role, str) else role
+        # current_app.logger.warning(role)
         if not user:
             return jsonify({"error": "Missing username"}), 400
-        client = authentication_client
-        adduser_resp = client.add_user_to_project(user, project_name, role)
-        if adduser_resp is True:
+        if role not in PROJECT_MANAGEABLE_ROLES:
+            return jsonify({"error": f"Unsupported role '{role}'"}), 400
+
+        authclient = authentication_client
+        current_app.logger.warning("COUILLE")
+
+        adduser_resp = authclient.add_user_to_project(user, project_name, role)
+        current_app.logger.warning("adduser_resp")
+        current_app.logger.warning(adduser_resp)
+
+
+        if adduser_resp is True or (isinstance(adduser_resp, dict) and adduser_resp.get("status") == "ok"):
             return jsonify({"message": f"User added to project {project_name}"}), 201
-        elif adduser_resp =="Nouser" :
+        elif adduser_resp == "Nouser":
             return jsonify({"error": f"User {user} doesn't exist."}), 404
-        elif adduser_resp =="Noproject" :
+        elif adduser_resp == "Noproject":
             return jsonify({"error": f"Project {project_name} doesn't exist."}), 404
         elif adduser_resp == "Norole":
             return jsonify({"error": f"Role {role} doesn't exist."}), 404
-        elif adduser_resp =="UserAlreadyIn":
-            return jsonify({"message": f"User {user} is already in project {project_name}."}), 304
+        elif adduser_resp in ("UserAlreadyIn", "UserAlreadyInRole"):
+            return jsonify({"message": f"User {user} already has role {role} in project {project_name}."}), 200
         return jsonify({"error": "User not added to project."}), 403
-    except Exception as e :
-        return jsonify({"error": str(e)}), 401
+    except Exception as e:
+        return _error_response(e)
 
 
 @app.route('/projects/<project_name>/members', methods=['GET'])
@@ -370,7 +417,7 @@ def get_project_members(project_name):
             return jsonify({"error": f"Project {project_name} doesn't exist."}), 404
         return jsonify({"project": project_name, "members": members}), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return _error_response(e)
 
 
 @app.route('/projects/<project_name>/roles', methods=['GET'])
@@ -383,8 +430,7 @@ def get_project_roles(project_name):
         roles = client.list_roles_for_project(project_name)
         return jsonify({"project": project_name, "roles": roles}), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+        return _error_response(e)
 
 @app.route('/projects/<project_name>/users/<user_id>/roles', methods=['PUT'])
 @authentication_client.login_required
@@ -396,6 +442,11 @@ def update_user_roles(project_name, user_id):
         roles = payload.get("roles", [])
         if not isinstance(roles, list):
             return jsonify({"error": "roles must be a list"}), 400
+        if not all(isinstance(role_name, str) for role_name in roles):
+            return jsonify({"error": "roles must contain only strings"}), 400
+        unsupported_roles = sorted(set(role_name for role_name in roles if role_name not in PROJECT_MANAGEABLE_ROLES))
+        if unsupported_roles:
+            return jsonify({"error": "Unsupported roles", "unsupported_roles": unsupported_roles}), 400
 
         client = authentication_client
         resp = client.set_user_roles_in_project(project_name, user_id, roles)
@@ -420,6 +471,7 @@ def remove_user_from_project(project_name, user_id):
             return jsonify({"error": "Operation not supported by authentication backend"}), 501
         client = authentication_client
         resp = client.remove_user_from_project_by_name(project_name, user_id)
+        current_app.logger.warning(resp)
         if resp == "Noproject":
             return jsonify({"error": f"Project {project_name} doesn't exist."}), 404
         if resp == "Nouser":
@@ -432,3 +484,4 @@ def remove_user_from_project(project_name, user_id):
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=5000)
+

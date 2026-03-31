@@ -257,12 +257,16 @@ class OpenstackSDKAuthClient(AuthenticationClient):
 
     def list_project_members(self, project_name: str):
         conn = self._get_conn(project_name=project_name)
-        project = conn.identity.find_project(project_name)
+        project = conn.identity.find_project(project_name, ignore_missing=True)
         if not project:
             return "Noproject"
 
         role_by_id = {role.id: role.name for role in conn.identity.roles()}
-        user_by_id = {user.id: user.name for user in conn.identity.users()}
+        user_by_id = {}
+        try:
+            user_by_id = {user.id: user.name for user in conn.identity.users()}
+        except Exception as e:
+            self.current_app.logger.warning(f"Unable to resolve usernames from role assignments: {e}")
 
         members = {}
         assignments = conn.identity.role_assignments(scope_project_id=project.id, effective=True)
@@ -315,34 +319,39 @@ class OpenstackSDKAuthClient(AuthenticationClient):
             self.current_app.logger.warning("ERROR" + e)
 
     def add_user_to_project(self, user_name: str, project_name: str, role_name: str = "member"):
-        """Ajoute un utilisateur à un projet avec un rôle (par défaut: member)"""
-        conn = self._get_conn()
-        project_id = conn.identity.find_project(project_name)
-        if not project_id:
+        """Add a user to a project with a role (member by default)."""
+        conn = self._get_conn(project_name=project_name)
+        project = conn.identity.find_project(project_name, ignore_missing=True)
+        if not project:
             return "Noproject"
-        role = conn.identity.find_role(role_name)
+        role = conn.identity.find_role(role_name, ignore_missing=True)
         if not role:
             return "Norole"
-        user = conn.identity.find_user(user_name)
+        user = conn.identity.find_user(user_name, ignore_missing=True, domain_id="default")
+        if not user:
+            user = conn.identity.find_user(user_name, ignore_missing=True)
         if not user:
             return "Nouser"
-        # self.current_app.logger.warning(( project_id["name"] in [x["name"] for x in list(conn.identity.user_projects(user["id"]))] ))
-
-        if project_id["name"] in [x["name"] for x in list(conn.identity.user_projects(user["id"]))]:
-            return "UserAlreadyIn"
-        self.current_app.logger.warning(user)
-
-        return conn.identity.assign_project_role_to_user(role=role.id, user=user, project=project_id)
+        memberrole = conn.identity.find_role("member")
+        list_roles = list(conn.identity.roles())
+        for role in list_roles:
+            if conn.identity.validate_user_has_project_role(project,user, role):
+                return {"status": "ok", "message": f" {user.name} user is already {role.name} in project {project.name}"}
+        conn.identity.assign_project_role_to_user(project, user, memberrole)
+        return {"status": "ok", "message": f"Role {memberrole.name} granted to {user.name} in {project.name}"}
 
     def set_user_roles_in_project(self, project_name: str, user_id: str, role_names):
         conn = self._get_conn(project_name=project_name)
-        project = conn.identity.find_project(project_name)
+        project = conn.identity.find_project(project_name, ignore_missing=True)
         if not project:
             return "Noproject"
 
-        users = list(conn.identity.users())
-        user = next((u for u in users if u.id == user_id), None)
-        if not user:
+        user = None
+        try:
+            user = conn.identity.get_user(user_id)
+        except Exception:
+            user = None
+        if user is None:
             return "Nouser"
 
         roles_map = {role.name: role.id for role in conn.identity.roles()}
@@ -350,8 +359,17 @@ class OpenstackSDKAuthClient(AuthenticationClient):
         if unknown_roles:
             return {"status": "Norole", "unknown_roles": unknown_roles}
 
-        assignments = list(conn.identity.role_assignments(user=user.id, project=project.id))
-        current_role_ids = {a.role_id for a in assignments if getattr(a, "role_id", None)}
+        assignments = list(conn.identity.role_assignments(user=user.id, scope_project_id=project.id, effective=True))
+        current_role_ids = set()
+        for assignment in assignments:
+            role_id = getattr(assignment, "role_id", None)
+            if not role_id and hasattr(assignment, "to_dict"):
+                payload = assignment.to_dict()
+                if isinstance(payload.get("role"), dict):
+                    role_id = payload["role"].get("id")
+            if role_id:
+                current_role_ids.add(role_id)
+
         target_role_ids = {roles_map[name] for name in role_names}
 
         for role_id in current_role_ids - target_role_ids:
@@ -364,29 +382,36 @@ class OpenstackSDKAuthClient(AuthenticationClient):
 
     def remove_user_from_project_by_name(self, project_name: str, user_id: str):
         conn = self._get_conn(project_name=project_name)
-        project = conn.identity.find_project(project_name)
+
+        self.current_app.logger.warning("project_name\n")
+        self.current_app.logger.warning("project_name\n")
+        self.current_app.logger.warning("project_name\n")
+        self.current_app.logger.warning(project_name)
+        project = conn.identity.find_project(project_name, ignore_missing=True)
         if not project:
             return "Noproject"
+        user = None
+        self.current_app.logger.warning("BITECOUILLE")
+        try:
+            user = conn.identity.get_user(user_id)
 
-        users = list(conn.identity.users())
-        user = next((u for u in users if u.id == user_id), None)
-        if not user:
+        except Exception:
+            user = None
+        if user is None:
             return "Nouser"
+        # self.current_app.logger.warning(dir(conn.identity))
+        self.current_app.logger.warning("BITECOUILLE")
+        try:
+            self.current_app.logger.warning("BITECOUILLE")
+            list_roles = list(conn.identity.roles())
+            self.current_app.logger.warning("C FAIT")
+            self.current_app.logger.warning(list_roles)
 
-        assignments = list(conn.identity.role_assignments(user=user.id, scope_project_id=project.id, effective=True))
-        for assignment in assignments:
-            role_id = getattr(assignment, "role_id", None)
-            payload = assignment.to_dict() if hasattr(assignment, "to_dict") else {}
-            scope = payload.get("scope", {}) if isinstance(payload, dict) else {}
-            scoped_project = scope.get("project", {}) if isinstance(scope, dict) else {}
-            scoped_project_id = scoped_project.get("id")
-            if scoped_project_id and scoped_project_id != project.id:
-                continue
-            if not role_id and isinstance(payload.get("role"), dict):
-                role_id = payload["role"].get("id")
-            if role_id:
-                conn.identity.revoke_role(role=role_id, user=user.id, project=project.id)
-
+        except Exception as e :
+            self.current_app.logger(e)
+        for role in list_roles:
+            if conn.identity.validate_user_has_project_role(project, user, role):
+                conn.identity.unassign_project_role_from_user(project, user, role)
         return {"message": f"User {user.id} removed from project {project.name}"}
 
 
@@ -440,3 +465,4 @@ class OpenstackSDKAuthClient(AuthenticationClient):
         conn = self._get_conn()
         conn.identity.revoke_role(role=role_id, user=user_id, project=project_id)
         return {"message": f"Rôle {role_id} retiré de l'utilisateur {user_id} sur le projet {project_id}"}
+

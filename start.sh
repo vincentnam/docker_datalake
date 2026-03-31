@@ -169,6 +169,7 @@ if [ "$RUN" = true ]; then
   echo "Starting data lake services..."
 
   if [ "$TEST" = true ]; then
+    export DOCKER_BUILDKIT=1
     sudo docker compose -f "$COMPOSE_FILE" --profile datalake --profile debug up --build
   else
     sudo docker compose -f "$COMPOSE_FILE" --profile datalake up --build

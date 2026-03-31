@@ -30,6 +30,7 @@ export const getAllUsers = async () => {
 export const addUserToProject = async (projectName, username, role = "member") => {
   const response = await apiFetch(`/projects/${encodeURIComponent(projectName)}/users`, {
     method: "POST",
+    // #TODO: Change to header to unify
     body: JSON.stringify({ username, role }),
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
