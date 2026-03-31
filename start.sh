@@ -168,12 +168,12 @@ fi
 if [ "$RUN" = true ]; then
   echo "Starting data lake services..."
 
+  chmod -R 777 rawdata_zone/openstackKeystone/conf/etc/keystone/fernet-keys
+  chmod -R 777 rawdata_zone/openstackKeystone/conf/etc/keystone/credential-keys
   if [ "$TEST" = true ]; then
     export DOCKER_BUILDKIT=1
-    chmod -R 777 rawdata_zone/openstackKeystone/conf/etc/keystone
     sudo docker compose -f "$COMPOSE_FILE" --profile datalake --profile debug up --build
   else
-    chmod -R 777 rawdata_zone/openstackKeystone/conf/etc/keystone
     sudo docker compose -f "$COMPOSE_FILE" --profile datalake up --build
   fi
 fi
