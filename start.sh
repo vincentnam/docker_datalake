@@ -170,8 +170,10 @@ if [ "$RUN" = true ]; then
 
   if [ "$TEST" = true ]; then
     export DOCKER_BUILDKIT=1
+    chmod -R 777 rawdata_zone/openstackKeystone/conf/etc/keystone
     sudo docker compose -f "$COMPOSE_FILE" --profile datalake --profile debug up --build
   else
+    chmod -R 777 rawdata_zone/openstackKeystone/conf/etc/keystone
     sudo docker compose -f "$COMPOSE_FILE" --profile datalake up --build
   fi
 fi
