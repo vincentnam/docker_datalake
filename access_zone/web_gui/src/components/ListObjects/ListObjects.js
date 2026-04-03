@@ -21,22 +21,6 @@ const ListObjects = forwardRef(({ bucketName, path: initialPath, onDelete }, ref
   const prefixPath = params.get("path") || initialPath || "";
   const toast = useRef(null);
 
-  /*const {
-    objects,
-    loading,
-    bucketInfo,
-    selectedNode,
-    setSelectedNode,
-    sidebarVisible,
-    setSidebarVisible,
-    loadBucketObjects,
-    createFolder,
-    refreshBucket,
-    onExpand,
-    sortOrder,
-    setSortOrder,
-  } = useObjectList(bucketName, prefixPath);
-*/
   const {
     objects,
     loading,

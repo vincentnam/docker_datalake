@@ -100,6 +100,7 @@ export const downloadObject = async (bucketName, key) => {
 
 export const deleteObject = async (bucketName, key) => {
   assertAuthenticated();
+
   const response = await apiFetch(
     `/buckets/${encodeURIComponent(bucketName)}/objects/${encodeURIComponent(key)}`,
     {

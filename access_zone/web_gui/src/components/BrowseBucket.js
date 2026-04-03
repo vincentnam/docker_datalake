@@ -10,13 +10,47 @@ import {
 } from "lucide-react";
 import PrimaryButton from "./common/PrimaryButton";
 import ListObjects from "./ListObjects/ListObjects";
-
+import { deleteObject } from "../utils/s3client";
 const BrowseBucket = () => {
-  const { bucketName, prefixPath, onDelete } = useParams();
+  const { bucketName, prefixPath } = useParams();
   const childRef = useRef(null);
   const toast = useRef(null);
   const navigate = useNavigate();
+  const handleDelete = async (objectKey) => {
 
+
+    if (!objectKey) return;
+
+    try {
+
+      await deleteObject(bucketName, objectKey.node.key);
+
+      // Message de succès
+      toast.current.show({
+        severity: "success",
+        summary: "Objet supprimé",
+        detail: `L’objet "${objectKey.node.key}" a été supprimé du bucket ${bucketName}.`,
+        life: 3000,
+      });
+
+      // Rafraîchit automatiquement la liste des objets (ListObjects doit avoir une méthode refresh)
+      if (childRef.current?.refresh) {
+        childRef.current.refresh();
+      } else {
+        // Fallback si jamais la méthode n’existe pas encore
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression :", error);
+
+      toast.current.show({
+        severity: "error",
+        summary: "Erreur de suppression",
+        detail: error.message || "Impossible de supprimer l’objet.",
+        life: 5000,
+      });
+    }
+  };
   return (
     <Fragment>
       <div className="flex flex-col gap-6 animate-fadeIn">
@@ -75,7 +109,7 @@ const BrowseBucket = () => {
               bucketName={bucketName}
               path={prefixPath}
               ref={childRef}
-              onDelete={onDelete}
+              onDelete={handleDelete}
             />
           </div>
         </div>
