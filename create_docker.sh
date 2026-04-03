@@ -292,7 +292,7 @@ cat << EOF >> docker-compose_datalake.yml
     image: web_gui
     container_name: web_gui
     volumes:
-      - $WEBGUI_PATH/web_gui:/opt/app/web_gui/
+      - $WEBGUI_PATH:/opt/app/web_gui/
     networks:
         swift-cluster:
           ipv4_address: 10.5.255.1
