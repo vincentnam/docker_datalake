@@ -25,7 +25,10 @@ c.JupyterHub.cookie_secret_file = "/data/jupyterhub_cookie_secret"
 c.JupyterHub.db_url = "sqlite:////data/jupyterhub.sqlite"
 
 # --- 4. Authentification ---
-c.JupyterHub.authenticator_class = "nativeauthenticator.NativeAuthenticator"
+c.JupyterHub.authenticator_class = "native"
+import os, nativeauthenticator
+c.JupyterHub.template_paths = [f"{os.path.dirname(nativeauthenticator.__file__)}/templates/"]
+c.Authenticator.admin_users = {'admin'}
 # c.JupyterHub.authenticator_class = 'keystoneauthenticator.KeystoneAuthenticator'
 # c.KeystoneAuthenticator.auth_url = 'http://keystone:5000/v3'
 #TODO: Add Jupyterhub user
