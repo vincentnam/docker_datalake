@@ -136,31 +136,40 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
     setProgress("redirecting");
     const notebookUrl = getNotebookUrl(username, notebookName);
     // Redirection dans l'historique (relatif)
-    navigate(notebookUrl); 
+    navigate(notebookUrl);
     // Forcer la navigation pour ouvrir dans le même onglet (relatif → navigateur ajoute le domaine)
-    window.location.href = notebookUrl; 
+    window.location.href = notebookUrl;
   } catch (err) {
     setProgress("error");
     setErrorMessage(err.message);
     showError("Erreur", err.message);
   }
 };
- 
+  const avenirJup = async () => {
+    // #TODO: To enable openInJupyter button, need to implement keystone authentication in JupyterHub
+    setProgressVisible(true)
+    setProgress("error");
+    setErrorMessage("Cette fonctionnalité a été désactivée liée à des modifications effectuées sur des solutions externes. Cette fonctionnalité reviendra très vite. Pour palier à ce désagréement, vous trouverez une solution sur la documentation sur ce lien : http://github.com/vincentnam/docker_datalake");
+    // showError("Erreur", err.message);
+  }
   return (
     <>
-<Sidebar
-  visible={visible}
-  onHide={onHide}
-  position="right"
-  className="ui-sidebar-lg sidebar-preview"
-  style={{ width: `${sidebarWidth}px`, position: "relative" }}
-  baseZIndex={1000}
->
-  <div className="resize-handle" onMouseDown={startResizing}></div>
+      <Sidebar
+        visible={visible}
+        onHide={onHide}
+        position="right"
+        className="ui-sidebar-lg sidebar-preview"
+        style={{ width: `${sidebarWidth}px`, position: "relative" }}
+        baseZIndex={1000}
+      >
+        <div className="resize-handle" onMouseDown={startResizing}></div>
         <div className="flex flex-col h-full">
           <div className="resize-handle" onMouseDown={startResizing}></div>
           {selectedNode && (
-            <Panel header={selectedNode.data.name} className="flex-grow overflow-y-auto">
+            <Panel
+              header={selectedNode.data.name}
+              className="flex-grow overflow-y-auto"
+            >
               <p>Taille : {selectedNode.data.size || "-"}</p>
               <p>Type : {selectedNode.data["contentType"] || "-"}</p>
               <p>
@@ -176,14 +185,31 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
                   : "-"}
               </p>
               <PrimaryButton
-                onClick={() => downloadFile(bucketName, selectedNode.key, selectedNode.data.name)}
+                onClick={() =>
+                  downloadFile(
+                    bucketName,
+                    selectedNode.key,
+                    selectedNode.data.name
+                  )
+                }
                 className="mt-4"
               >
                 Télécharger
               </PrimaryButton>
-              <PrimaryButton onClick={openInJupyter} className="mt-4 ml-2">
-                Ouvrir dans Jupyter Notebook
-              </PrimaryButton>
+
+              <button
+                className={`bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors duration-300 neon-button `}
+                onClick={avenirJup}
+              >
+                Ouvrir dans Jupyter Notebook (A venir)
+              </button>
+              {/*<PrimaryButton*/}
+              {/*  disabled={true}*/}
+              {/*  onClick={openInJupyter}*/}
+              {/*  className="mt-4 ml-2 bg-gray-500"*/}
+              {/*>*/}
+              {/*  Ouvrir dans Jupyter Notebook*/}
+              {/*</PrimaryButton>*/}
               {isPreviewLoading ? (
                 <p>Chargement de la prévisualisation...</p>
               ) : previewError ? (

@@ -13,7 +13,7 @@ c.DockerSpawner.network_name = os.environ.get("DOCKER_NETWORK_NAME", "jupyter-ne
 c.DockerSpawner.use_internal_ip = True
 
 
-c.JupyterHub.hub_connect_ip = '10.5.100.1' 
+c.JupyterHub.hub_connect_ip = '10.5.100.1'
 
 c.DockerSpawner.notebook_dir = "/home/jovyan/work"
 c.DockerSpawner.volumes = {"jupyterhub-user-{username}": "/home/jovyan/work"}
@@ -26,5 +26,12 @@ c.JupyterHub.db_url = "sqlite:////data/jupyterhub.sqlite"
 
 # --- 4. Authentification ---
 c.JupyterHub.authenticator_class = "nativeauthenticator.NativeAuthenticator"
+# c.JupyterHub.authenticator_class = 'keystoneauthenticator.KeystoneAuthenticator'
+# c.KeystoneAuthenticator.auth_url = 'http://keystone:5000/v3'
+#TODO: Add Jupyterhub user
+# c.KeystoneAuthenticator.valid_role = 'user'
+#TODO: Fix keystone policy on jupyterhub
+# jupyterhub          | [W 2026-04-03 04:54:49.817 JupyterHub keystoneauthenticator:76] username:test Failed to authenticate: ForbiddenException: 403: Client Error for url: http://keystone:5000/v3/roles, You are not authorized to perform the requested action: identity:list_roles.
+
 c.NativeAuthenticator.open_signup = True
 c.Authenticator.allow_all = True
