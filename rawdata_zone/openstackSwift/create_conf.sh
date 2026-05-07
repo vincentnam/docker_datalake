@@ -276,60 +276,65 @@ done
 
 
 for i in $(seq $NB_STORAGE_NODE); do
-
-  cat << EOF > scripts/storage/storage-$i.sh
+cat << EOF > scripts/storage/storage-$i.sh
 #!/bin/bash
 
+echo "=== Initialisation stockage Swift - Nœud $i ==="
 
-get_loop_for_device_number() {
-  local number="$1"
-  local output
-  output=$(losetup -l 2>/dev/null | tail -n +2 | awk '{for(i=1; i<=NF; i++) if ($i ~ /swift-storage-d-'"$number"'$/) {print $1; exit}}')
-  echo "${output:-null}"
-}
-
-
-ls /internal_dev
-mkdir -p /srv/node/swift-storage-d-$i /internal_dev
-
-truncate --size $NODE_STORAGE_SIZE /internal_dev/swift-storage-d-$i
-mkfs.xfs -f -L size=512 /internal_dev/swift-storage-d-$i
-losetup -f /internal_dev/swift-storage-d-$i -v
-losetup
-
-mount -t xfs -o noatime  /dev/loop0 /srv/node/swift-storage-d-1
-
-# TODO: Mount just created loop dev and not /dev/loop0
-
-
-#truncate -s $NODE_STORAGE_SIZE /internal_dev/$DEVICE_NAME;
-#echo "    created storage device /internal_dev/$DEVICE_NAME of $NODE_STORAGE_SIZE";
-#export PATH=$PATH:/opt/python/usr/local/bin/
-
-#echo "[[ creating directories ]]"
-
-
-mkdir -p /srv/node/swift-storage-d-$i
-
+# Création des répertoires
+mkdir -p /internal_dev "/srv/node/swift-storage-d-$i"
 chown -R swift:swift /srv/node
 
+# ===================== GESTION DU FICHIER IMAGE =====================
+if [ ! -f "/internal_dev/swift-storage-d-$i" ]; then
+    echo "Création du fichier image"
+    truncate --size $NODE_STORAGE_SIZE /internal_dev/swift-storage-d-$i
 
+    echo "Formatage XFS"
+    mkfs.xfs -f -L "swift-$i" /internal_dev/swift-storage-d-$i
+
+    echo "Attachement loop device"
+    LOOP_DEV=\$(losetup -f --show /internal_dev/swift-storage-d-$i)
+else
+    echo "Fichier image existant : /internal_dev/swift-storage-d-$i"
+
+    LOOP_DEV=\$(losetup -j /internal_dev/swift-storage-d-$i 2>/dev/null | awk -F: '{print \$1}' | head -n1)
+
+    if [ -z "\$LOOP_DEV" ]; then
+        echo "Attachement du loop device"
+        LOOP_DEV=\$(losetup -f --show /internal_dev/swift-storage-d-$i)
+    else
+        echo "Loop device existant : \$LOOP_DEV"
+    fi
+fi
+
+# ===================== MONTAGE =====================
+if mountpoint -q "/srv/node/swift-storage-d-$i"; then
+    echo "/srv/node/swift-storage-d-$i déjà monté"
+else
+    echo "Montage de \$LOOP_DEV sur /srv/node/swift-storage-d-$i"
+    if ! mount -t xfs -o noatime,nodiratime,logbufs=8 \$LOOP_DEV /srv/node/swift-storage-d-$i; then
+        echo "Tentative de montage avec recovery"
+        mount -t xfs -o noatime,nodiratime,recovery \$LOOP_DEV /srv/node/swift-storage-d-$i
+    fi
+fi
+
+chown -R swift:swift "/srv/node/swift-storage-d-$i"
+
+# ===================== SERVICES =====================
 sed -i -e 's/RSYNC_ENABLE=false/RSYNC_ENABLE=true/g' /etc/default/rsync
-rm /run/rsyslogd.pid
-## Start rsync
+rm -f /run/rsyslogd.pid
+
 /etc/init.d/rsync start
-
-## Start memcached
 /etc/init.d/memcached start
-
-## Restart rsyslog
 rsyslogd
 
+echo "Démarrage des serveurs Swift pour le nœud $i"
 swift-account-server /etc/swift/account/account-$i.conf verbose &
 swift-object-server /etc/swift/object/object-$i.conf verbose &
-swift-container-server /etc/swift/container/container-$i.conf &
-wait
+swift-container-server /etc/swift/container/container-$i.conf verbose &
 
+wait
 EOF
 
   cat << EOF > conf/account/account-$i.conf
