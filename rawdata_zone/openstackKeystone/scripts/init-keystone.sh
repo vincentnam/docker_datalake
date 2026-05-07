@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-
+: "${OS_PASSWORD:=admin}" # change in production
 # Configuration Apache (toujours, idempotent)
 a2enmod wsgi
 a2dissite 000-default || true
@@ -18,7 +18,7 @@ if [ ! -f /var/lib/keystone/.initialized ]; then
     chmod 700 /etc/keystone/fernet-keys /etc/keystone/credential-keys
 
     keystone-manage bootstrap \
-        --bootstrap-password admin \
+        --bootstrap-password $OS_PASSWORD \
         --bootstrap-username admin \
         --bootstrap-project-name admin \
         --bootstrap-role-name admin \
