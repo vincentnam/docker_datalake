@@ -1,10 +1,12 @@
 #!/bin/bash
 set -e
-
+export $(grep -v '^#' ../../conf.env | sed 's/\r$//' | xargs)
 # ===================== CONFIGURATION =====================
-OPENSTACK_RELEASE="stable/2026.1"
-BASE_DISTRO="ubuntu:noble"
-BASE_TAG="ubuntu_noble"
+OPENSTACK_RELEASE=$OPENSTACK_RELEASE_VAR
+BASE_DISTRO=$BASE_DISTRO_VAR
+BASE_TAG=$BASE_TAG_VAR
+
+echo $BASE_TAG
 
 # Ceph : Option recommendedf for Noble
 CEPH_REPO=""

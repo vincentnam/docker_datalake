@@ -2,6 +2,11 @@
 ###################################
 # Be careful to spaces in docker compose sections when modified
 ###################################
+
+export $(grep -v '^#' ./conf.env | sed 's/\r$//' | xargs)
+
+
+
 OPENSTACKSWIFT_PATH="./rawdata_zone/openstackSwift"
 OPENSTACKKEYSTONE_PATH="./rawdata_zone/openstackKeystone"
 
@@ -44,7 +49,7 @@ cat <<EOF >> docker-compose_datalake.yml
       - swift-cluster
 
 EOF
-export $(grep -v '^#' ./conf.env | sed 's/\r$//' | xargs)
+
 
 
 
@@ -146,7 +151,7 @@ cat << EOF >> docker-compose_datalake.yml
         ipv4_address: 10.5.3.4
 
   keystone:
-    image: keystone:master-ubuntu_jammy
+    image: keystone:${OPENSTACK_RELEASE_VAR//stable\//}-${BASE_TAG_VAR}
     container_name: keystone
     restart: always
     profiles:
@@ -206,7 +211,7 @@ cat << EOF >> docker-compose_datalake.yml
 
 
   horizon:
-    image: horizon:master-ubuntu_jammy
+    image: horizon:${OPENSTACK_RELEASE_VAR//stable\//}-${BASE_TAG_VAR}
     container_name: horizon
     restart: always
     profiles:
