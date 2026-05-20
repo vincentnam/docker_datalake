@@ -190,11 +190,11 @@ cat << EOF >> docker-compose_datalake.yml
     environment:
       - OS_AUTH_URL=http://keystone:5000/v3
       - OS_USERNAME=admin
-      - OS_PASSWORD=admin
+      - OS_PASSWORD=$OS_PASSWORD
       - OS_PROJECT_NAME=admin
       - OS_USER_DOMAIN_NAME=Default
       - OS_PROJECT_DOMAIN_NAME=Default
-      - SWIFT_PASSWORD=testing           # change si besoin
+      - SWIFT_PASSWORD=$SWIFT_PASSWORD           # change si besoin
     profiles:
       - datalake
       - frontend

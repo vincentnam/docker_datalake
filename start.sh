@@ -1,5 +1,35 @@
 #!/bin/bash
 set -euo pipefail
+export $(grep -v '^#' ./conf.env | sed 's/\r$//' | xargs)
+
+if [ -z "$OS_PASSWORD" ]; then
+  echo "Set the Admin account password in conf.env file."
+  exit 1;
+else
+  PASSWORD_LENGTH=${#OS_PASSWORD}
+  if [ "$PASSWORD_LENGTH" -lt 12 ]; then
+    echo "WARNING : Admin password is short (<12 char)."
+  fi
+fi
+
+
+
+if [ -z "$SWIFT_PASSWORD" ]; then
+  echo "Set the Swift account password in conf.env file."
+  exit 1;
+else
+  PASSWORD_LENGTH=${#SWIFT_PASSWORD}
+  if [ "$PASSWORD_LENGTH" -lt 12 ]; then
+    echo "WARNING : Swift password is short (<12 char)."
+  fi
+fi
+
+
+
+
+
+
+
 
 # ==================== CONFIGURATION PATHS ====================
 OPENSTACKSWIFT_PATH="./rawdata_zone/openstackSwift"
@@ -104,6 +134,9 @@ fi
 
 # ==================== BUILD ====================
 if [ "$BUILD" = true ]; then
+
+
+
   echo "Running build steps..."
 
   # Update paths
@@ -179,47 +212,3 @@ if [ "$RUN" = true ]; then
 fi
 
 echo "Script completed successfully."
-
-##!/bin/bash
-#
-#OPENSTACKSWIFT_PATH="./rawdata_zone/openstackSwift"
-#OPENSTACKKEYSTONE_PATH="./rawdata_zone/openstackKeystone"
-#
-#JUPYTER_PATH="./process_zone/jupyter"
-#WEBGUI_PATH="./access_zone/web_gui"
-#REST_API_PATH="./access_zone/flask"
-#NGINX_PATH="./access_zone/nginx"
-#
-#
-#
-#sed -i 's#OPENSTACKSWIFT_PATH=".*"#OPENSTACKSWIFT_PATH="'"$OPENSTACKSWIFT_PATH"'"#g' create_docker.sh create_conf.sh
-#sed -i 's#JUPYTER_PATH=".*"#JUPYTER_PATH="'"$JUPYTER_PATH"'"#g' create_docker.sh create_conf.sh
-#sed -i 's#WEBGUI_PATH=".*"#WEBGUI_PATH="'"$WEBGUI_PATH"'"#g' create_docker.sh create_conf.sh
-#sed -i 's#REST_API_PATH=".*"#REST_API_PATH="'"$REST_API_PATH"'"#g' create_docker.sh create_conf.sh
-#sed -i 's#NGINX_PATH=".*"#NGINX_PATH="'"$NGINX_PATH"'"#g' create_docker.sh create_conf.sh
-#
-#
-#
-#
-#
-##set -x
-#
-#chmod +x create_docker.sh
-#chmod +x $OPENSTACKSWIFT_PATH/init.sh
-#chmod +x $OPENSTACKSWIFT_PATH/create_conf.sh
-#chmod +x $OPENSTACKKEYSTONE_PATH/build.sh
-#(cd $OPENSTACKKEYSTONE_PATH/ && ./build.sh)
-#
-#
-#chmod +x create_conf.sh
-#./create_conf.sh
-#./create_docker.sh
-#
-#
-#
-#
-#(cd $OPENSTACKSWIFT_PATH/; ./init.sh) &
-##(cd ./frontend/; sh ./start.sh -br ) &
-#
-#docker build -t cors_base-notebook:latest -f $JUPYTER_PATH/Dockerfile.jupyterserver $JUPYTER_PATH
-#docker compose -f docker-compose_datalake.yml --profile datalake up --build
