@@ -15,7 +15,8 @@ set -euo pipefail
 : "${SWIFT_PROJECT:=service}"
 : "${SWIFT_ROLE:=admin}"
 : "${REGION:=RegionOne}"
-
+echo "SWIFT_PASSWORD : $SWIFT_PASSWORD"
+echo "OS_PASSWORD : $OS_PASSWORD"
 # RBAC model (default roles reused as much as possible)
 : "${GLOBAL_ADMIN_ROLE:=admin}"   # Global admin
 : "${WRITER_ROLE:=member}"        # Writer
