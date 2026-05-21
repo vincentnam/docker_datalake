@@ -168,6 +168,8 @@ cat << EOF >> docker-compose_datalake.yml
       - $OPENSTACKKEYSTONE_PATH/scripts/init-keystone.sh:/entrypoint.sh:ro
       - keystone_data:/var/lib/keystone
     command: /entrypoint.sh
+    environment:
+      - OS_PASSWORD=$OS_PASSWORD
     depends_on:
         mariadb:
           condition: service_healthy
@@ -180,9 +182,10 @@ cat << EOF >> docker-compose_datalake.yml
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:5000/healthcheck"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 20
+      start_period: 60s
       start_interval: 2s
+
   keystone_bootstrap:
     build:
       context: $OPENSTACKKEYSTONE_PATH

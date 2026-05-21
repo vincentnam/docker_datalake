@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 : "${OS_PASSWORD:=admin}" # change in production
+echo OS_PASSWORD
+
 # Configuration Apache (toujours, idempotent)
 a2enmod wsgi
 a2dissite 000-default || true
