@@ -97,7 +97,7 @@ auth_url = http://keystone:5000/v3
 auth_type = password
 project_name = service
 username = swift
-password = testing
+password = $SWIFT_PASSWORD
 user_domain_name = Default
 project_domain_name = Default
 memcached_servers = memcached:11211
@@ -113,7 +113,6 @@ operator_roles = admin, bucket_owner, bucket_admin, member
 project_reader_roles = reader
 reseller_admin_role = admin
 reseller_prefix = AUTH_
-is_admin = false
 
 [filter:staticweb]
 use = egg:swift#staticweb
