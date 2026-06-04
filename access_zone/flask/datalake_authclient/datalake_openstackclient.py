@@ -372,12 +372,16 @@ class OpenstackSDKAuthClient(AuthenticationClient):
                 current_role_ids.add(role_id)
 
         target_role_ids = {roles_map[name] for name in role_names}
-
+        
         for role_id in current_role_ids - target_role_ids:
-            conn.identity.revoke_role(role=role_id, user=user.id, project=project.id)
+            if role_id != roles_map["bucket_owner"] and role_id != roles_map["admin"] :
+                conn.identity.unassign_project_role_to_user(role=role_id, user=user.id, project=project.id)
 
         for role_id in target_role_ids - current_role_ids:
-            conn.identity.grant_role(role=role_id, user=user.id, project=project.id)
+            if role_id != roles_map["bucket_owner"] and role_id != roles_map["admin"]:
+                conn.identity.assign_project_role_to_user(role=role_id, user=user.id, project=project.id) 
+
+
 
         return {"message": f"Roles updated for user {user.id} in project {project.name}"}
 
