@@ -32,6 +32,9 @@ const ProjectAdministration = ({ projectName, showSuccess, showError }) => {
 
   const roleOptions = useMemo(() => {
     const names = normalizeRoleNames(roles);
+    const allowedRoles = names.filter(
+      (role) => role.toLowerCase() !== "admin"
+    );
     return names.length ? names : ["member"];
   }, [roles]);
 
