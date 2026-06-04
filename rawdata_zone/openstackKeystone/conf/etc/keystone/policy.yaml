@@ -1,75 +1,59 @@
-# =============================================
-# Keystone RBAC policy for Swift bucket governance
-# Roles model:
-# - admin         : global administrator (reserved)
-# - bucket_owner  : can appoint bucket_admin and has bucket_admin rights
-# - bucket_admin  : can manage grants except admin/bucket_owner grants
-# - member        : writer (default Keystone role)
-# - reader        : reader (default Keystone role)
-# =============================================
+# ==============================================================================
+# POLICY.YAML
+# ==============================================================================
 
-# --- BASE RULES --------------------------------------------------------------
+# === REGLES DE BASE & ALIAS ===
 "global_admin_required": "role:admin or is_admin:1"
 "owner": "user_id:%(user_id)s"
-"admin_or_owner": "rule:global_admin_required or rule:owner"
 
-# Project-scoped role checks
 "same_target_project": "token.project.id:%(target.project.id)s"
+
 "bucket_owner_on_target_project": "role:bucket_owner and rule:same_target_project"
 "bucket_admin_on_target_project": "role:bucket_admin and rule:same_target_project"
-"writer_on_target_project": "role:member and rule:same_target_project"
-"reader_on_target_project": "role:reader and rule:same_target_project"
 
-"project_read_access": "rule:reader_on_target_project or rule:writer_on_target_project or rule:bucket_admin_on_target_project or rule:bucket_owner_on_target_project"
-"project_write_access": "rule:writer_on_target_project or rule:bucket_admin_on_target_project or rule:bucket_owner_on_target_project"
-"project_role_manager": "rule:bucket_admin_on_target_project or rule:bucket_owner_on_target_project"
+"project_role_manager": "rule:bucket_owner_on_target_project or rule:bucket_admin_on_target_project"
 
-# Bucket owner can manage everyone except global-admin and owner grants.
-# Bucket admin cannot touch admin/bucket_owner grants.
-"bucket_owner_grant_manage_required": "rule:bucket_owner_on_target_project and not target.role.name:'admin' and not target.role.name:'bucket_owner'"
-"bucket_admin_grant_manage_required": "rule:bucket_admin_on_target_project and not target.role.name:'admin' and not target.role.name:'bucket_owner'"
-"project_grant_manage_required": "rule:bucket_owner_grant_manage_required or rule:bucket_admin_grant_manage_required"
+"target_role_is_admin": "target.role.name:admin"
+"target_role_is_bucket_owner": "target.role.name:bucket_owner"
 
-# --- USERS -------------------------------------------------------------------
-# User lifecycle remains global-admin only.
-"identity:create_user": "rule:global_admin_required"
+# === PROJECTS ===
+"identity:create_project": "rule:global_admin_required"
+"identity:list_projects": "rule:global_admin_required or role:bucket_owner or role:bucket_admin"
+"identity:list_user_projects": "rule:global_admin_required or role:bucket_owner or role:bucket_admin or rule:owner"
+"identity:list_projects_for_user": "rule:global_admin_required or role:bucket_owner or role:bucket_admin or rule:owner"
+"identity:get_project": "rule:global_admin_required or rule:project_role_manager"
+"identity:update_project": "rule:global_admin_required or rule:project_role_manager"
+"identity:delete_project": "rule:global_admin_required"
+
+# === USERS ===
 "identity:list_users": "rule:global_admin_required or role:bucket_owner or role:bucket_admin"
 "identity:get_user": "rule:global_admin_required or rule:owner or role:bucket_owner or role:bucket_admin"
 "identity:update_user": "rule:global_admin_required or rule:owner"
 "identity:delete_user": "rule:global_admin_required"
-"identity:change_password": "rule:admin_or_owner"
 
-# --- ROLE ASSIGNMENTS --------------------------------------------------------
-"identity:create_grant": "rule:global_admin_required or rule:project_grant_manage_required"
-"identity:delete_grant": "rule:global_admin_required or rule:project_grant_manage_required"
+# === ROLE ASSIGNMENTS  ===
+"identity:list_role_assignments": "rule:global_admin_required or rule:project_role_manager or role:bucket_owner or role:bucket_admin"
+"identity:create_grant": "rule:global_admin_required or (rule:project_role_manager and not rule:target_role_is_admin and not rule:target_role_is_bucket_owner)"
+"identity:delete_grant": "rule:global_admin_required or (rule:project_role_manager and not rule:target_role_is_admin and not rule:target_role_is_bucket_owner)"
 "identity:list_grants": "rule:global_admin_required or rule:project_role_manager"
 "identity:check_grant": "rule:global_admin_required or rule:project_role_manager"
-"identity:list_role_assignments": "rule:global_admin_required or role:bucket_owner or role:bucket_admin"
 
-# --- PROJECTS ----------------------------------------------------------------
-"identity:create_project": "rule:global_admin_required"
-"identity:list_projects": "rule:global_admin_required or role:bucket_owner or role:bucket_admin"
-"identity:get_project": "rule:global_admin_required or rule:project_read_access"
-"identity:update_project": "rule:global_admin_required or rule:project_role_manager"
-"identity:delete_project": "rule:global_admin_required"
-"identity:list_projects_for_user": "rule:global_admin_required or rule:owner"
-"identity:list_user_projects": "rule:global_admin_required or rule:owner"
-
-# --- ROLES (global definitions) ----------------------------------------------
+# === ROLES ===
 "identity:list_roles": "rule:global_admin_required or role:bucket_owner or role:bucket_admin"
 "identity:get_role": "rule:global_admin_required or role:bucket_owner or role:bucket_admin"
-"identity:create_role": "rule:global_admin_required"
-"identity:update_role": "rule:global_admin_required"
-"identity:delete_role": "rule:global_admin_required"
 
-# --- SWIFT / S3 (documentary mapping for external checks) --------------------
-"swift:container:read": "rule:project_read_access or rule:global_admin_required"
-"swift:container:write": "rule:project_write_access or rule:global_admin_required"
-"swift:container:delete": "rule:project_write_access or rule:global_admin_required"
+# === AUTRES (services Keystone) ===
+"identity:list_endpoints": "rule:global_admin_required"
+"identity:list_services": "rule:global_admin_required"
 
-"swift:object:read": "rule:project_read_access or rule:global_admin_required"
-"swift:object:write": "rule:project_write_access or rule:global_admin_required"
-"swift:object:delete": "rule:project_write_access or rule:global_admin_required"
+# === SECURITE TOKENS ===
+"identity:create_token": ""
+"identity:validate_token": ""
+"identity:check_token": ""
+"identity:revoke_token": ""
 
-# Fallback
+# === FALLBACK ===
 "default": "rule:global_admin_required"
+
+
+
