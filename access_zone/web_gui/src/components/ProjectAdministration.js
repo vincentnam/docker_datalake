@@ -280,7 +280,7 @@ const ProjectAdministration = ({ projectName, showSuccess, showError }) => {
             </div>
 
             <div className="space-y-2">
-              {roleOptions.map((roleName) => {
+              {roleOptions.filter((roleName) => !["admin", "service", "bucket_owner"].includes(roleName)).map((roleName) => {
                 const checked = editingRoles.includes(roleName);
                 return (
                   <label

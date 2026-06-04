@@ -435,6 +435,7 @@ def get_project_roles(project_name):
 @app.route('/projects/<project_name>/users/<user_id>/roles', methods=['PUT'])
 @authentication_client.login_required
 def update_user_roles(project_name, user_id):
+
     try:
         if not hasattr(authentication_client, "set_user_roles_in_project"):
             return jsonify({"error": "Operation not supported by authentication backend"}), 501

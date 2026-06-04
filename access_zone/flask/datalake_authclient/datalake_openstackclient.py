@@ -101,7 +101,7 @@ class OpenstackSDKAuthClient(AuthenticationClient):
                     auth_kwargs = {
                         "auth_url": self.KEYSTONE_URL,
                         "token": token,
-                        "auth_type": "v3token"  # CORRECTION : Force le plugin Token
+                        "auth_type": "v3token"
                     }
                     if project_name:
                         auth_kwargs.update({
@@ -147,7 +147,7 @@ class OpenstackSDKAuthClient(AuthenticationClient):
                         "username": username,
                         "password": password,
                         "user_domain_name": 'Default',
-                        "auth_type": "v3password"  # CORRECTION : Force le plugin Password
+                        "auth_type": "v3password"
                     }
 
                     if project_name:
@@ -257,6 +257,7 @@ class OpenstackSDKAuthClient(AuthenticationClient):
 
     def list_project_members(self, project_name: str):
         conn = self._get_conn(project_name=project_name)
+
         project = conn.identity.find_project(project_name, ignore_missing=True)
         if not project:
             return "Noproject"
