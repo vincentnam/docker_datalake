@@ -13,6 +13,15 @@ from dotenv import load_dotenv
 from datalake_authclient import get_auth
 from datalake_objectstoreclient import get_storage
 
+
+
+
+
+
+import traceback
+
+
+
 #TODO : Handle error when error are raised in clients
 load_dotenv()
 
@@ -448,10 +457,11 @@ def update_user_roles(project_name, user_id):
         unsupported_roles = sorted(set(role_name for role_name in roles if role_name not in PROJECT_MANAGEABLE_ROLES))
         if unsupported_roles:
             return jsonify({"error": "Unsupported roles", "unsupported_roles": unsupported_roles}), 400
-
+        current_app.logger.warning("ROLES SALUT : ")
+        current_app.logger.warning(roles)
         client = authentication_client
         resp = client.set_user_roles_in_project(project_name, user_id, roles)
-
+        
         if resp == "Noproject":
             return jsonify({"error": f"Project {project_name} doesn't exist."}), 404
         if resp == "Nouser":
@@ -461,6 +471,8 @@ def update_user_roles(project_name, user_id):
 
         return jsonify(resp), 200
     except Exception as e:
+        current_app.logger.warning(traceback.format_exc())
+        current_app.logger.warning(e)
         return jsonify({"error": str(e)}), 500
 
 

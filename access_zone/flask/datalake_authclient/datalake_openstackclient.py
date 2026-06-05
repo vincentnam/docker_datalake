@@ -340,13 +340,14 @@ class OpenstackSDKAuthClient(AuthenticationClient):
                 return {"status": "ok", "message": f" {user.name} user is already {role.name} in project {project.name}"}
         conn.identity.assign_project_role_to_user(project, user, memberrole)
         return {"status": "ok", "message": f"Role {memberrole.name} granted to {user.name} in {project.name}"}
+    
 
     def set_user_roles_in_project(self, project_name: str, user_id: str, role_names):
         conn = self._get_conn(project_name=project_name)
         project = conn.identity.find_project(project_name, ignore_missing=True)
         if not project:
             return "Noproject"
-
+        self.current_app.logger.warning("SET_USER_ROLE_IN_PROJECT()")
         user = None
         try:
             user = conn.identity.get_user(user_id)
@@ -360,8 +361,8 @@ class OpenstackSDKAuthClient(AuthenticationClient):
         if unknown_roles:
             return {"status": "Norole", "unknown_roles": unknown_roles}
 
-        assignments = list(conn.identity.role_assignments(user=user.id, scope_project_id=project.id, effective=True))
         current_role_ids = set()
+        assignments = list(conn.identity.role_assignments(user=user.id, scope_project_id=project.id))
         for assignment in assignments:
             role_id = getattr(assignment, "role_id", None)
             if not role_id and hasattr(assignment, "to_dict"):
@@ -370,20 +371,42 @@ class OpenstackSDKAuthClient(AuthenticationClient):
                     role_id = payload["role"].get("id")
             if role_id:
                 current_role_ids.add(role_id)
-
-        target_role_ids = {roles_map[name] for name in role_names}
+        self.current_app.logger.warning("ASSIGNEMNT AVANT")
+        all_roles = set(["reader","member","bucket_admin"])
+        self.current_app.logger.warning(assignments)
+        self.current_app.logger.warning(project)
+        role_target_set = set(role_names)
         
-        for role_id in current_role_ids - target_role_ids:
-            if role_id != roles_map["bucket_owner"] and role_id != roles_map["admin"] :
-                conn.identity.unassign_project_role_to_user(role=role_id, user=user.id, project=project.id)
+        role_to_remove = [roles_map[role_name] for role_name in list(all_roles.difference(role_target_set))]
 
-        for role_id in target_role_ids - current_role_ids:
-            if role_id != roles_map["bucket_owner"] and role_id != roles_map["admin"]:
-                conn.identity.assign_project_role_to_user(role=role_id, user=user.id, project=project.id) 
+        role_to_add = [roles_map[role_name] for role_name in list(all_roles.intersection(role_target_set))]
+        
+        self.current_app.logger.warning(role_to_add)        
+        self.current_app.logger.warning(role_to_remove)
 
 
+        self.current_app.logger.warning(user)
+        for role_id in role_to_remove:
+            conn.identity.unassign_project_role_from_user(role=role_id, user=user.id, project=project.id)
+        self.current_app.logger.warning("COUCOU 1")
+        
+        assignments = list(conn.identity.role_assignments(user=user.id, scope_project_id=project.id))
+        self.current_app.logger.warning(assignments)
+        for role_id in role_to_add :
+            conn.identity.assign_project_role_to_user(role=role_id, user=user.id, project=project.id) 
+        self.current_app.logger.warning("test2")
+        assignments = list(conn.identity.role_assignments(user=user.id, scope_project_id=project.id))
+
+        self.current_app.logger.warning(assignments)
 
         return {"message": f"Roles updated for user {user.id} in project {project.name}"}
+
+
+
+
+
+
+
 
     def remove_user_from_project_by_name(self, project_name: str, user_id: str):
         conn = self._get_conn(project_name=project_name)
