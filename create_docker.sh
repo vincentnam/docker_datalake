@@ -128,10 +128,10 @@ cat << EOF >> docker-compose_datalake.yml
     container_name: mariadb
     hostname: mariadb
     environment:
-      - MYSQL_ROOT_PASSWORD=secret
-      - MYSQL_DATABASE=keystone
-      - MYSQL_USER=keystone
-      - MYSQL_PASSWORD=keystone_db_pass
+      - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE=$MYSQL_DATABASE
+      - MYSQL_USER=$MYSQL_USER
+      - MYSQL_PASSWORD=$MYSQL_PASSWORD
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
@@ -192,7 +192,7 @@ cat << EOF >> docker-compose_datalake.yml
       dockerfile: Dockerfile.openstackClientBootstrap
     environment:
       - OS_AUTH_URL=http://keystone:5000/v3
-      - OS_USERNAME=admin
+      - OS_USERNAME=$OS_USERNAME
       - OS_PASSWORD=$OS_PASSWORD
       - OS_PROJECT_NAME=admin
       - OS_USER_DOMAIN_NAME=Default
@@ -245,7 +245,7 @@ cat << EOF >> docker-compose_datalake.yml
       context: $JUPYTER_PATH
       dockerfile: Dockerfile.jupyterhub
       args:
-        JUPYTERHUB_VERSION: 5.3.0
+        JUPYTERHUB_VERSION: $JUPYTERHUB_VERSION
     profiles:
       - datalake
       - frontend
@@ -270,11 +270,11 @@ cat << EOF >> docker-compose_datalake.yml
 #      - 8000:8000
     environment:
       # This username will be a JupyterHub admin
-      JUPYTERHUB_ADMIN: admin
+      JUPYTERHUB_ADMIN: $JUPYTERHUB_ADMIN
       # All containers will join this network
       DOCKER_NETWORK_NAME: swift-cluster
       # JupyterHub will spawn this Notebook image for users
-      DOCKER_NOTEBOOK_IMAGE: cors_base-notebook:latest
+      DOCKER_NOTEBOOK_IMAGE: $DOCKER_NOTEBOOK_IMAGE
       #DOCKER_NOTEBOOK_IMAGE: quay.io/jupyter/base-notebook:latest
       # Notebook directory inside user image
       DOCKER_NOTEBOOK_DIR: /home/jovyan/work

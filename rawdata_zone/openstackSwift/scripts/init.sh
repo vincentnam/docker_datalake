@@ -36,9 +36,9 @@ touch /etc/swift/remakerings
 chmod +x /etc/swift/remakerings
 
 echo "set -x" >> /etc/swift/remakerings
-echo "swift-ring-builder object.builder create 10 $NB_STORAGE_NODE 1" >> /etc/swift/remakerings
-echo "swift-ring-builder container.builder create 10 $NB_STORAGE_NODE 1" >> /etc/swift/remakerings
-echo "swift-ring-builder account.builder create 10 $NB_STORAGE_NODE 1" >> /etc/swift/remakerings
+echo "swift-ring-builder object.builder create $SWIFT_PART_POWER $NB_STORAGE_NODE $SWIFT_MIN_PART_HOURS" >> /etc/swift/remakerings
+echo "swift-ring-builder container.builder create $SWIFT_PART_POWER $NB_STORAGE_NODE $SWIFT_MIN_PART_HOURS" >> /etc/swift/remakerings
+echo "swift-ring-builder account.builder create $SWIFT_PART_POWER $NB_STORAGE_NODE $SWIFT_MIN_PART_HOURS" >> /etc/swift/remakerings
 
 
 cat /etc/swift/remakerings.account >> /etc/swift/remakerings;

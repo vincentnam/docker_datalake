@@ -1,11 +1,13 @@
 #!/bin/bash
 
+export $(grep -v '^#' ./config_cluster.env | sed 's/\r$//' | xargs)
+
 cat << EOF > conf/swift.conf
 
 [swift-hash]
 # random unique strings that can never change (DO NOT LOSE)
-swift_hash_path_prefix = bd08f643f5663c4ec607
-swift_hash_path_suffix = f423bf7ab663888fe832
+swift_hash_path_prefix = $SWIFT_HASH_PREFIX
+swift_hash_path_suffix = $SWIFT_HASH_SUFFIX
 
 [storage-policy:0]
 name = 1replica

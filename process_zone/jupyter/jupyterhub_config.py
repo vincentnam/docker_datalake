@@ -28,7 +28,7 @@ c.JupyterHub.db_url = "sqlite:////data/jupyterhub.sqlite"
 c.JupyterHub.authenticator_class = "native"
 import os, nativeauthenticator
 c.JupyterHub.template_paths = [f"{os.path.dirname(nativeauthenticator.__file__)}/templates/"]
-c.Authenticator.admin_users = {'admin'}
+c.Authenticator.admin_users = {os.environ.get("JUPYTERHUB_ADMIN", "admin")}
 # c.JupyterHub.authenticator_class = 'keystoneauthenticator.KeystoneAuthenticator'
 # c.KeystoneAuthenticator.auth_url = 'http://keystone:5000/v3'
 #TODO: Add Jupyterhub user
