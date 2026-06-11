@@ -145,34 +145,27 @@ if [ "$FEDERATION_ENABLED_LC" = "true" ]; then
         exit 1
     fi
 
-    # Keystone group + project the federated users are mapped onto
-    if ! openstack group show --domain "$FEDERATED_DOMAIN" "$FEDERATED_GROUP" >/dev/null 2>&1; then
-        echo "Creating federated group: $FEDERATED_GROUP"
-        openstack group create --domain "$FEDERATED_DOMAIN" \
-            --description "Datalake federated users (Keycloak)" "$FEDERATED_GROUP" >/dev/null
-    fi
-    if ! openstack project show --domain "$FEDERATED_DOMAIN" "$FEDERATED_PROJECT" >/dev/null 2>&1; then
-        echo "Creating federated project: $FEDERATED_PROJECT"
-        openstack project create --domain "$FEDERATED_DOMAIN" \
-            --description "Datalake federated project" "$FEDERATED_PROJECT" >/dev/null
-    fi
+    # Per-user model : the mapping below auto-provisions a dedicated project per
+    # federated user and grants them FEDERATED_ROLE on it. Just make sure every
+    # role referenced by the datalake exists (idempotent).
     ensure_role "$FEDERATED_ROLE"
-
-    echo "Granting '$FEDERATED_ROLE' on project '$FEDERATED_PROJECT' to group '$FEDERATED_GROUP'"
-    openstack role add \
-        --group "$FEDERATED_GROUP" --group-domain "$FEDERATED_DOMAIN" \
-        --project "$FEDERATED_PROJECT" --project-domain "$FEDERATED_DOMAIN" \
-        "$FEDERATED_ROLE" || true
+    ensure_role "$READER_ROLE"
+    ensure_role "$WRITER_ROLE"
+    ensure_role "$BUCKET_ADMIN_ROLE"
+    ensure_role "$BUCKET_OWNER_ROLE"
 
     # Identity provider (remote-id MUST equal the Keycloak issuer)
     if ! openstack identity provider show "$KEYCLOAK_IDP_ID" >/dev/null 2>&1; then
         echo "Creating identity provider: $KEYCLOAK_IDP_ID"
-        openstack identity provider create --remote-id "$KEYCLOAK_ISSUER" "$KEYCLOAK_IDP_ID" >/dev/null
+        openstack identity provider create --domain Default --remote-id "$KEYCLOAK_ISSUER" "$KEYCLOAK_IDP_ID" >/dev/null
     else
-        openstack identity provider set --remote-id "$KEYCLOAK_ISSUER" "$KEYCLOAK_IDP_ID" >/dev/null
+        openstack identity provider set --domain Default --remote-id "$KEYCLOAK_ISSUER" "$KEYCLOAK_IDP_ID" >/dev/null
     fi
 
-    # Mapping : Keycloak identity -> ephemeral Keystone user in FEDERATED_GROUP
+    # Mapping : Keycloak identity -> ephemeral Keystone user, with a dedicated
+    # auto-provisioned project named after the username ({0}) on which the user
+    # gets FEDERATED_ROLE (bucket_owner). Keystone creates the project on first
+    # login (federation auto-provisioning).
     MAPPING_ID="${KEYCLOAK_IDP_ID}_mapping"
     MAPPING_FILE="$(mktemp)"
     cat > "$MAPPING_FILE" <<MAP
@@ -184,13 +177,15 @@ if [ "$FEDERATION_ENABLED_LC" = "true" ]; then
           "name": "{0}",
           "email": "{1}",
           "domain": { "name": "$FEDERATED_DOMAIN" }
-        }
-      },
-      {
-        "group": {
-          "name": "$FEDERATED_GROUP",
-          "domain": { "name": "$FEDERATED_DOMAIN" }
-        }
+        },
+        "projects": [
+          {
+            "name": "{0}",
+            "roles": [
+              { "name": "$FEDERATED_ROLE" }
+            ]
+          }
+        ]
       }
     ],
     "remote": [

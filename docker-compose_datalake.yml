@@ -97,9 +97,12 @@ services:
         ipv4_address: 10.5.3.4
 
   keystone:
-    image: keystone:master-ubuntu_jammy
+    image: keystone:2026.1-ubuntu_noble
     container_name: keystone
     restart: always
+    profiles:
+      - datalake
+      - authentication
 #    ports:
 #      - "5000:5000"
 #      - "35357:35357"   # Admin endpoint
@@ -111,6 +114,20 @@ services:
       - ./rawdata_zone/openstackKeystone/scripts/init-keystone.sh:/entrypoint.sh:ro
       - keystone_data:/var/lib/keystone
     command: /entrypoint.sh
+    environment:
+      - OS_PASSWORD=pipi
+      # --- OIDC federation (consumed by init-keystone.sh / mod_auth_openidc) ---
+      - FEDERATION_ENABLED=true
+      - KEYCLOAK_ISSUER=http://localhost:8088/realms/datalake
+      # JWKS endpoint reached internally by Keystone to validate bearer access
+      # tokens (oauth20). Internal URL : works even though the issuer is public.
+      - KEYCLOAK_JWKS_URI=http://keycloak:8080/realms/datalake/protocol/openid-connect/certs
+      - KEYCLOAK_CLIENT_ID=keystone
+      - KEYCLOAK_CLIENT_SECRET=ChangeMe_keystone_client_secret
+      - OIDC_CRYPTO_PASSPHRASE=ChangeMe_long_random_oidc_passphrase_2026
+      - KEYCLOAK_IDP_ID=keycloak
+      - KEYCLOAK_PROTOCOL_ID=mapped
+      - KEYSTONE_PUBLIC_URL=http://localhost:5000
     depends_on:
         mariadb:
           condition: service_healthy
@@ -123,9 +140,10 @@ services:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:5000/healthcheck"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 20
+      start_period: 60s
       start_interval: 2s
+
   keystone_bootstrap:
     build:
       context: ./rawdata_zone/openstackKeystone
@@ -133,15 +151,25 @@ services:
     environment:
       - OS_AUTH_URL=http://keystone:5000/v3
       - OS_USERNAME=admin
-      - OS_PASSWORD=admin
+      - OS_PASSWORD=pipi
       - OS_PROJECT_NAME=admin
       - OS_USER_DOMAIN_NAME=Default
       - OS_PROJECT_DOMAIN_NAME=Default
-      - SWIFT_PASSWORD=testing           # change si besoin
+      - SWIFT_PASSWORD=pipi           # change si besoin
+      # --- OIDC federation registration (identity provider / mapping / protocol) ---
+      - FEDERATION_ENABLED=true
+      - KEYCLOAK_ISSUER=http://localhost:8088/realms/datalake
+      - KEYCLOAK_IDP_ID=keycloak
+      - KEYCLOAK_PROTOCOL_ID=mapped
+      - FEDERATED_DOMAIN=Default
+      - FEDERATED_GROUP=datalake_users
+      - FEDERATED_PROJECT=federated
+      - FEDERATED_ROLE=bucket_owner
     profiles:
       - datalake
       - frontend
       - process
+      - authentication
     container_name: keystone_bootstrap
     networks:
       swift-cluster:
@@ -153,9 +181,12 @@ services:
 
 
   horizon:
-    image: horizon:master-ubuntu_jammy
+    image: horizon:2026.1-ubuntu_noble
     container_name: horizon
     restart: always
+    profiles:
+      - authentication
+      - datalake
     ports:
       - "8080:80"
     volumes:
@@ -168,6 +199,36 @@ services:
     networks:
       swift-cluster:
         ipv4_address: 10.5.3.2
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: keycloak
+    restart: always
+    profiles:
+      - datalake
+      - authentication
+      - keycloak
+    command: start-dev --import-realm
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=ChangeMe_keycloak_admin
+      - KC_HTTP_ENABLED=true
+      # Pin the public hostname so the token issuer is stable and matches what
+      # the browser logs in through (KEYCLOAK_PUBLIC_URL / the Keystone IdP).
+      - KC_HOSTNAME=http://localhost:8088
+      - KC_HOSTNAME_STRICT=false
+      # Let in-cluster services (Keystone/Flask) resolve token/userinfo endpoints
+      # through the docker hostname while the browser uses KC_HOSTNAME.
+      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true
+      - KC_HEALTH_ENABLED=true
+    ports:
+      - "8088:8080"
+    volumes:
+      - ./rawdata_zone/openstackKeycloak/realm/:/opt/keycloak/data/import/:ro
+      - keycloak_data:/opt/keycloak/data
+    networks:
+      swift-cluster:
+        ipv4_address: 10.5.3.5
 
   hub:
     build:
@@ -212,13 +273,14 @@ services:
       - frontend
       - webgui
       - datalake
+      - authentication
     build:
       context: ./access_zone/web_gui
       dockerfile: Dockerfile.web_gui
     image: web_gui
     container_name: web_gui
     volumes:
-      - ./access_zone/web_gui/web_gui:/opt/app/web_gui/
+      - ./access_zone/web_gui:/opt/app/web_gui/
     networks:
         swift-cluster:
           ipv4_address: 10.5.255.1
@@ -231,6 +293,7 @@ services:
     profiles:
       - frontend
       - datalake
+      - authentication
     ports:
       - "7000:80"
     depends_on:
@@ -251,6 +314,7 @@ services:
       - frontend
       - RESTApi
       - datalake
+      - authentication
     volumes:
       - "./access_zone/flask/app.py:/home/app/app.py"
     healthcheck:
@@ -266,22 +330,6 @@ services:
         ipv4_address: 10.5.255.2
 
 
-
-  caddy:
-    image: caddy:2-alpine
-    container_name: caddy_temp_proxy
-    restart: unless-stopped
-    profiles:
-      - debug
-    ports:
-      - "2015:80"    # Web GUI
-      - "5000:5000"  # Keystone
-      - "5001:5001"  # flask
-      - "8081:8080"  # Swift - Horizon
-    volumes:
-      - ./debug/Caddyfile:/etc/caddy/Caddyfile:ro
-    networks:
-      - swift-cluster
 #END SERVICE SECTION
 ######################
 
@@ -290,6 +338,7 @@ volumes:
     name: OpenstackSwiftData
   mariadb_data:
   keystone_data:
+  keycloak_data:
 
 
 
