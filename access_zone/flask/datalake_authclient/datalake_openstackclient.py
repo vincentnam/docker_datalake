@@ -270,7 +270,7 @@ class OpenstackSDKAuthClient(AuthenticationClient):
             self.current_app.logger.warning(f"Unable to resolve usernames from role assignments: {e}")
 
         members = {}
-        assignments = conn.identity.role_assignments(scope_project_id=project.id, effective=False)
+        assignments = conn.identity.role_assignments(scope_project_id=project.id)
         for assignment in assignments:
             payload = assignment.to_dict() if hasattr(assignment, "to_dict") else {}
 
@@ -320,8 +320,10 @@ class OpenstackSDKAuthClient(AuthenticationClient):
             self.current_app.logger.warning("ERROR" + e)
 
     def add_user_to_project(self, user_name: str, project_name: str, role_name: str = "member"):
+
         """Add a user to a project with a role (member by default)."""
         conn = self._get_conn(project_name=project_name)
+        self.current_app.logger.warning("NOUVELLE VERSION")
         project = conn.identity.find_project(project_name, ignore_missing=True)
         if not project:
             return "Noproject"
@@ -347,8 +349,6 @@ class OpenstackSDKAuthClient(AuthenticationClient):
         project = conn.identity.find_project(project_name, ignore_missing=True)
         if not project:
             return "Noproject"
-        self.current_app.logger.warning("SET_USER_ROLE_IN_PROJECT()")
-        user = None
         try:
             user = conn.identity.get_user(user_id)
         except Exception:
@@ -356,44 +356,57 @@ class OpenstackSDKAuthClient(AuthenticationClient):
         if user is None:
             return "Nouser"
 
-        roles_map = {role.name: role.id for role in conn.identity.roles()}
-        id_to_name = {role_id: name for name, role_id in roles_map.items()}
-        unknown_roles = [name for name in role_names if name not in roles_map]
-        if unknown_roles:
-            return {"status": "Norole", "unknown_roles": unknown_roles}
-
-        # Seuls ces rôles sont gérables depuis l'interface d'administration.
         manageable_roles = {"reader", "member", "bucket_admin"}
+        roles_by_name = {r.name: r for r in conn.identity.roles()}
+        id_to_name = {r.id: name for name, r in roles_by_name.items()}
 
-        # Rôles assignés DIRECTEMENT (on ignore les rôles implicites, non retirables).
-        current_role_names = set()
-        assignments = list(conn.identity.role_assignments(
-            user=user.id, scope_project_id=project.id, effective=False))
-        for assignment in assignments:
-            role_id = getattr(assignment, "role_id", None)
-            if not role_id and hasattr(assignment, "to_dict"):
-                payload = assignment.to_dict()
-                if isinstance(payload.get("role"), dict):
-                    role_id = payload["role"].get("id")
-            name = id_to_name.get(role_id)
-            if name:
-                current_role_names.add(name)
+        unknown = [n for n in role_names if n not in roles_by_name]
+        if unknown:
+            return {"status": "Norole", "unknown_roles": unknown}
 
-        current_manageable = current_role_names & manageable_roles
-        target_manageable = set(role_names) & manageable_roles
+        def current_direct_roles():
+            names = set()
+            for a in conn.identity.role_assignments(scope_project_id=project.id):
+                payload = a.to_dict() if hasattr(a, "to_dict") else {}
+                uid = getattr(a, "user_id", None)
+                if not uid and isinstance(payload.get("user"), dict):
+                    uid = payload["user"].get("id")
+                if uid != user.id:
+                    continue
+                rid = getattr(a, "role_id", None)
+                if not rid and isinstance(payload.get("role"), dict):
+                    rid = payload["role"].get("id")
+                name = id_to_name.get(rid)
+                if name:
+                    names.add(name)
+            return names & manageable_roles
 
-        roles_to_remove = current_manageable - target_manageable
-        roles_to_add = target_manageable - current_manageable
+        current = current_direct_roles()
+        target = set(role_names) & manageable_roles
 
-        for role_name in roles_to_remove:
+        to_remove = current - target
+        to_add = target - current
+
+        for name in to_remove:
             conn.identity.unassign_project_role_from_user(
-                role=roles_map[role_name], user=user.id, project=project.id)
-
-        for role_name in roles_to_add:
+                project=project.id, user=user.id, role=roles_by_name[name].id)
+        for name in to_add:
             conn.identity.assign_project_role_to_user(
-                role=roles_map[role_name], user=user.id, project=project.id)
+                project=project.id, user=user.id, role=roles_by_name[name].id)
 
-        return {"message": f"Roles updated for user {user.id} in project {project.name}"}
+        # Vérification sur les assignments DIRECTS (on ignore les rôles implicites).
+        final = current_direct_roles()
+        if final != target:
+            return {
+                "status": "error",
+                "message": "Le changement de rôles n'a pas été entièrement appliqué",
+                "expected": sorted(target),
+                "actual": sorted(final),
+            }
+        return {
+            "message": f"Roles updated for user {user.id} in project {project.name}",
+            "roles": sorted(final),
+        }
 
 
 
