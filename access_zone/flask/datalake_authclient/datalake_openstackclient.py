@@ -479,14 +479,14 @@ class OpenstackSDKAuthClient(AuthenticationClient):
         """Supprime complètement un utilisateur d'un projet"""
         conn = self._get_conn()
         assignments = list(conn.identity.role_assignments(
-            user=user_id, project=project_id, effective=True
+            user_id=user_id, project=project_id, effective=True
         ))
 
         for assignment in assignments:
             if assignment.role_id:
                 conn.identity.revoke_role(
                     role=assignment.role_id,
-                    user=user_id,
+                    user_id=user_id,
                     project=project_id
                 )
 
