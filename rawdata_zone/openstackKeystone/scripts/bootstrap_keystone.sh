@@ -24,6 +24,16 @@ echo "OS_PASSWORD : $OS_PASSWORD"
 : "${BUCKET_ADMIN_ROLE:=bucket_admin}"
 : "${BUCKET_OWNER_ROLE:=bucket_owner}"
 
+# OIDC federation with Keycloak (identity provider / mapping / protocol)
+: "${FEDERATION_ENABLED:=false}"
+: "${KEYCLOAK_IDP_ID:=keycloak}"
+: "${KEYCLOAK_PROTOCOL_ID:=openid}"
+: "${KEYCLOAK_ISSUER:=}"
+: "${FEDERATED_DOMAIN:=Default}"
+: "${FEDERATED_GROUP:=datalake_users}"
+: "${FEDERATED_PROJECT:=federated}"
+: "${FEDERATED_ROLE:=member}"
+
 # Swift endpoints
 SWIFT_PUBLIC="http://management-1:8080/v1/AUTH_\$(tenant_id)s"
 SWIFT_INTERNAL="http://management-1:8080/v1/AUTH_\$(tenant_id)s"
@@ -119,5 +129,115 @@ auth_url             = $OS_AUTH_URL
 www_authenticate_uri = $OS_AUTH_URL
 auth_type            = password
 EOF
+
+# ---------------------------------------------------------------------------
+# OIDC federation with Keycloak : identity provider + mapping + protocol.
+# Idempotent ; gated by FEDERATION_ENABLED so a pure-password deployment is
+# unaffected. (POSIX sh : this script is run with busybox ash, no bash-isms.)
+# ---------------------------------------------------------------------------
+FEDERATION_ENABLED_LC=$(printf '%s' "$FEDERATION_ENABLED" | tr '[:upper:]' '[:lower:]')
+if [ "$FEDERATION_ENABLED_LC" = "true" ]; then
+    echo
+    echo "Configuring OIDC federation (IdP=$KEYCLOAK_IDP_ID, issuer=$KEYCLOAK_ISSUER)"
+
+    if [ -z "$KEYCLOAK_ISSUER" ]; then
+        echo "ERROR: FEDERATION_ENABLED=true but KEYCLOAK_ISSUER is empty." >&2
+        exit 1
+    fi
+
+    # Keystone group + project the federated users are mapped onto
+    if ! openstack group show --domain "$FEDERATED_DOMAIN" "$FEDERATED_GROUP" >/dev/null 2>&1; then
+        echo "Creating federated group: $FEDERATED_GROUP"
+        openstack group create --domain "$FEDERATED_DOMAIN" \
+            --description "Datalake federated users (Keycloak)" "$FEDERATED_GROUP" >/dev/null
+    fi
+    if ! openstack project show --domain "$FEDERATED_DOMAIN" "$FEDERATED_PROJECT" >/dev/null 2>&1; then
+        echo "Creating federated project: $FEDERATED_PROJECT"
+        openstack project create --domain "$FEDERATED_DOMAIN" \
+            --description "Datalake federated project" "$FEDERATED_PROJECT" >/dev/null
+    fi
+    ensure_role "$FEDERATED_ROLE"
+
+    echo "Granting '$FEDERATED_ROLE' on project '$FEDERATED_PROJECT' to group '$FEDERATED_GROUP'"
+    openstack role add \
+        --group "$FEDERATED_GROUP" --group-domain "$FEDERATED_DOMAIN" \
+        --project "$FEDERATED_PROJECT" --project-domain "$FEDERATED_DOMAIN" \
+        "$FEDERATED_ROLE" || true
+
+    # Identity provider (remote-id MUST equal the Keycloak issuer)
+    if ! openstack identity provider show "$KEYCLOAK_IDP_ID" >/dev/null 2>&1; then
+        echo "Creating identity provider: $KEYCLOAK_IDP_ID"
+        openstack identity provider create --remote-id "$KEYCLOAK_ISSUER" "$KEYCLOAK_IDP_ID" >/dev/null
+    else
+        openstack identity provider set --remote-id "$KEYCLOAK_ISSUER" "$KEYCLOAK_IDP_ID" >/dev/null
+    fi
+
+    # Mapping : Keycloak identity -> ephemeral Keystone user in FEDERATED_GROUP
+    MAPPING_ID="${KEYCLOAK_IDP_ID}_mapping"
+    MAPPING_FILE="$(mktemp)"
+    cat > "$MAPPING_FILE" <<MAP
+[
+  {
+    "local": [
+      {
+        "user": {
+          "name": "{0}",
+          "email": "{1}",
+          "domain": { "name": "$FEDERATED_DOMAIN" }
+        }
+      },
+      {
+        "group": {
+          "name": "$FEDERATED_GROUP",
+          "domain": { "name": "$FEDERATED_DOMAIN" }
+        }
+      }
+    ],
+    "remote": [
+      { "type": "HTTP_OIDC_preferred_username" },
+      { "type": "HTTP_OIDC_email" }
+    ]
+  }
+]
+MAP
+    if ! openstack mapping show "$MAPPING_ID" >/dev/null 2>&1; then
+        echo "Creating mapping: $MAPPING_ID"
+        openstack mapping create --rules "$MAPPING_FILE" "$MAPPING_ID" >/dev/null
+    else
+        openstack mapping set --rules "$MAPPING_FILE" "$MAPPING_ID" >/dev/null
+    fi
+    rm -f "$MAPPING_FILE"
+
+    # Federation protocol linking IdP + mapping.
+    # NOTE: `openstack federation protocol create` is unreliable on this client
+    # version ("Request requires an ID but none was found"), so we PUT it through
+    # the Keystone REST API directly (idempotent: 409 means already present).
+    if ! openstack federation protocol show --identity-provider "$KEYCLOAK_IDP_ID" "$KEYCLOAK_PROTOCOL_ID" >/dev/null 2>&1; then
+        echo "Creating federation protocol: $KEYCLOAK_PROTOCOL_ID"
+        PROTO_TOKEN="$(openstack token issue -f value -c id)"
+        python3 - "$PROTO_TOKEN" "$OS_AUTH_URL" "$KEYCLOAK_IDP_ID" "$KEYCLOAK_PROTOCOL_ID" "$MAPPING_ID" <<'PY'
+import sys, json, urllib.request, urllib.error
+tok, auth_url, idp, proto, mapping = sys.argv[1:6]
+url = "%s/OS-FEDERATION/identity_providers/%s/protocols/%s" % (auth_url.rstrip("/"), idp, proto)
+body = json.dumps({"protocol": {"mapping_id": mapping}}).encode()
+req = urllib.request.Request(url, data=body, method="PUT",
+    headers={"X-Auth-Token": tok, "Content-Type": "application/json"})
+try:
+    resp = urllib.request.urlopen(req)
+    print("Protocol '%s' created (HTTP %s)" % (proto, resp.status))
+except urllib.error.HTTPError as e:
+    if e.code == 409:
+        print("Protocol '%s' already exists" % proto)
+    else:
+        sys.stderr.write("Failed to create protocol: HTTP %s %s\n" % (e.code, e.read().decode()))
+        sys.exit(1)
+PY
+    fi
+
+    echo
+    echo "Federation summary:"
+    openstack identity provider show "$KEYCLOAK_IDP_ID"
+    openstack federation protocol list --identity-provider "$KEYCLOAK_IDP_ID"
+fi
 
 echo "Bootstrap complete."

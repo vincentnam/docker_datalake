@@ -54,7 +54,7 @@ docker build . \
     --build-arg PROJECT_RELEASE=${OPENSTACK_RELEASE} \
     --build-arg PROJECT_REF=${OPENSTACK_RELEASE} \
     --build-arg PROFILES=apache \
-    --build-arg DIST_PACKAGES="python3-openstackclient curl" \
+    --build-arg DIST_PACKAGES="python3-openstackclient curl libapache2-mod-auth-openidc" \
     --tag keystone:${OPENSTACK_RELEASE//stable\//}-${BASE_TAG}
 
 # Horizon

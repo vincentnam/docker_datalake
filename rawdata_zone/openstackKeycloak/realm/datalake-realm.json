@@ -1,0 +1,54 @@
+{
+  "realm": "datalake",
+  "enabled": true,
+  "sslRequired": "none",
+  "loginWithEmailAllowed": true,
+  "groups": [
+    { "name": "datalake_users" }
+  ],
+  "users": [
+    {
+      "username": "datalake-user",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "datalake-user@datalake.local",
+      "firstName": "Datalake",
+      "lastName": "User",
+      "credentials": [
+        { "type": "password", "value": "ChangeMe_datalake_user", "temporary": false }
+      ],
+      "groups": [ "/datalake_users" ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "keystone",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "ChangeMe_keystone_client_secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [ "http://localhost:7000/api/auth/callback", "http://localhost:7000/*", "http://localhost:5000/*" ],
+      "webOrigins": [ "+" ],
+      "defaultClientScopes": [ "openid", "profile", "email", "roles" ],
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "claim.name": "groups",
+            "multivalued": "true"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 
 from datalake_authclient import get_auth
 from datalake_objectstoreclient import get_storage
+from datalake_sso import sso_bp
 
 
 
@@ -31,6 +32,10 @@ CORS(app, resources={r"/buckets": {"origins": "*", "methods": ["GET", "POST", "O
                      r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]},
                      r"/buckets/*": {"origins": "*", "methods": ["GET", "POST", "DELETE", "OPTIONS"]}})
 app.config['DEBUG'] = True
+# Secret key used to sign the OIDC SSO state cookie (see datalake_sso.py)
+app.secret_key = os.getenv("FLASK_SECRET", "dev-insecure-change-me")
+# Keycloak SSO endpoints : /auth/login, /auth/callback, /auth/config
+app.register_blueprint(sso_bp)
 
 OBJECT_STORAGE_BACKEND = os.getenv("OBJECT_STORAGE_BACKEND", "swift").lower()  # "s3" ou "swift"
 KEYSTONE_URL = os.getenv("KEYSTONE_URL", "http://keystone:5000/v3")

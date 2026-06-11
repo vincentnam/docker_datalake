@@ -9,6 +9,7 @@ export $(grep -v '^#' ./conf.env | sed 's/\r$//' | xargs)
 
 OPENSTACKSWIFT_PATH="./rawdata_zone/openstackSwift"
 OPENSTACKKEYSTONE_PATH="./rawdata_zone/openstackKeystone"
+OPENSTACKKEYCLOAK_PATH="./rawdata_zone/openstackKeycloak"
 
 JUPYTER_PATH="./process_zone/jupyter"
 WEBGUI_PATH="./access_zone/web_gui"
@@ -170,6 +171,18 @@ cat << EOF >> docker-compose_datalake.yml
     command: /entrypoint.sh
     environment:
       - OS_PASSWORD=$OS_PASSWORD
+      # --- OIDC federation (consumed by init-keystone.sh / mod_auth_openidc) ---
+      - FEDERATION_ENABLED=$FEDERATION_ENABLED
+      - KEYCLOAK_ISSUER=${KEYCLOAK_ISSUER:-${KEYCLOAK_PUBLIC_URL%/}/realms/$KEYCLOAK_REALM}
+      # JWKS endpoint reached internally by Keystone to validate bearer access
+      # tokens (oauth20). Internal URL : works even though the issuer is public.
+      - KEYCLOAK_JWKS_URI=${KEYCLOAK_URL%/}/realms/$KEYCLOAK_REALM/protocol/openid-connect/certs
+      - KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID
+      - KEYCLOAK_CLIENT_SECRET=$KEYCLOAK_CLIENT_SECRET
+      - OIDC_CRYPTO_PASSPHRASE=$OIDC_CRYPTO_PASSPHRASE
+      - KEYCLOAK_IDP_ID=$KEYCLOAK_IDP_ID
+      - KEYCLOAK_PROTOCOL_ID=$KEYCLOAK_PROTOCOL_ID
+      - KEYSTONE_PUBLIC_URL=$KEYSTONE_PUBLIC_URL
     depends_on:
         mariadb:
           condition: service_healthy
@@ -198,6 +211,15 @@ cat << EOF >> docker-compose_datalake.yml
       - OS_USER_DOMAIN_NAME=Default
       - OS_PROJECT_DOMAIN_NAME=Default
       - SWIFT_PASSWORD=$SWIFT_PASSWORD           # change si besoin
+      # --- OIDC federation registration (identity provider / mapping / protocol) ---
+      - FEDERATION_ENABLED=$FEDERATION_ENABLED
+      - KEYCLOAK_ISSUER=${KEYCLOAK_ISSUER:-${KEYCLOAK_PUBLIC_URL%/}/realms/$KEYCLOAK_REALM}
+      - KEYCLOAK_IDP_ID=$KEYCLOAK_IDP_ID
+      - KEYCLOAK_PROTOCOL_ID=$KEYCLOAK_PROTOCOL_ID
+      - FEDERATED_DOMAIN=$FEDERATED_DOMAIN
+      - FEDERATED_GROUP=$FEDERATED_GROUP
+      - FEDERATED_PROJECT=$FEDERATED_PROJECT
+      - FEDERATED_ROLE=$FEDERATED_ROLE
     profiles:
       - datalake
       - frontend
@@ -234,6 +256,46 @@ cat << EOF >> docker-compose_datalake.yml
         ipv4_address: 10.5.3.2
 
 EOF
+
+###################################
+# KEYCLOAK SECTION (optional / bundled)
+###################################
+# Only generated when DEPLOY_KEYCLOAK=true. Set it to false in conf.env to reuse
+# an already existing / external Keycloak (KEYCLOAK_URL must then point to it).
+if [ "${DEPLOY_KEYCLOAK,,}" = "true" ]; then
+cat << EOF >> docker-compose_datalake.yml
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: keycloak
+    restart: always
+    profiles:
+      - datalake
+      - authentication
+      - keycloak
+    command: start-dev --import-realm
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=$KEYCLOAK_ADMIN
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD
+      - KC_HTTP_ENABLED=true
+      # Pin the public hostname so the token issuer is stable and matches what
+      # the browser logs in through (KEYCLOAK_PUBLIC_URL / the Keystone IdP).
+      - KC_HOSTNAME=$KEYCLOAK_PUBLIC_URL
+      - KC_HOSTNAME_STRICT=false
+      # Let in-cluster services (Keystone/Flask) resolve token/userinfo endpoints
+      # through the docker hostname while the browser uses KC_HOSTNAME.
+      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true
+      - KC_HEALTH_ENABLED=true
+    ports:
+      - "$KEYCLOAK_HOST_PORT:8080"
+    volumes:
+      - $OPENSTACKKEYCLOAK_PATH/realm/:/opt/keycloak/data/import/:ro
+      - keycloak_data:/opt/keycloak/data
+    networks:
+      swift-cluster:
+        ipv4_address: 10.5.3.5
+
+EOF
+fi
 
 ###################################
 # JUPYTER HUB SECTION
@@ -374,6 +436,7 @@ volumes:
     name: OpenstackSwiftData
   mariadb_data:
   keystone_data:
+  keycloak_data:
 
 
 EOF

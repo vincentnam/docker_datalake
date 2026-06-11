@@ -1,4 +1,17 @@
-KEYCLOAK_URL="base url to keycloak"
+# Generated from conf.env by create_conf.sh
+FEDERATION_ENABLED="true"
+# Internal URL (Flask <-> Keycloak token exchange) and public URL (browser SSO)
+KEYCLOAK_URL="http://keycloak:8080"
+KEYCLOAK_PUBLIC_URL="http://localhost:8088"
+KEYCLOAK_ISSUER="${KEYCLOAK_PUBLIC_URL}/realms/${KEYCLOAK_REALM}"
 KEYCLOAK_REALM="Realm string"
 KEYCLOAK_CLIENT_ID="Client ID string"
+KEYCLOAK_CLIENT_SECRET="Client secret string"
+# Browser redirect target (through nginx /api) for the SSO callback
+KEYCLOAK_REDIRECT_URI="http://localhost:7000/api/auth/callback"
+KEYCLOAK_IDP_ID="keycloak"
+KEYCLOAK_PROTOCOL_ID="openid"
+FEDERATED_PROJECT="federated"
+KEYSTONE_URL="http://keystone:5000/v3"
+WEB_GUI_URL="http://localhost:7000"
 FLASK_SECRET="change_me"

@@ -1,0 +1,27 @@
+# Dépendances (réinstallées dans l'image)
+node_modules/
+vendor/
+__pycache__/
+*.pyc
+
+# Git et IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+*.swp
+
+# Fichiers de build locaux
+dist/
+build/
+*.log
+
+# Secrets et config locale (CRITIQUE : risque d'exfiltration)
+.env
+.env.local
+*.pem
+*.key
+secrets/
+.npmrc
+.pypirc
+kubeconfig

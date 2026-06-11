@@ -1,19 +1,78 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Lock, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { User, Lock, ArrowRight, Loader2, AlertCircle, KeyRound } from "lucide-react";
 import {
+  getAuthData,
   setActiveProject,
   setAuthData,
   setSessionCredentials,
 } from "../utils/authUtils";
-import { loginWithCredentials } from "../utils/apiClient";
+import {
+  loginWithCredentials,
+  loginWithToken,
+  getSsoLoginUrl,
+  fetchAuthConfig,
+} from "../utils/apiClient";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ssoEnabled, setSsoEnabled] = useState(false);
   const navigate = useNavigate();
+
+  // On mount : finalize an SSO return, OR skip login if already authenticated.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const ssoToken = params.get("sso_token");
+    const ssoError = params.get("sso_error");
+    const ssoProject = params.get("project");
+
+    const clearHash = () =>
+      window.history.replaceState(null, "", window.location.pathname);
+
+    if (ssoError) {
+      setError(ssoError);
+      clearHash();
+      return;
+    }
+
+    if (ssoToken) {
+      // Came back from Keycloak SSO : exchange the Keystone token for the full
+      // auth payload, store it, then go to the app.
+      setLoading(true);
+      loginWithToken({ token: ssoToken, project: ssoProject })
+        .then((data) => {
+          setAuthData(data);
+          if (ssoProject) {
+            setActiveProject(ssoProject);
+          }
+          clearHash();
+          navigate("/buckets");
+        })
+        .catch((err) => {
+          setError(err.message || "Echec de connexion SSO");
+          clearHash();
+          setLoading(false);
+        });
+      return;
+    }
+
+    // Already have a valid session ? Skip the login screen.
+    const authData = getAuthData();
+    if (authData && authData.status === "authenticated" && authData.access_token) {
+      navigate("/buckets");
+      return;
+    }
+
+    // Otherwise, ask the API whether to offer the Keycloak SSO button.
+    fetchAuthConfig().then((cfg) => setSsoEnabled(Boolean(cfg.sso_enabled)));
+  }, [navigate]);
+
+  const handleSsoLogin = () => {
+    window.location.href = getSsoLoginUrl();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -139,6 +198,29 @@ const Login = () => {
           )}
         </button>
       </form>
+
+      {/* Connexion SSO Keycloak (affichée seulement si activée côté API) */}
+      {ssoEnabled && (
+        <div className="mt-6">
+          <div className="relative flex items-center my-6">
+            <div className="flex-grow border-t border-gray-200"></div>
+            <span className="flex-shrink mx-4 text-xs text-gray-400 uppercase tracking-widest font-semibold">
+              ou
+            </span>
+            <div className="flex-grow border-t border-gray-200"></div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSsoLogin}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 py-4 bg-white border border-gray-200 hover:border-orange-400 text-gray-700 font-bold rounded-xl shadow-sm transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            <KeyRound className="w-5 h-5 text-orange-500" />
+            Se connecter avec Keycloak
+          </button>
+        </div>
+      )}
 
       <p className="text-center mt-8 text-xs text-gray-400 uppercase tracking-widest font-semibold">
         Un texte centré
