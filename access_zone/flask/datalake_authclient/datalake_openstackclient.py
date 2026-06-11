@@ -270,7 +270,7 @@ class OpenstackSDKAuthClient(AuthenticationClient):
             self.current_app.logger.warning(f"Unable to resolve usernames from role assignments: {e}")
 
         members = {}
-        assignments = conn.identity.role_assignments(scope_project_id=project.id, effective=True)
+        assignments = conn.identity.role_assignments(scope_project_id=project.id, effective=False)
         for assignment in assignments:
             payload = assignment.to_dict() if hasattr(assignment, "to_dict") else {}
 
@@ -357,47 +357,41 @@ class OpenstackSDKAuthClient(AuthenticationClient):
             return "Nouser"
 
         roles_map = {role.name: role.id for role in conn.identity.roles()}
+        id_to_name = {role_id: name for name, role_id in roles_map.items()}
         unknown_roles = [name for name in role_names if name not in roles_map]
         if unknown_roles:
             return {"status": "Norole", "unknown_roles": unknown_roles}
 
-        current_role_ids = set()
-        assignments = list(conn.identity.role_assignments(user=user.id, scope_project_id=project.id))
+        # Seuls ces rôles sont gérables depuis l'interface d'administration.
+        manageable_roles = {"reader", "member", "bucket_admin"}
+
+        # Rôles assignés DIRECTEMENT (on ignore les rôles implicites, non retirables).
+        current_role_names = set()
+        assignments = list(conn.identity.role_assignments(
+            user=user.id, scope_project_id=project.id, effective=False))
         for assignment in assignments:
             role_id = getattr(assignment, "role_id", None)
             if not role_id and hasattr(assignment, "to_dict"):
                 payload = assignment.to_dict()
                 if isinstance(payload.get("role"), dict):
                     role_id = payload["role"].get("id")
-            if role_id:
-                current_role_ids.add(role_id)
-        self.current_app.logger.warning("ASSIGNEMNT AVANT")
-        all_roles = set(["reader","member","bucket_admin"])
-        self.current_app.logger.warning(assignments)
-        self.current_app.logger.warning(project)
-        role_target_set = set(role_names)
-        
-        role_to_remove = [roles_map[role_name] for role_name in list(all_roles.difference(role_target_set))]
+            name = id_to_name.get(role_id)
+            if name:
+                current_role_names.add(name)
 
-        role_to_add = [roles_map[role_name] for role_name in list(all_roles.intersection(role_target_set))]
-        
-        self.current_app.logger.warning(role_to_add)        
-        self.current_app.logger.warning(role_to_remove)
+        current_manageable = current_role_names & manageable_roles
+        target_manageable = set(role_names) & manageable_roles
 
+        roles_to_remove = current_manageable - target_manageable
+        roles_to_add = target_manageable - current_manageable
 
-        self.current_app.logger.warning(user)
-        for role_id in role_to_remove:
-            conn.identity.unassign_project_role_from_user(role=role_id, user=user.id, project=project.id)
-        self.current_app.logger.warning("COUCOU 1")
-        
-        assignments = list(conn.identity.role_assignments(user=user.id, scope_project_id=project.id))
-        self.current_app.logger.warning(assignments)
-        for role_id in role_to_add :
-            conn.identity.assign_project_role_to_user(role=role_id, user=user.id, project=project.id) 
-        self.current_app.logger.warning("test2")
-        assignments = list(conn.identity.role_assignments(user=user.id, scope_project_id=project.id))
+        for role_name in roles_to_remove:
+            conn.identity.unassign_project_role_from_user(
+                role=roles_map[role_name], user=user.id, project=project.id)
 
-        self.current_app.logger.warning(assignments)
+        for role_name in roles_to_add:
+            conn.identity.assign_project_role_to_user(
+                role=roles_map[role_name], user=user.id, project=project.id)
 
         return {"message": f"Roles updated for user {user.id} in project {project.name}"}
 
