@@ -139,7 +139,16 @@ class OpenstackSDKAuthClient(AuthenticationClient):
                     self.current_app.logger.warning(f"Token validation failed: {e}")
                     return jsonify({"error": "Invalid or expired token"}), 401
 
-            # CASE 2: Username + Password
+            # CASE 2: Username + Password (LOCAL Keystone accounts only).
+            #
+            # Reserved for local Keystone users such as `admin` (break-glass
+            # account, not in Keycloak). Federated users have no local password
+            # and must authenticate via the SSO Authorization Code flow (the
+            # "Keycloak" button). We deliberately do NOT use the OIDC password
+            # grant (ROPC) here : it is deprecated (OAuth 2.0 Security BCP /
+            # removed in OAuth 2.1) and would force the app to handle end-user
+            # passwords. The classic login form is the secondary path for local
+            # accounts only.
             if username and password:
                 try:
                     auth_kwargs = {

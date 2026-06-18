@@ -12,7 +12,7 @@ import {
   setActiveProject,
   clearAuthData,
 } from "../utils/authUtils";
-import { loginWithCredentials } from "../utils/apiClient";
+import { loginWithCredentials, logout } from "../utils/apiClient";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -119,7 +119,9 @@ const Header = () => {
                 </div>
               </div>
               <button
-                onClick={() => {
+                onClick={async () => {
+                  // Revoke the token server-side first, then clear local state.
+                  await logout();
                   clearAuthData();
                   navigate("/");
                 }}

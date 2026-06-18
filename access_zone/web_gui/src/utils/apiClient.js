@@ -72,6 +72,30 @@ export const loginWithToken = async ({ token, project }) => {
   return data;
 };
 
+// Log out : ask the API to REVOKE the current Keystone token server-side so it
+// can no longer be used, in addition to clearing the local browser state.
+// Best-effort : never block the UI logout on a network/revocation error.
+export const logout = async () => {
+  const authData = getAuthData();
+  const token = authData?.access_token;
+  if (!token) {
+    return { revoked: false };
+  }
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) {
+      return { revoked: false };
+    }
+    return await response.json();
+  } catch (e) {
+    console.error('Logout revocation failed', e);
+    return { revoked: false };
+  }
+};
+
 // URL the browser is sent to in order to start the Keycloak SSO login.
 export const getSsoLoginUrl = () => `${API_BASE_URL}/auth/login`;
 

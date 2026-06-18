@@ -74,6 +74,45 @@ def auth_config():
     return jsonify({"sso_enabled": sso_enabled(), "login_url": "/api/auth/login"}), 200
 
 
+@sso_bp.route("/auth/logout", methods=["POST"])
+def auth_logout():
+    """Log the user out by REVOKING their Keystone token server-side.
+
+    Clearing the browser storage alone leaves the token valid until it expires :
+    anyone who captured it could keep using it. Here we ask Keystone to revoke
+    it immediately (DELETE /v3/auth/tokens, the token authorizes its own
+    revocation), so it can no longer be used by anyone.
+    """
+    c = _cfg()
+
+    auth_header = request.headers.get("Authorization", "")
+    token = None
+    if auth_header.startswith("Bearer "):
+        token = auth_header.split(" ", 1)[1].strip()
+    if not token:
+        token = request.headers.get("X-Subject-Token")
+
+    revoked = False
+    if token:
+        try:
+            resp = requests.delete(
+                f"{c['keystone_url'].rstrip('/')}/auth/tokens",
+                headers={"X-Auth-Token": token, "X-Subject-Token": token},
+                timeout=10,
+            )
+            revoked = resp.status_code in (200, 204)
+            if not revoked:
+                current_app.logger.warning(
+                    f"Token revocation returned HTTP {resp.status_code}"
+                )
+        except Exception:
+            current_app.logger.exception("Token revocation failed")
+
+    # Drop any server-side SSO session/state cookie too.
+    session.clear()
+    return jsonify({"revoked": revoked}), 200
+
+
 @sso_bp.route("/auth/login", methods=["GET"])
 def auth_login():
     c = _cfg()

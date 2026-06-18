@@ -20,6 +20,7 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [ssoEnabled, setSsoEnabled] = useState(false);
+  const [showClassic, setShowClassic] = useState(false);
   const navigate = useNavigate();
 
   // On mount : finalize an SSO return, OR skip login if already authenticated.
@@ -133,6 +134,46 @@ const Login = () => {
         </p>
       </div>
 
+      {/* Connexion SSO Keycloak en premier (méthode principale) */}
+      {ssoEnabled && (
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={handleSsoLogin}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-200 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            <KeyRound className="w-5 h-5" />
+            Se connecter avec Keycloak
+          </button>
+
+          {!showClassic && (
+            <>
+              <div className="relative flex items-center my-6">
+                <div className="flex-grow border-t border-gray-200"></div>
+                <span className="flex-shrink mx-4 text-xs text-gray-400 uppercase tracking-widest font-semibold">
+                  ou
+                </span>
+                <div className="flex-grow border-t border-gray-200"></div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowClassic(true)}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 py-4 bg-white border border-gray-200 hover:border-orange-400 text-gray-700 font-bold rounded-xl shadow-sm transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                <User className="w-5 h-5 text-orange-500" />
+                Connexion classique
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Formulaire user/password : affiché directement si pas de SSO,
+          sinon seulement après clic sur "Connexion classique". */}
+      {(!ssoEnabled || showClassic) && (
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Champ Utilisateur */}
         <div className="space-y-2">
@@ -197,29 +238,19 @@ const Login = () => {
             </>
           )}
         </button>
-      </form>
 
-      {/* Connexion SSO Keycloak (affichée seulement si activée côté API) */}
-      {ssoEnabled && (
-        <div className="mt-6">
-          <div className="relative flex items-center my-6">
-            <div className="flex-grow border-t border-gray-200"></div>
-            <span className="flex-shrink mx-4 text-xs text-gray-400 uppercase tracking-widest font-semibold">
-              ou
-            </span>
-            <div className="flex-grow border-t border-gray-200"></div>
-          </div>
-
+        {/* Retour vers les méthodes de connexion (si SSO dispo) */}
+        {ssoEnabled && (
           <button
             type="button"
-            onClick={handleSsoLogin}
+            onClick={() => setShowClassic(false)}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-4 bg-white border border-gray-200 hover:border-orange-400 text-gray-700 font-bold rounded-xl shadow-sm transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full text-center text-sm text-gray-500 hover:text-orange-600 transition-colors"
           >
-            <KeyRound className="w-5 h-5 text-orange-500" />
-            Se connecter avec Keycloak
+            ← Autres méthodes de connexion
           </button>
-        </div>
+        )}
+      </form>
       )}
 
       <p className="text-center mt-8 text-xs text-gray-400 uppercase tracking-widest font-semibold">

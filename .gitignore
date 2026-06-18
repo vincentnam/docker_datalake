@@ -13,3 +13,6 @@ rawdata_zone/openstackSwift/data/
 rawdata_zone/openstackSwift/rsyncd/
 rawdata_zone/openstackSwift/scripts/management/
 rawdata_zone/openstackSwift/scripts/storage/
+TODO
+debug/user1.ipynb
+debug/datalake_authclient/datalake_openstackclient.py
