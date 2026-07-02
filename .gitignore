@@ -8,6 +8,7 @@ dockerswarm_token.md
 *.env
 .idea/*
 rawdata_zone/openstackKeystone/loci/
+rawdata_zone/openstackKeystone/conf/etc/keystone/keycloak-certs/
 **/__pycache__/
 rawdata_zone/openstackSwift/data/
 rawdata_zone/openstackSwift/rsyncd/
