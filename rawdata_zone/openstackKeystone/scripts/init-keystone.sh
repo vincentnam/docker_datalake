@@ -116,6 +116,10 @@ OIDCCryptoPassphrase ${OIDC_CRYPTO_PASSPHRASE}
 OIDCRedirectURI ${OIDC_REDIRECT_URI}
 OIDCClaimPrefix "HTTP_OIDC_"
 OIDCPassClaimsAs both
+# Multi-valued claims (e.g. groups) are joined with this delimiter. Keystone's
+# mapped plugin splits assertion values on ";" : keep them aligned, otherwise a
+# user in several Keycloak groups would never match the FEDERATED_GROUP rule.
+OIDCClaimDelimiter ";"
 # Which token claim becomes the Apache remote user (default "sub" is not always
 # resolvable for Keycloak access tokens); preferred_username always is.
 OIDCOAuthRemoteUserClaim preferred_username

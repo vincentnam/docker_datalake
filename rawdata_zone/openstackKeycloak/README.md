@@ -149,10 +149,21 @@ federation is working end to end.
 
 ## Notes on the mapping rules
 
-`scripts/bootstrap_keystone.sh` renders the Keystone mapping so that **every**
-Keycloak-authenticated user becomes an ephemeral Keystone user, member of
-`FEDERATED_GROUP`, which is granted `FEDERATED_ROLE` on `FEDERATED_PROJECT`.
-This is the most robust default. To drive Keystone groups from the Keycloak
-`groups` claim instead, replace the static `group` block with a
-`{ "groups": "{2}" }` rule and add `{ "type": "HTTP_OIDC_GROUPS" }` to the
-`remote` list (the matching Keystone groups must pre-exist).
+`scripts/bootstrap_keystone.sh` renders the Keystone mapping so that every
+Keycloak user **member of the `FEDERATED_GROUP` Keycloak group** becomes an
+ephemeral Keystone user (in the `FEDERATED_DOMAIN` domain) with their own
+auto-provisioned project (named after the username) and `FEDERATED_ROLE` on it.
+
+The group is the **datalake access gate** :
+
+* not in the group → authenticated by Keycloak but refused by Keystone
+  (the mapping rule requires the `groups` claim to contain `FEDERATED_GROUP`) ;
+* removed from the group → refused at the **next** login (the current token
+  lives until expiry) ; the shadow user, project and data are kept, and
+  recovered as-is if the user is added back.
+
+This requires the `groups` protocol mapper on the Keycloak client (present in
+the bundled realm ; on an external Keycloak create it manually : client scopes
+→ `keystone-dedicated` → Add mapper → Group Membership, claim `groups`, full
+path off). The Apache config pins `OIDCClaimDelimiter ";"` so multi-valued
+claims match Keystone's assertion splitting.
