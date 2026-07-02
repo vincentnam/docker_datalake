@@ -118,12 +118,12 @@ services:
       - OS_PASSWORD=pipi
       # --- OIDC federation (consumed by init-keystone.sh / mod_auth_openidc) ---
       - FEDERATION_ENABLED=true
-      - KEYCLOAK_ISSUER=http://localhost:8088/realms/datalake
+      - KEYCLOAK_ISSUER=http://localhost:8088/realms/MIDOC
       # JWKS endpoint reached internally by Keystone to validate bearer access
       # tokens (oauth20). Internal URL : works even though the issuer is public.
-      - KEYCLOAK_JWKS_URI=http://keycloak:8080/realms/datalake/protocol/openid-connect/certs
+      - KEYCLOAK_JWKS_URI=http://keycloak:8080/realms/MIDOC/protocol/openid-connect/certs
       - KEYCLOAK_CLIENT_ID=keystone
-      - KEYCLOAK_CLIENT_SECRET=ChangeMe_keystone_client_secret
+      - KEYCLOAK_CLIENT_SECRET=EdMYtZ8ra9rTlloVQTPGJdc0qtMuEKiU
       - OIDC_CRYPTO_PASSPHRASE=ChangeMe_long_random_oidc_passphrase_2026
       - KEYCLOAK_IDP_ID=keycloak
       - KEYCLOAK_PROTOCOL_ID=mapped
@@ -158,13 +158,15 @@ services:
       - SWIFT_PASSWORD=pipi           # change si besoin
       # --- OIDC federation registration (identity provider / mapping / protocol) ---
       - FEDERATION_ENABLED=true
-      - KEYCLOAK_ISSUER=http://localhost:8088/realms/datalake
+      - KEYCLOAK_ISSUER=http://localhost:8088/realms/MIDOC
       - KEYCLOAK_IDP_ID=keycloak
       - KEYCLOAK_PROTOCOL_ID=mapped
-      - FEDERATED_DOMAIN=Default
+      - FEDERATED_DOMAIN=keycloak
       - FEDERATED_GROUP=datalake_users
       - FEDERATED_PROJECT=federated
       - FEDERATED_ROLE=bucket_owner
+      - IDP_READER_USER=idp-reader
+      - IDP_READER_PASSWORD=ChangeMe_idp_reader
     profiles:
       - datalake
       - frontend

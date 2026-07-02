@@ -42,6 +42,13 @@
 "identity:list_roles": "rule:global_admin_required or role:bucket_owner or role:bucket_admin"
 "identity:get_role": "rule:global_admin_required or role:bucket_owner or role:bucket_admin"
 
+# === FEDERATION ===
+# The Flask API lists the registered identity providers with a dedicated
+# read-only service account (idp_reader role) to build the dynamic
+# "federated login" buttons of the web GUI login page.
+"identity:list_identity_providers": "rule:global_admin_required or role:idp_reader"
+"identity:get_identity_provider": "rule:global_admin_required or role:idp_reader"
+
 # === AUTRES (services Keystone) ===
 "identity:list_endpoints": "rule:global_admin_required"
 "identity:list_services": "rule:global_admin_required"

@@ -220,6 +220,8 @@ cat << EOF >> docker-compose_datalake.yml
       - FEDERATED_GROUP=$FEDERATED_GROUP
       - FEDERATED_PROJECT=$FEDERATED_PROJECT
       - FEDERATED_ROLE=$FEDERATED_ROLE
+      - IDP_READER_USER=$IDP_READER_USER
+      - IDP_READER_PASSWORD=$IDP_READER_PASSWORD
     profiles:
       - datalake
       - frontend

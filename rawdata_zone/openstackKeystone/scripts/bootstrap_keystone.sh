@@ -27,6 +27,10 @@ echo "OS_PASSWORD : $OS_PASSWORD"
 # OIDC federation with Keycloak (identity provider / mapping / protocol)
 : "${FEDERATION_ENABLED:=false}"
 : "${KEYCLOAK_IDP_ID:=keycloak}"
+# Read-only service account used by the Flask API to list the identity
+# providers (dynamic login buttons in the web GUI).
+: "${IDP_READER_USER:=idp-reader}"
+: "${IDP_READER_PASSWORD:=ChangeMe_idp_reader}"
 : "${KEYCLOAK_PROTOCOL_ID:=openid}"
 : "${KEYCLOAK_ISSUER:=}"
 : "${FEDERATED_DOMAIN:=Default}"
@@ -44,6 +48,14 @@ ensure_role() {
     if ! openstack role show "$role_name" >/dev/null 2>&1; then
         echo "Creating role: $role_name"
         openstack role create "$role_name" >/dev/null
+    fi
+}
+
+ensure_domain() {
+    domain_name="$1"
+    if ! openstack domain show "$domain_name" >/dev/null 2>&1; then
+        echo "Creating domain: $domain_name"
+        openstack domain create --description "Federated (Keycloak) users and their auto-provisioned projects" "$domain_name" >/dev/null
     fi
 }
 
@@ -154,12 +166,34 @@ if [ "$FEDERATION_ENABLED_LC" = "true" ]; then
     ensure_role "$BUCKET_ADMIN_ROLE"
     ensure_role "$BUCKET_OWNER_ROLE"
 
-    # Identity provider (remote-id MUST equal the Keycloak issuer)
+    # Dedicated domain for the federated users : Keystone attaches the shadow
+    # users AND the auto-provisioned projects to the domain of the identity
+    # provider, so this is what really isolates them from the local accounts.
+    ensure_domain "$FEDERATED_DOMAIN"
+
+    # Read-only service account for the Flask API : lists the registered IdPs
+    # (policy.yaml grants identity:list_identity_providers to idp_reader) so
+    # the web GUI can build one login button per identity provider.
+    # ensure_user never updates the password of an existing user, so re-apply
+    # it explicitly : the Flask .env and Keystone must stay in sync even when
+    # IDP_READER_PASSWORD changed between two runs.
+    ensure_role "idp_reader"
+    ensure_user "$IDP_READER_USER" "$IDP_READER_PASSWORD"
+    openstack user set --password "$IDP_READER_PASSWORD" "$IDP_READER_USER"
+    openstack role add --project "$SWIFT_PROJECT" --user "$IDP_READER_USER" idp_reader || true
+
+    # Identity provider (remote-id MUST equal the Keycloak issuer).
+    # NOTE : the domain of an existing IdP is immutable — only remote-id can be
+    # updated in place. Changing FEDERATED_DOMAIN requires deleting the IdP
+    # first so it gets recreated here in the new domain.
     if ! openstack identity provider show "$KEYCLOAK_IDP_ID" >/dev/null 2>&1; then
-        echo "Creating identity provider: $KEYCLOAK_IDP_ID"
-        openstack identity provider create --domain Default --remote-id "$KEYCLOAK_ISSUER" "$KEYCLOAK_IDP_ID" >/dev/null
+        echo "Creating identity provider: $KEYCLOAK_IDP_ID (domain: $FEDERATED_DOMAIN)"
+        openstack identity provider create --domain "$FEDERATED_DOMAIN" \
+            --remote-id "$KEYCLOAK_ISSUER" \
+            --description "Keycloak ($KEYCLOAK_IDP_ID)" \
+            "$KEYCLOAK_IDP_ID" >/dev/null
     else
-        openstack identity provider set --domain Default --remote-id "$KEYCLOAK_ISSUER" "$KEYCLOAK_IDP_ID" >/dev/null
+        openstack identity provider set --remote-id "$KEYCLOAK_ISSUER" "$KEYCLOAK_IDP_ID" >/dev/null
     fi
 
     # Mapping : Keycloak identity -> ephemeral Keystone user, with a dedicated

@@ -1,5 +1,5 @@
 {
-  "realm": "datalake",
+  "realm": "MIDOC",
   "enabled": true,
   "sslRequired": "none",
   "loginWithEmailAllowed": true,
@@ -26,12 +26,13 @@
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
-      "secret": "ChangeMe_keystone_client_secret",
+      "secret": "EdMYtZ8ra9rTlloVQTPGJdc0qtMuEKiU",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": false,
       "redirectUris": [ "http://localhost:7000/api/auth/callback", "http://localhost:7000/*", "http://localhost:5000/*" ],
       "webOrigins": [ "+" ],
+      "attributes": { "post.logout.redirect.uris": "+" },
       "defaultClientScopes": [ "openid", "profile", "email", "roles" ],
       "protocolMappers": [
         {

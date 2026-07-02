@@ -16,6 +16,29 @@ class OpenstackSDKAuthClient(AuthenticationClient):
         self.current_app = flask.current_app
         self.KEYSTONE_URL = os.getenv("KEYSTONE_URL", "http://localhost:5000/v3")
         self.S3_ENDPOINT = os.getenv("S3_ENDPOINT", "http://10.5.10.1:8080")
+        # Domain holding the federated (Keycloak) users and their
+        # auto-provisioned projects. Local accounts stay in Default.
+        self.FEDERATED_DOMAIN = os.getenv("FEDERATED_DOMAIN", "Default")
+
+    def _project_scopes(self, project_id=None, project_name=None):
+        """Ordered list of scoping attempts for a project reference.
+
+        Scoping by ID is domain-agnostic and always preferred (this is what the
+        web GUI sends via the Project-Id header). A bare NAME is ambiguous :
+        names are only unique per domain, so it is looked up in Default first
+        (local projects) then in FEDERATED_DOMAIN (auto-provisioned projects of
+        the Keycloak users). Returns [{}] (unscoped) when nothing is given.
+        """
+        if project_id:
+            return [{"project_id": project_id}]
+        if project_name:
+            scopes = [{"project_name": project_name,
+                       "project_domain_name": "Default"}]
+            if self.FEDERATED_DOMAIN and self.FEDERATED_DOMAIN.lower() != "default":
+                scopes.append({"project_name": project_name,
+                               "project_domain_name": self.FEDERATED_DOMAIN})
+            return scopes
+        return [{}]
 
     def _inject_token_in_response(self, response, token):
         """
@@ -93,25 +116,32 @@ class OpenstackSDKAuthClient(AuthenticationClient):
 
             # CORRECTION : Aucun projet par défaut pour permettre l'authentification Unscoped
             project_name = request.headers.get("Project")
+            # Domain-agnostic project reference sent by the web GUI (preferred
+            # over the name : project ids are globally unique across domains).
+            project_id = request.headers.get("Project-Id")
 
             # CASE 1: Bearer token
             if authorization and authorization.startswith("Bearer "):
                 token = authorization.split(" ", 1)[1].strip()
                 try:
-                    auth_kwargs = {
+                    base_kwargs = {
                         "auth_url": self.KEYSTONE_URL,
                         "token": token,
                         "auth_type": "v3token"
                     }
-                    if project_name:
-                        auth_kwargs.update({
-                            "project_name": project_name,
-                            "project_domain_name": "Default"
-                        })
 
-                    conn = openstack.connect(**auth_kwargs)
-
-                    access_info = conn.session.auth.get_access(conn.session)
+                    conn = None
+                    scope_error = None
+                    for scope in self._project_scopes(project_id, project_name):
+                        try:
+                            conn = openstack.connect(**base_kwargs, **scope)
+                            access_info = conn.session.auth.get_access(conn.session)
+                            break
+                        except Exception as e:
+                            conn = None
+                            scope_error = e
+                    if conn is None:
+                        raise scope_error
 
                     g.user = {
                         "id": access_info.user_id,
@@ -151,7 +181,11 @@ class OpenstackSDKAuthClient(AuthenticationClient):
             # accounts only.
             if username and password:
                 try:
-                    auth_kwargs = {
+                    # user_domain stays Default : the password path is reserved
+                    # for LOCAL accounts. The project scope, however, may live
+                    # in the federated domain (e.g. admin acting on a federated
+                    # project), hence the _project_scopes fallback.
+                    base_kwargs = {
                         "auth_url": self.KEYSTONE_URL,
                         "username": username,
                         "password": password,
@@ -159,16 +193,19 @@ class OpenstackSDKAuthClient(AuthenticationClient):
                         "auth_type": "v3password"
                     }
 
-                    if project_name:
-                        auth_kwargs.update({
-                            "project_name": project_name,
-                            "project_domain_name": "Default"
-                        })
-
-                    conn = openstack.connect(**auth_kwargs)
-
-                    access_token = conn.auth_token
-                    access_info = conn.session.auth.get_access(conn.session)
+                    conn = None
+                    scope_error = None
+                    for scope in self._project_scopes(project_id, project_name):
+                        try:
+                            conn = openstack.connect(**base_kwargs, **scope)
+                            access_token = conn.auth_token
+                            access_info = conn.session.auth.get_access(conn.session)
+                            break
+                        except Exception as e:
+                            conn = None
+                            scope_error = e
+                    if conn is None:
+                        raise scope_error
 
                     preauthurl = None
                     # On ne cherche le endpoint object-store que si on est scopé sur un projet
@@ -207,33 +244,39 @@ class OpenstackSDKAuthClient(AuthenticationClient):
 
         return decorated_function
 
-    def _get_conn(self, project_name=None):
+    def _get_conn(self, project_name=None, project_id=None):
         """
         Crée une connexion fraîche avec le token actuel.
-        Optionnel : forcer un project_name différent.
+        Optionnel : forcer un project_name / project_id différent.
         """
         if not hasattr(g, 'user') or not g.user.get('access_token'):
             raise ValueError("Aucun token disponible dans g.user. Utilisez @login_required")
 
-        auth_kwargs = {
+        base_kwargs = {
             "auth_url": self.KEYSTONE_URL,
             "token": g.user["access_token"],
             "auth_type": "v3token",
         }
 
-        # Si on veut forcer un projet différent (ex: admin project)
-        if project_name:
-            auth_kwargs.update({
-                "project_name": project_name,
-                "project_domain_name": "Default"
-            })
-        elif g.user.get("project_name"):
-            auth_kwargs.update({
-                "project_name": g.user["project_name"],
-                "project_domain_name": "Default"
-            })
+        # Sans projet explicite : reprendre le scope courant du token, par id
+        # (indépendant du domaine) plutôt que par nom.
+        if not project_name and not project_id:
+            project_id = g.user.get("project_id")
+            if not project_id:
+                project_name = g.user.get("project_name")
 
-        return openstack.connect(**auth_kwargs)
+        # openstack.connect est paresseux : on force l'authentification tout de
+        # suite (authorize) pour pouvoir retomber sur le domaine fédéré si le
+        # nom de projet n'existe pas dans Default.
+        scope_error = None
+        for scope in self._project_scopes(project_id, project_name):
+            try:
+                conn = openstack.connect(**base_kwargs, **scope)
+                conn.authorize()
+                return conn
+            except Exception as e:
+                scope_error = e
+        raise scope_error
 
     # ------------------------------------------------------------------
     # 1. Liste des utilisateurs

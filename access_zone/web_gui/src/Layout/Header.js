@@ -12,7 +12,7 @@ import {
   setActiveProject,
   clearAuthData,
 } from "../utils/authUtils";
-import { loginWithCredentials, logout } from "../utils/apiClient";
+import { loginWithCredentials, logout, getSsoLogoutUrl } from "../utils/apiClient";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -120,10 +120,13 @@ const Header = () => {
               </div>
               <button
                 onClick={async () => {
-                  // Revoke the token server-side first, then clear local state.
+                  // Revoke the Keystone token server-side, clear local state,
+                  // then leave through a full-page navigation so Keycloak can
+                  // clear its SSO cookie too — otherwise "Se connecter avec
+                  // Keycloak" silently re-logs the same account.
                   await logout();
                   clearAuthData();
-                  navigate("/");
+                  window.location.href = getSsoLogoutUrl();
                 }}
                 className="flex items-center gap-2 px-4 py-2 bg-black/20 hover:bg-black/40 rounded-xl text-white text-sm font-medium transition-all border border-white/5"
               >

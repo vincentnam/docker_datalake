@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { User, Lock, ArrowRight, Loader2, AlertCircle, KeyRound } from "lucide-react";
 import {
   getAuthData,
@@ -19,8 +19,10 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [ssoEnabled, setSsoEnabled] = useState(false);
+  // Identity providers registered in Keystone : one login button per entry.
+  const [idps, setIdps] = useState([]);
   const [showClassic, setShowClassic] = useState(false);
+  const ssoEnabled = idps.length > 0;
   const navigate = useNavigate();
 
   // On mount : finalize an SSO return, OR skip login if already authenticated.
@@ -29,6 +31,7 @@ const Login = () => {
     const ssoToken = params.get("sso_token");
     const ssoError = params.get("sso_error");
     const ssoProject = params.get("project");
+    const ssoProjectId = params.get("project_id");
 
     const clearHash = () =>
       window.history.replaceState(null, "", window.location.pathname);
@@ -43,7 +46,7 @@ const Login = () => {
       // Came back from Keycloak SSO : exchange the Keystone token for the full
       // auth payload, store it, then go to the app.
       setLoading(true);
-      loginWithToken({ token: ssoToken, project: ssoProject })
+      loginWithToken({ token: ssoToken, project: ssoProject, projectId: ssoProjectId })
         .then((data) => {
           setAuthData(data);
           if (ssoProject) {
@@ -60,20 +63,34 @@ const Login = () => {
       return;
     }
 
-    // Already have a valid session ? Skip the login screen.
-    const authData = getAuthData();
-    if (authData && authData.status === "authenticated" && authData.access_token) {
-      navigate("/buckets");
-      return;
-    }
-
-    // Otherwise, ask the API whether to offer the Keycloak SSO button.
-    fetchAuthConfig().then((cfg) => setSsoEnabled(Boolean(cfg.sso_enabled)));
+    // Ask the API for the login options (identity providers list).
+    fetchAuthConfig().then((cfg) =>
+      setIdps(cfg.sso_enabled ? cfg.idps : [])
+    );
   }, [navigate]);
 
-  const handleSsoLogin = () => {
-    window.location.href = getSsoLoginUrl();
+  // A valid token is already stored and we're not finalizing an SSO return :
+  // never render the login page, the app's default page is the buckets.
+  const hashParams = new URLSearchParams(window.location.hash.slice(1));
+  const isSsoReturn = hashParams.has("sso_token") || hashParams.has("sso_error");
+  const storedAuth = getAuthData();
+  if (
+    !isSsoReturn &&
+    storedAuth?.status === "authenticated" &&
+    storedAuth?.access_token
+  ) {
+    return <Navigate to="/buckets" replace />;
+  }
+
+  const handleSsoLogin = (idpId) => {
+    window.location.href = getSsoLoginUrl(idpId);
   };
+
+  // Button label : "Connexion fédérée" alone for a single IdP, numbered
+  // ("Connexion fédérée 1", "Connexion fédérée 2"...) when several are
+  // registered. The IdP description (or id) is shown as a hint.
+  const idpLabel = (index) =>
+    idps.length > 1 ? `Connexion fédérée ${index + 1}` : "Connexion fédérée";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -134,18 +151,25 @@ const Login = () => {
         </p>
       </div>
 
-      {/* Connexion SSO Keycloak en premier (méthode principale) */}
+      {/* Connexions fédérées en premier (méthode principale) : un bouton par
+          identity provider enregistré dans Keystone. */}
       {ssoEnabled && (
-        <div className="mb-6">
-          <button
-            type="button"
-            onClick={handleSsoLogin}
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-200 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            <KeyRound className="w-5 h-5" />
-            Se connecter avec Keycloak
-          </button>
+        <div className="mb-6 space-y-3">
+          {idps.map((idp, index) => (
+            <button
+              key={idp.id}
+              type="button"
+              onClick={() => handleSsoLogin(idp.id)}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-200 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              <KeyRound className="w-5 h-5" />
+              <span>{idpLabel(index)}</span>
+              <span className="text-white/70 text-xs font-medium">
+                {idp.description || idp.id}
+              </span>
+            </button>
+          ))}
 
           {!showClassic && (
             <>
@@ -164,15 +188,15 @@ const Login = () => {
                 className="w-full flex items-center justify-center gap-2 py-4 bg-white border border-gray-200 hover:border-orange-400 text-gray-700 font-bold rounded-xl shadow-sm transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <User className="w-5 h-5 text-orange-500" />
-                Connexion classique
+                Connexion locale
               </button>
             </>
           )}
         </div>
       )}
 
-      {/* Formulaire user/password : affiché directement si pas de SSO,
-          sinon seulement après clic sur "Connexion classique". */}
+      {/* Formulaire user/password (comptes locaux Keystone) : affiché
+          directement si pas de SSO, sinon après clic sur "Connexion locale". */}
       {(!ssoEnabled || showClassic) && (
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Champ Utilisateur */}

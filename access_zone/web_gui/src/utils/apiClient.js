@@ -1,4 +1,4 @@
-import { getActiveProject, getAuthData } from './authUtils';
+import { getActiveProject, getActiveProjectId, getAuthData } from './authUtils';
 
 const API_BASE_URL = process.env.REACT_APP_FLASK_APP_URL || 'http://localhost:7000/api';
 
@@ -16,6 +16,11 @@ const buildAuthHeaders = ({ includeJsonContentType = true } = {}) => {
   const project = getActiveProject();
   if (project) {
     headers.Project = project;
+  }
+  // Domain-agnostic project reference, preferred by the API over the name.
+  const projectId = getActiveProjectId();
+  if (projectId) {
+    headers['Project-Id'] = projectId;
   }
 
   if (includeJsonContentType) {
@@ -51,12 +56,15 @@ export const loginWithCredentials = async ({ username, password, project }) => {
 // Finalize a login from an existing Keystone token (e.g. obtained via Keycloak
 // SSO). Hits the same `/` endpoint as the password login but with a Bearer
 // token, returning the same auth payload shape.
-export const loginWithToken = async ({ token, project }) => {
+export const loginWithToken = async ({ token, project, projectId }) => {
   const headers = {
     Authorization: `Bearer ${token}`,
   };
   if (project) {
     headers.Project = project;
+  }
+  if (projectId) {
+    headers['Project-Id'] = projectId;
   }
 
   const response = await fetch(`${API_BASE_URL}/`, {
@@ -96,19 +104,28 @@ export const logout = async () => {
   }
 };
 
-// URL the browser is sent to in order to start the Keycloak SSO login.
-export const getSsoLoginUrl = () => `${API_BASE_URL}/auth/login`;
+// URL the browser is sent to in order to start the SSO login on one of the
+// identity providers registered in Keystone (see fetchAuthConfig).
+export const getSsoLoginUrl = (idpId) =>
+  `${API_BASE_URL}/auth/login${idpId ? `?idp=${encodeURIComponent(idpId)}` : ''}`;
 
-// Ask the API whether Keycloak SSO is enabled (to show the SSO button or not).
+// URL of the full-page logout navigation : Flask closes the Keycloak SSO
+// session (so another account can log in) then redirects to the login page.
+export const getSsoLogoutUrl = () => `${API_BASE_URL}/auth/logout`;
+
+// Login options : whether SSO is enabled, and the list of identity providers
+// registered in Keystone ([{id, description, login_url}]) — one login button
+// per entry, next to the local (password) login.
 export const fetchAuthConfig = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/auth/config`);
     if (!response.ok) {
-      return { sso_enabled: false };
+      return { sso_enabled: false, idps: [] };
     }
-    return await response.json();
+    const data = await response.json();
+    return { sso_enabled: Boolean(data.sso_enabled), idps: data.idps || [] };
   } catch (e) {
-    return { sso_enabled: false };
+    return { sso_enabled: false, idps: [] };
   }
 };
 

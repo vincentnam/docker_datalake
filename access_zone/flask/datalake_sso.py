@@ -1,25 +1,29 @@
 # datalake_sso.py - Keycloak SSO (OIDC Authorization Code) Backend-for-Frontend.
 #
 # Flow (BFF : the OIDC client secret never reaches the browser) :
-#   1. GET /auth/login    -> redirect the browser to the Keycloak login page.
-#   2. Keycloak redirects back to GET /auth/callback?code=...&state=...
-#   3. Flask exchanges the code for a Keycloak access token AND a federated
-#      Keystone token in one step (keystoneauth v3oidcauthcode), scopes it to a
-#      project, then redirects the browser back to the web GUI with the Keystone
-#      token in the URL fragment. The GUI finalizes via the existing Bearer flow.
+#   1. GET /auth/config   -> login options : one entry per identity provider
+#      registered in Keystone (listed with the idp-reader service account).
+#   2. GET /auth/login?idp=<id> -> redirect the browser to that IdP's login page.
+#   3. Keycloak redirects back to GET /auth/callback?code=...&state=...
+#   4. Flask exchanges the code directly (keeping the id_token for logout),
+#      trades the access token for a federated Keystone token (v3oidcaccesstoken),
+#      scopes it to a project, then redirects the browser back to the web GUI
+#      with the Keystone token in the URL fragment. The GUI finalizes via the
+#      existing Bearer flow.
 #
 # The web GUI keeps using a *Keystone* token as Bearer, exactly like the
 # username/password login : SSO is just another way to obtain that token.
 
 import os
 import secrets
+import time
 from urllib.parse import urlencode
 
 import requests
 from flask import Blueprint, request, redirect, session, jsonify, current_app
 
 from keystoneauth1 import session as ksa_session
-from keystoneauth1.identity.v3 import OidcAuthorizationCode, Token
+from keystoneauth1.identity.v3 import OidcAccessToken, Token
 
 
 sso_bp = Blueprint("sso", __name__)
@@ -40,6 +44,11 @@ def _cfg():
         "protocol": os.getenv("KEYCLOAK_PROTOCOL_ID", "openid"),
         "preferred_project": os.getenv("FEDERATED_PROJECT", ""),
         "web_gui_url": os.getenv("WEB_GUI_URL", "http://localhost:7000").rstrip("/"),
+        # Read-only service account used to list the IdPs registered in
+        # Keystone (drives the dynamic login buttons of the web GUI).
+        "idp_reader_user": os.getenv("IDP_READER_USER", ""),
+        "idp_reader_password": os.getenv("IDP_READER_PASSWORD", ""),
+        "idp_reader_project": os.getenv("IDP_READER_PROJECT", "service"),
     }
 
 
@@ -54,6 +63,98 @@ def sso_enabled():
     )
 
 
+# Cache of the identity providers registered in Keystone : the login page
+# requests them on every load, no need to hammer Keystone.
+_IDP_CACHE = {"fetched_at": 0.0, "idps": None}
+_IDP_CACHE_TTL = 60  # seconds
+
+
+def _idp_client_cfg(idp_id):
+    """OIDC client (relying party) configuration for one identity provider.
+
+    Single-IdP for now : only the statically configured Keycloak has client
+    credentials. To plug another IdP later, return here a dict with the same
+    shape as _cfg() (its own kc_public_url / kc_internal_url / realm / client
+    id / secret), keyed on its Keystone IdP id. Returns None for an unknown
+    IdP so callers can reject it.
+    """
+    c = _cfg()
+    if idp_id == c["idp"]:
+        return c
+    return None
+
+
+def _keystone_service_token(c):
+    """Token of the read-only idp-reader service account (None if unset)."""
+    if not (c["idp_reader_user"] and c["idp_reader_password"]):
+        return None
+    body = {
+        "auth": {
+            "identity": {
+                "methods": ["password"],
+                "password": {
+                    "user": {
+                        "name": c["idp_reader_user"],
+                        "domain": {"name": "Default"},
+                        "password": c["idp_reader_password"],
+                    }
+                },
+            },
+            "scope": {
+                "project": {
+                    "name": c["idp_reader_project"],
+                    "domain": {"name": "Default"},
+                }
+            },
+        }
+    }
+    resp = requests.post(
+        f"{c['keystone_url'].rstrip('/')}/auth/tokens", json=body, timeout=10
+    )
+    resp.raise_for_status()
+    return resp.headers["X-Subject-Token"]
+
+
+def _list_idps(c):
+    """Identity providers registered in Keystone (id + description).
+
+    Keystone is the source of truth : an IdP registered by the bootstrap shows
+    up on the login page automatically. Only IdPs the BFF has OIDC client
+    credentials for are kept (an entry without a secret would just be a broken
+    button). Falls back to the statically configured IdP when Keystone can't
+    be queried, so the login page keeps working.
+    """
+    now = time.time()
+    if _IDP_CACHE["idps"] is not None and now - _IDP_CACHE["fetched_at"] < _IDP_CACHE_TTL:
+        return _IDP_CACHE["idps"]
+
+    idps = None
+    try:
+        token = _keystone_service_token(c)
+        if token:
+            resp = requests.get(
+                f"{c['keystone_url'].rstrip('/')}/OS-FEDERATION/identity_providers",
+                headers={"X-Auth-Token": token},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            idps = [
+                {"id": idp["id"], "description": idp.get("description")}
+                for idp in resp.json().get("identity_providers", [])
+                if idp.get("enabled", True)
+            ]
+    except Exception:
+        current_app.logger.exception("Could not list identity providers from Keystone")
+
+    if idps is None:
+        idps = [{"id": c["idp"], "description": None}]
+
+    idps = [i for i in idps if _idp_client_cfg(i["id"]) is not None]
+
+    _IDP_CACHE.update({"fetched_at": now, "idps": idps})
+    return idps
+
+
 def _authorize_endpoint(c):
     return f"{c['kc_public_url']}/realms/{c['realm']}/protocol/openid-connect/auth"
 
@@ -64,14 +165,33 @@ def _token_endpoint(c):
     return f"{base}/realms/{c['realm']}/protocol/openid-connect/token"
 
 
+def _end_session_endpoint(c):
+    # Public URL : the browser is navigated there so Keycloak can clear its
+    # SSO session cookie (RP-initiated logout).
+    return f"{c['kc_public_url']}/realms/{c['realm']}/protocol/openid-connect/logout"
+
+
 def _gui_redirect(c, fragment):
     return redirect(f"{c['web_gui_url']}/#{fragment}")
 
 
 @sso_bp.route("/auth/config", methods=["GET"])
 def auth_config():
-    """Let the web GUI know whether to show the 'Login with Keycloak' button."""
-    return jsonify({"sso_enabled": sso_enabled(), "login_url": "/api/auth/login"}), 200
+    """Login options for the web GUI : local login + one button per identity
+    provider registered in Keystone."""
+    if not sso_enabled():
+        return jsonify({"sso_enabled": False, "idps": []}), 200
+
+    c = _cfg()
+    idps = [
+        {
+            "id": idp["id"],
+            "description": idp.get("description"),
+            "login_url": f"/api/auth/login?idp={idp['id']}",
+        }
+        for idp in _list_idps(c)
+    ]
+    return jsonify({"sso_enabled": bool(idps), "idps": idps}), 200
 
 
 @sso_bp.route("/auth/logout", methods=["POST"])
@@ -108,19 +228,59 @@ def auth_logout():
         except Exception:
             current_app.logger.exception("Token revocation failed")
 
-    # Drop any server-side SSO session/state cookie too.
-    session.clear()
+    # Keep the Flask session (it may hold the Keycloak id_token) : the GET
+    # /auth/logout navigation right after this call needs it to close the
+    # Keycloak SSO session, and clears everything itself.
+    session.pop("oidc_state", None)
     return jsonify({"revoked": revoked}), 200
+
+
+@sso_bp.route("/auth/logout", methods=["GET"])
+def auth_logout_sso():
+    """Browser-navigated logout : close the Keycloak SSO session, then land
+    back on the GUI login page.
+
+    Revoking the Keystone token (POST above) is not enough for a real logout :
+    the Keycloak SSO cookie survives in the browser, so the next 'login with
+    Keycloak' silently re-authenticates the same user and switching accounts is
+    impossible. This endpoint is a full-page navigation so Keycloak can clear
+    that cookie (RP-initiated logout ; id_token_hint skips the confirmation
+    screen). Without an SSO session it just bounces back to the GUI.
+    """
+    id_token = session.pop("oidc_id_token", None)
+    idp_id = session.pop("oidc_idp", None)
+    session.clear()
+    # End the session on the IdP the user actually logged in through.
+    c = _idp_client_cfg(idp_id) if idp_id else None
+    if c is None:
+        c = _cfg()
+
+    if sso_enabled() and id_token:
+        params = {
+            "id_token_hint": id_token,
+            "client_id": c["client_id"],
+            "post_logout_redirect_uri": c["web_gui_url"],
+        }
+        return redirect(f"{_end_session_endpoint(c)}?{urlencode(params)}")
+
+    return redirect(c["web_gui_url"])
 
 
 @sso_bp.route("/auth/login", methods=["GET"])
 def auth_login():
-    c = _cfg()
     if not sso_enabled():
         return jsonify({"error": "SSO is not enabled"}), 404
 
+    idp_id = request.args.get("idp") or _cfg()["idp"]
+    c = _idp_client_cfg(idp_id)
+    if c is None:
+        return jsonify({"error": f"Unknown identity provider '{idp_id}'"}), 404
+
     state = secrets.token_urlsafe(24)
     session["oidc_state"] = state
+    # Remember which IdP this login round-trip belongs to : the callback needs
+    # its token endpoint / client credentials.
+    session["oidc_login_idp"] = idp_id
 
     params = {
         "client_id": c["client_id"],
@@ -134,9 +294,15 @@ def auth_login():
 
 @sso_bp.route("/auth/callback", methods=["GET"])
 def auth_callback():
-    c = _cfg()
     if not sso_enabled():
         return jsonify({"error": "SSO is not enabled"}), 404
+
+    # The login round-trip was started for a specific IdP (see auth_login).
+    idp_id = session.pop("oidc_login_idp", None) or _cfg()["idp"]
+    c = _idp_client_cfg(idp_id)
+    if c is None:
+        c = _cfg()
+        return _gui_redirect(c, urlencode({"sso_error": f"Unknown identity provider '{idp_id}'"}))
 
     error = request.args.get("error")
     if error:
@@ -149,17 +315,34 @@ def auth_callback():
         return _gui_redirect(c, urlencode({"sso_error": "Invalid SSO state or missing code"}))
 
     try:
-        # Exchange the authorization code for a *federated unscoped* Keystone
-        # token (keystoneauth does code -> Keycloak access token -> Keystone).
-        auth = OidcAuthorizationCode(
+        # Exchange the authorization code against Keycloak DIRECTLY (instead of
+        # letting keystoneauth do it) : we need the id_token too, kept in the
+        # Flask session to close the Keycloak SSO session on logout
+        # (id_token_hint of the RP-initiated logout).
+        tk_resp = requests.post(
+            _token_endpoint(c),
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": c["redirect_uri"],
+                "client_id": c["client_id"],
+                "client_secret": c["client_secret"],
+            },
+            timeout=10,
+        )
+        tk_resp.raise_for_status()
+        kc_tokens = tk_resp.json()
+        session["oidc_id_token"] = kc_tokens.get("id_token")
+        # Kept for the logout : the end-session endpoint is per-IdP.
+        session["oidc_idp"] = idp_id
+
+        # Trade the Keycloak access token for a *federated unscoped* Keystone
+        # token.
+        auth = OidcAccessToken(
             auth_url=c["keystone_url"],
-            identity_provider=c["idp"],
+            identity_provider=idp_id,
             protocol=c["protocol"],
-            client_id=c["client_id"],
-            client_secret=c["client_secret"],
-            access_token_endpoint=_token_endpoint(c),
-            redirect_uri=c["redirect_uri"],
-            code=code,
+            access_token=kc_tokens["access_token"],
         )
         sess = ksa_session.Session(auth=auth)
         unscoped_token = sess.get_token()
@@ -178,7 +361,13 @@ def auth_callback():
         scoped_token = ksa_session.Session(auth=scope_auth).get_token()
 
         return _gui_redirect(
-            c, urlencode({"sso_token": scoped_token, "project": project["name"]})
+            c, urlencode({
+                "sso_token": scoped_token,
+                "project": project["name"],
+                # Domain-agnostic reference : the GUI sends it back as the
+                # Project-Id header (federated projects don't live in Default).
+                "project_id": project["id"],
+            })
         )
 
     except Exception as exc:  # noqa: BLE001 - surface a readable error to the GUI

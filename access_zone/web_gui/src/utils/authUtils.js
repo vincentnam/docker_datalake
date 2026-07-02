@@ -53,6 +53,19 @@ export const setActiveProject = (projectName) => {
   localStorage.setItem(ACTIVE_PROJECT_KEY, projectName);
 };
 
+// Resolve the id of the active project from the projects list of the auth
+// payload. Ids are domain-agnostic : the API prefers them over names (a name
+// is only unique within a Keystone domain, and federated projects don't live
+// in the same domain as the local ones).
+export const getActiveProjectId = () => {
+  const name = getActiveProject();
+  if (!name) {
+    return '';
+  }
+  const match = getAvailableProjects().find((p) => p.name === name);
+  return match?.id || '';
+};
+
 export const setSessionCredentials = (username, password) => {
   try {
     sessionStorage.setItem(CREDENTIALS_KEY, JSON.stringify({ username, password }));

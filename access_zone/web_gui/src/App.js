@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import ListBuckets from "./components/ListBuckets";
 import BrowseBucket from "./components/BrowseBucket";
 import AppLayout from "./Layout/AppLayout";
@@ -16,6 +16,9 @@ const App = () => {
           <Route path="/" element={<Login />} />
           <Route path="/buckets" element={<PrivateRoute requiredRoles={['user']}><ListBuckets /></PrivateRoute>} />
           <Route path="/buckets/:bucketName" element={<PrivateRoute requiredRoles={['user']}><BrowseBucket /></PrivateRoute>} />
+          {/* Any unknown URL falls back on "/" : Login redirects to /buckets
+              when a token is already stored. */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AppLayout>
     </BrowserRouter>

@@ -69,6 +69,10 @@ KEYCLOAK_REDIRECT_URI="$KEYCLOAK_REDIRECT_URI"
 KEYCLOAK_IDP_ID="$KEYCLOAK_IDP_ID"
 KEYCLOAK_PROTOCOL_ID="$KEYCLOAK_PROTOCOL_ID"
 FEDERATED_PROJECT="$FEDERATED_PROJECT"
+FEDERATED_DOMAIN="$FEDERATED_DOMAIN"
+IDP_READER_USER="$IDP_READER_USER"
+IDP_READER_PASSWORD="$IDP_READER_PASSWORD"
+IDP_READER_PROJECT="service"
 KEYSTONE_URL="$KEYSTONE_URL"
 WEB_GUI_URL="$WEB_GUI_URL"
 FLASK_SECRET="$FLASK_SECRET"
@@ -117,6 +121,7 @@ if [ "${DEPLOY_KEYCLOAK,,}" = "true" ]; then
       "serviceAccountsEnabled": false,
       "redirectUris": [ "$KEYCLOAK_REDIRECT_URI", "${WEB_GUI_URL%/}/*", "${KEYSTONE_PUBLIC_URL%/}/*" ],
       "webOrigins": [ "+" ],
+      "attributes": { "post.logout.redirect.uris": "+" },
       "defaultClientScopes": [ "openid", "profile", "email", "roles" ],
       "protocolMappers": [
         {
