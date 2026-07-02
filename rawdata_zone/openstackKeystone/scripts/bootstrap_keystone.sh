@@ -166,6 +166,13 @@ if [ "$FEDERATION_ENABLED_LC" = "true" ]; then
     # auto-provisioned project named after the username ({0}) on which the user
     # gets FEDERATED_ROLE (bucket_owner). Keystone creates the project on first
     # login (federation auto-provisioning).
+    #
+    # NOTE : we deliberately key the rule ONLY on the preferred_username claim.
+    # Every entry listed in "remote" is a *requirement* : if we also required
+    # HTTP_OIDC_email, any Keycloak user without an email (the common case for
+    # a hand-created account) would fail to match the rule, so no shadow user
+    # and no auto-provisioned project would be created. The project doesn't need
+    # the email, so email is left out to make provisioning robust.
     MAPPING_ID="${KEYCLOAK_IDP_ID}_mapping"
     MAPPING_FILE="$(mktemp)"
     cat > "$MAPPING_FILE" <<MAP
@@ -175,7 +182,6 @@ if [ "$FEDERATION_ENABLED_LC" = "true" ]; then
       {
         "user": {
           "name": "{0}",
-          "email": "{1}",
           "domain": { "name": "$FEDERATED_DOMAIN" }
         },
         "projects": [
@@ -189,8 +195,7 @@ if [ "$FEDERATION_ENABLED_LC" = "true" ]; then
       }
     ],
     "remote": [
-      { "type": "HTTP_OIDC_preferred_username" },
-      { "type": "HTTP_OIDC_email" }
+      { "type": "HTTP_OIDC_preferred_username" }
     ]
   }
 ]
