@@ -241,9 +241,11 @@ cat << EOF >> docker-compose_datalake.yml
     image: horizon:${OPENSTACK_RELEASE_VAR//stable\//}-${BASE_TAG_VAR}
     container_name: horizon
     restart: always
+    # Test-only : Horizon is a debugging dashboard, brought up solely by
+    # start.sh -t (which adds --profile debug). A normal run (--profile
+    # datalake) leaves it out, so it is not exposed in production.
     profiles:
-      - authentication
-      - datalake
+      - debug
     ports:
       - "8080:80"
     volumes:

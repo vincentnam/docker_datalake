@@ -79,6 +79,19 @@ FLASK_SECRET="$FLASK_SECRET"
 EOF
 
 ####################################
+## KEYSTONE SERVICE CONF
+####################################
+# Keep the Keystone DB connection string in sync with the MariaDB credentials
+# from conf.env. Without this, keystone.conf holds a hardcoded password that
+# silently drifts from MYSQL_PASSWORD -> "Access denied for user 'keystone'".
+# Only the [database] connection line is rewritten ; the rest of keystone.conf
+# (auth methods, federation, cache...) is left untouched.
+KEYSTONE_CONF="$OPENSTACKKEYSTONE_PATH/conf/etc/keystone/keystone.conf"
+if [ -f "$KEYSTONE_CONF" ]; then
+  sed -i "s#^connection = .*#connection = mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mariadb/${MYSQL_DATABASE}#" "$KEYSTONE_CONF"
+fi
+
+####################################
 ## KEYCLOAK REALM SECTION
 ####################################
 # Render the realm imported by the bundled Keycloak container so that the
