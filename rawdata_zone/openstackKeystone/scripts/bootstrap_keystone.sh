@@ -205,13 +205,16 @@ if [ "$FEDERATION_ENABLED_LC" = "true" ]; then
     #  - preferred_username ({0}) : always present, names the user + project.
     #    (email is deliberately NOT required : a hand-created Keycloak account
     #    often has none, and requiring it would silently break provisioning.)
-    #  - HTTP_OIDC_GROUPS must contain FEDERATED_GROUP : the Keycloak group is
+    #  - HTTP_OIDC_groups must contain FEDERATED_GROUP : the Keycloak group is
     #    the datalake ACCESS GATE. Not in the group = authenticated by Keycloak
     #    but refused by Keystone (no token). Removing a user from the group
     #    blocks the NEXT login ; the shadow user / project / data stay intact
     #    and are recovered if the user is added back.
     #    Requires the "groups" protocol mapper on the Keycloak client (present
     #    in the bundled realm ; to create manually on an external Keycloak).
+    #    NOTE the claim key case : mod_auth_openidc exposes claims KEEPING their
+    #    original (lowercase) name, so it is HTTP_OIDC_groups, NOT _GROUPS, the
+    #    same way remote_id_attribute uses HTTP_OIDC_iss (lowercase).
     MAPPING_ID="${KEYCLOAK_IDP_ID}_mapping"
     MAPPING_FILE="$(mktemp)"
     cat > "$MAPPING_FILE" <<MAP
@@ -236,7 +239,7 @@ if [ "$FEDERATION_ENABLED_LC" = "true" ]; then
     "remote": [
       { "type": "HTTP_OIDC_preferred_username" },
       {
-        "type": "HTTP_OIDC_GROUPS",
+        "type": "HTTP_OIDC_groups",
         "any_one_of": [ "$FEDERATED_GROUP" ]
       }
     ]
