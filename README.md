@@ -35,3 +35,17 @@ export OS_PROJECT_DOMAIN_NAME=Default
 export OS_AUTH_URL=http://localhost:5000/v3
 export OS_IDENTITY_API_VERSION=3
 export OS_IMAGE_API_VERSION=2
+
+## Licence
+
+
+
+Copyright (C) 2020-2026 Vincent-Nam DANG  
+Copyright (C) 2021-2026 docker_datalake contributors
+
+
+
+The software license does not apply to data, notebooks, business scripts, queries, models, results, configurations, or other independent content merely because they are used by, provided to, or created with the project.
+These items remain subject to the rights and licenses chosen by their respective owners.
+
+Third-party components used or executed by the project, particularly in the form of separate containers, remain governed by their respective licenses.
