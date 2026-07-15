@@ -413,8 +413,9 @@ cat <<EOF >> docker-compose_datalake.yml
       timeout: 10s
       retries: 3
       #for tests
-#    command: gunicorn -w 3 -t 60 -b 0.0.0.0:5000 app:app
-    command: python /home/app/app.py
+    command: gunicorn -w 3 -t 60 -b 0.0.0.0:5000 app:app
+#   Test purpose
+#    command: python /home/app/app.py
     networks:
       swift-cluster:
         ipv4_address: 10.5.255.2
