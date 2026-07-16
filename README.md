@@ -9,9 +9,29 @@ Potential security breach :
     
     - Swift container in privileged mode 
         - #TODO give defined list of privilege instead of full privileged mode  
-    - Remove hardcoded secret
+
+## TODO (deferred): Centralize Keystone token management in Flask
+
+### Current situation
+
+The web GUI stores the Keystone token in `localStorage` and local credentials in
+`sessionStorage`. Flask is already the only public gateway, so this improvement is
+useful but not currently a priority. It allows to open Keystone service (in order to make authentication federation 
+process from external to internal datalake Keystone) without risking to expose the Keystone token through web GUI.
+
+### Target architecture
+
+Flask would become the single authentication and session authority for all data lake
+clients:
+- Store Keystone tokens in Valkey and expose only an `HttpOnly` session cookie
+- Use the same server-side session for local login and federated SSO
+- Remove Keystone tokens and passwords from browser storage and API responses
+- Load authentication from the Flask session for all API requests
+- Revoke the Keystone token and delete the session on logout
+- JupyterHub authenticate through short-lived tickets issued by Flask
 
 
+# Other
 curl -H "Authorization: Bearer gAAAAABpoat_E62omkMt_iIW3O7etR8a8CUPTt7r33sefp_wNLRsgBW4h8jORAzwGhwnLO-pNXd45BKvMJ5vpEJ64qeJBQxDjJF7hB27QdYzM7jvMoWN-oHAn58WelrveFEqoB8zjs5BEimX3If-QofMGAMleM8RktpFB3E-LZRSKX79O-eDauA" http://localhost:3001/buckets
 curl -X GET -H "X-Username: admin" -H "X-Password: admin"      -H "Content-Type: application/json"      http://localhost:3001/buckets
 
