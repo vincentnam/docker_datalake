@@ -1,27 +1,105 @@
-
-
-from .datalake_authclient import AuthenticationClient
-from functools import wraps
-from flask import request, g, jsonify, current_app
-
 import json
-from keystoneauth1.identity import v3
+import os
+from functools import wraps
+
+from flask import current_app, g, jsonify, request
 from keystoneauth1 import session
+from keystoneauth1.exceptions import ClientException
+from keystoneauth1.exceptions.http import Unauthorized
+from keystoneauth1.identity import v3
 from keystoneclient.v3 import client as keystone_client
+
+from .datalake_authclient import (
+    AuthenticationBackendError,
+    AuthenticationClient,
+    AuthenticationRejected,
+)
 
 
 class KeystoneClient(AuthenticationClient):
 
-    def __init__(self, current_app):
-        import os
-
-        self.current_app = current_app
+    def __init__(self, app=None):
+        self.current_app = app if app is not None else current_app
         self.KEYSTONE_URL = os.getenv("KEYSTONE_URL", "http://keystone:5000/v3")
         self.S3_ENDPOINT = os.getenv("S3_ENDPOINT", "http://10.5.10.1:8080")
 
-    def _make_session_from_auth(self, auth):
-        """Crée une session Keystone à partir d'un objet auth."""
-        return session.Session(auth=auth)
+    def _make_session_from_auth(self, keystone_authentication):
+        """Crée une session Keystone à partir d'un objet d'authentification."""
+        return session.Session(auth=keystone_authentication)
+
+    def authenticate_credentials(
+        self,
+        username,
+        password,
+        project_name=None,
+        project_id=None,
+    ):
+        """Authentifie un compte Keystone local avec keystoneauth."""
+        authentication_parameters = {
+            "auth_url": self.KEYSTONE_URL,
+            "username": username,
+            "password": password,
+            "user_domain_name": "Default",
+        }
+        # La connexion locale reste dans le domaine Default. Le projet est
+        # optionnel pour permettre aussi une authentification non scopée.
+        if project_id:
+            authentication_parameters["project_id"] = project_id
+        elif project_name:
+            authentication_parameters.update({
+                "project_name": project_name,
+                "project_domain_name": "Default",
+            })
+
+        try:
+            keystone_authentication = v3.Password(**authentication_parameters)
+            keystone_session = self._make_session_from_auth(
+                keystone_authentication
+            )
+            access_token = keystone_session.get_token()
+            keystone_access_information = keystone_authentication.auth_ref
+
+            object_store_url = None
+            if keystone_access_information.project_id:
+                try:
+                    # Swift n'est disponible que si le token est scopé sur un
+                    # projet et que Keystone retourne un endpoint object-store.
+                    object_store_endpoints = (
+                        keystone_access_information.service_catalog.get_endpoints(
+                            service_type="object-store"
+                        )
+                    )
+                    for endpoint in object_store_endpoints.get("object-store", []):
+                        if endpoint["interface"] in ("public", "internal"):
+                            object_store_url = endpoint["url"]
+                            break
+                except Exception:
+                    pass
+
+            authenticated_user = {
+                "id": keystone_access_information.user_id,
+                "username": keystone_access_information.username,
+                "roles": keystone_access_information.role_names or [],
+                "project_id": keystone_access_information.project_id,
+                "project_name": keystone_access_information.project_name,
+                "source": "credentials",
+                "access_token": access_token,
+                "preauthurl": object_store_url,
+                "projects": [],
+                "ec2_credentials": None,
+            }
+            self._enrich_user_info(authenticated_user, keystone_session)
+            return authenticated_user
+        except Unauthorized as exception:
+            raise AuthenticationRejected("Invalid credentials") from exception
+        except ClientException as exception:
+            raise AuthenticationBackendError(
+                "Keystone authentication failed"
+            ) from exception
+        except Exception as exception:
+            raise AuthenticationBackendError(
+                "Keystone authentication failed"
+            ) from exception
 
     def _inject_token_in_response(self,response, token):
         """
@@ -159,47 +237,25 @@ class KeystoneClient(AuthenticationClient):
             if username and password:
 
                 try:
-                    auth = v3.Password(
-                        auth_url=self.KEYSTONE_URL,
-                        username=username,
-                        password=password,
-                        user_domain_name='Default',
-                        project_domain_name='Default',
-                        project_name=project_name
+                    g.user = self.authenticate_credentials(
+                        username,
+                        password,
+                        project_name=project_name,
                     )
-                    sess = self._make_session_from_auth(auth)
-                    access_token = sess.get_token()
-                    access_info = auth.auth_ref
-
-
-                    preauthurl = None
-                    for ep in sess.auth.auth_ref.service_catalog.get_endpoints().get('object-store', []):
-                        if ep['interface'] in ('public', 'internal'):
-                            preauthurl = ep['url']
-                            break
-
-                    g.user = {
-                        "id": access_info.user_id,
-                        "username": access_info.username,
-                        "roles": access_info.role_names or [],
-                        "project_id": access_info.project_id,
-                        "project_name": access_info.project_name,
-                        "source": "credentials",
-                        "access_token": access_token,
-                        "preauthurl":preauthurl,
-                        "projects": [],
-                        "ec2_credentials": None
-                    }
-
-                    self._enrich_user_info(g.user, sess)
 
                     response = f(*args, **kwargs)
 
                     # inject token + projects + ec2_credentials into response body or headers
-                    return self._inject_token_in_response(response, access_token)
-                except Exception as e:
-                    print(e)
-                    self.current_app.logger.info(f"Login failure: {type(e).__name__} - {e}")
+                    return self._inject_token_in_response(response, g.user["access_token"])
+                except (
+                    AuthenticationRejected,
+                    AuthenticationBackendError,
+                ) as exception:
+                    self.current_app.logger.info(
+                        "Login failure: %s - %s",
+                        type(exception).__name__,
+                        exception,
+                    )
                     return jsonify({"error": "Invalid credentials"}), 401
 
 

@@ -1,13 +1,20 @@
-import os
 import json
+import os
 from functools import wraps
+
 from flask import request, g, jsonify
 import flask
 
 # Import du SDK OpenStack
 import openstack
+from keystoneauth1.exceptions.http import Unauthorized
 from openstack.exceptions import EndpointNotFound
-from .datalake_authclient import AuthenticationClient
+
+from .datalake_authclient import (
+    AuthenticationBackendError,
+    AuthenticationClient,
+    AuthenticationRejected,
+)
 
 
 class OpenstackSDKAuthClient(AuthenticationClient):
@@ -20,7 +27,7 @@ class OpenstackSDKAuthClient(AuthenticationClient):
         # auto-provisioned projects. Local accounts stay in Default.
         self.FEDERATED_DOMAIN = os.getenv("FEDERATED_DOMAIN", "Default")
 
-    def _project_scopes(self, project_id=None, project_name=None):
+    def _get_project_scopes(self, project_id=None, project_name=None):
         """Ordered list of scoping attempts for a project reference.
 
         Scoping by ID is domain-agnostic and always preferred (this is what the
@@ -32,13 +39,101 @@ class OpenstackSDKAuthClient(AuthenticationClient):
         if project_id:
             return [{"project_id": project_id}]
         if project_name:
-            scopes = [{"project_name": project_name,
-                       "project_domain_name": "Default"}]
+            project_scopes = [{
+                "project_name": project_name,
+                "project_domain_name": "Default",
+            }]
             if self.FEDERATED_DOMAIN and self.FEDERATED_DOMAIN.lower() != "default":
-                scopes.append({"project_name": project_name,
-                               "project_domain_name": self.FEDERATED_DOMAIN})
-            return scopes
+                project_scopes.append({
+                    "project_name": project_name,
+                    "project_domain_name": self.FEDERATED_DOMAIN,
+                })
+            return project_scopes
         return [{}]
+
+    def authenticate_credentials(
+        self,
+        username,
+        password,
+        project_name=None,
+        project_id=None,
+    ):
+        """Authentifie un compte Keystone local avec le SDK OpenStack."""
+        authentication_parameters = {
+            "auth_url": self.KEYSTONE_URL,
+            "username": username,
+            "password": password,
+            "user_domain_name": "Default",
+            "auth_type": "v3password",
+        }
+
+        # On teste les scopes dans l'ordre. C'est utile quand un nom de projet
+        # existe dans le domaine fédéré mais pas dans Default.
+        openstack_connection = None
+        authentication_error = None
+        for project_scope in self._get_project_scopes(project_id, project_name):
+            try:
+                openstack_connection = openstack.connect(
+                    **authentication_parameters,
+                    **project_scope,
+                )
+                access_token = openstack_connection.auth_token
+                keystone_access_information = (
+                    openstack_connection.session.auth.get_access(
+                        openstack_connection.session
+                    )
+                )
+                break
+            except Exception as exception:
+                openstack_connection = None
+                authentication_error = exception
+
+        if openstack_connection is None:
+            http_status = (
+                getattr(authentication_error, "status_code", None)
+                or getattr(authentication_error, "http_status", None)
+            )
+            if (
+                isinstance(authentication_error, Unauthorized)
+                or http_status in (401, 403)
+            ):
+                raise AuthenticationRejected(
+                    "Invalid credentials"
+                ) from authentication_error
+            raise AuthenticationBackendError(
+                "Keystone authentication failed"
+            ) from authentication_error
+
+        object_store_url = None
+        if keystone_access_information.project_id:
+            try:
+                # Sans projet scopé il n'y a pas d'endpoint Swift exploitable.
+                object_store_url = openstack_connection.endpoint_for(
+                    "object-store",
+                    interface="public",
+                )
+                if not object_store_url:
+                    object_store_url = openstack_connection.endpoint_for(
+                        "object-store",
+                        interface="internal",
+                    )
+            except EndpointNotFound:
+                pass
+
+        authenticated_user = {
+            "id": keystone_access_information.user_id,
+            "username": keystone_access_information.username,
+            "roles": keystone_access_information.role_names or [],
+            "project_id": keystone_access_information.project_id,
+            "project_name": keystone_access_information.project_name,
+            "source": "credentials",
+            "access_token": access_token,
+            "preauthurl": object_store_url,
+            "projects": [],
+            "ec2_credentials": None,
+        }
+        self._enrich_user_info(authenticated_user, openstack_connection)
+        return authenticated_user
 
     def _inject_token_in_response(self, response, token):
         """
@@ -132,7 +227,7 @@ class OpenstackSDKAuthClient(AuthenticationClient):
 
                     conn = None
                     scope_error = None
-                    for scope in self._project_scopes(project_id, project_name):
+                    for scope in self._get_project_scopes(project_id, project_name):
                         try:
                             conn = openstack.connect(**base_kwargs, **scope)
                             access_info = conn.session.auth.get_access(conn.session)
@@ -181,61 +276,20 @@ class OpenstackSDKAuthClient(AuthenticationClient):
             # accounts only.
             if username and password:
                 try:
-                    # user_domain stays Default : the password path is reserved
-                    # for LOCAL accounts. The project scope, however, may live
-                    # in the federated domain (e.g. admin acting on a federated
-                    # project), hence the _project_scopes fallback.
-                    base_kwargs = {
-                        "auth_url": self.KEYSTONE_URL,
-                        "username": username,
-                        "password": password,
-                        "user_domain_name": 'Default',
-                        "auth_type": "v3password"
-                    }
-
-                    conn = None
-                    scope_error = None
-                    for scope in self._project_scopes(project_id, project_name):
-                        try:
-                            conn = openstack.connect(**base_kwargs, **scope)
-                            access_token = conn.auth_token
-                            access_info = conn.session.auth.get_access(conn.session)
-                            break
-                        except Exception as e:
-                            conn = None
-                            scope_error = e
-                    if conn is None:
-                        raise scope_error
-
-                    preauthurl = None
-                    # On ne cherche le endpoint object-store que si on est scopé sur un projet
-                    if access_info.project_id:
-                        try:
-                            preauthurl = conn.endpoint_for('object-store', interface='public')
-                            if not preauthurl:
-                                preauthurl = conn.endpoint_for('object-store', interface='internal')
-                        except EndpointNotFound:
-                            preauthurl = None
-
-                    g.user = {
-                        "id": access_info.user_id,
-                        "username": access_info.username,
-                        "roles": access_info.role_names or [],
-                        "project_id": access_info.project_id,
-                        "project_name": access_info.project_name,
-                        "source": "credentials",
-                        "access_token": access_token,
-                        "preauthurl": preauthurl,
-                        "projects": [],
-                        "ec2_credentials": None
-                    }
-
-                    self._enrich_user_info(g.user, conn)
+                    g.user = self.authenticate_credentials(
+                        username,
+                        password,
+                        project_name=project_name,
+                        project_id=project_id,
+                    )
                     response = f(*args, **kwargs)
 
-                    return self._inject_token_in_response(response, access_token)
+                    return self._inject_token_in_response(
+                        response,
+                        g.user["access_token"],
+                    )
 
-                except Exception as e:
+                except (AuthenticationRejected, AuthenticationBackendError) as e:
                     self.current_app.logger.info(f"Login failure: {type(e).__name__} - {e}")
                     return jsonify({"error": "Invalid credentials"}), 401
 
@@ -269,7 +323,7 @@ class OpenstackSDKAuthClient(AuthenticationClient):
         # suite (authorize) pour pouvoir retomber sur le domaine fédéré si le
         # nom de projet n'existe pas dans Default.
         scope_error = None
-        for scope in self._project_scopes(project_id, project_name):
+        for scope in self._get_project_scopes(project_id, project_name):
             try:
                 conn = openstack.connect(**base_kwargs, **scope)
                 conn.authorize()
