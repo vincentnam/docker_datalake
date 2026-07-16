@@ -334,6 +334,8 @@ cat << EOF >> docker-compose_datalake.yml
     environment:
       # This username will be a JupyterHub admin
       JUPYTERHUB_ADMIN: $JUPYTERHUB_ADMIN
+      # JupyterHub delegates local Keystone authentication to Flask.
+      FLASK_INTERNAL_URL: $JUPYTERHUB_FLASK_URL
       # All containers will join this network
       DOCKER_NETWORK_NAME: swift-cluster
       # JupyterHub will spawn this Notebook image for users

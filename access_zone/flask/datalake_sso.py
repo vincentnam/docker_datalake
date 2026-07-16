@@ -7,9 +7,9 @@
 #   3. Keycloak redirects back to GET /auth/callback?code=...&state=...
 #   4. Flask exchanges the code directly (keeping the id_token for logout),
 #      trades the access token for a federated Keystone token (v3oidcaccesstoken),
-#      scopes it to a project, then redirects the browser back to the web GUI
-#      with the Keystone token in the URL fragment. The GUI finalizes via the
-#      existing Bearer flow.
+#      then redirects the browser to the registered client. The web GUI receives
+#      its scoped Keystone token; JupyterHub receives a short-lived one-time
+#      ticket that it redeems server-to-server through Flask.
 #
 # The web GUI keeps using a *Keystone* token as Bearer, exactly like the
 # username/password login : SSO is just another way to obtain that token.
@@ -24,6 +24,8 @@ from flask import Blueprint, request, redirect, session, jsonify, current_app
 
 from keystoneauth1 import session as ksa_session
 from keystoneauth1.identity.v3 import OidcAccessToken, Token
+
+from datalake_jupyter_auth import issue_jupyter_ticket
 
 
 sso_bp = Blueprint("sso", __name__)
@@ -44,6 +46,10 @@ def _cfg():
         "protocol": os.getenv("KEYCLOAK_PROTOCOL_ID", "openid"),
         "preferred_project": os.getenv("FEDERATED_PROJECT", ""),
         "web_gui_url": os.getenv("WEB_GUI_URL", "http://localhost:7000").rstrip("/"),
+        "jupyterhub_login_url": os.getenv(
+            "JUPYTERHUB_PUBLIC_LOGIN_URL",
+            "http://localhost:7000/hub/hub/login",
+        ),
         # Read-only service account used to list the IdPs registered in
         # Keystone (drives the dynamic login buttons of the web GUI).
         "idp_reader_user": os.getenv("IDP_READER_USER", ""),
@@ -147,7 +153,13 @@ def _list_idps(c):
         current_app.logger.exception("Could not list identity providers from Keystone")
 
     if idps is None:
-        idps = [{"id": c["idp"], "description": None}]
+        # Legacy deployments without an IdP reader keep the static fallback.
+        # When the reader is configured, a lookup failure means the federation
+        # bootstrap is unhealthy and must not produce a broken login button.
+        if c["idp_reader_user"] and c["idp_reader_password"]:
+            idps = []
+        else:
+            idps = [{"id": c["idp"], "description": None}]
 
     idps = [i for i in idps if _idp_client_cfg(i["id"]) is not None]
 
@@ -173,6 +185,20 @@ def _end_session_endpoint(c):
 
 def _gui_redirect(c, fragment):
     return redirect(f"{c['web_gui_url']}/#{fragment}")
+
+
+def _safe_jupyter_next(value):
+    """Only accept paths inside the public JupyterHub prefix."""
+    if isinstance(value, str) and value.startswith("/hub/") and not value.startswith("//"):
+        return value
+    return "/hub/"
+
+
+def _client_redirect(c, client, next_path, fragment):
+    if client == "jupyterhub":
+        query = urlencode({"next": _safe_jupyter_next(next_path)})
+        return redirect(f"{c['jupyterhub_login_url']}?{query}#{fragment}")
+    return _gui_redirect(c, fragment)
 
 
 @sso_bp.route("/auth/config", methods=["GET"])
@@ -276,11 +302,19 @@ def auth_login():
     if c is None:
         return jsonify({"error": f"Unknown identity provider '{idp_id}'"}), 404
 
+    client = request.args.get("client", "web_gui")
+    if client not in {"web_gui", "jupyterhub"}:
+        return jsonify({"error": f"Unknown authentication client '{client}'"}), 400
+
     state = secrets.token_urlsafe(24)
     session["oidc_state"] = state
     # Remember which IdP this login round-trip belongs to : the callback needs
     # its token endpoint / client credentials.
     session["oidc_login_idp"] = idp_id
+    session["oidc_login_client"] = client
+    session["oidc_login_next"] = (
+        _safe_jupyter_next(request.args.get("next")) if client == "jupyterhub" else ""
+    )
 
     params = {
         "client_id": c["client_id"],
@@ -299,20 +333,37 @@ def auth_callback():
 
     # The login round-trip was started for a specific IdP (see auth_login).
     idp_id = session.pop("oidc_login_idp", None) or _cfg()["idp"]
+    client = session.pop("oidc_login_client", "web_gui")
+    next_path = session.pop("oidc_login_next", "")
     c = _idp_client_cfg(idp_id)
     if c is None:
         c = _cfg()
-        return _gui_redirect(c, urlencode({"sso_error": f"Unknown identity provider '{idp_id}'"}))
+        return _client_redirect(
+            c,
+            client,
+            next_path,
+            urlencode({"sso_error": f"Unknown identity provider '{idp_id}'"}),
+        )
 
     error = request.args.get("error")
     if error:
-        return _gui_redirect(c, urlencode({"sso_error": request.args.get("error_description", error)}))
+        return _client_redirect(
+            c,
+            client,
+            next_path,
+            urlencode({"sso_error": request.args.get("error_description", error)}),
+        )
 
     code = request.args.get("code")
     state = request.args.get("state")
     expected_state = session.pop("oidc_state", None)
     if not code or not state or state != expected_state:
-        return _gui_redirect(c, urlencode({"sso_error": "Invalid SSO state or missing code"}))
+        return _client_redirect(
+            c,
+            client,
+            next_path,
+            urlencode({"sso_error": "Invalid SSO state or missing code"}),
+        )
 
     try:
         # Exchange the authorization code against Keycloak DIRECTLY (instead of
@@ -346,11 +397,41 @@ def auth_callback():
         )
         sess = ksa_session.Session(auth=auth)
         unscoped_token = sess.get_token()
+        access_info = auth.auth_ref
 
         # List the projects the federated user can access, pick one, scope.
         projects = _list_projects(c["keystone_url"], unscoped_token)
         if not projects:
-            return _gui_redirect(c, urlencode({"sso_error": "No project available for this user"}))
+            return _client_redirect(
+                c,
+                client,
+                next_path,
+                urlencode({"sso_error": "No project available for this user"}),
+            )
+
+        if client == "jupyterhub":
+            if not access_info.user_id or not access_info.username:
+                raise RuntimeError("Keystone did not return a federated user identity")
+            ticket = issue_jupyter_ticket(access_info.user_id, access_info.username)
+            try:
+                requests.delete(
+                    f"{c['keystone_url'].rstrip('/')}/auth/tokens",
+                    headers={
+                        "X-Auth-Token": unscoped_token,
+                        "X-Subject-Token": unscoped_token,
+                    },
+                    timeout=10,
+                )
+            except Exception:
+                current_app.logger.warning(
+                    "Could not revoke the temporary JupyterHub Keystone token"
+                )
+            return _client_redirect(
+                c,
+                client,
+                next_path,
+                urlencode({"flask_ticket": ticket}),
+            )
 
         project = _pick_project(projects, c["preferred_project"])
         scope_auth = Token(
@@ -372,7 +453,12 @@ def auth_callback():
 
     except Exception as exc:  # noqa: BLE001 - surface a readable error to the GUI
         current_app.logger.exception("SSO callback failed")
-        return _gui_redirect(c, urlencode({"sso_error": str(exc)}))
+        return _client_redirect(
+            c,
+            client,
+            next_path,
+            urlencode({"sso_error": str(exc)}),
+        )
 
 
 def _list_projects(keystone_url, unscoped_token):

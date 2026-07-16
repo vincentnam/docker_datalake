@@ -2,11 +2,10 @@ ARG JUPYTERHUB_VERSION
 FROM quay.io/jupyterhub/jupyterhub:$JUPYTERHUB_VERSION
 
 RUN python3 -m pip install --no-cache-dir \
-    dockerspawner \
-    jupyterhub-nativeauthenticator
-RUN apt update && apt install -y git
-RUN python3 -m pip install --no-cache-dir  git+https://github.com/jtopjian/jupyterhub-keystoneauthenticator
+    dockerspawner
 
+COPY datalake_authenticator.py /srv/jupyterhub/datalake_authenticator.py
+COPY templates /srv/jupyterhub/templates
 
 CMD ["jupyterhub","--debug", "-f", "/srv/jupyterhub/jupyterhub_config.py"]
 

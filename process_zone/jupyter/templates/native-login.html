@@ -1,0 +1,347 @@
+{% extends "page.html" %}
+
+{% if announcement_login %}
+  {% set announcement = announcement_login %}
+{% endif %}
+
+{% block script %}
+{{ super() }}
+<script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function () {
+    const passwordButton = document.getElementById("password-toggle");
+    const passwordInput = document.getElementById("password_input");
+    const fragment = new URLSearchParams(window.location.hash.slice(1));
+    const flaskTicket = fragment.get("flask_ticket");
+    const ssoError = fragment.get("sso_error");
+
+    if (ssoError) {
+      const errorElement = document.getElementById("sso-login-error");
+      errorElement.textContent = ssoError;
+      errorElement.classList.remove("hidden");
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+
+    if (flaskTicket) {
+      const loginForm = document.querySelector(".datalake-login-form");
+      const ticketInput = document.createElement("input");
+      ticketInput.type = "hidden";
+      ticketInput.name = "flask_ticket";
+      ticketInput.value = flaskTicket;
+      loginForm.appendChild(ticketInput);
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      loginForm.submit();
+      return;
+    }
+
+    passwordButton.addEventListener("click", function () {
+      const passwordIsHidden = passwordInput.type === "password";
+      passwordInput.type = passwordIsHidden ? "text" : "password";
+      passwordButton.textContent = passwordIsHidden ? "Masquer" : "Afficher";
+    });
+
+    if (window.location.protocol === "http:") {
+      document.getElementById("insecure-login-warning").classList.remove("hidden");
+    }
+
+    fetch("/api/auth/config", { headers: { Accept: "application/json" } })
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error("Unable to load identity providers");
+        }
+        return response.json();
+      })
+      .then(function (config) {
+        const idps = Array.isArray(config.idps) ? config.idps : [];
+        if (!config.sso_enabled || idps.length === 0) {
+          return;
+        }
+
+        const list = document.getElementById("idp-list");
+        idps.forEach(function (idp) {
+          const link = document.createElement("a");
+          link.className = "idp-button";
+          const loginUrl = new URL(
+            idp.login_url || ("/api/auth/login?idp=" + encodeURIComponent(idp.id)),
+            window.location.origin
+          );
+          loginUrl.searchParams.set("client", "jupyterhub");
+          loginUrl.searchParams.set(
+            "next",
+            new URLSearchParams(window.location.search).get("next") || "/hub/"
+          );
+          link.href = loginUrl.toString();
+
+          const icon = document.createElement("span");
+          icon.className = "idp-icon";
+          icon.setAttribute("aria-hidden", "true");
+          icon.textContent = "↗";
+
+          const label = document.createElement("span");
+          label.textContent = "Continuer avec " + (idp.description || idp.id);
+
+          link.appendChild(icon);
+          link.appendChild(label);
+          list.appendChild(link);
+        });
+
+        document.getElementById("idp-section").classList.remove("hidden");
+        document.getElementById("login-separator").classList.remove("hidden");
+      })
+      .catch(function () {
+        // Local authentication remains available when Flask or the IdP list is unavailable.
+      });
+  });
+</script>
+{% endblock script %}
+
+{% block main %}
+<style>
+  #login-main {
+    display: flex;
+    justify-content: center;
+    padding-top: 4rem;
+  }
+
+  .datalake-login-card {
+    width: min(100%, 440px);
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  }
+
+  .datalake-login-header {
+    padding: 1.4rem 1.6rem;
+    color: #ffffff;
+    background: linear-gradient(135deg, #f37726, #ea580c);
+  }
+
+  .datalake-login-header h1 {
+    margin: 0;
+    font-size: 1.45rem;
+    font-weight: 700;
+  }
+
+  .datalake-login-header p {
+    margin: 0.35rem 0 0;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.92rem;
+  }
+
+  .datalake-login-body {
+    padding: 1.6rem;
+  }
+
+  .login-section-title {
+    margin: 0 0 0.85rem;
+    color: #334155;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  #idp-list {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .idp-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    min-height: 44px;
+    border: 1px solid #fed7aa;
+    border-radius: 9px;
+    color: #9a3412;
+    background: #fff7ed;
+    font-weight: 700;
+    text-decoration: none;
+    transition: border-color 120ms ease, background 120ms ease, transform 120ms ease;
+  }
+
+  .idp-button:hover,
+  .idp-button:focus {
+    border-color: #fb923c;
+    color: #7c2d12;
+    background: #ffedd5;
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+
+  .idp-icon {
+    font-size: 1.05rem;
+  }
+
+  .login-separator {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin: 1.35rem 0;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .login-separator::before,
+  .login-separator::after {
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+    content: "";
+  }
+
+  .datalake-login-form label {
+    margin-bottom: 0.35rem;
+    color: #475569;
+    font-weight: 600;
+  }
+
+  .datalake-login-form .form-control {
+    min-height: 42px;
+    border-color: #cbd5e1;
+    border-radius: 8px;
+  }
+
+  .datalake-login-form .form-control:focus {
+    border-color: #fb923c;
+    box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.18);
+  }
+
+  .password-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .password-row .form-control {
+    flex: 1;
+  }
+
+  .password-toggle {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #475569;
+    background: #f8fafc;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  #login_submit {
+    width: 100%;
+    min-height: 44px;
+    margin-top: 1.1rem;
+    border: 0;
+    border-radius: 8px;
+    color: #ffffff;
+    background: #f37726;
+    font-weight: 700;
+  }
+
+  #login_submit:hover,
+  #login_submit:focus {
+    color: #ffffff;
+    background: #d95f0e;
+  }
+
+  .local-signup {
+    margin: 1rem 0 0;
+    color: #64748b;
+    text-align: center;
+    font-size: 0.85rem;
+  }
+
+  .login_error,
+  #insecure-login-warning {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+  }
+
+  .login_error {
+    color: #991b1b;
+    background: #fef2f2;
+  }
+
+  #insecure-login-warning {
+    color: #92400e;
+    background: #fffbeb;
+  }
+</style>
+
+<div id="login-main" class="container">
+  <div class="datalake-login-card">
+    <div class="datalake-login-header">
+      <h1>Connexion JupyterHub</h1>
+      <p>Accédez à votre environnement de traitement.</p>
+    </div>
+
+    <div class="datalake-login-body">
+      <p id="insecure-login-warning" class="hidden">
+        Cette connexion utilise HTTP ; activez HTTPS avant un déploiement en production.
+      </p>
+
+      {% if login_error %}
+        <p class="login_error">{{ login_error }}</p>
+      {% endif %}
+      <p id="sso-login-error" class="login_error hidden"></p>
+
+      <section id="idp-section" class="hidden" aria-label="Fournisseurs d'identité">
+        <p class="login-section-title">Connexion fédérée</p>
+        <div id="idp-list"></div>
+      </section>
+
+      <div id="login-separator" class="login-separator hidden">ou</div>
+
+      <section aria-label="Connexion locale">
+        <p class="login-section-title">Connexion locale</p>
+        <form class="datalake-login-form" action="{{ login_url }}?next={{ next }}" method="post" role="form">
+          <input type="hidden" name="_xsrf" value="{{ xsrf }}" />
+
+          <label for="username_input">Nom d'utilisateur</label>
+          <input id="username_input"
+                 type="text"
+                 name="username"
+                 value="{{ username }}"
+                 autocapitalize="off"
+                 autocorrect="off"
+                 autocomplete="username"
+                 class="form-control"
+                 autofocus="autofocus"
+                 required />
+
+          <label for="password_input" style="margin-top: 0.9rem;">Mot de passe</label>
+          <div class="password-row">
+            <input id="password_input"
+                   type="password"
+                   name="password"
+                   autocomplete="current-password"
+                   class="form-control"
+                   required />
+            <button id="password-toggle" class="password-toggle" type="button">Afficher</button>
+          </div>
+
+          {% if two_factor_auth %}
+            <label for="2fa_input" style="margin-top: 0.9rem;">Code à usage unique</label>
+            <input id="2fa_input"
+                   type="text"
+                   name="2fa"
+                   autocomplete="one-time-password"
+                   class="form-control" />
+          {% endif %}
+
+          <input id="login_submit" type="submit" class="btn" value="Se connecter" />
+        </form>
+
+        {% if enable_signup %}
+          <p class="local-signup">
+            <a href="{{ base_url }}signup">Créer un compte local</a>
+          </p>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock main %}

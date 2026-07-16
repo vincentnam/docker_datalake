@@ -1,6 +1,9 @@
 import os
+import sys
 
 c = get_config()
+
+sys.path.insert(0, "/srv/jupyterhub")
 
 # --- 1. URL et Réseau ---
 c.JupyterHub.base_url = '/hub/'
@@ -25,16 +28,12 @@ c.JupyterHub.cookie_secret_file = "/data/jupyterhub_cookie_secret"
 c.JupyterHub.db_url = "sqlite:////data/jupyterhub.sqlite"
 
 # --- 4. Authentification ---
-c.JupyterHub.authenticator_class = "native"
-import os, nativeauthenticator
-c.JupyterHub.template_paths = [f"{os.path.dirname(nativeauthenticator.__file__)}/templates/"]
-c.Authenticator.admin_users = {os.environ.get("JUPYTERHUB_ADMIN", "admin")}
-# c.JupyterHub.authenticator_class = 'keystoneauthenticator.KeystoneAuthenticator'
-# c.KeystoneAuthenticator.auth_url = 'http://keystone:5000/v3'
-#TODO: Add Jupyterhub user
-# c.KeystoneAuthenticator.valid_role = 'user'
-#TODO: Fix keystone policy on jupyterhub
-# jupyterhub          | [W 2026-04-03 04:54:49.817 JupyterHub keystoneauthenticator:76] username:test Failed to authenticate: ForbiddenException: 403: Client Error for url: http://keystone:5000/v3/roles, You are not authorized to perform the requested action: identity:list_roles.
+from datalake_authenticator import FlaskLocalAuthenticator
 
-c.NativeAuthenticator.open_signup = True
+c.JupyterHub.authenticator_class = FlaskLocalAuthenticator
+c.JupyterHub.template_paths = ["/srv/jupyterhub/templates"]
+c.FlaskLocalAuthenticator.flask_base_url = os.environ.get(
+    "FLASK_INTERNAL_URL", "http://flask-app:5000"
+)
+c.Authenticator.admin_users = {os.environ.get("JUPYTERHUB_ADMIN", "admin")}
 c.Authenticator.allow_all = True
