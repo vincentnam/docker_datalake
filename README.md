@@ -1,7 +1,17 @@
-#TODO: Add endpoint creation in keystone bootstrap for each management node created in the architecture 
-#TODO: Use variable to configure conf file in keystone
-#TODO: Add Keystone federation to a keycloak Identity provider
+# TODO : 
+- [ ] Distribution of architecture : 
+  - [ ] Swift multi node
+  - [ ] Scripts management
+- [ ] Kubernetes deployment : transform docker compose to helm chart / kubernetes yaml deployment
+- [ ] Test scripts
+- [ ] Change SSO token management to a unique central management in flask : server side management, allow to open Keystone (no token can be stolen in web browser)
+- [ ] Change jupyterhub SQLite to SQL database  
+  - [ ] Reuse Keystone's Mariadb 
+  - [ ] High availability Mariadb 
+  - [ ] Manage multi serveur deployment
+git
 
+#TODO: Add endpoint creation in keystone bootstrap for each management node created in the architecture
 #TODO: Test list bucket with token provided in request
 # Security TODO list:
 
