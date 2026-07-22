@@ -14,7 +14,7 @@ temporaire à usage unique qu'il échange ensuite auprès de Flask.
 import os
 import secrets
 import time
-from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlencode
 
 import requests
 from flask import Blueprint, current_app, jsonify, redirect, request, session
@@ -22,6 +22,7 @@ from keystoneauth1 import session as keystone_authentication_session
 from keystoneauth1.identity.v3 import OidcAccessToken, Token
 
 from .datalake_jupyter_auth import JupyterTicketStore
+from .datalake_notebook import NotebookAuthenticationStore
 
 
 sso_blueprint = Blueprint("sso", __name__)
@@ -263,6 +264,14 @@ def _redirect_to_authentication_client(
             f"{configuration['jupyterhub_login_url']}"
             f"?{query_parameters}#{url_fragment}"
         )
+    if authentication_client == "notebook":
+        result_parameters = parse_qs(url_fragment)
+        error_message = (result_parameters.get("sso_error") or [None])[0]
+        if error_message:
+            NotebookAuthenticationStore().fail(next_path, error_message)
+        query_parameters = urlencode({"sso_error": error_message}) if error_message else ""
+        result_url = f"{configuration['web_gui_url']}/api/auth/notebook/result"
+        return redirect(f"{result_url}?{query_parameters}" if query_parameters else result_url)
     return _redirect_to_web_gui(configuration, url_fragment)
 
 
@@ -439,7 +448,7 @@ def start_sso_login():
         }), 404
 
     authentication_client = request.args.get("client", "web_gui")
-    if authentication_client not in {"web_gui", "jupyterhub"}:
+    if authentication_client not in {"web_gui", "jupyterhub", "notebook"}:
         return jsonify({
             "error": f"Unknown authentication client '{authentication_client}'",
         }), 400
@@ -450,11 +459,15 @@ def start_sso_login():
     session["oidc_state"] = state_token
     session["oidc_login_idp"] = identity_provider_id
     session["oidc_login_client"] = authentication_client
-    session["oidc_login_next"] = (
-        _get_safe_jupyterhub_next_path(request.args.get("next"))
-        if authentication_client == "jupyterhub"
-        else ""
-    )
+    if authentication_client == "jupyterhub":
+        next_path = _get_safe_jupyterhub_next_path(request.args.get("next"))
+    elif authentication_client == "notebook":
+        next_path = request.args.get("request_id", "")
+        if not NotebookAuthenticationStore().exists(next_path):
+            return jsonify({"error": "Invalid or expired notebook request"}), 400
+    else:
+        next_path = ""
+    session["oidc_login_next"] = next_path
 
     query_parameters = {
         "client_id": configuration["keycloak_client_id"],
@@ -587,7 +600,7 @@ def handle_sso_callback():
                 urlencode({"flask_ticket": jupyterhub_ticket}),
             )
 
-        # La Web GUI continue de fonctionner avec un token Keystone scopé sur
+        # La Web GUI et le notebook ont besoin d'un token Keystone scopé sur
         # le projet choisi, exactement comme après une connexion locale.
         selected_project = _select_keystone_project(
             available_projects,
@@ -601,6 +614,20 @@ def handle_sso_callback():
         scoped_keystone_token = keystone_authentication_session.Session(
             auth=scoped_authentication
         ).get_token()
+
+        if authentication_client == "notebook":
+            NotebookAuthenticationStore().complete(
+                next_path,
+                scoped_keystone_token,
+                selected_project["name"],
+                selected_project["id"],
+            )
+            return _redirect_to_authentication_client(
+                configuration,
+                authentication_client,
+                next_path,
+                "",
+            )
 
         return _redirect_to_web_gui(
             configuration,

@@ -3,7 +3,8 @@ import { Sidebar } from "primereact/sidebar";
 import PrimaryButton from "../common/PrimaryButton";
 import { downloadFile } from "../../utils/fileUtils";
 import usePreview from "../../hooks/usePreview";
-import { getJupyterHubUrl } from "../../utils/jupyterUtils";
+import { createNotebookInJupyter, getJupyterHubUrl } from "../../utils/jupyterUtils";
+import { apiFetch } from "../../utils/apiClient";
 import "../../styles/preview.css";
 import { Panel } from "primereact/panel";
 import { throttle } from "lodash";
@@ -11,6 +12,7 @@ import { throttle } from "lodash";
 const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
   const { previewComponent, isPreviewLoading, previewError } = usePreview(selectedNode, bucketName);
   const [sidebarWidth, setSidebarWidth] = useState(384);
+  const [isCreatingNotebook, setIsCreatingNotebook] = useState(false);
 
   const throttledResize = throttle((newWidth) => {
     requestAnimationFrame(() => setSidebarWidth(newWidth));
@@ -40,9 +42,39 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
     document.addEventListener("mousemove", doResize);
     document.addEventListener("mouseup", stopResizing);
   };
-  const openJupyterHub = () => {
-    // JupyterHub ouvre le serveur du user courant ou lance son authentification.
-    window.location.assign(getJupyterHubUrl());
+  const openInJupyter = async () => {
+    if (!selectedNode?.leaf || isCreatingNotebook) {
+      return;
+    }
+
+    // Le popup démarre immédiatement pour ne pas être bloqué par le navigateur.
+    const jupyterWindow = window.open(getJupyterHubUrl(), "_blank");
+    if (!jupyterWindow) {
+      window.alert("Le navigateur a bloqué l'ouverture de JupyterHub");
+      return;
+    }
+
+    setIsCreatingNotebook(true);
+    try {
+      // Flask valide le token actuel et renvoie le username de référence.
+      const authenticationResponse = await apiFetch('/');
+      const authenticationData = await authenticationResponse.json();
+      if (!authenticationResponse.ok) {
+        throw new Error(authenticationData.error || "Session Flask invalide");
+      }
+
+      const notebookUrl = await createNotebookInJupyter({
+        username: authenticationData.user.username,
+        bucketName,
+        objectKey: selectedNode.key,
+      });
+      jupyterWindow.location.assign(notebookUrl);
+    } catch (error) {
+      jupyterWindow.close();
+      window.alert(error.message || "Impossible de créer le notebook");
+    } finally {
+      setIsCreatingNotebook(false);
+    }
   };
 
   return (
@@ -92,9 +124,10 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
 
               <button
                 className={`bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors duration-300 neon-button `}
-                onClick={openJupyterHub}
+                onClick={openInJupyter}
+                disabled={isCreatingNotebook}
               >
-                Ouvrir dans Jupyter Notebook
+                {isCreatingNotebook ? "Création du notebook..." : "Ouvrir dans Jupyter Notebook"}
               </button>
               {isPreviewLoading ? (
                 <p>Chargement de la prévisualisation...</p>

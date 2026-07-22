@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 
 from datalake_authclient import get_auth
 from datalake_authclient.datalake_jupyter_auth import jupyter_auth_blueprint
+from datalake_authclient.datalake_notebook import notebook_blueprint
 from datalake_authclient.datalake_sso import sso_blueprint
 from datalake_objectstoreclient import get_storage
 
@@ -40,6 +41,8 @@ app.secret_key = os.getenv("FLASK_SECRET", "dev-insecure-change-me")
 app.register_blueprint(sso_blueprint)
 # JupyterHub local login connector : /auth/jupyter/local
 app.register_blueprint(jupyter_auth_blueprint)
+# Création des notebooks et authentification SSO depuis leur première cellule.
+app.register_blueprint(notebook_blueprint)
 
 OBJECT_STORAGE_BACKEND = os.getenv("OBJECT_STORAGE_BACKEND", "swift").lower()  # "s3" ou "swift"
 KEYSTONE_URL = os.getenv("KEYSTONE_URL", "http://keystone:5000/v3")
@@ -289,7 +292,7 @@ def list_objects(bucket):
         abort(404 if 'Not Found' in str(e) else 500, description=str(e))
 
 
-@app.route('/buckets/<bucket>/objects/<key>', methods=['GET'])
+@app.route('/buckets/<bucket>/objects/<path:key>', methods=['GET'])
 @authentication_client.login_required
 def download_object(bucket, key):
     try:
@@ -315,7 +318,7 @@ def download_object(bucket, key):
         abort(404 if 'Not Found' in str(e) else 500, description=str(e))
 
 
-@app.route('/buckets/<bucket>/objects/<key>', methods=['DELETE'])
+@app.route('/buckets/<bucket>/objects/<path:key>', methods=['DELETE'])
 @authentication_client.login_required
 def delete_object(bucket, key):
     try:
@@ -335,7 +338,7 @@ def delete_object(bucket, key):
         abort(404 if 'Not Found' in str(e) else 500, description=str(e))
 
 
-@app.route('/buckets/<bucket>/objects/<key>', methods=['HEAD'])
+@app.route('/buckets/<bucket>/objects/<path:key>', methods=['HEAD'])
 @authentication_client.login_required
 def head_object(bucket, key):
     try:
