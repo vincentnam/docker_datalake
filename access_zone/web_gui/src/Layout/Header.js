@@ -131,7 +131,7 @@ const Header = () => {
                 className="flex items-center gap-2 px-4 py-2 bg-black/20 hover:bg-black/40 rounded-xl text-white text-sm font-medium transition-all border border-white/5"
               >
                 <LogOut size={16} />
-                Quitter
+                Se déconnecter
               </button>
             </>
           )}

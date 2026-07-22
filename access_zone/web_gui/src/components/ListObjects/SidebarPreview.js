@@ -1,29 +1,16 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { Sidebar } from "primereact/sidebar";
-import { Dialog } from "primereact/dialog"; // Importer Dialog pour la popup
 import PrimaryButton from "../common/PrimaryButton";
 import { downloadFile } from "../../utils/fileUtils";
 import usePreview from "../../hooks/usePreview";
-import { checkJupyterServer, startJupyterServer, createNotebook, getNotebookUrl } from "../../utils/jupyterUtils";
-import useToast from "../../hooks/useToast";
+import { getJupyterHubUrl } from "../../utils/jupyterUtils";
 import "../../styles/preview.css";
 import { Panel } from "primereact/panel";
 import { throttle } from "lodash";
-import { Toast } from "primereact/toast";
-import { useNavigate } from "react-router-dom"; // Importer useNavigate
 
 const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
-  const { previewHtml, previewComponent, isPreviewLoading, previewError } = usePreview(selectedNode, bucketName);
+  const { previewComponent, isPreviewLoading, previewError } = usePreview(selectedNode, bucketName);
   const [sidebarWidth, setSidebarWidth] = useState(384);
-  const [isResizing, setIsResizing] = useState(false);
-  const sidebarRef = useRef(null);
-  const [toast, showError, showSuccess] = useToast();
-  const navigate = useNavigate();
-
-  // États pour la popup de progression
-  const [progress, setProgress] = useState(null);
-  const [progressVisible, setProgressVisible] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
 
   const throttledResize = throttle((newWidth) => {
     requestAnimationFrame(() => setSidebarWidth(newWidth));
@@ -32,7 +19,6 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
   const startResizing = (e) => {
     e.preventDefault();
     console.log("Démarrage du redimensionnement, position initiale :", e.clientX);
-    setIsResizing(true);
     const startX = e.clientX;
     const startWidth = sidebarWidth;
 
@@ -47,7 +33,6 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
 
     const stopResizing = () => {
       console.log("Arrêt du redimensionnement");
-      setIsResizing(false);
       document.removeEventListener("mousemove", doResize);
       document.removeEventListener("mouseup", stopResizing);
     };
@@ -55,103 +40,11 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
     document.addEventListener("mousemove", doResize);
     document.addEventListener("mouseup", stopResizing);
   };
-  // Messages de progression
-  const progressMessages = {
-    checking_server: "Vérification du serveur Jupyter...",
-    starting_server: "Lancement du serveur Jupyter...",
-    creating_notebook: "Création du notebook...",
-    redirecting: "Redirection vers le notebook...",
-    error: "Une erreur est survenue.",
+  const openJupyterHub = () => {
+    // JupyterHub ouvre le serveur du user courant ou lance son authentification.
+    window.location.assign(getJupyterHubUrl());
   };
 
-  // Fonction pour générer le contenu du notebook
-  const generateNotebookContent = (dataInfo) => {
-    /*Pas la bonne image, nécessaire pour enlever "!pip install minio"*/
-    const code = [
-      "!pip install minio \n",
-      "# Code pour télécharger les données depuis MinIO\n",
-      `bucket_name = "${dataInfo.bucketName}"\n`,
-      `object_key = "${dataInfo.key}"\n`,
-      "from minio import Minio\n",
-      'client = Minio("raw_data_storage:9000", access_key="admin", secret_key="adminadmin", secure=False)\n',
-      "client.fget_object(bucket_name, object_key, 'downloaded_file')\n",
-      "# Le fichier est maintenant téléchargé localement sous 'downloaded_file'\n",
-    ];
-
-    return {
-      cells: [
-        {
-          cell_type: "code",
-          execution_count: null,
-          metadata: {},
-          outputs: [],
-          source: code,
-        },
-      ],
-      metadata: {
-        kernelspec: {
-          display_name: "Python 3",
-          language: "python",
-          name: "python3",
-        },
-        language_info: {
-          codemirror_mode: { name: "ipython", version: 3 },
-          file_extension: ".py",
-          mimetype: "text/x-python",
-          name: "python",
-          nbconvert_exporter: "python",
-          pygments_lexer: "ipython3",
-          version: "3.8.5",
-        },
-      },
-      nbformat: 4,
-      nbformat_minor: 4,
-    };
-  };
-  const openInJupyter = async () => {
-  if (!selectedNode || !selectedNode.leaf) {
-    showError("Erreur", "Veuillez sélectionner un fichier");
-    return;
-  }
-
-  setProgressVisible(true);
-  setProgress("checking_server");
-
-  try {
-    const username = "admin"; // Remplacer par l'utilisateur actuel si nécessaire
-    const serverRunning = await checkJupyterServer(username);
-
-    if (!serverRunning) {
-      setProgress("starting_server");
-      await startJupyterServer(username);
-      // Attendre 5 secondes pour s'assurer que le serveur est prêt
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
-
-    setProgress("creating_notebook");
-    const notebookName = `notebook-${Date.now()}`;
-    const content = generateNotebookContent({ bucketName, key: selectedNode.key });
-    await createNotebook(username, notebookName, content);
-
-    setProgress("redirecting");
-    const notebookUrl = getNotebookUrl(username, notebookName);
-    // Redirection dans l'historique (relatif)
-    navigate(notebookUrl);
-    // Forcer la navigation pour ouvrir dans le même onglet (relatif → navigateur ajoute le domaine)
-    window.location.href = notebookUrl;
-  } catch (err) {
-    setProgress("error");
-    setErrorMessage(err.message);
-    showError("Erreur", err.message);
-  }
-};
-  const avenirJup = async () => {
-    // #TODO: To enable openInJupyter button, need to implement keystone authentication in JupyterHub
-    setProgressVisible(true)
-    setProgress("error");
-    setErrorMessage("Cette fonctionnalité a été désactivée liée à des modifications effectuées sur des solutions externes. Cette fonctionnalité reviendra très vite. Pour palier à ce désagréement, vous trouverez une solution sur la documentation sur ce lien : http://github.com/vincentnam/docker_datalake");
-    // showError("Erreur", err.message);
-  }
   return (
     <>
       <Sidebar
@@ -199,17 +92,10 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
 
               <button
                 className={`bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors duration-300 neon-button `}
-                onClick={avenirJup}
+                onClick={openJupyterHub}
               >
-                Ouvrir dans Jupyter Notebook (A venir)
+                Ouvrir dans Jupyter Notebook
               </button>
-              {/*<PrimaryButton*/}
-              {/*  disabled={true}*/}
-              {/*  onClick={openInJupyter}*/}
-              {/*  className="mt-4 ml-2 bg-gray-500"*/}
-              {/*>*/}
-              {/*  Ouvrir dans Jupyter Notebook*/}
-              {/*</PrimaryButton>*/}
               {isPreviewLoading ? (
                 <p>Chargement de la prévisualisation...</p>
               ) : previewError ? (
@@ -221,16 +107,6 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
           )}
         </div>
       </Sidebar>
-      <Dialog
-        header="Progression"
-        visible={progressVisible}
-        onHide={() => setProgressVisible(false)}
-        style={{ width: "50vw" }}
-      >
-        <p>{progressMessages[progress]}</p>
-        {progress === "error" && <p>{errorMessage}</p>}
-      </Dialog>
-      <Toast ref={toast} />
     </>
   );
 };
