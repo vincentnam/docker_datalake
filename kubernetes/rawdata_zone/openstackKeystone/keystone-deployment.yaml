@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert --profile datalake
+    kompose.version: 1.34.0 (cbf2835db)
+  labels:
+    io.kompose.service: keystone
+  name: keystone
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: keystone
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --profile datalake
+        kompose.version: 1.34.0 (cbf2835db)
+      labels:
+        io.kompose.service: keystone
+    spec:
+      containers:
+        - args:
+            - /entrypoint.sh
+          env:
+            - name: FEDERATION_ENABLED
+              value: "true"
+            - name: KEYCLOAK_CLIENT_ID
+              value: keystone
+            - name: KEYCLOAK_CLIENT_SECRET
+              value: EdMYtZ8ra9rTlloVQTPGJdc0qtMuEKiU
+            - name: KEYCLOAK_IDP_ID
+              value: keycloak
+            - name: KEYCLOAK_ISSUER
+              value: http://localhost:8088/realms/MIDOC
+            - name: KEYCLOAK_JWKS_URI
+              value: http://keycloak:8080/realms/MIDOC/protocol/openid-connect/certs
+            - name: KEYCLOAK_PROTOCOL_ID
+              value: mapped
+            - name: KEYSTONE_PUBLIC_URL
+              value: http://localhost:5000
+            - name: OIDC_CRYPTO_PASSPHRASE
+              value: ChangeMe_long_random_oidc_passphrase_2026
+            - name: OS_PASSWORD
+              value: pipi
+          image: keystone:2026.1-ubuntu_noble
+          livenessProbe:
+            exec:
+              command:
+                - curl
+                - --fail
+                - --silent
+                - http://localhost:5000/healthcheck
+            failureThreshold: 20
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: keystone
+          volumeMounts:
+            - mountPath: /etc/keystone
+              name: keystone-claim0
+            - mountPath: /etc/apache2/ports.conf
+              name: keystone-claim1
+              readOnly: true
+            - mountPath: /etc/apache2/sites-available/keystone.conf
+              name: keystone-claim2
+              readOnly: true
+            - mountPath: /var/lib/openstack/lib/python3.10/site-packages/keystone/server/wsgi.py
+              name: keystone-claim3
+            - mountPath: /entrypoint.sh
+              name: keystone-claim4
+              readOnly: true
+            - mountPath: /var/lib/keystone
+              name: keystone-data
+      restartPolicy: Always
+      volumes:
+        - name: keystone-claim0
+          persistentVolumeClaim:
+            claimName: keystone-claim0
+        - name: keystone-claim1
+          persistentVolumeClaim:
+            claimName: keystone-claim1
+            readOnly: true
+        - name: keystone-claim2
+          persistentVolumeClaim:
+            claimName: keystone-claim2
+            readOnly: true
+        - name: keystone-claim3
+          persistentVolumeClaim:
+            claimName: keystone-claim3
+        - name: keystone-claim4
+          persistentVolumeClaim:
+            claimName: keystone-claim4
+            readOnly: true
+        - name: keystone-data
+          persistentVolumeClaim:
+            claimName: keystone-data
