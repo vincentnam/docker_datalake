@@ -1,0 +1,7 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: swift-disks
+provisioner: kubernetes.io/no-provisioner   # pas de création à la demande : les PV sont créés par le local static provisioner
+volumeBindingMode: WaitForFirstConsumer     # attend le placement du Pod avant de lier un PV
+reclaimPolicy: Retain                       # PVC supprimée = disque et données conservés (défaut : Delete = disque effacé)

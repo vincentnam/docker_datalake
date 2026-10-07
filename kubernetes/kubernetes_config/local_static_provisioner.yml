@@ -1,0 +1,159 @@
+# Local static provisioner — kubernetes-sigs/sig-storage-local-static-provisioner v2.9.0
+#
+# Tourne sur chaque nœud (DaemonSet) et crée un PersistentVolume pour chaque point
+# de montage trouvé au PREMIER niveau du répertoire d'une classe (hostDir).
+# Les disques sont préparés sur l'hôte par disk_fallocate.sh.
+#
+# Adapté de helm/generated_examples/baremetal-default-storage.yaml :
+#  - namespace kube-system (composant de la plateforme, comme le local-path-provisioner de k3s)
+#  - StorageClass définie à part (storage_class_swift_disk.yml) et non « par défaut »
+#  - une entrée par classe dans storageClassMap
+#
+# À appliquer APRÈS la StorageClass : le provisioner y lit la reclaimPolicy des PV qu'il crée.
+# Après une modification de la ConfigMap :
+#   kubectl -n kube-system rollout restart daemonset/local-static-provisioner
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: local-static-provisioner
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: local-static-provisioner
+    app.kubernetes.io/version: "2.9.0"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: local-static-provisioner-config
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: local-static-provisioner
+    app.kubernetes.io/version: "2.9.0"
+data:
+  # <classe> : où chercher les points de montage sur l'hôte (hostDir) et dans le conteneur (mountDir)
+  storageClassMap: |
+    swift-disks:
+      hostDir: /mnt/disks/swift-disks
+      mountDir: /mnt/disks/swift-disks
+      volumeMode: Filesystem
+      accessMode: ReadWriteOnce
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: local-static-provisioner
+  labels:
+    app.kubernetes.io/name: local-static-provisioner
+    app.kubernetes.io/version: "2.9.0"
+rules:
+- apiGroups: [""]
+  resources: ["persistentvolumes"]
+  verbs: ["get", "list", "watch", "create", "delete"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["watch"]
+- apiGroups: ["", "events.k8s.io"]
+  resources: ["events"]
+  verbs: ["create", "update", "patch"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: local-static-provisioner
+  labels:
+    app.kubernetes.io/name: local-static-provisioner
+    app.kubernetes.io/version: "2.9.0"
+subjects:
+- kind: ServiceAccount
+  name: local-static-provisioner
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: local-static-provisioner
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: local-static-provisioner
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: local-static-provisioner
+    app.kubernetes.io/version: "2.9.0"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: local-static-provisioner
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: local-static-provisioner
+        app.kubernetes.io/version: "2.9.0"
+    spec:
+      serviceAccountName: local-static-provisioner
+      nodeSelector:
+        kubernetes.io/os: linux
+      containers:
+        - name: provisioner
+          image: registry.k8s.io/sig-storage/local-volume-provisioner:v2.9.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true                  # comme l'upstream : accès aux montages et périphériques de l'hôte
+          env:
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: MY_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: JOB_CONTAINER_IMAGE
+              value: registry.k8s.io/sig-storage/local-volume-provisioner:v2.9.0
+          ports:
+            - name: metrics
+              containerPort: 8080
+          livenessProbe:
+            tcpSocket:
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 60
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          volumeMounts:
+            - name: provisioner-config
+              mountPath: /etc/provisioner/config
+              readOnly: true
+            - name: provisioner-dev
+              mountPath: /dev
+            - name: local-disks
+              mountPath: /mnt/disks
+              mountPropagation: HostToContainer # voit les disques montés sur l'hôte APRÈS le démarrage du Pod
+      volumes:
+        - name: provisioner-config
+          configMap:
+            name: local-static-provisioner-config
+        - name: provisioner-dev
+          hostPath:
+            path: /dev
+        - name: local-disks
+          hostPath:
+            path: /mnt/disks                  # parent de toutes les classes : /mnt/disks/<classe>/
+            type: DirectoryOrCreate

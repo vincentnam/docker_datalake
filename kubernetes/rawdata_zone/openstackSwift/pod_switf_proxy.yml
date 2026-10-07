@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "swift_storage_pod"
+  namespace: "datalake"
+  labels:
+    app.kubernetes.io/name: swift
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/part-of: raw_data_zone
+    app.kubernetes.io/version: "2.30.0"
+  annotations: {}
+spec:
+  securityContext: {}
+  initContainers: []
+  containers:
+    - name: ""
+      image: ""
+      imagePullPolicy: ""
+      command: []
+      args: []
+      env: []
+      envFrom: []
+      ports: []
+      volumeMounts: []
+      resources:
+        requests: {}
+        limits: {}
+      startupProbe: {}
+      readinessProbe: {}
+      livenessProbe: {}
+      securityContext: {}
+  volumes: []
+  restartPolicy: Always
+  terminationGracePeriodSeconds: 30
