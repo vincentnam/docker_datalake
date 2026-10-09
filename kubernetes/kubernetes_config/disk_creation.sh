@@ -1,6 +1,6 @@
 #!/bin/bash
 # Local disk backed by an image file, for the local static provisioner :
-#   image (fallocate) → loop (direct-io) → XFS → mounted on DISKS_ROOT/STORAGE_CLASS/<name>-<uuid>
+#   image (fallocate) → loop (direct-io) → XFS or ext4 → mounted on DISKS_ROOT/STORAGE_CLASS/<name>-<uuid>
 # The provisioner sees the mount point and creates the PersistentVolume by itself.
 #
 # Dev, or degraded production on a single machine. With a real block device
@@ -17,13 +17,14 @@ if [ ! -f "$CONF_FILE" ]; then
 fi
 export $(grep -v '^#' "$CONF_FILE" | sed 's/\r$//' | xargs)
 
-for var in STORAGE_CLASS DISK_NAME DISK_SIZE IMG_DIR DISKS_ROOT; do
+for var in STORAGE_CLASS DISK_NAME DISK_SIZE DISK_FS IMG_DIR DISKS_ROOT; do
   if [ -z "${!var:-}" ]; then
     echo "Set $var in $CONF_FILE."
     exit 1
   fi
 done
 DISK_OWNER="${DISK_OWNER:-}"
+KUBECONFIG_FILE="${KUBECONFIG_FILE:-/etc/rancher/k3s/k3s.yaml}"
 
 # Every step is idempotent : an interrupted run is simply run again
 trap 'echo ""; echo "Interrupted. Run the same command again : every step is idempotent."; exit 1' SIGINT SIGTERM
@@ -31,24 +32,28 @@ trap 'echo ""; echo "Interrupted. Run the same command again : every step is ide
 # ==================== HELP ====================
 help_message() {
   echo "Usage: $0 [OPTIONS]"
-  echo "Local disk backed by a fallocate image (loop + XFS), discovered by the local static provisioner."
+  echo "Local disk backed by a fallocate image (loop + XFS/ext4), discovered by the local static provisioner."
   echo ""
   echo "Options:"
-  echo "  -c, --create       Create the disk : fallocate + XFS + mount (again at every boot, before k3s)"
-  echo "  -g, --grow         Grow an existing disk to --size, online (XFS can only grow)"
-  echo "  -i, --info         Show the disks of the storage class"
-  echo "  --remove           Delete the disk and ALL its data (asks for confirmation)"
-  echo "  -n, --name NAME    Disk name (default: $DISK_NAME)"
-  echo "  -s, --size SIZE    Disk size, fallocate syntax (default: $DISK_SIZE)"
-  echo "  -h, --help         Show this help"
+  echo "  -c, --create         Create the disk : fallocate + format + mount (again at every boot, before k3s)"
+  echo "  -g, --grow           Grow an existing disk to --size, online (never shrinks)"
+  echo "  -a, --apply          Apply the StorageClass + provisioner, then wait for the PV of the disk"
+  echo "  -i, --info           Show the disks of the storage class"
+  echo "  --remove            Delete the disk and ALL its data (asks for confirmation)"
+  echo "  -n, --name NAME      Disk name (default: $DISK_NAME)"
+  echo "  -s, --size SIZE      Disk size, fallocate syntax (default: $DISK_SIZE)"
+  echo "  -f, --filetype FS    Filesystem used by --create : xfs or ext4 (default: $DISK_FS)"
+  echo "  -h, --help           Show this help"
   echo ""
   echo "Defaults are read from $CONF_FILE"
   echo ""
   echo "Examples:"
   echo "  $0 -c                  # Create d1 with the default size"
   echo "  $0 -c -n d2 -s 50G     # Create d2 of 50G"
+  echo "  $0 -c -f ext4          # Create d1 formatted in ext4"
   echo "  $0 -g -s 20G           # Grow d1 to 20G"
   echo "  $0 -ci                 # Create + show the disks"
+  echo "  $0 -cai -n test -s 1G  # Create test + get its PV + show the disks"
   echo "  $0 --remove -n d2      # Delete d2"
 }
 
@@ -64,7 +69,7 @@ if ! command -v getopt >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! PARSED=$(getopt -o cgin:s:h -l create,grow,info,remove,name:,size:,help --name "$0" -- "$@"); then
+if ! PARSED=$(getopt -o cgain:s:f:h -l create,grow,apply,info,remove,name:,size:,filetype:,help --name "$0" -- "$@"); then
   echo "Error: Invalid arguments."
   exit 1
 fi
@@ -73,19 +78,23 @@ eval set -- "$PARSED"
 
 CREATE=false
 GROW=false
+APPLY=false
 INFO=false
 REMOVE=false
 NAME="$DISK_NAME"
 SIZE="$DISK_SIZE"
+FS_TYPE="$DISK_FS"
 
 while true; do
   case "$1" in
     -c|--create) CREATE=true; shift ;;
     -g|--grow)   GROW=true;   shift ;;
+    -a|--apply)  APPLY=true;  shift ;;
     -i|--info)   INFO=true;   shift ;;
     --remove)    REMOVE=true; shift ;;
     -n|--name)   NAME="$2";   shift 2 ;;
     -s|--size)   SIZE="$2";   shift 2 ;;
+    -f|--filetype) FS_TYPE="$2"; shift 2 ;;
     -h|--help) help_message; exit 0 ;;
     --) shift; break ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -93,14 +102,19 @@ while true; do
 done
 
 # At least one action
-if [ "$CREATE" = false ] && [ "$GROW" = false ] && [ "$INFO" = false ] && [ "$REMOVE" = false ]; then
-  echo "Error: You must specify at least one action (-c, -g, -i, --remove)"
+if [ "$CREATE" = false ] && [ "$GROW" = false ] && [ "$APPLY" = false ] && [ "$INFO" = false ] && [ "$REMOVE" = false ]; then
+  echo "Error: You must specify at least one action (-c, -g, -a, -i, --remove)"
   help_message
   exit 1
 fi
 
-if [ "$REMOVE" = true ] && { [ "$CREATE" = true ] || [ "$GROW" = true ] || [ "$INFO" = true ]; }; then
+if [ "$REMOVE" = true ] && { [ "$CREATE" = true ] || [ "$GROW" = true ] || [ "$APPLY" = true ] || [ "$INFO" = true ]; }; then
   echo "Error: --remove cannot be combined with another action."
+  exit 1
+fi
+
+if [ "$FS_TYPE" != xfs ] && [ "$FS_TYPE" != ext4 ]; then
+  echo "Error: unsupported filetype « $FS_TYPE » : xfs or ext4."
   exit 1
 fi
 
@@ -108,6 +122,8 @@ fi
 IMG="$IMG_DIR/$STORAGE_CLASS/$NAME.img"
 DISCOVERY_DIR="$DISKS_ROOT/$STORAGE_CLASS"     # = hostDir of the class in local_static_provisioner.yml
 UNIT="local-disk-$STORAGE_CLASS-$NAME.service"
+SC_FILE="$SCRIPT_DIR/storage_class_swift_disk.yml"
+PROVISIONER_FILE="$SCRIPT_DIR/local_static_provisioner.yml"
 
 # ==================== CHECKS ====================
 if [ "$EUID" -eq 0 ]; then
@@ -123,12 +139,6 @@ fi
 for cmd in fallocate losetup blkid findmnt mountpoint numfmt; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "Error: $cmd is not installed (sudo apt install util-linux coreutils)."
-    exit 1
-  fi
-done
-for cmd in mkfs.xfs xfs_growfs; do
-  if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "Error: $cmd is not installed (sudo apt install xfsprogs)."
     exit 1
   fi
 done
@@ -179,6 +189,22 @@ loop_device() {
   sudo losetup -j "$1" | cut -d: -f1 | head -n1
 }
 
+# Tools needed to format and grow a filesystem type
+require_fs_tools() {
+  local tools package cmd
+  case "$1" in
+    xfs)  tools="mkfs.xfs xfs_growfs"; package=xfsprogs ;;
+    ext4) tools="mkfs.ext4 resize2fs";  package=e2fsprogs ;;
+    *)    echo "Error: unsupported filesystem « $1 » : xfs or ext4."; exit 1 ;;
+  esac
+  for cmd in $tools; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+      echo "Error: $cmd is not installed (sudo apt install $package)."
+      exit 1
+    fi
+  done
+}
+
 write_unit() {
   echo "Writing systemd unit $UNIT (mount replayed at every boot, before k3s)..."
   # \$\$ becomes $$ in the file, which systemd hands to the shell as a plain $
@@ -227,13 +253,23 @@ create_disk() {
   # Filesystem : never reformat an existing one
   local fs
   fs=$(sudo blkid -p -o value -s TYPE "$IMG" || true)
-  case "$fs" in
-    "")  echo "Formatting XFS..."
-         sudo mkfs.xfs -q -L "${NAME:0:12}" "$IMG" ;;
-    xfs) echo "Already formatted in XFS." ;;
-    *)   echo "Error: $IMG already holds a « $fs » filesystem : refusing to reformat it."
-         exit 1 ;;
-  esac
+  if [ -z "$fs" ]; then
+    require_fs_tools "$FS_TYPE"
+    echo "Formatting $FS_TYPE..."
+    case "$FS_TYPE" in
+      xfs)  sudo mkfs.xfs -q -L "${NAME:0:12}" "$IMG" ;;
+      ext4) sudo mkfs.ext4 -q -F -m 0 -L "${NAME:0:12}" "$IMG" ;;   # -m 0 : no blocks reserved for root on a data disk
+    esac
+  elif [ "$fs" = "$FS_TYPE" ]; then
+    echo "Already formatted in $fs."
+  else
+    echo "Error: $IMG already holds a « $fs » filesystem (asked : $FS_TYPE) : refusing to reformat it."
+    echo "       Remove the disk first (--remove) to recreate it in $FS_TYPE."
+    exit 1
+  fi
+  if [ "$FS_TYPE" = ext4 ]; then
+    echo "WARNING : ext4 limits Swift object metadata (~4 KB of xattrs per object) : XFS is recommended in production."
+  fi
   resolve_mount
 
   local old
@@ -277,21 +313,72 @@ grow_disk() {
     exit 1
   fi
 
-  local before after loopdev
+  local fs before after loopdev
+  fs=$(sudo blkid -p -o value -s TYPE "$IMG" || true)
+  require_fs_tools "$fs"                # the existing filesystem decides, not --filetype
+
   before=$(sudo stat -c %s "$IMG")
   sudo fallocate -l "$SIZE" "$IMG"      # a smaller size changes nothing : fallocate never shrinks
   after=$(sudo stat -c %s "$IMG")
   if [ "$after" -le "$before" ]; then
-    echo "Nothing to grow : $NAME is already $(numfmt --to=iec "$before") (>= $SIZE). XFS can only grow."
+    echo "Nothing to grow : $NAME is already $(numfmt --to=iec "$before") (>= $SIZE). The disk only grows."
     return
   fi
 
   loopdev=$(loop_device "$IMG")
   sudo losetup -c "$loopdev"            # the loop device re-reads the size of its image
-  sudo xfs_growfs "$MNT" >/dev/null     # XFS grows while mounted
-  echo "Disk $NAME grown : $(numfmt --to=iec "$before") -> $(numfmt --to=iec "$after")"
+  case "$fs" in                         # both grow while mounted
+    xfs)  sudo xfs_growfs "$MNT" >/dev/null ;;
+    ext4) sudo resize2fs "$loopdev" >/dev/null ;;
+  esac
+  echo "Disk $NAME ($fs) grown : $(numfmt --to=iec "$before") -> $(numfmt --to=iec "$after")"
   echo "The PV still shows its old capacity : display only, not a limit."
   echo "Several Swift devices ? Update the weight of this device in the rings, then rebalance."
+}
+
+K() { kubectl --kubeconfig "$KUBECONFIG_FILE" "$@"; }
+
+# The provisioner creates the PV ; this applies it and waits for the PV of the disk
+apply_manifests() {
+  if ! command -v kubectl >/dev/null 2>&1; then
+    echo "Error: kubectl is not installed."
+    exit 1
+  fi
+  if ! K get nodes >/dev/null 2>&1; then
+    echo "Error: cluster unreachable with $KUBECONFIG_FILE (sudo systemctl status k3s)."
+    exit 1
+  fi
+
+  echo "Applying the StorageClass and the local static provisioner..."
+  K apply -f "$SC_FILE"
+  K apply -f "$PROVISIONER_FILE"
+  K -n kube-system rollout status daemonset/local-static-provisioner --timeout=180s
+
+  if ! sudo test -e "$IMG"; then
+    echo "No disk $NAME yet : its PV will appear once the disk is created (-c)."
+    return
+  fi
+  resolve_mount
+  if ! mountpoint -q "$MNT"; then
+    echo "Error: $MNT is not mounted (sudo systemctl start $UNIT) : no PV can be created."
+    exit 1
+  fi
+
+  echo "Waiting for the PV of disk $NAME ($MNT)..."
+  local pv="" end=$((SECONDS + 90))
+  while [ -z "$pv" ]; do
+    pv=$(K get pv -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.spec.local.path}{"\n"}{end}' \
+         | awk -v p="$MNT" '$2 == p {print $1}' || true)
+    if [ -z "$pv" ]; then
+      if [ "$SECONDS" -ge "$end" ]; then
+        echo "Error: no PV after 90 s. Check that « $STORAGE_CLASS » is in storageClassMap of $PROVISIONER_FILE,"
+        echo "       then : kubectl -n kube-system logs daemonset/local-static-provisioner"
+        exit 1
+      fi
+      sleep 5
+    fi
+  done
+  K get pv "$pv"
 }
 
 info_disks() {
@@ -304,11 +391,13 @@ info_disks() {
     return
   fi
 
-  local img name uuid mnt image fs used dio loopdev
-  printf '  %-10s %-8s %-8s %-8s %-4s %s\n' NAME IMAGE FS USED DIO MOUNT
+  local img name type uuid mnt image fs used dio loopdev
+  printf '  %-10s %-5s %-8s %-8s %-8s %-4s %s\n' NAME TYPE IMAGE FS USED DIO MOUNT
   for img in "${imgs[@]}"; do
     name=$(basename "$img" .img)
     image=$(numfmt --to=iec "$(sudo stat -c %s "$img")")
+    type=$(sudo blkid -p -o value -s TYPE "$img" || true)
+    type=${type:--}
     uuid=$(sudo blkid -p -o value -s UUID "$img" || true)
     mnt="$DISCOVERY_DIR/$name-$uuid"
     if [ -n "$uuid" ] && mountpoint -q "$mnt"; then
@@ -321,7 +410,7 @@ info_disks() {
     else
       fs=-; used=-; dio=-; mnt="(not mounted)"
     fi
-    printf '  %-10s %-8s %-8s %-8s %-4s %s\n' "$name" "$image" "$fs" "$used" "$dio" "$mnt"
+    printf '  %-10s %-5s %-8s %-8s %-8s %-4s %s\n' "$name" "$type" "$image" "$fs" "$used" "$dio" "$mnt"
   done
   echo ""
   echo "PersistentVolumes : kubectl get pv"
@@ -370,6 +459,11 @@ fi
 # ==================== GROW ====================
 if [ "$GROW" = true ]; then
   grow_disk
+fi
+
+# ==================== APPLY ====================
+if [ "$APPLY" = true ]; then
+  apply_manifests
 fi
 
 # ==================== INFO ====================
