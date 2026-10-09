@@ -1,0 +1,22 @@
+# La web GUI n'est joignable que par le point d'entrée nginx.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: web-gui-ingress
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: web-gui
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: access-zone
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: web-gui
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: nginx-proxy
+      ports:
+        - {port: 8080}

@@ -1,0 +1,72 @@
+# Template rendu par kubernetes/start.sh : ${APP_TAG} = commit git de l'image construite
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-gui
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: web-gui
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: access-zone
+    app.kubernetes.io/version: "${APP_TAG}"
+spec:
+  replicas: 1                               # fichiers statiques, sans état : peut être augmenté librement
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: web-gui
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: web-gui
+        app.kubernetes.io/component: frontend
+        app.kubernetes.io/part-of: access-zone
+        app.kubernetes.io/version: "${APP_TAG}"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101                      # utilisateur « nginx » de nginx-unprivileged
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web-gui
+          image: datalake-web-gui:${APP_TAG}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: nginx-conf              # remplace la conf par défaut : fallback index.html pour React Router
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
+            - name: tmp                     # pid et fichiers temporaires de nginx-unprivileged
+              mountPath: /tmp
+          resources:
+            requests: {cpu: 10m, memory: 32Mi}
+            limits: {memory: 128Mi}
+          readinessProbe:
+            httpGet: {path: /nginx-health, port: http}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /nginx-health, port: http}
+            periodSeconds: 20
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: web-gui-nginx
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30

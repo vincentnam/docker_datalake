@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-gui                             # http://web-gui:8080 (nginx-proxy)
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: web-gui
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: access-zone
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: web-gui
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

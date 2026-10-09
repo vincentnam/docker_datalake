@@ -1,0 +1,25 @@
+# L'API n'est joignable que par le point d'entrée nginx (et par JupyterHub, une fois migré).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: flask-app-ingress
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: flask-app
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: access-zone
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: flask-app
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: nginx-proxy
+        - podSelector:                      # JupyterHub, une fois migré (labels à respecter)
+            matchLabels:
+              app.kubernetes.io/name: jupyterhub
+      ports:
+        - {port: 5000}

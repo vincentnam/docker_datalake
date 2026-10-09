@@ -1,0 +1,72 @@
+# Point d'entrée du data lake : / -> web GUI, /api/ -> API Flask (conf dans la ConfigMap nginx-proxy)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-proxy
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: nginx-proxy
+    app.kubernetes.io/component: reverse-proxy
+    app.kubernetes.io/part-of: access-zone
+    app.kubernetes.io/version: "1.28"
+spec:
+  replicas: 1                               # sans état : peut être augmenté librement
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nginx-proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nginx-proxy
+        app.kubernetes.io/component: reverse-proxy
+        app.kubernetes.io/part-of: access-zone
+        app.kubernetes.io/version: "1.28"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101                      # utilisateur « nginx » de nginx-unprivileged
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: nginx-proxy
+          image: nginxinc/nginx-unprivileged:1.28-alpine   # image officielle : la conf vient de la ConfigMap, pas de build
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
+            - name: tmp                     # pid, tampons des uploads et des réponses proxifiées
+              mountPath: /tmp
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {memory: 256Mi}
+          readinessProbe:
+            httpGet: {path: /nginx-health, port: http}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /nginx-health, port: http}
+            periodSeconds: 20
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: nginx-proxy
+        - name: tmp
+          emptyDir:
+            sizeLimit: 1Gi                  # nginx met en tampon sur disque les gros uploads (jusqu'à 500 Mo)
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60

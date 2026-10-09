@@ -1,0 +1,20 @@
+# Seul Service exposé hors du cluster : http://<nœud>:7000, comme le "7000:80" du Compose.
+# LoadBalancer : k3s (ServiceLB) ouvre le port 7000 sur le nœud. En production avec un nom de domaine
+# et du TLS, on passera par un Ingress (Traefik) devant ce Service.
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-proxy
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: nginx-proxy
+    app.kubernetes.io/component: reverse-proxy
+    app.kubernetes.io/part-of: access-zone
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: nginx-proxy
+  ports:
+    - name: http
+      port: 7000
+      targetPort: http
