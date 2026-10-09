@@ -1,0 +1,57 @@
+# memcached centralisé : un seul cache pour toute l'architecture (proxy Swift, Keystone, futurs services)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memcached
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: memcached
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: datalake
+    app.kubernetes.io/version: "1.6"
+spec:
+  # Une seule instance : les clients répartissent les clés entre les serveurs qu'on leur liste.
+  # Plusieurs replicas derrière un même Service couperaient le cache en morceaux incohérents.
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: memcached
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: memcached
+        app.kubernetes.io/component: cache
+        app.kubernetes.io/part-of: datalake
+        app.kubernetes.io/version: "1.6"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 11211                    # utilisateur « memcache » de l'image officielle
+        runAsGroup: 11211
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: memcached
+          image: memcached:1.6-alpine
+          imagePullPolicy: IfNotPresent
+          args: ["-m", "128", "-c", "1024"]   # 128 Mo de cache, 1024 connexions max
+          ports:
+            - name: memcached
+              containerPort: 11211
+          resources:
+            requests: {cpu: 50m, memory: 160Mi}
+            limits: {memory: 256Mi}
+          readinessProbe:
+            tcpSocket: {port: memcached}
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: {port: memcached}
+            periodSeconds: 20
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 10

@@ -1,0 +1,94 @@
+# Template rendu par kubernetes/start.sh : ${SWIFT_PROXY_REPLICAS} vient de conf.env
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: swift-proxy
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: swift
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/part-of: raw-data-zone
+    app.kubernetes.io/version: "2.30.0"
+spec:
+  replicas: ${SWIFT_PROXY_REPLICAS}         # = NB_MANAGEMENT_NODE : proxies sans état, interchangeables
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0                     # mise à jour : un nouveau proxy est prêt avant qu'un ancien parte
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: swift
+      app.kubernetes.io/component: proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: swift
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/part-of: raw-data-zone
+        app.kubernetes.io/version: "2.30.0"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 55555
+        runAsGroup: 55555
+        fsGroup: 55555
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: proxy-server
+          image: swift-base:2.30.0
+          imagePullPolicy: IfNotPresent
+          # un dossier de conf : Swift lit tous ses *.conf par ordre alphabétique et fusionne les sections
+          command: ["swift-proxy-server", "/etc/swift/proxy-server.conf.d", "verbose"]
+          ports:
+            - name: proxy
+              containerPort: 8080
+          volumeMounts:
+            - name: swift-etc                   # conf proxy + mot de passe Keystone + swift.conf + rings
+              mountPath: /etc/swift
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests: {cpu: 250m, memory: 256Mi}  # tout le trafic client passe par le proxy : surtout CPU et réseau
+            limits: {memory: 1Gi}
+          readinessProbe:
+            httpGet: {path: /healthcheck, port: proxy}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /healthcheck, port: proxy}
+            periodSeconds: 20
+            failureThreshold: 3
+          lifecycle:
+            preStop:
+              exec:
+                # SIGHUP = arrêt gracieux de Swift (les transferts en cours se terminent) ; SIGTERM couperait net
+                command: ["/bin/sh", "-c", "kill -HUP 1; while kill -0 1 2>/dev/null; do sleep 1; done"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: swift-etc
+          projected:
+            defaultMode: 0440
+            sources:
+              - configMap:
+                  name: swift-conf
+                  items:                        # seulement la conf du proxy, sans secret
+                    - {key: proxy-server.conf, path: proxy-server.conf.d/00-proxy.conf}
+              - secret:
+                  name: swift-secrets
+                  items:
+                    - {key: swift.conf,           path: swift.conf}
+                    - {key: proxy-authtoken.conf, path: proxy-server.conf.d/10-authtoken.conf}  # [filter:authtoken] password
+              - configMap:
+                  name: swift-rings             # le proxy a besoin des 3 rings pour savoir où router
+        - name: tmp
+          emptyDir:
+            sizeLimit: 256Mi
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60         # laisse aux gros transferts le temps de finir

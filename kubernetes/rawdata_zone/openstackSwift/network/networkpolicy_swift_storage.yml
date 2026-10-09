@@ -1,0 +1,37 @@
+# Les storage servers et rsync n'ont aucune authentification (elle n'existe que sur le proxy) :
+# seuls le proxy et les autres storage pods peuvent les joindre.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: swift-storage-ingress
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: swift
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: raw-data-zone
+spec:
+  podSelector:                              # À QUI s'applique la policy : les storage pods
+    matchLabels:
+      app.kubernetes.io/name: swift
+      app.kubernetes.io/component: storage
+  policyTypes: [Ingress]                    # toute entrée non listée ci-dessous est refusée
+  ingress:
+    - from:                                 # le proxy : uniquement les serveurs Swift
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: swift
+              app.kubernetes.io/component: proxy
+      ports:
+        - {port: 6200}
+        - {port: 6201}
+        - {port: 6202}
+    - from:                                 # les autres storage pods : serveurs (updaters, replicators) + rsync
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: swift
+              app.kubernetes.io/component: storage
+      ports:
+        - {port: 6200}
+        - {port: 6201}
+        - {port: 6202}
+        - {port: 873}

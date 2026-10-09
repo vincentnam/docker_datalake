@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: swift-storage                       # = serviceName du StatefulSet
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: swift
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: raw-data-zone
+spec:
+  clusterIP: None                           # headless : pas d'IP virtuelle, un nom DNS par pod
+                                            # swift-storage-<i>.swift-storage.datalake.svc.cluster.local (utilisé dans les rings)
+  publishNotReadyAddresses: true            # le nom existe dès le démarrage du pod : les démons Swift y trouvent leur propre device
+  selector:
+    app.kubernetes.io/name: swift
+    app.kubernetes.io/component: storage
+  ports:
+    - name: account
+      port: 6200
+      targetPort: account
+    - name: container
+      port: 6201
+      targetPort: container
+    - name: object
+      port: 6202
+      targetPort: object

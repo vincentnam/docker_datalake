@@ -22,7 +22,10 @@ else
 fi
 
 # ==================== CONFIGURATION PATHS ====================
+NAMESPACE="datalake"
 NAMESPACE_FILE="$SCRIPT_DIR/namespace_datalake.yml"
+MEMCACHED_PATH="$SCRIPT_DIR/memcached"
+DISK_SCRIPT="$SCRIPT_DIR/kubernetes_config/disk_creation.sh"
 OPENSTACKSWIFT_PATH="$SCRIPT_DIR/rawdata_zone/openstackSwift"
 SWIFT_BUILD_PATH="$SCRIPT_DIR/../rawdata_zone/openstackSwift"    # Dockerfile.base, shared with Compose
 SWIFT_IMAGE="swift-base:2.30.0"
@@ -30,12 +33,29 @@ KUBECONFIG_FILE="${KUBECONFIG_FILE:-/etc/rancher/k3s/k3s.yaml}"
 
 K() { kubectl --kubeconfig "$KUBECONFIG_FILE" "$@"; }
 
+# apply_rendered <dir> : applies every *.yml of dir, with the ${SWIFT_*} placeholders replaced
+apply_rendered() {
+  local file
+  for file in "$1"/*.yml; do
+    envsubst '${SWIFT_STORAGE_REPLICAS} ${SWIFT_PROXY_REPLICAS} ${SWIFT_STORAGE_REQUEST}' < "$file" \
+      | K apply --server-side -f -
+  done
+}
+
+# wait_rollout <kind/name> : waits until the pods are ready
+wait_rollout() {
+  if ! K -n "$NAMESPACE" rollout status "$1" --timeout=300s; then
+    echo "Error: $1 is not ready. See : kubectl -n $NAMESPACE get pods,pvc ; kubectl -n $NAMESPACE describe $1"
+    exit 1
+  fi
+}
+
 # ==================== HELP ====================
 help_message() {
   echo "Usage: $0 [OPTIONS]"
   echo "Options:"
-  echo "  -b, --build        Run build steps (Swift image imported into k3s, configs, rings)"
-  echo "  -r, --run          Apply the namespace and the generated configs to the cluster"
+  echo "  -b, --build        Run build steps (local disks, Swift image imported into k3s, configs, rings)"
+  echo "  -r, --run          Deploy to the cluster : namespace, memcached, Swift (configs, rings, services, pods)"
   echo "  -h, --help         Show this help"
   echo ""
   echo "Examples:"
@@ -92,6 +112,13 @@ fi
 if [ "$BUILD" = true ]; then
   echo "Running build steps..."
 
+  # One local disk per storage pod (fallocate image, see kubernetes_config/disk_creation.sh), from conf.env.
+  # Idempotent : existing disks are kept, grown if NODE_STORAGE_SIZE increased, never removed.
+  echo "Creating the local disks of the storage pods ($NB_STORAGE_NODE x $NODE_STORAGE_SIZE)..."
+  for i in $(seq 0 $((NB_STORAGE_NODE - 1))); do
+    bash "$DISK_SCRIPT" --create --grow --apply --name "swift-$i" --size "$NODE_STORAGE_SIZE"
+  done
+
   # Docker through sudo when the user is not allowed to reach the daemon
   DOCKER=(docker)
   if ! docker info >/dev/null 2>&1; then
@@ -119,12 +146,34 @@ if [ "$RUN" = true ]; then
     exit 1
   fi
 
+  if ! command -v envsubst >/dev/null 2>&1; then
+    echo "Error: envsubst is not installed (sudo apt install gettext-base)."
+    exit 1
+  fi
+
+  # Values injected in the templates of pods/ ( ${...} placeholders ), from conf.env
+  export SWIFT_STORAGE_REPLICAS="$NB_STORAGE_NODE"
+  export SWIFT_PROXY_REPLICAS="$NB_MANAGEMENT_NODE"
+  # PVC request = 90 % of NODE_STORAGE_SIZE : the filesystem keeps part of the disk and the PV capacity is rounded down
+  STORAGE_BYTES=$(numfmt --from=auto "${NODE_STORAGE_SIZE%B}")
+  export SWIFT_STORAGE_REQUEST="$(( STORAGE_BYTES * 9 / 10 / 1048576 ))Mi"
+
   # --server-side : no last-applied annotation, which is capped at 256 KiB (ring builders can grow past it)
   echo "Applying the datalake namespace..."
   K apply --server-side -f "$NAMESPACE_FILE"
 
-  echo "Applying the Swift configs and rings..."
+  echo "Applying memcached (shared by the whole architecture)..."
+  K apply --server-side -f "$MEMCACHED_PATH/services/" -f "$MEMCACHED_PATH/network/" -f "$MEMCACHED_PATH/pods/"
+
+  echo "Applying Swift (configs, rings, services, network policies, pods)..."
   K apply --server-side -f "$OPENSTACKSWIFT_PATH/volumes/"
+  K apply --server-side -f "$OPENSTACKSWIFT_PATH/services/" -f "$OPENSTACKSWIFT_PATH/network/"
+  apply_rendered "$OPENSTACKSWIFT_PATH/pods"
+
+  echo "Waiting for the pods (storage request : $SWIFT_STORAGE_REQUEST per storage pod)..."
+  wait_rollout deployment/memcached
+  wait_rollout statefulset/swift-storage
+  wait_rollout deployment/swift-proxy
 fi
 
 echo "Script completed successfully."

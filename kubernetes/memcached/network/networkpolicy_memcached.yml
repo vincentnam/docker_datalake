@@ -1,0 +1,27 @@
+# memcached n'a pas d'authentification et contient les tokens Keystone validés :
+# seuls les services qui l'utilisent peuvent le joindre.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: memcached-ingress
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: memcached
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: datalake
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: memcached
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:                      # proxy Swift
+            matchLabels:
+              app.kubernetes.io/name: swift
+              app.kubernetes.io/component: proxy
+        - podSelector:                      # Keystone, une fois migré (labels à respecter)
+            matchLabels:
+              app.kubernetes.io/name: keystone
+      ports:
+        - {port: 11211}
