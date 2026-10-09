@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: datalake
+  labels:
+    app.kubernetes.io/part-of: datalake
+    # Pod Security Admission : pods that break "baseline" (privileged, hostPath, hostNetwork...) are refused ;
+    # what is not "restricted" yet is only reported (warning on apply + audit log).
+    # Switch enforce to restricted once every service of the namespace complies.
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/audit: restricted
