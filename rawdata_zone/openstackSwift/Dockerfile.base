@@ -2,9 +2,10 @@ FROM debian:bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+
 # Create swift system user
-RUN groupadd --system swift && \
-    useradd --system --gid swift --home-dir /var/lib/swift --shell /bin/false swift && \
+RUN groupadd --system --gid 55555 swift && \
+    useradd --system --uid 55555 --gid swift --home-dir /var/lib/swift --shell /bin/false swift && \
     mkdir -p /etc/swift /var/log/swift /var/cache/swift /srv/node /var/lib/swift && \
     chown -R swift:swift /etc/swift /var/log/swift /var/cache/swift /srv/node /var/lib/swift
 
@@ -31,6 +32,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 #COPY ../entrypoints/ /opt/swift-scripts/
+
 # Expose ports for services
 EXPOSE 8080 11211 6000-6012
 
@@ -38,7 +40,7 @@ EXPOSE 8080 11211 6000-6012
 #COPY  build_script/config_cluster.env /config_cluster.env
 
 # Switch to swift user
-#USER swift
+#USER swift:swift
 WORKDIR /var/lib/swift
 
 # Default CMD (overridden in compose)
