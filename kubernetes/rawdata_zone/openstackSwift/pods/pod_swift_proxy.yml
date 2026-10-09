@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "swift-proxy-pod"
+  namespace: "datalake"
+  labels:
+    app.kubernetes.io/name: swift
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/part-of: raw-data-zone
+    app.kubernetes.io/version: "2.30.0"
+  annotations: {}
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 55555
+    runAsGroup: 55555
+    fsGroup: 55555
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: proxy-server
+      image: swift-base:2.30.0
+      imagePullPolicy: IfNotPresent
+
+      command: ["swift-proxy-server", "/etc/swift/proxy-server.conf.d", "verbose"]
+      ports:
+        - name: proxy
+          containerPort: 8080
+      volumeMounts:
+        - name: swift-etc
+          mountPath: /etc/swift
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+      resources:
+        requests: {cpu: 250m, memory: 256Mi}
+        limits: {memory: 1Gi}
+      readinessProbe:
+        httpGet: {path: /healthcheck, port: proxy}
+        periodSeconds: 10
+      livenessProbe:
+        httpGet: {path: /healthcheck, port: proxy}
+        periodSeconds: 20
+        failureThreshold: 3
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+  volumes:
+    - name: swift-etc
+      projected:
+        defaultMode: 0440
+        sources:
+          - configMap:
+              name: swift-conf
+              items:
+                - { key: proxy-server.conf, path: proxy-server.conf.d/00-proxy.conf }
+          - secret:
+              name: swift-secrets
+              items:
+                - { key: swift.conf,           path: swift.conf }
+                - { key: proxy-authtoken.conf, path: proxy-server.conf.d/10-authtoken.conf }  # [filter:authtoken] password = …
+          - configMap:
+              name: swift-rings
+    - name: tmp
+      emptyDir:
+        sizeLimit: 256Mi
+  restartPolicy: Always
+  terminationGracePeriodSeconds: 30
