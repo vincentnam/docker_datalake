@@ -70,7 +70,9 @@ help_message() {
   echo "  -r, --run          Start the data lake services"
   echo "  -t, --test         Test mode: automatically add Caddy reverse proxy"
   echo "  -c, --clean        Clean stopped containers and orphans"
+  echo "  --platform         Choose the platform : docker-compose OR kubernetes"
   echo "  --clean-hard       Full reset (delete volumes, configs, data)"
+
   echo "  -h, --help         Show this help"
   echo ""
   echo "Examples:"
@@ -93,7 +95,7 @@ if ! command -v getopt >/dev/null 2>&1; then
   exit 1
 fi
 
-PARSED=$(getopt -o brtch -l build,run,test,clean,clean-hard,help --name "$0" -- "$@")
+PARSED=$(getopt -o brtch -l build,run,test,clean,clean-hard,help,platform: --name "$0" -- "$@")
 if [ $? -ne 0 ]; then
   echo "Error: Invalid arguments."
   exit 1
@@ -105,6 +107,7 @@ BUILD=false
 RUN=false
 TEST=false
 CLEAN=false
+PLATFORM=false
 
 while true; do
   case "$1" in
@@ -112,6 +115,7 @@ while true; do
     -r|--run)   RUN=true;   shift ;;
     -t|--test)  TEST=true;  shift ;;
     -c|--clean) CLEAN=true; shift ;;
+    --platform) PLATFORM="$2"; shift 2;;
     --clean-hard) hard_clean ;;
     -h|--help) help_message; exit 0 ;;
     --) shift; break ;;
@@ -126,55 +130,72 @@ if [ "$BUILD" = false ] && [ "$RUN" = false ] && [ "$TEST" = false ] && [ "$CLEA
   exit 1
 fi
 
-# Clean
-if [ "$CLEAN" = true ]; then
-  echo "Cleaning containers..."
-  sudo docker compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
-fi
+case "$PLATFORM" in
+  docker-compose|kubernetes) ;;
+  false)
+    echo "Error: You must specify a platform to deploy on (--platform docker-compose OR kubernetes)"
+    help_message
+    exit 1 ;;
+  *)
+    echo "Error: unknown platform « $PLATFORM » (docker-compose OR kubernetes)"
+    help_message
+    exit 1 ;;
+esac
 
-# ==================== BUILD ====================
-if [ "$BUILD" = true ]; then
 
-
-
-  echo "Running build steps..."
-
-  # Update paths
-  sed -i 's#OPENSTACKSWIFT_PATH=".*"#OPENSTACKSWIFT_PATH="'"$OPENSTACKSWIFT_PATH"'"#g' create_docker.sh create_conf.sh
-  sed -i 's#JUPYTER_PATH=".*"#JUPYTER_PATH="'"$JUPYTER_PATH"'"#g' create_docker.sh create_conf.sh
-  sed -i 's#WEBGUI_PATH=".*"#WEBGUI_PATH="'"$WEBGUI_PATH"'"#g' create_docker.sh create_conf.sh
-  sed -i 's#REST_API_PATH=".*"#REST_API_PATH="'"$REST_API_PATH"'"#g' create_docker.sh create_conf.sh
-  sed -i 's#NGINX_PATH=".*"#NGINX_PATH="'"$NGINX_PATH"'"#g' create_docker.sh create_conf.sh
-
-  chmod +x create_docker.sh create_conf.sh
-  chmod +x "$OPENSTACKSWIFT_PATH"/{init.sh,create_conf.sh}
-  chmod +x "$OPENSTACKKEYSTONE_PATH/build.sh"
-
-  (cd "$OPENSTACKKEYSTONE_PATH" && ./build.sh)
-
-  ./create_conf.sh
-  ./create_docker.sh
-
-  echo "Initializing Swift in background..."
-  (cd "$OPENSTACKSWIFT_PATH" && ./init.sh) &
-
-  # Build Jupyter base image
-  sudo docker build -t cors_base-notebook:latest -f "$JUPYTER_PATH/Dockerfile.jupyterserver" "$JUPYTER_PATH"
-fi
-
-# ==================== TEST MODE (Caddy) ====================
-if [ "$TEST" = true ]; then
-  if [ ! -f "$COMPOSE_FILE" ]; then
-    echo "Error: $COMPOSE_FILE not found. Please run with -b first."
-    exit 1
+if [ "$PLATFORM" = "docker-compose" ]; then
+  # Clean
+  if [ "$CLEAN" = true ]; then
+    echo "Cleaning containers..."
+    sudo docker compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
   fi
 
-  echo "Adding Caddy for test mode..."
 
-  if ! grep -q "^  caddy:" "$COMPOSE_FILE"; then
-#sed -i 's?#END SERVICE SECTION?  caddy:\n    image: caddy:2-alpine\n    container_name: caddy_temp_proxy\n    restart: unless-stopped\n    profiles:\n      - debug\n    ports:\n      - \"2015:80\"\n    volumes:\n      - ./Caddyfile:/et
-#c/caddy/Caddyfile:ro\n    networks:\n      - swift-cluster\n    depends_on:\n      - web_gui\n      - flask-app\n      - horizon\n      - management-1\n#END SERVICE SECTION?g' docker-compose_datalake.yml -i
-  sed -i 's/#END SERVICE SECTION/\
+
+
+  # ==================== BUILD ====================
+  if [ "$BUILD" = true ]; then
+
+
+
+    echo "Running build steps..."
+
+    # Update paths
+    sed -i 's#OPENSTACKSWIFT_PATH=".*"#OPENSTACKSWIFT_PATH="'"$OPENSTACKSWIFT_PATH"'"#g' create_docker.sh create_conf.sh
+    sed -i 's#JUPYTER_PATH=".*"#JUPYTER_PATH="'"$JUPYTER_PATH"'"#g' create_docker.sh create_conf.sh
+    sed -i 's#WEBGUI_PATH=".*"#WEBGUI_PATH="'"$WEBGUI_PATH"'"#g' create_docker.sh create_conf.sh
+    sed -i 's#REST_API_PATH=".*"#REST_API_PATH="'"$REST_API_PATH"'"#g' create_docker.sh create_conf.sh
+    sed -i 's#NGINX_PATH=".*"#NGINX_PATH="'"$NGINX_PATH"'"#g' create_docker.sh create_conf.sh
+
+    chmod +x create_docker.sh create_conf.sh
+    chmod +x "$OPENSTACKSWIFT_PATH"/{init.sh,create_conf.sh}
+    chmod +x "$OPENSTACKKEYSTONE_PATH/build.sh"
+
+    (cd "$OPENSTACKKEYSTONE_PATH" && ./build.sh)
+
+    ./create_conf.sh
+    ./create_docker.sh
+
+    echo "Initializing Swift in background..."
+    (cd "$OPENSTACKSWIFT_PATH" && ./init.sh) &
+
+    # Build Jupyter base image
+    sudo docker build -t cors_base-notebook:latest -f "$JUPYTER_PATH/Dockerfile.jupyterserver" "$JUPYTER_PATH"
+  fi
+
+  # ==================== TEST MODE (Caddy) ====================
+  if [ "$TEST" = true ]; then
+    if [ ! -f "$COMPOSE_FILE" ]; then
+      echo "Error: $COMPOSE_FILE not found. Please run with -b first."
+      exit 1
+    fi
+
+    echo "Adding Caddy for test mode..."
+
+    if ! grep -q "^  caddy:" "$COMPOSE_FILE"; then
+  #sed -i 's?#END SERVICE SECTION?  caddy:\n    image: caddy:2-alpine\n    container_name: caddy_temp_proxy\n    restart: unless-stopped\n    profiles:\n      - debug\n    ports:\n      - \"2015:80\"\n    volumes:\n      - ./Caddyfile:/et
+  #c/caddy/Caddyfile:ro\n    networks:\n      - swift-cluster\n    depends_on:\n      - web_gui\n      - flask-app\n      - horizon\n      - management-1\n#END SERVICE SECTION?g' docker-compose_datalake.yml -i
+    sed -i 's/#END SERVICE SECTION/\
   caddy:\
     image: caddy:2-alpine\
     container_name: caddy_temp_proxy\
@@ -191,26 +212,45 @@ if [ "$TEST" = true ]; then
     networks:\
       - swift-cluster\
 #END SERVICE SECTION/g' docker-compose_datalake.yml
+    fi
+
+
+    echo "Caddy ready → http://localhost:2015"
   fi
 
+  # ==================== RUN ====================
+  if [ "$RUN" = true ]; then
+    echo "Starting data lake services..."
+    # 42424 is ID of Keystone user in container / check and change id if not working
+    chown -R 42424:42424 rawdata_zone/openstackKeystone/conf/etc/keystone/credential-keys
+    chown -R 42424:42424 rawdata_zone/openstackKeystone/conf/etc/keystone/fernet-keys
+    chmod -R 770 rawdata_zone/openstackKeystone/conf/etc/keystone/credential-keys
+    chmod -R 770 rawdata_zone/openstackKeystone/conf/etc/keystone/fernet-keys
+    if [ "$TEST" = true ]; then
+      export DOCKER_BUILDKIT=1
+      sudo docker compose -f "$COMPOSE_FILE" --profile datalake --profile debug up --build
+    else
+      sudo docker compose -f "$COMPOSE_FILE" --profile datalake up --build
+    fi
+  fi
 
-  echo "Caddy ready → http://localhost:2015"
-fi
+  echo "Script completed successfully."
+elif [ "$PLATFORM" = "kubernetes" ]; then
+  KUBE_ROOT_FOLDER="./kubernetes"
 
-# ==================== RUN ====================
-if [ "$RUN" = true ]; then
-  echo "Starting data lake services..."
-  # 42424 is ID of Keystone user in container / check and change id if not working 
-  chown -R 42424:42424 rawdata_zone/openstackKeystone/conf/etc/keystone/credential-keys
-  chown -R 42424:42424 rawdata_zone/openstackKeystone/conf/etc/keystone/fernet-keys
-  chmod -R 770 rawdata_zone/openstackKeystone/conf/etc/keystone/credential-keys
-  chmod -R 770 rawdata_zone/openstackKeystone/conf/etc/keystone/fernet-keys
+  if [ "$BUILD" = true ]; then
+    $KUBE_ROOT_FOLDER/runK3S.sh install
+    $KUBE_ROOT_FOLDER/runK3S.sh gui &
+  fi
+
+  # ==================== TEST MODE (Caddy) ====================
   if [ "$TEST" = true ]; then
-    export DOCKER_BUILDKIT=1
-    sudo docker compose -f "$COMPOSE_FILE" --profile datalake --profile debug up --build
-  else
-    sudo docker compose -f "$COMPOSE_FILE" --profile datalake up --build
+    echo "Pas de test"
+  fi
+
+  # ==================== RUN ====================
+  if [ "$RUN" = true ]; then
+    chmod +x $KUBE_ROOT_FOLDER/deploy.sh
+    $KUBE_ROOT_FOLDER/deploy.sh
   fi
 fi
-
-echo "Script completed successfully."
