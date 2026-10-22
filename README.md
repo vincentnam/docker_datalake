@@ -65,6 +65,9 @@ export OS_PROJECT_DOMAIN_NAME=Default
 export OS_AUTH_URL=http://localhost:5000/v3
 export OS_IDENTITY_API_VERSION=3
 export OS_IMAGE_API_VERSION=2
+# Kubernetes install
+
+Get the K3S.yaml if you install K3S on the same server (/etc/rancher/k3s/k3s.yaml), unless fill the k3s.yaml.example with correct informations.
 
 ## Licence
 

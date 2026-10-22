@@ -17,3 +17,4 @@ rawdata_zone/openstackSwift/scripts/storage/
 TODO
 debug/user1.ipynb
 debug/datalake_authclient/datalake_openstackclient.py
+k3s.yaml
