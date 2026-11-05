@@ -4,15 +4,15 @@ A self-hosted data lake built on OpenStack components, automatically deployable 
 
 ## Architecture
 
-| Zone             | Services                                                                                                                                                     | Role                                     |
-|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------|
-| Raw data zone    | Included : OpenStack Swift (proxy + storage nodes),                                                                                                          | Object storage, identity, SSO federation |
-| Access zone      | Included : Flask REST API (single entry point), React web GUI (User friendly interaction)                                                                    | Single public entry point                |
-| Process zone     | Included : JupyterHub / Planned : Airflow (for orchestration) - Apache Spark Streaming (for data stream)                                                     | Notebooks on lake data                   |
-| Consumption zone | Planned : Kubernetes / Docker (not managed)                                                                                                                  | Deploy multiple services to consume data |
-| Security Zone    | Included : Openstack Keystone + MariaDB (local IDP + federated IDP for Swift (mandatory)) + external IDP (Keycloak as default), nginx reverse proxy (security) | Manage authentication                    |
-| Govern Zone      | Planned : MongoDB ( metadata management )                                                                                                                    | Manage authentication                    |
-| Other            | Memcached ( data lake caching system )                                                                                                                       |                    |
+| Zone             | Services                                                                                                                                                       | Role                                                                |
+|------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| Raw data zone    | Included : OpenStack Swift (proxy + storage nodes),                                                                                                            | Store raw data with no modification at the lowest cost possible     |
+| Access zone      | Included : Flask REST API (single entry point), React web GUI (User friendly interaction)                                                                      | Allow interaction with differents data lake services                |
+| Process zone     | Included : JupyterHub / Planned : Airflow (for orchestration) - Apache Spark + Apache Spark Streaming (for data stream)                                        | "Brain" part : orchestration + data exploration + stream management |
+| Consumption zone | Planned : Kubernetes / Docker (not managed)                                                                                                                    | Deploy multiple services to consume data                            |
+| Security Zone    | Included : Openstack Keystone + MariaDB (local IDP + federated IDP for Swift (mandatory)) + external IDP (Keycloak as default), nginx reverse proxy (security) | Manage authentication                                               |
+| Govern Zone      | Planned : MongoDB ( metadata management )                                                                                                                      | Data lifecycle management                                           |
+| Other            | Memcached ( data lake caching system )                                                                                                                         |                                                                     |
 
 ## Requirements
 
