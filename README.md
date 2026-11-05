@@ -98,29 +98,29 @@ All settings live in 'conf.env', at the repository root. Each line of the file h
 
 ### Keycloak / Keystone federation (OIDC)
 
-| Variable | Description | Example |
-|---|---|---|
-| 'FEDERATION_ENABLED' | Turns on OIDC federation between Keystone and Keycloak. Values: true (federation on) or false (Keystone uses passwords only). Case-insensitive; any value other than 'true' counts as 'false'. | FEDERATION_ENABLED="true" |
-| 'DEPLOY_KEYCLOAK' | Chooses which Keycloak to use. Values: true (deploy the bundled Keycloak) or false (reuse an external Keycloak, set in 'KEYCLOAK_URL'). Case-insensitive; any value other than 'true' counts as 'false'. | DEPLOY_KEYCLOAK="true" |
-| 'KEYCLOAK_URL' | Internal Keycloak base URL, for server-to-server calls. No trailing slash and no '/realms' suffix. | KEYCLOAK_URL="http://keycloak:8080" |
-| 'KEYCLOAK_PUBLIC_URL' | Keycloak base URL as the browser reaches it, for the SSO login redirect. For an external Keycloak, use the same value as 'KEYCLOAK_URL'. | KEYCLOAK_PUBLIC_URL="http://localhost:8088" |
-| 'KEYCLOAK_REALM' | Keycloak realm that holds the data lake users. | KEYCLOAK_REALM="datalake" |
-| 'KEYCLOAK_CLIENT_ID' | OIDC client declared in Keycloak for Keystone and Flask. | KEYCLOAK_CLIENT_ID="keystone" |
-| 'KEYCLOAK_CLIENT_SECRET' | Secret of that OIDC client. | KEYCLOAK_CLIENT_SECRET="ChangeMe_client_secret" |
-| 'KEYCLOAK_ISSUER' | Optional override of the token issuer. Leave it empty to use '${KEYCLOAK_PUBLIC_URL}/realms/${KEYCLOAK_REALM}'. Set it only for a legacy Keycloak that serves '/auth/realms/<realm>'. | KEYCLOAK_ISSUER="" |
-| 'KEYCLOAK_ADMIN' | Admin username of the bundled Keycloak. Ignored when DEPLOY_KEYCLOAK="false". | KEYCLOAK_ADMIN="admin" |
-| 'KEYCLOAK_ADMIN_PASSWORD' | Admin password of the bundled Keycloak. | KEYCLOAK_ADMIN_PASSWORD="ChangeMe_keycloak_admin" |
-| 'KEYCLOAK_HOST_PORT' | Host port of the bundled Keycloak, for browser and admin console access. | KEYCLOAK_HOST_PORT="8088" |
-| 'OIDC_CRYPTO_PASSPHRASE' | Passphrase that Apache 'mod_auth_openidc' uses to encrypt session cookies. Long, random and secret: generate it with 'openssl rand -base64 32'. | OIDC_CRYPTO_PASSPHRASE="ChangeMe_long_random_oidc_passphrase" |
-| 'KEYCLOAK_IDP_ID' | ID of the identity provider registered in Keystone. | KEYCLOAK_IDP_ID="keycloak" |
-| 'KEYCLOAK_PROTOCOL_ID' | Keystone federation protocol ID. Value: mapped, the only value valid for OIDC (Keystone 2026.1 has no 'openid' auth method). | KEYCLOAK_PROTOCOL_ID="mapped" |
-| 'KEYSTONE_PUBLIC_URL' | Keystone URL as the browser reaches it, used to build the OIDC redirect URI. No '/v3' suffix. | KEYSTONE_PUBLIC_URL="http://localhost:5000" |
+| Variable | Description                                                                                                                                                                                                                  | Example |
+|---|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---|
+| 'FEDERATION_ENABLED' | Turns on OIDC federation between Keystone and Keycloak. Values: true (federation on) or false (Keystone uses passwords only). Case-insensitive; any value other than 'true' counts as 'false'.                               | FEDERATION_ENABLED="true" |
+| 'DEPLOY_KEYCLOAK' | Chooses which Keycloak to use. Values: true (deploy the bundled Keycloak) or false (reuse an external Keycloak, set in 'KEYCLOAK_URL'). Case-insensitive; any value other than 'true' counts as 'false'.                     | DEPLOY_KEYCLOAK="true" |
+| 'KEYCLOAK_URL' | Internal Keycloak base URL, for server-to-server calls. No trailing slash and no '/realms' suffix.                                                                                                                           | KEYCLOAK_URL="http://keycloak:8080" |
+| 'KEYCLOAK_PUBLIC_URL' | Keycloak base URL as the browser reaches it, for the SSO login redirect. For an external Keycloak, use the same value as 'KEYCLOAK_URL'.                                                                                     | KEYCLOAK_PUBLIC_URL="http://localhost:8088" |
+| 'KEYCLOAK_REALM' | Keycloak realm that holds the data lake users.                                                                                                                                                                               | KEYCLOAK_REALM="datalake" |
+| 'KEYCLOAK_CLIENT_ID' | OIDC client declared in Keycloak for Keystone and Flask.                                                                                                                                                                     | KEYCLOAK_CLIENT_ID="keystone" |
+| 'KEYCLOAK_CLIENT_SECRET' | Secret of that OIDC client.                                                                                                                                                                                                  | KEYCLOAK_CLIENT_SECRET="ChangeMe_client_secret" |
+| 'KEYCLOAK_ISSUER' | Optional override of the token issuer. Leave it empty to use '\${KEYCLOAK_PUBLIC_URL}/realms/\${KEYCLOAK_REALM}'. Set it only for a legacy Keycloak that serves '/auth/realms/<realm>'.                                      | KEYCLOAK_ISSUER="" |
+| 'KEYCLOAK_ADMIN' | Admin username of the bundled Keycloak. Ignored when DEPLOY_KEYCLOAK="false".                                                                                                                                                | KEYCLOAK_ADMIN="admin" |
+| 'KEYCLOAK_ADMIN_PASSWORD' | Admin password of the bundled Keycloak.                                                                                                                                                                                      | KEYCLOAK_ADMIN_PASSWORD="ChangeMe_keycloak_admin" |
+| 'KEYCLOAK_HOST_PORT' | Host port of the bundled Keycloak, for browser and admin console access.                                                                                                                                                     | KEYCLOAK_HOST_PORT="8088" |
+| 'OIDC_CRYPTO_PASSPHRASE' | Passphrase that Apache 'mod_auth_openidc' uses to encrypt session cookies. Long, random and secret: generate it with 'openssl rand -base64 32'.                                                                              | OIDC_CRYPTO_PASSPHRASE="ChangeMe_long_random_oidc_passphrase" |
+| 'KEYCLOAK_IDP_ID' | ID of the identity provider registered in Keystone.                                                                                                                                                                          | KEYCLOAK_IDP_ID="keycloak" |
+| 'KEYCLOAK_PROTOCOL_ID' | Keystone federation protocol ID. Value: mapped, the only value valid for OIDC (Keystone 2026.1 has no 'openid' auth method).                                                                                                 | KEYCLOAK_PROTOCOL_ID="mapped" |
+| 'KEYSTONE_PUBLIC_URL' | Keystone URL as the browser reaches it, used to build the OIDC redirect URI. No '/v3' suffix.                                                                                                                                | KEYSTONE_PUBLIC_URL="http://localhost:5000" |
 | 'FEDERATED_DOMAIN' | Keystone domain for federated users and their projects. It is kept apart from 'Default' so that Keycloak usernames never collide with local accounts. To change it on a live deployment, delete the identity provider first. | FEDERATED_DOMAIN="keycloak" |
-| 'FEDERATED_ROLE' | Role each federated user gets on their own project. | FEDERATED_ROLE="bucket_owner" |
-| 'FEDERATED_GROUP' | Keycloak group that grants data lake access. A user removed from the group is refused at their next login; their data is kept. | FEDERATED_GROUP="datalake_users" |
-| 'FEDERATED_PROJECT' | Keystone project used by the federation mapping. | FEDERATED_PROJECT="federated" |
-| 'KEYCLOAK_SAMPLE_USER' | Sample user created in the bundled realm, for development. | KEYCLOAK_SAMPLE_USER="datalake-user" |
-| 'KEYCLOAK_SAMPLE_PASSWORD' | Password of the sample user. | KEYCLOAK_SAMPLE_PASSWORD="ChangeMe_datalake_user" |
+| 'FEDERATED_ROLE' | Role each federated user gets on their own project.                                                                                                                                                                          | FEDERATED_ROLE="bucket_owner" |
+| 'FEDERATED_GROUP' | Keycloak group that grants data lake access. A user removed from the group is refused at their next login; their data is kept.                                                                                               | FEDERATED_GROUP="datalake_users" |
+| 'FEDERATED_PROJECT' | Keystone project used by the federation mapping.                                                                                                                                                                             | FEDERATED_PROJECT="federated" |
+| 'KEYCLOAK_SAMPLE_USER' | Sample user created in the bundled realm, for development.                                                                                                                                                                   | KEYCLOAK_SAMPLE_USER="datalake-user" |
+| 'KEYCLOAK_SAMPLE_PASSWORD' | Password of the sample user.                                                                                                                                                                                                 | KEYCLOAK_SAMPLE_PASSWORD="ChangeMe_datalake_user" |
 
 ### Flask API
 
