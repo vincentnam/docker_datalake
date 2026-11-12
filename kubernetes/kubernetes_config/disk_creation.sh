@@ -58,6 +58,7 @@ help_message() {
   echo "  -n, --name NAME      Disk name (default: $DISK_NAME)"
   echo "  -s, --size SIZE      Disk size, fallocate syntax (default: $DISK_SIZE)"
   echo "  -f, --filetype FS    Filesystem used by --create : xfs or ext4 (default: $DISK_FS)"
+  echo "  --class CLASS        StorageClass of the disk : swift-disks or mariadb-disks (default: $STORAGE_CLASS)"
   echo "  -h, --help           Show this help"
   echo ""
   echo "Examples:"
@@ -67,6 +68,7 @@ help_message() {
   echo "  $0 -g -s 20G           # Grow d1 to 20G"
   echo "  $0 -cai -n test -s 1G  # Create test + get its PV + show the disks"
   echo "  $0 --remove -n d2      # Delete d2"
+  echo "  $0 -ca --class mariadb-disks -n mariadb-0 -s 2GB  # Create the MariaDB disk + get its PV"
 }
 
 # No args → help
@@ -81,7 +83,7 @@ if ! command -v getopt >/dev/null 2>&1; then
   exit 1
 fi
 
-PARSED=$(getopt -o cgain:s:f:h -l create,grow,apply,info,remove,name:,size:,filetype:,help --name "$0" -- "$@")
+PARSED=$(getopt -o cgain:s:f:h -l create,grow,apply,info,remove,name:,size:,filetype:,class:,help --name "$0" -- "$@")
 if [ $? -ne 0 ]; then
   echo "Error: Invalid arguments."
   exit 1
@@ -108,6 +110,7 @@ while true; do
     -n|--name)   NAME="$2";   shift 2 ;;
     -s|--size)   SIZE="$2";   shift 2 ;;
     -f|--filetype) FS_TYPE="$2"; shift 2 ;;
+    --class)     STORAGE_CLASS="$2"; shift 2 ;;
     -h|--help) help_message; exit 0 ;;
     --) shift; break ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -413,9 +416,16 @@ if [ "$APPLY" = true ]; then
     exit 1
   fi
 
-  echo "Applying the StorageClass and the local static provisioner..."
+  echo "Applying the StorageClasses and the local static provisioner..."
   kubectl apply -f $DISK_CONFIG_PATH/storage_class_swift_disk.yml
-  kubectl apply -f $DISK_CONFIG_PATH/local_static_provisioner.yml
+  kubectl apply -f $DISK_CONFIG_PATH/storage_class_mariadb_disk.yml
+
+  # The provisioner reads its ConfigMap only at start : restarted when a class is added
+  PROVISIONER_APPLY=$(kubectl apply -f $DISK_CONFIG_PATH/local_static_provisioner.yml)
+  echo "$PROVISIONER_APPLY"
+  if echo "$PROVISIONER_APPLY" | grep -q "configmap/local-static-provisioner-config configured"; then
+    kubectl -n kube-system rollout restart daemonset/local-static-provisioner
+  fi
   kubectl -n kube-system rollout status daemonset/local-static-provisioner --timeout=180s
 
   if ! sudo test -e "$IMG"; then

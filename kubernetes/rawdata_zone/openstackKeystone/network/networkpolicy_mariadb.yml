@@ -1,0 +1,24 @@
+# La base contient tous les comptes, projets et rôles de Keystone : seul Keystone peut la joindre.
+# Plus tard : le pod de dump de la routine de sauvegarde Airflow (voir le kanban AirflowRoutine).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mariadb-ingress
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: security-zone
+spec:
+  podSelector:                              # À QUI s'applique la policy : le pod MariaDB
+    matchLabels:
+      app.kubernetes.io/name: mariadb
+      app.kubernetes.io/component: database
+  policyTypes: [Ingress]                    # toute entrée non listée ci-dessous est refusée
+  ingress:
+    - from:
+        - podSelector:                      # Keystone : serveur et Jobs (db-sync, bootstrap), même label
+            matchLabels:
+              app.kubernetes.io/name: keystone
+      ports:
+        - {port: 3306}

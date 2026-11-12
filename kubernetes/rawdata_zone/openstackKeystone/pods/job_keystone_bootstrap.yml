@@ -1,0 +1,49 @@
+# Template rendu par kubernetes/deploy.sh : ${APP_TAG} = commit git, comme les images de Flask et de la web GUI.
+# Transposition du service keystone_bootstrap de create_docker.sh : même image (Dockerfile.openstackClientBootstrap),
+# même script. Seul écart : les endpoints Swift pointent sur le Service swift-proxy (remplacé par create_conf.sh).
+# Le script attend Keystone lui-même et peut être relancé : deploy.sh supprime le Job puis le recrée à chaque déploiement.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keystone-bootstrap
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: keystone
+    app.kubernetes.io/component: bootstrap
+    app.kubernetes.io/part-of: security-zone
+    app.kubernetes.io/version: "${APP_TAG}"
+spec:
+  backoffLimit: 6                           # en cas d'échec, relancé jusqu'à 6 fois (délai croissant)
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: keystone    # autorisé par les NetworkPolicy de Keystone
+        app.kubernetes.io/component: bootstrap
+        app.kubernetes.io/part-of: security-zone
+        app.kubernetes.io/version: "${APP_TAG}"
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: bootstrap
+          image: keystone-bootstrap:${APP_TAG}
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "/bootstrap_keystone.sh"]
+          envFrom:
+            - configMapRef:
+                name: keystone-env
+            - secretRef:
+                name: keystone-env
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {memory: 512Mi}
+          volumeMounts:
+            - name: keystone-files          # remplace le script copié dans l'image (endpoints Swift du Compose)
+              mountPath: /bootstrap_keystone.sh
+              subPath: bootstrap_keystone.sh
+      volumes:
+        - name: keystone-files
+          configMap:
+            name: keystone-files
+      restartPolicy: OnFailure

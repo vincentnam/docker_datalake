@@ -1,0 +1,131 @@
+# Template rendu par kubernetes/deploy.sh : ${KEYSTONE_TAG} vient de conf.env (même tag que build.sh)
+# Transposition du service keystone de create_docker.sh : même image, même script de démarrage (init-keystone.sh),
+# mêmes fichiers aux mêmes chemins. Écart : les clés fernet et credential viennent de Secrets créés une fois
+# par create_conf.sh. Keystone ne garde alors aucun état (tout est dans MariaDB) : un Deployment suffit.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keystone
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: keystone
+    app.kubernetes.io/component: identity
+    app.kubernetes.io/part-of: security-zone
+    app.kubernetes.io/version: "${KEYSTONE_TAG}"
+spec:
+  replicas: 1                               # peut augmenter : toutes les instances lisent les mêmes clés
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: keystone
+      app.kubernetes.io/component: identity
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: keystone
+        app.kubernetes.io/component: identity
+        app.kubernetes.io/part-of: security-zone
+        app.kubernetes.io/version: "${KEYSTONE_TAG}"
+    spec:
+      # Comme le Compose : root au démarrage (a2enmod), Apache passe ensuite à l'utilisateur keystone.
+      # Accepté par le Pod Security « baseline » du namespace.
+      securityContext:
+        fsGroup: 42424                      # groupe keystone de l'image : les processus WSGI lisent les clés
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # depends_on mariadb du Compose : attend que la base accepte les connexions avant db_sync
+        - name: wait-mariadb
+          image: keystone:${KEYSTONE_TAG}
+          imagePullPolicy: IfNotPresent
+          command: ["bash", "-c", "until (echo > /dev/tcp/mariadb/3306) 2>/dev/null; do echo 'Waiting for mariadb:3306...'; sleep 2; done"]
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {memory: 64Mi}
+      containers:
+        - name: keystone
+          image: keystone:${KEYSTONE_TAG}
+          imagePullPolicy: IfNotPresent
+          command: ["/entrypoint.sh"]
+          envFrom:
+            - configMapRef:
+                name: keystone-env
+            - secretRef:
+                name: keystone-env
+          ports:
+            - name: public
+              containerPort: 5000
+            - name: admin
+              containerPort: 35357
+          resources:
+            requests: {cpu: 200m, memory: 512Mi}
+            limits: {memory: 2Gi}         # 2 vhosts x 4 processus WSGI (site Apache de Keystone)
+          # healthcheck du Compose : curl /healthcheck sur 5000.
+          # Démarrage : db_sync, bootstrap et attente de Keycloak (2 min) : jusqu'à 5 min.
+          startupProbe:
+            httpGet: {path: /healthcheck, port: public}
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet: {path: /healthcheck, port: public}
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet: {path: /healthcheck, port: public}
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            # mêmes chemins que les volumes du service keystone de create_docker.sh
+            - name: keystone-conf
+              mountPath: /etc/keystone/keystone.conf
+              subPath: keystone.conf
+            - name: keystone-files
+              mountPath: /etc/keystone/policy.yaml
+              subPath: policy.yaml
+            - name: keystone-files
+              mountPath: /etc/apache2/ports.conf
+              subPath: ports.conf
+            - name: keystone-files
+              mountPath: /etc/apache2/sites-available/keystone.conf
+              subPath: keystone-site.conf
+            - name: keystone-files
+              mountPath: /var/lib/openstack/lib/python3.10/site-packages/keystone/server/wsgi.py
+              subPath: wsgi.py
+            - name: entrypoint
+              mountPath: /entrypoint.sh
+              subPath: init-keystone.sh
+            # clés : dossiers entiers (pas de subPath), mis à jour par Kubernetes quand la rotation change le Secret
+            - name: fernet-keys
+              mountPath: /etc/keystone/fernet-keys
+              readOnly: true
+            - name: credential-keys
+              mountPath: /etc/keystone/credential-keys
+              readOnly: true
+            # certificats Keycloak téléchargés par init-keystone.sh à chaque démarrage
+            - name: keycloak-certs
+              mountPath: /etc/keystone/keycloak-certs
+      volumes:
+        - name: keystone-conf
+          secret:
+            secretName: keystone-conf
+            defaultMode: 0444               # lu par les processus WSGI (utilisateur keystone)
+        - name: keystone-files
+          configMap:
+            name: keystone-files
+        - name: entrypoint
+          configMap:
+            name: keystone-files
+            defaultMode: 0755               # exécutable, comme dans le dépôt
+        - name: fernet-keys
+          secret:
+            secretName: keystone-fernet-keys
+            defaultMode: 0440               # root + groupe keystone (fsGroup), comme le chmod du Compose
+        - name: credential-keys
+          secret:
+            secretName: keystone-credential-keys
+            defaultMode: 0440
+        - name: keycloak-certs
+          emptyDir:
+            sizeLimit: 1Mi
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30

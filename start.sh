@@ -238,6 +238,7 @@ if [ "$PLATFORM" = "docker-compose" ]; then
 elif [ "$PLATFORM" = "kubernetes" ]; then
   KUBE_ROOT_FOLDER="./kubernetes"
   OPENSTACKSWIFT_KUBE_PATH="$KUBE_ROOT_FOLDER/rawdata_zone/openstackSwift"
+  OPENSTACKKEYSTONE_KUBE_PATH="$KUBE_ROOT_FOLDER/rawdata_zone/openstackKeystone"
   ACCESS_ZONE_KUBE_PATH="$KUBE_ROOT_FOLDER/access_zone"
   DISK_CONFIG_PATH="$KUBE_ROOT_FOLDER/kubernetes_config"
 
@@ -256,18 +257,41 @@ elif [ "$PLATFORM" = "kubernetes" ]; then
     chmod +x "$DISK_CONFIG_PATH/disk_creation.sh"
     chmod +x "$OPENSTACKSWIFT_KUBE_PATH"/{create_conf.sh,create_rings.sh}
     chmod +x "$ACCESS_ZONE_KUBE_PATH/create_conf.sh"
+    chmod +x "$OPENSTACKKEYSTONE_KUBE_PATH/create_conf.sh"
 
+    if [ -z "$MARIADB_VERSION" ]; then
+      echo "Set the MariaDB version in conf.env file."
+      exit 1
+    fi
+
+    if [ -z "$MARIADB_STORAGE_SIZE" ]; then
+      echo "Set the MariaDB disk size in conf.env file."
+      exit 1
+    fi
     # One local disk per storage node (swift-0, swift-1... like the storage pods)
     for i in $(seq 0 $((NB_STORAGE_NODE - 1))); do
       "$DISK_CONFIG_PATH/disk_creation.sh" --create --grow --apply --name "swift-$i" --size "$NODE_STORAGE_SIZE"
     done
 
+    # One local disk for the MariaDB of Keystone (mariadb-0, like its pod)
+    "$DISK_CONFIG_PATH/disk_creation.sh" --create --grow --apply --class mariadb-disks --name mariadb-0 --size "$MARIADB_STORAGE_SIZE"
     # Flask and web GUI images are tagged with the git commit (same tag in deploy.sh)
     APP_TAG="$(git rev-parse --short HEAD)"
 
     # k3s does not see the Docker images : each image is imported after its build
     sudo docker build -t swift-base:2.30.0 -f "$OPENSTACKSWIFT_PATH/Dockerfile.base" "$OPENSTACKSWIFT_PATH"
     sudo docker save swift-base:2.30.0 | sudo k3s ctr images import -
+
+    # Keystone image built by LOCI, like the docker-compose platform (same tag as create_docker.sh)
+    # build.sh calls docker without sudo : run with sudo, like the other docker commands of this block
+    chmod +x "$OPENSTACKKEYSTONE_PATH/build.sh"
+    (cd "$OPENSTACKKEYSTONE_PATH" && sudo ./build.sh)
+    KEYSTONE_TAG="${OPENSTACK_RELEASE_VAR//stable\//}-${BASE_TAG_VAR}"
+    sudo docker save "keystone:$KEYSTONE_TAG" | sudo k3s ctr images import -
+
+    # openstack client image of the bootstrap Job, tagged with the git commit (same tag in deploy.sh)
+    sudo docker build -t "keystone-bootstrap:$APP_TAG" -f "$OPENSTACKKEYSTONE_PATH/Dockerfile.openstackClientBootstrap" "$OPENSTACKKEYSTONE_PATH"
+    sudo docker save "keystone-bootstrap:$APP_TAG" | sudo k3s ctr images import -
 
     sudo docker build -t "datalake-flask:$APP_TAG" -f "$ACCESS_ZONE_KUBE_PATH/flask/Dockerfile" "$REST_API_PATH"
     sudo docker save "datalake-flask:$APP_TAG" | sudo k3s ctr images import -
@@ -280,6 +304,7 @@ elif [ "$PLATFORM" = "kubernetes" ]; then
 
     "$OPENSTACKSWIFT_KUBE_PATH/create_conf.sh"
     "$OPENSTACKSWIFT_KUBE_PATH/create_rings.sh"
+    "$OPENSTACKKEYSTONE_KUBE_PATH/create_conf.sh"
     "$ACCESS_ZONE_KUBE_PATH/create_conf.sh"
 
 #    $KUBE_ROOT_FOLDER/runK3S.sh install

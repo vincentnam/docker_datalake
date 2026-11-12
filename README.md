@@ -219,9 +219,22 @@ Install k3s and the Headlamp admin GUI:
 
 Then run 'start.sh' with '--platform kubernetes' (see [How does this repo work?](#how-does-this-repo-work)).
 
-Migration status: Swift, memcached and the access zone are migrated. MariaDB, Keystone, Keycloak, Horizon and JupyterHub are still to be migrated.
+Migration status: Swift, memcached, the access zone, MariaDB and Keystone are migrated. Keycloak, Horizon and JupyterHub are still to be migrated.
 
 WSL is for testing only, not for production.
+
+### Access the services (port forwarding)
+
+The web GUI and the Flask API are served by the 'nginx-proxy' Service on port 7000. The browser URLs of 'conf.env' ('WEB_GUI_URL', 'REACT_APP_FLASK_APP_URL') point to 'http://localhost:7000', so port 7000 of the Service must be forwarded to 'localhost'. From the repository root:
+
+```bash
+export KUBECONFIG="$PWD/k3s.yaml"
+kubectl -n datalake port-forward svc/nginx-proxy 7000:7000
+```
+
+Keep the command running, then open http://localhost:7000 in the browser. It stops when the terminal is closed or the 'nginx-proxy' pod restarts: run it again.
+
+Port forwarding is needed when the browser cannot reach the k3s LoadBalancer directly: k3s on WSL (the LoadBalancer listens on the WSL IP, not on Windows 'localhost'), or a VPN that blocks local network traffic.
 
 ## Troubleshooting
 

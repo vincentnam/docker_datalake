@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: keystone                            # keystone:5000 dans les confs (Swift, Flask, bootstrap)
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: keystone
+    app.kubernetes.io/component: identity
+    app.kubernetes.io/part-of: security-zone
+spec:
+  type: ClusterIP                           # une IP stable, répartie entre les instances prêtes
+  selector:
+    app.kubernetes.io/name: keystone
+    app.kubernetes.io/component: identity
+  ports:
+    - name: public
+      port: 5000
+      targetPort: public
+    - name: admin                           # endpoint admin enregistré par keystone-manage bootstrap (keystone:35357)
+      port: 35357
+      targetPort: admin

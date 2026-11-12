@@ -1,0 +1,32 @@
+# Keystone délivre les tokens de tout le data lake : seuls ses clients peuvent le joindre.
+# Plus tard : Keycloak, Horizon et JupyterHub, quand ils seront migrés et s'ils l'appellent directement.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: keystone-ingress
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: keystone
+    app.kubernetes.io/component: identity
+    app.kubernetes.io/part-of: security-zone
+spec:
+  podSelector:                              # À QUI s'applique la policy : le pod Keystone
+    matchLabels:
+      app.kubernetes.io/name: keystone
+      app.kubernetes.io/component: identity
+  policyTypes: [Ingress]                    # toute entrée non listée ci-dessous est refusée
+  ingress:
+    - from:
+        - podSelector:                      # proxy Swift : validation des tokens (authtoken)
+            matchLabels:
+              app.kubernetes.io/name: swift
+              app.kubernetes.io/component: proxy
+        - podSelector:                      # API Flask : login mot de passe et fédéré, liste des IdP
+            matchLabels:
+              app.kubernetes.io/name: flask-app
+        - podSelector:                      # Job keystone-bootstrap (et Keystone lui-même)
+            matchLabels:
+              app.kubernetes.io/name: keystone
+      ports:
+        - {port: 5000}
+        - {port: 35357}

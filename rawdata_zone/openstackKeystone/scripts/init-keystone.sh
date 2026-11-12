@@ -164,11 +164,17 @@ apache2ctl configtest
 if [ ! -f /var/lib/keystone/.initialized ]; then
     echo "Initialisation de Keystone..."
     keystone-manage db_sync
-    keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
-    keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
 
-    # Sécurise les clés
-    chmod 700 /etc/keystone/fernet-keys /etc/keystone/credential-keys
+    # Keys already there are never created again (Kubernetes : read-only Secret, created once by create_conf.sh)
+    if [ ! -f /etc/keystone/fernet-keys/0 ]; then
+        keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+        chmod 700 /etc/keystone/fernet-keys
+    fi
+
+    if [ ! -f /etc/keystone/credential-keys/0 ]; then
+        keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
+        chmod 700 /etc/keystone/credential-keys
+    fi
 
     keystone-manage bootstrap \
         --bootstrap-password $OS_PASSWORD \

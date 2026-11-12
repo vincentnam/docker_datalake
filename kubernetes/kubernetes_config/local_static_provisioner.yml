@@ -9,8 +9,8 @@
 #  - StorageClass définie à part (storage_class_swift_disk.yml) et non « par défaut »
 #  - une entrée par classe dans storageClassMap
 #
-# À appliquer APRÈS la StorageClass : le provisioner y lit la reclaimPolicy des PV qu'il crée.
-# Après une modification de la ConfigMap :
+# À appliquer APRÈS les StorageClass : le provisioner y lit la reclaimPolicy des PV qu'il crée.
+# Après une modification de la ConfigMap (fait par disk_creation.sh -a) :
 #   kubectl -n kube-system rollout restart daemonset/local-static-provisioner
 ---
 apiVersion: v1
@@ -36,6 +36,11 @@ data:
     swift-disks:
       hostDir: /mnt/disks/swift-disks
       mountDir: /mnt/disks/swift-disks
+      volumeMode: Filesystem
+      accessMode: ReadWriteOnce
+    mariadb-disks:
+      hostDir: /mnt/disks/mariadb-disks
+      mountDir: /mnt/disks/mariadb-disks
       volumeMode: Filesystem
       accessMode: ReadWriteOnce
 ---
