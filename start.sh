@@ -237,10 +237,53 @@ if [ "$PLATFORM" = "docker-compose" ]; then
   echo "Script completed successfully."
 elif [ "$PLATFORM" = "kubernetes" ]; then
   KUBE_ROOT_FOLDER="./kubernetes"
+  OPENSTACKSWIFT_KUBE_PATH="$KUBE_ROOT_FOLDER/rawdata_zone/openstackSwift"
+  ACCESS_ZONE_KUBE_PATH="$KUBE_ROOT_FOLDER/access_zone"
+  DISK_CONFIG_PATH="$KUBE_ROOT_FOLDER/kubernetes_config"
 
+  # kubeconfig of the cluster, used by every kubectl of the scripts below
+  export KUBECONFIG="$PWD/k3s.yaml"
+
+  # ==================== BUILD ====================
   if [ "$BUILD" = true ]; then
-    $KUBE_ROOT_FOLDER/runK3S.sh install
-    $KUBE_ROOT_FOLDER/runK3S.sh gui &
+    echo "Running build steps..."
+
+    if ! kubectl get nodes >/dev/null 2>&1; then
+      echo "Error: no reachable cluster with KUBECONFIG=$KUBECONFIG (local install : $KUBE_ROOT_FOLDER/runK3S.sh install)"
+      exit 1
+    fi
+
+    chmod +x "$DISK_CONFIG_PATH/disk_creation.sh"
+    chmod +x "$OPENSTACKSWIFT_KUBE_PATH"/{create_conf.sh,create_rings.sh}
+    chmod +x "$ACCESS_ZONE_KUBE_PATH/create_conf.sh"
+
+    # One local disk per storage node (swift-0, swift-1... like the storage pods)
+    for i in $(seq 0 $((NB_STORAGE_NODE - 1))); do
+      "$DISK_CONFIG_PATH/disk_creation.sh" --create --grow --apply --name "swift-$i" --size "$NODE_STORAGE_SIZE"
+    done
+
+    # Flask and web GUI images are tagged with the git commit (same tag in deploy.sh)
+    APP_TAG="$(git rev-parse --short HEAD)"
+
+    # k3s does not see the Docker images : each image is imported after its build
+    sudo docker build -t swift-base:2.30.0 -f "$OPENSTACKSWIFT_PATH/Dockerfile.base" "$OPENSTACKSWIFT_PATH"
+    sudo docker save swift-base:2.30.0 | sudo k3s ctr images import -
+
+    sudo docker build -t "datalake-flask:$APP_TAG" -f "$ACCESS_ZONE_KUBE_PATH/flask/Dockerfile" "$REST_API_PATH"
+    sudo docker save "datalake-flask:$APP_TAG" | sudo k3s ctr images import -
+
+    sudo docker build -t "datalake-web-gui:$APP_TAG" -f "$ACCESS_ZONE_KUBE_PATH/web_gui/Dockerfile" \
+      --build-arg "REACT_APP_FLASK_APP_URL=${REACT_APP_FLASK_APP_URL:-/api}" \
+      --build-arg "REACT_APP_JUPYTERHUB_URL=${REACT_APP_JUPYTERHUB_URL:-}" \
+      "$WEBGUI_PATH"
+    sudo docker save "datalake-web-gui:$APP_TAG" | sudo k3s ctr images import -
+
+    "$OPENSTACKSWIFT_KUBE_PATH/create_conf.sh"
+    "$OPENSTACKSWIFT_KUBE_PATH/create_rings.sh"
+    "$ACCESS_ZONE_KUBE_PATH/create_conf.sh"
+
+#    $KUBE_ROOT_FOLDER/runK3S.sh install
+#    $KUBE_ROOT_FOLDER/runK3S.sh gui &
   fi
 
   # ==================== TEST MODE (Caddy) ====================
