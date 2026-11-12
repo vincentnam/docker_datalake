@@ -81,13 +81,15 @@ ensure_endpoint() {
     endpoint_url="$2"
     existing_url=""
 
-    existing_url="$(openstack endpoint list --service object-store --interface "$endpoint_interface" -f value -c URL | head -n 1 || true)"
+    existing_url="$(openstack endpoint list --service "$SWIFT_SERVICE_ID" --interface "$endpoint_interface" -f value -c URL | head -n 1 || true)"
     if [ -z "$existing_url" ]; then
         echo "Creating $endpoint_interface endpoint: $endpoint_url"
-        openstack endpoint create --region "$REGION" object-store "$endpoint_interface" "$endpoint_url" >/dev/null
+        openstack endpoint create --region "$REGION" "$SWIFT_SERVICE_ID" "$endpoint_interface" "$endpoint_url" >/dev/null
     elif [ "$existing_url" != "$endpoint_url" ]; then
-        echo "WARNING: $endpoint_interface endpoint already exists with URL: $existing_url"
-        echo "         expected URL in this deployment: $endpoint_url"
+        # The URL changed (new host, Kubernetes Service...) : the catalog follows the deployment
+        echo "Updating $endpoint_interface endpoint: $existing_url -> $endpoint_url"
+        endpoint_id="$(openstack endpoint list --service "$SWIFT_SERVICE_ID" --interface "$endpoint_interface" -f value -c ID | head -n 1)"
+        openstack endpoint set --url "$endpoint_url" "$endpoint_id"
     fi
 }
 
@@ -114,14 +116,30 @@ echo "Ensuring role '$SWIFT_ROLE' on project '$SWIFT_PROJECT' for user '$SWIFT_U
 openstack role add --project "$SWIFT_PROJECT" --user "$SWIFT_USER" "$SWIFT_ROLE" || true
 
 echo "Ensuring object-store service exists"
-# Created only if missing : "service create" never fails on a duplicate, it adds a second
-# object-store service and every "--service object-store" below becomes ambiguous.
-if [ -z "$(openstack service list -f value -c Type | grep -x object-store || true)" ]; then
-    openstack service create \
+# Created only if missing, never deleted : "service create" never fails on a duplicate, so an
+# older bootstrap could leave several object-store services. The endpoints below use the ID of
+# one of them ("--service object-store" is ambiguous with several) : the one that already has
+# endpoints, else the first one found.
+SWIFT_SERVICE_ID=""
+for service_id in $(openstack service list -f value -c ID -c Type | awk '$2 == "object-store" {print $1}'); do
+    if [ -z "$SWIFT_SERVICE_ID" ]; then
+        SWIFT_SERVICE_ID="$service_id"
+    fi
+    if [ -n "$(openstack endpoint list --service "$service_id" -f value -c ID)" ]; then
+        SWIFT_SERVICE_ID="$service_id"
+        break
+    fi
+done
+
+if [ -z "$SWIFT_SERVICE_ID" ]; then
+    echo "Creating service: swift (object-store)"
+    SWIFT_SERVICE_ID="$(openstack service create \
         --name swift \
         --description "Swift Object Storage" \
-        object-store >/dev/null
+        -f value -c id \
+        object-store)"
 fi
+echo "object-store service used: $SWIFT_SERVICE_ID"
 
 echo "Ensuring Swift endpoints exist"
 ensure_endpoint public "$SWIFT_PUBLIC"
@@ -130,7 +148,7 @@ ensure_endpoint admin "$SWIFT_ADMIN"
 
 echo
 echo "Final checks:"
-openstack endpoint list --service object-store
+openstack endpoint list --service "$SWIFT_SERVICE_ID"
 openstack user show "$SWIFT_USER"
 
 echo

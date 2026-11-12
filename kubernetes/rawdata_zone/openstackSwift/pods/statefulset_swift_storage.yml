@@ -24,6 +24,8 @@ spec:
       app.kubernetes.io/component: storage
   template:
     metadata:
+      annotations:
+        checksum/config: "${SWIFT_CONF_HASH}"   # empreinte de la conf générée (-r de start.sh) : conf changée = pods remplacés
       labels:
         app.kubernetes.io/name: swift
         app.kubernetes.io/component: storage

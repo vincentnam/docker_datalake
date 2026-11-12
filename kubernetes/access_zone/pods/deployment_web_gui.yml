@@ -21,6 +21,8 @@ spec:
       app.kubernetes.io/name: web-gui
   template:
     metadata:
+      annotations:
+        checksum/config: "${WEB_GUI_CONF_HASH}"   # empreinte de la conf générée (-r de start.sh) : conf changée = pods remplacés
       labels:
         app.kubernetes.io/name: web-gui
         app.kubernetes.io/component: frontend

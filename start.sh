@@ -72,6 +72,7 @@ help_message() {
   echo "  -c, --clean        Clean stopped containers and orphans"
   echo "  --platform         Choose the platform : docker-compose OR kubernetes"
   echo "  --clean-hard       Full reset (delete volumes, configs, data)"
+  echo "  --force-restart    Restart every service, even unchanged ones (image rebuilt with the same tag)"
 
   echo "  -h, --help         Show this help"
   echo ""
@@ -81,6 +82,7 @@ help_message() {
   echo "  $0 -bt                 # Build + Test mode"
   echo "  $0 -brt                # Build + Run + Test mode (recommandé en dev)"
   echo "  $0 --clean-hard        # Full wipe"
+  echo "  $0 --platform kubernetes --force-restart   # Restart every pod"
 }
 
 # No args → help
@@ -95,7 +97,7 @@ if ! command -v getopt >/dev/null 2>&1; then
   exit 1
 fi
 
-PARSED=$(getopt -o brtch -l build,run,test,clean,clean-hard,help,platform: --name "$0" -- "$@")
+PARSED=$(getopt -o brtch -l build,run,test,clean,clean-hard,force-restart,help,platform: --name "$0" -- "$@")
 if [ $? -ne 0 ]; then
   echo "Error: Invalid arguments."
   exit 1
@@ -107,6 +109,7 @@ BUILD=false
 RUN=false
 TEST=false
 CLEAN=false
+FORCE_RESTART=false
 PLATFORM=false
 
 while true; do
@@ -117,6 +120,7 @@ while true; do
     -c|--clean) CLEAN=true; shift ;;
     --platform) PLATFORM="$2"; shift 2;;
     --clean-hard) hard_clean ;;
+    --force-restart) FORCE_RESTART=true; shift ;;
     -h|--help) help_message; exit 0 ;;
     --) shift; break ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -124,8 +128,8 @@ while true; do
 done
 
 # At least one action
-if [ "$BUILD" = false ] && [ "$RUN" = false ] && [ "$TEST" = false ] && [ "$CLEAN" = false ]; then
-  echo "Error: You must specify at least one action (-b, -r, -t, -c)"
+if [ "$BUILD" = false ] && [ "$RUN" = false ] && [ "$TEST" = false ] && [ "$CLEAN" = false ] && [ "$FORCE_RESTART" = false ]; then
+  echo "Error: You must specify at least one action (-b, -r, -t, -c, --force-restart)"
   help_message
   exit 1
 fi
@@ -148,6 +152,12 @@ if [ "$PLATFORM" = "docker-compose" ]; then
   if [ "$CLEAN" = true ]; then
     echo "Cleaning containers..."
     sudo docker compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
+  fi
+
+  # Force restart : every running container is restarted
+  if [ "$FORCE_RESTART" = true ]; then
+    echo "Restarting containers..."
+    sudo docker compose -f "$COMPOSE_FILE" restart
   fi
 
 
@@ -237,6 +247,7 @@ if [ "$PLATFORM" = "docker-compose" ]; then
   echo "Script completed successfully."
 elif [ "$PLATFORM" = "kubernetes" ]; then
   KUBE_ROOT_FOLDER="./kubernetes"
+  MEMCACHED_KUBE_PATH="$KUBE_ROOT_FOLDER/memcached"
   OPENSTACKSWIFT_KUBE_PATH="$KUBE_ROOT_FOLDER/rawdata_zone/openstackSwift"
   OPENSTACKKEYSTONE_KUBE_PATH="$KUBE_ROOT_FOLDER/rawdata_zone/openstackKeystone"
   OPENSTACKKEYCLOAK_KUBE_PATH="$KUBE_ROOT_FOLDER/rawdata_zone/openstackKeycloak"
@@ -294,7 +305,7 @@ elif [ "$PLATFORM" = "kubernetes" ]; then
       "$DISK_CONFIG_PATH/disk_creation.sh" --create --grow --apply --class keycloak-disks --name keycloak-0 --size "$KEYCLOAK_STORAGE_SIZE"
     fi
 
-    # Flask and web GUI images are tagged with the git commit (same tag in deploy.sh)
+    # Flask and web GUI images are tagged with the git commit (same tag in RUN below)
     APP_TAG="$(git rev-parse --short HEAD)"
 
     # k3s does not see the Docker images : each image is imported after its build
@@ -308,7 +319,7 @@ elif [ "$PLATFORM" = "kubernetes" ]; then
     KEYSTONE_TAG="${OPENSTACK_RELEASE_VAR//stable\//}-${BASE_TAG_VAR}"
     sudo docker save "keystone:$KEYSTONE_TAG" | sudo k3s ctr images import -
 
-    # openstack client image of the bootstrap Job, tagged with the git commit (same tag in deploy.sh)
+    # openstack client image of the bootstrap Job, tagged with the git commit (same tag in RUN below)
     sudo docker build -t "keystone-bootstrap:$APP_TAG" -f "$OPENSTACKKEYSTONE_PATH/Dockerfile.openstackClientBootstrap" "$OPENSTACKKEYSTONE_PATH"
     sudo docker save "keystone-bootstrap:$APP_TAG" | sudo k3s ctr images import -
 
@@ -343,7 +354,87 @@ elif [ "$PLATFORM" = "kubernetes" ]; then
 
   # ==================== RUN ====================
   if [ "$RUN" = true ]; then
-    chmod +x $KUBE_ROOT_FOLDER/deploy.sh
-    $KUBE_ROOT_FOLDER/deploy.sh
+    # Values of the ${...} placeholders of the pods/ files.
+    # The storage requests are 90 % of the disk sizes : the filesystem keeps a part of the disk.
+    export SWIFT_STORAGE_REPLICAS="$NB_STORAGE_NODE"
+    export SWIFT_PROXY_REPLICAS="$NB_MANAGEMENT_NODE"
+    export SWIFT_STORAGE_REQUEST="$(( $(numfmt --from=auto "${NODE_STORAGE_SIZE%B}") * 9 / 10 / 1048576 ))Mi"
+    export MARIADB_STORAGE_REQUEST="$(( $(numfmt --from=auto "${MARIADB_STORAGE_SIZE%B}") * 9 / 10 / 1048576 ))Mi"
+    export KEYCLOAK_STORAGE_REQUEST="$(( $(numfmt --from=auto "${KEYCLOAK_STORAGE_SIZE%B}") * 9 / 10 / 1048576 ))Mi"
+    # Same tag as rawdata_zone/openstackKeystone/build.sh and create_docker.sh
+    export KEYSTONE_TAG="${OPENSTACK_RELEASE_VAR//stable\//}-${BASE_TAG_VAR}"
+    export APP_TAG="$(git rev-parse --short HEAD)"
+
+    # Checksum of the generated conf of each service (volumes/ files), written in its pod template (checksum/config).
+    # Conf changed = pod template changed = Kubernetes replaces the pods of that service only.
+    export SWIFT_CONF_HASH="$(cat $OPENSTACKSWIFT_KUBE_PATH/volumes/*.yml | sha256sum | cut -c1-16)"
+    export MARIADB_CONF_HASH="$(cat $OPENSTACKKEYSTONE_KUBE_PATH/volumes/secret_mariadb_env.yml | sha256sum | cut -c1-16)"
+    export KEYSTONE_CONF_HASH="$(cat $OPENSTACKKEYSTONE_KUBE_PATH/volumes/*keystone*.yml | sha256sum | cut -c1-16)"
+    export FLASK_CONF_HASH="$(cat $ACCESS_ZONE_KUBE_PATH/volumes/*flask_env.yml | sha256sum | cut -c1-16)"
+    export WEB_GUI_CONF_HASH="$(cat $ACCESS_ZONE_KUBE_PATH/volumes/configmap_web_gui_nginx.yml | sha256sum | cut -c1-16)"
+    export NGINX_PROXY_CONF_HASH="$(cat $ACCESS_ZONE_KUBE_PATH/volumes/configmap_nginx_proxy.yml | sha256sum | cut -c1-16)"
+    if [ "${DEPLOY_KEYCLOAK,,}" = "true" ]; then
+      export KEYCLOAK_CONF_HASH="$(cat $OPENSTACKKEYCLOAK_KUBE_PATH/volumes/*.yml | sha256sum | cut -c1-16)"
+    fi
+
+    VARS='${SWIFT_STORAGE_REPLICAS} ${SWIFT_PROXY_REPLICAS} ${SWIFT_STORAGE_REQUEST} ${MARIADB_VERSION} ${MARIADB_STORAGE_REQUEST} ${KEYSTONE_TAG} ${KEYCLOAK_VERSION} ${KEYCLOAK_STORAGE_REQUEST} ${KEYCLOAK_HOST_PORT} ${APP_TAG}'
+    VARS="$VARS"' ${SWIFT_CONF_HASH} ${MARIADB_CONF_HASH} ${KEYSTONE_CONF_HASH} ${KEYCLOAK_CONF_HASH} ${FLASK_CONF_HASH} ${WEB_GUI_CONF_HASH} ${NGINX_PROXY_CONF_HASH}'
+
+
+    ###################################
+    # NAMESPACE
+    ###################################
+    kubectl apply --server-side -f $KUBE_ROOT_FOLDER/namespace_datalake.yml
+
+    ###################################
+    # MEMCACHED
+    ###################################
+    kubectl apply --server-side -f $MEMCACHED_KUBE_PATH/services/ -f $MEMCACHED_KUBE_PATH/network/ -f $MEMCACHED_KUBE_PATH/pods/
+
+    ###################################
+    # KEYCLOAK (optional)
+    ###################################
+    # Only when DEPLOY_KEYCLOAK=true, like create_docker.sh. Before Keystone : Keystone fetches its certificates at start.
+    if [ "${DEPLOY_KEYCLOAK,,}" = "true" ]; then
+      kubectl apply --server-side -f $OPENSTACKKEYCLOAK_KUBE_PATH/volumes/
+      kubectl apply --server-side -f $OPENSTACKKEYCLOAK_KUBE_PATH/services/service_keycloak.yml
+      envsubst "$VARS" < $OPENSTACKKEYCLOAK_KUBE_PATH/services/service_keycloak_public.yml | kubectl apply --server-side -f -
+      envsubst "$VARS" < $OPENSTACKKEYCLOAK_KUBE_PATH/pods/statefulset_keycloak.yml | kubectl apply --server-side -f -
+    fi
+
+    ###################################
+    # OPENSTACK KEYSTONE (MariaDB + Keystone)
+    ###################################
+    kubectl apply --server-side -f $OPENSTACKKEYSTONE_KUBE_PATH/volumes/
+    kubectl apply --server-side -f $OPENSTACKKEYSTONE_KUBE_PATH/services/ -f $OPENSTACKKEYSTONE_KUBE_PATH/network/
+    envsubst "$VARS" < $OPENSTACKKEYSTONE_KUBE_PATH/pods/statefulset_mariadb.yml | kubectl apply --server-side -f -
+    envsubst "$VARS" < $OPENSTACKKEYSTONE_KUBE_PATH/pods/deployment_keystone.yml | kubectl apply --server-side -f -
+    # The pod template of a Job cannot be changed : the bootstrap Job is deleted, then created again (the script can run again)
+    kubectl -n datalake delete job keystone-bootstrap --ignore-not-found
+    envsubst "$VARS" < $OPENSTACKKEYSTONE_KUBE_PATH/pods/job_keystone_bootstrap.yml | kubectl apply --server-side -f -
+
+    ###################################
+    # OPENSTACK SWIFT
+    ###################################
+    kubectl apply --server-side -f $OPENSTACKSWIFT_KUBE_PATH/volumes/
+    kubectl apply --server-side -f $OPENSTACKSWIFT_KUBE_PATH/services/ -f $OPENSTACKSWIFT_KUBE_PATH/network/
+    envsubst "$VARS" < $OPENSTACKSWIFT_KUBE_PATH/pods/statefulset_swift_storage.yml | kubectl apply --server-side -f -
+    envsubst "$VARS" < $OPENSTACKSWIFT_KUBE_PATH/pods/deployment_swift_proxy.yml | kubectl apply --server-side -f -
+
+    ###################################
+    # REST API + WEB GUI + NGINX PROXY
+    ###################################
+    kubectl apply --server-side -f $ACCESS_ZONE_KUBE_PATH/volumes/
+    kubectl apply --server-side -f $ACCESS_ZONE_KUBE_PATH/services/ -f $ACCESS_ZONE_KUBE_PATH/network/
+    envsubst "$VARS" < $ACCESS_ZONE_KUBE_PATH/pods/deployment_flask_app.yml | kubectl apply --server-side -f -
+    envsubst "$VARS" < $ACCESS_ZONE_KUBE_PATH/pods/deployment_web_gui.yml | kubectl apply --server-side -f -
+    envsubst "$VARS" < $ACCESS_ZONE_KUBE_PATH/pods/deployment_nginx_proxy.yml | kubectl apply --server-side -f -
+  fi
+
+  # ==================== FORCE RESTART ====================
+  # -r already restarts the services whose conf changed (checksum/config annotation, see RUN above).
+  # This restarts every one of them : needed when an image is rebuilt with the same tag (swift-base, keystone, mariadb...).
+  if [ "$FORCE_RESTART" = true ]; then
+    kubectl -n datalake rollout restart deployment,statefulset
   fi
 fi

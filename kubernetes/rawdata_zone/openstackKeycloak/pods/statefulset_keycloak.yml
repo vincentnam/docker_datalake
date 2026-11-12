@@ -1,4 +1,4 @@
-# Template rendu par kubernetes/deploy.sh : ${KEYCLOAK_VERSION} et ${KEYCLOAK_STORAGE_REQUEST} viennent de conf.env
+# Template rendu par le -r de start.sh : ${KEYCLOAK_VERSION} et ${KEYCLOAK_STORAGE_REQUEST} viennent de conf.env
 # Keycloak local, optionnel : déployé seulement si DEPLOY_KEYCLOAK="true".
 # Transposition du service keycloak de create_docker.sh : même image, même commande, mêmes variables,
 # realm importé depuis le même fichier, données (/opt/keycloak/data) sur un disque comme le volume keycloak_data.
@@ -27,6 +27,8 @@ spec:
       app.kubernetes.io/component: identity-provider
   template:
     metadata:
+      annotations:
+        checksum/config: "${KEYCLOAK_CONF_HASH}"   # empreinte de la conf générée (-r de start.sh) : conf changée = pods remplacés
       labels:
         app.kubernetes.io/name: keycloak
         app.kubernetes.io/component: identity-provider

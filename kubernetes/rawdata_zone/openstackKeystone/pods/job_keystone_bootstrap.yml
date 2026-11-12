@@ -1,7 +1,7 @@
-# Template rendu par kubernetes/deploy.sh : ${APP_TAG} = commit git, comme les images de Flask et de la web GUI.
+# Template rendu par le -r de start.sh : ${APP_TAG} = commit git, comme les images de Flask et de la web GUI.
 # Transposition du service keystone_bootstrap de create_docker.sh : même image (Dockerfile.openstackClientBootstrap),
 # même script. Seul écart : les endpoints Swift pointent sur le Service swift-proxy (remplacé par create_conf.sh).
-# Le script attend Keystone lui-même et peut être relancé : deploy.sh supprime le Job puis le recrée à chaque déploiement.
+# Le script attend Keystone lui-même et peut être relancé : le -r de start.sh supprime le Job puis le recrée à chaque déploiement.
 apiVersion: batch/v1
 kind: Job
 metadata:

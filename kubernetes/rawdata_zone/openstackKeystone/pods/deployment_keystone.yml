@@ -1,4 +1,4 @@
-# Template rendu par kubernetes/deploy.sh : ${KEYSTONE_TAG} vient de conf.env (même tag que build.sh)
+# Template rendu par le -r de start.sh : ${KEYSTONE_TAG} vient de conf.env (même tag que build.sh)
 # Transposition du service keystone de create_docker.sh : même image, même script de démarrage (init-keystone.sh),
 # mêmes fichiers aux mêmes chemins. Écart : les clés fernet et credential viennent de Secrets créés une fois
 # par create_conf.sh. Keystone ne garde alors aucun état (tout est dans MariaDB) : un Deployment suffit.
@@ -20,6 +20,8 @@ spec:
       app.kubernetes.io/component: identity
   template:
     metadata:
+      annotations:
+        checksum/config: "${KEYSTONE_CONF_HASH}"   # empreinte de la conf générée (-r de start.sh) : conf changée = pods remplacés
       labels:
         app.kubernetes.io/name: keystone
         app.kubernetes.io/component: identity

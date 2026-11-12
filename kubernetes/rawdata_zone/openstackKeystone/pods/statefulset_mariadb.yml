@@ -1,4 +1,4 @@
-# Template rendu par kubernetes/deploy.sh : ${MARIADB_VERSION} et ${MARIADB_STORAGE_REQUEST} viennent de conf.env
+# Template rendu par le -r de start.sh : ${MARIADB_VERSION} et ${MARIADB_STORAGE_REQUEST} viennent de conf.env
 # Base de Keystone UNIQUEMENT : une base critique n'est jamais partagée, un autre service aura sa propre instance.
 apiVersion: apps/v1
 kind: StatefulSet
@@ -25,6 +25,8 @@ spec:
       app.kubernetes.io/component: database
   template:
     metadata:
+      annotations:
+        checksum/config: "${MARIADB_CONF_HASH}"   # empreinte de la conf générée (-r de start.sh) : conf changée = pods remplacés
       labels:
         app.kubernetes.io/name: mariadb
         app.kubernetes.io/component: database

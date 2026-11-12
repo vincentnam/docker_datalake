@@ -21,6 +21,8 @@ spec:
       app.kubernetes.io/name: nginx-proxy
   template:
     metadata:
+      annotations:
+        checksum/config: "${NGINX_PROXY_CONF_HASH}"   # empreinte de la conf générée (-r de start.sh) : conf changée = pods remplacés
       labels:
         app.kubernetes.io/name: nginx-proxy
         app.kubernetes.io/component: reverse-proxy

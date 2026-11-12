@@ -65,10 +65,12 @@ Each service has its own folder, grouped by zone. For example, OpenStack Swift l
 
 Kubernetes manifests live in 'kubernetes/', with the same zone layout as the Docker Compose files.
 
-1. 'disk_creation.sh' creates one local disk (XFS by default, see 'DISK_FS') per Swift storage node and exposes it to the cluster as a PersistentVolume.
-2. 'start.sh' builds the Swift, Flask and web GUI images and imports them into k3s.
-3. Each service's 'create_conf.sh' generates its configuration (ConfigMaps and Secrets) from 'conf.env', and 'create_rings.sh' builds the Swift rings.
-4. With '-r', 'deploy.sh' fills the variables of the manifests (image tag, replicas, storage size) with 'envsubst' and applies them with 'kubectl apply'.
+'start.sh' is the single entry point: build, deployment, update and maintenance.
+
+1. With '-b', 'disk_creation.sh' creates the local disks (XFS by default, see 'DISK_FS') of Swift, MariaDB and Keycloak and exposes them to the cluster as PersistentVolumes.
+2. With '-b', 'start.sh' builds the Swift, Keystone, Flask and web GUI images and imports them into k3s.
+3. With '-b', each service's 'create_conf.sh' generates its configuration (ConfigMaps and Secrets) from 'conf.env', and 'create_rings.sh' builds the Swift rings.
+4. With '-r', 'start.sh' fills the variables of the manifests (image tag, replicas, storage size, configuration checksum) with 'envsubst' and applies them with 'kubectl apply'. Only the services whose configuration changed are restarted.
 
 
 ## Configuration
@@ -199,6 +201,7 @@ export KUBECONFIG="$PWD/k3s.yaml"
 | '-t', '--test' | Test mode: adds a Caddy reverse proxy |
 | '-c', '--clean' | Remove stopped containers and orphans |
 | '--clean-hard' | Full reset: deletes volumes, configuration and data |
+| '--force-restart' | Restart every service, even unchanged ones. Kubernetes: 'kubectl rollout restart' of every Deployment and StatefulSet. Docker Compose: 'docker compose restart' |
 | '-h', '--help' | Show help |
 
 '--platform' is mandatory. Examples:
@@ -241,6 +244,28 @@ kubectl -n datalake port-forward svc/keycloak-public 8088:8088
 ```
 
 Port forwarding is needed when the browser cannot reach the k3s LoadBalancer directly: k3s on WSL (the LoadBalancer listens on the WSL IP, not on Windows 'localhost'), or a VPN that blocks local network traffic.
+
+### Change a value of conf.env (Kubernetes)
+
+Run '-br' again. '-r' only restarts the services whose generated configuration changed: each pod carries a checksum of its configuration (annotation 'checksum/config'), and Kubernetes replaces the pods when it changes. Services call each other by Service name ('keystone:5000', 'swift-proxy:8080', 'mariadb:3306', 'keycloak:8080'), so a restarted pod is found again without any change.
+
+Use '--force-restart' when an image was rebuilt with the same tag ('swift-base', 'keystone', 'mariadb', or the Flask and web GUI images without a new git commit): the configuration did not change, so '-r' restarts nothing.
+
+```bash
+./start.sh --platform kubernetes --force-restart
+```
+
+Some values are only read when a service is initialized, the first time. Changing them in 'conf.env' is not enough:
+
+| Value | Why | What to do |
+|---|---|---|
+| 'MYSQL_*' | MariaDB creates root, the database and its user on an empty disk only. A new 'MYSQL_PASSWORD' goes to 'keystone.conf' but not to the database ("Access denied"). | Change it in MariaDB too ('ALTER USER'), then '-br'. |
+| 'KEYCLOAK_ADMIN_PASSWORD' | Keycloak creates its admin at the first start only. | Change it in the Keycloak admin console. |
+| Keycloak realm ('KEYCLOAK_CLIENT_SECRET', 'KEYCLOAK_SAMPLE_*', 'WEB_GUI_URL' in the redirect URIs) | The realm is imported only when it does not exist, to keep the users. | Change the client in the Keycloak admin console. A wrong client secret breaks the SSO login. |
+| 'REACT_APP_*' | Built into the web GUI image. | '-b', then '--force-restart' if the git commit did not change. |
+| 'SWIFT_HASH_PREFIX', 'SWIFT_HASH_SUFFIX' | Part of the path of every stored object. | Never change them once Swift holds data. |
+
+'OS_PASSWORD' and the Swift endpoints of the Keystone catalog are applied again at every deployment.
 
 ## Troubleshooting
 
