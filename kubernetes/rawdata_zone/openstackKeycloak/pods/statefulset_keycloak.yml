@@ -1,0 +1,100 @@
+# Template rendu par kubernetes/deploy.sh : ${KEYCLOAK_VERSION} et ${KEYCLOAK_STORAGE_REQUEST} viennent de conf.env
+# Keycloak local, optionnel : déployé seulement si DEPLOY_KEYCLOAK="true".
+# Transposition du service keycloak de create_docker.sh : même image, même commande, mêmes variables,
+# realm importé depuis le même fichier, données (/opt/keycloak/data) sur un disque comme le volume keycloak_data.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: keycloak
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: identity-provider
+    app.kubernetes.io/part-of: security-zone
+    app.kubernetes.io/version: "${KEYCLOAK_VERSION}"
+spec:
+  serviceName: keycloak                     # headless Service : keycloak:8080 = KEYCLOAK_URL de conf.env
+  replicas: 1                               # start-dev : base embarquée sur le disque, une seule instance
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+  persistentVolumeClaimRetentionPolicy:     # supprimer le StatefulSet ne supprime jamais les utilisateurs
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: keycloak
+      app.kubernetes.io/component: identity-provider
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: keycloak
+        app.kubernetes.io/component: identity-provider
+        app.kubernetes.io/part-of: security-zone
+        app.kubernetes.io/version: "${KEYCLOAK_VERSION}"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000                     # utilisateur « keycloak » de l'image officielle
+        fsGroup: 1000                       # le disque devient accessible en écriture au groupe 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}
+          imagePullPolicy: IfNotPresent
+          args: ["start-dev", "--import-realm"]
+          envFrom:
+            - configMapRef:
+                name: keycloak-env
+            - secretRef:
+                name: keycloak-env
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: management                # santé (KC_HEALTH_ENABLED) : port de gestion 9000 depuis Keycloak 25
+              containerPort: 9000
+          resources:
+            requests: {cpu: 200m, memory: 768Mi}
+            limits: {memory: 1536Mi}        # la JVM prend 70 % de la limite pour son heap
+          startupProbe:                     # start-dev reconstruit Keycloak au démarrage : jusqu'à 5 min
+            httpGet: {path: /health/started, port: management}
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet: {path: /health/ready, port: management}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /health/live, port: management}
+            periodSeconds: 20
+            failureThreshold: 3
+          volumeMounts:
+            - name: data                    # base embarquée (H2) : utilisateurs, realms, sessions
+              mountPath: /opt/keycloak/data
+            - name: realm                   # même fichier que le Compose (rawdata_zone/openstackKeycloak/realm/)
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: realm
+          secret:
+            secretName: keycloak-realm
+        # data : ajouté automatiquement par le StatefulSet à partir de volumeClaimTemplates
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+  volumeClaimTemplates:
+    - metadata:
+        name: data                          # PVC data-keycloak-0, liée à un PV de la classe keycloak-disks
+        labels:
+          app.kubernetes.io/name: keycloak
+          app.kubernetes.io/component: identity-provider
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: keycloak-disks
+        resources:
+          requests:
+            storage: ${KEYCLOAK_STORAGE_REQUEST}   # 90 % de KEYCLOAK_STORAGE_SIZE (taille minimale du disque accepté)

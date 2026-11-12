@@ -43,6 +43,11 @@ data:
       mountDir: /mnt/disks/mariadb-disks
       volumeMode: Filesystem
       accessMode: ReadWriteOnce
+    keycloak-disks:
+      hostDir: /mnt/disks/keycloak-disks
+      mountDir: /mnt/disks/keycloak-disks
+      volumeMode: Filesystem
+      accessMode: ReadWriteOnce
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole

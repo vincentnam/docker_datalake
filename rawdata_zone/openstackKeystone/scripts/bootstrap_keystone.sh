@@ -114,10 +114,14 @@ echo "Ensuring role '$SWIFT_ROLE' on project '$SWIFT_PROJECT' for user '$SWIFT_U
 openstack role add --project "$SWIFT_PROJECT" --user "$SWIFT_USER" "$SWIFT_ROLE" || true
 
 echo "Ensuring object-store service exists"
-openstack service create \
-    --name swift \
-    --description "Swift Object Storage" \
-    object-store >/dev/null 2>&1 || true
+# Created only if missing : "service create" never fails on a duplicate, it adds a second
+# object-store service and every "--service object-store" below becomes ambiguous.
+if [ -z "$(openstack service list -f value -c Type | grep -x object-store || true)" ]; then
+    openstack service create \
+        --name swift \
+        --description "Swift Object Storage" \
+        object-store >/dev/null
+fi
 
 echo "Ensuring Swift endpoints exist"
 ensure_endpoint public "$SWIFT_PUBLIC"

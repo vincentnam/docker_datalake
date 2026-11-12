@@ -234,6 +234,12 @@ kubectl -n datalake port-forward svc/nginx-proxy 7000:7000
 
 Keep the command running, then open http://localhost:7000 in the browser. It stops when the terminal is closed or the 'nginx-proxy' pod restarts: run it again.
 
+With the bundled Keycloak ('DEPLOY_KEYCLOAK="true"'), the browser must also reach Keycloak at 'KEYCLOAK_PUBLIC_URL' (SSO login page, admin console). Forward 'KEYCLOAK_HOST_PORT' the same way, in a second terminal:
+
+```bash
+kubectl -n datalake port-forward svc/keycloak-public 8088:8088
+```
+
 Port forwarding is needed when the browser cannot reach the k3s LoadBalancer directly: k3s on WSL (the LoadBalancer listens on the WSL IP, not on Windows 'localhost'), or a VPN that blocks local network traffic.
 
 ## Troubleshooting

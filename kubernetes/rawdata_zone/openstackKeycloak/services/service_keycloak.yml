@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak                            # = serviceName du StatefulSet ; http://keycloak:8080 = KEYCLOAK_URL (Keystone, Flask)
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: identity-provider
+    app.kubernetes.io/part-of: security-zone
+spec:
+  clusterIP: None                           # headless : « keycloak » pointe directement sur le pod, seulement quand il est prêt
+  selector:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: identity-provider
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

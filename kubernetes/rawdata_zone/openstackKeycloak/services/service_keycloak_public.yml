@@ -1,0 +1,22 @@
+# Template rendu par kubernetes/deploy.sh : ${KEYCLOAK_HOST_PORT} vient de conf.env
+# Accès du navigateur à Keycloak (page de login SSO, console d'admin), comme le "8088:8080" du Compose.
+# LoadBalancer : k3s (ServiceLB) ouvre le port sur le nœud. Sinon : kubectl port-forward (voir README).
+# KEYCLOAK_PUBLIC_URL doit pointer sur ce port : c'est l'émetteur (issuer) des tokens.
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak-public
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: identity-provider
+    app.kubernetes.io/part-of: security-zone
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: identity-provider
+  ports:
+    - name: http
+      port: ${KEYCLOAK_HOST_PORT}
+      targetPort: http

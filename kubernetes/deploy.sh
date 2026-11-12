@@ -6,6 +6,7 @@ KUBE_ROOT_FOLDER="./kubernetes"
 MEMCACHED_KUBE_PATH="$KUBE_ROOT_FOLDER/memcached"
 OPENSTACKSWIFT_KUBE_PATH="$KUBE_ROOT_FOLDER/rawdata_zone/openstackSwift"
 OPENSTACKKEYSTONE_KUBE_PATH="$KUBE_ROOT_FOLDER/rawdata_zone/openstackKeystone"
+OPENSTACKKEYCLOAK_KUBE_PATH="$KUBE_ROOT_FOLDER/rawdata_zone/openstackKeycloak"
 ACCESS_ZONE_KUBE_PATH="$KUBE_ROOT_FOLDER/access_zone"
 
 export KUBECONFIG="$PWD/k3s.yaml"
@@ -16,10 +17,11 @@ export SWIFT_STORAGE_REPLICAS="$NB_STORAGE_NODE"
 export SWIFT_PROXY_REPLICAS="$NB_MANAGEMENT_NODE"
 export SWIFT_STORAGE_REQUEST="$(( $(numfmt --from=auto "${NODE_STORAGE_SIZE%B}") * 9 / 10 / 1048576 ))Mi"
 export MARIADB_STORAGE_REQUEST="$(( $(numfmt --from=auto "${MARIADB_STORAGE_SIZE%B}") * 9 / 10 / 1048576 ))Mi"
+export KEYCLOAK_STORAGE_REQUEST="$(( $(numfmt --from=auto "${KEYCLOAK_STORAGE_SIZE%B}") * 9 / 10 / 1048576 ))Mi"
 # Same tag as rawdata_zone/openstackKeystone/build.sh and create_docker.sh
 export KEYSTONE_TAG="${OPENSTACK_RELEASE_VAR//stable\//}-${BASE_TAG_VAR}"
 export APP_TAG="$(git rev-parse --short HEAD)"
-VARS='${SWIFT_STORAGE_REPLICAS} ${SWIFT_PROXY_REPLICAS} ${SWIFT_STORAGE_REQUEST} ${MARIADB_VERSION} ${MARIADB_STORAGE_REQUEST} ${KEYSTONE_TAG} ${APP_TAG}'
+VARS='${SWIFT_STORAGE_REPLICAS} ${SWIFT_PROXY_REPLICAS} ${SWIFT_STORAGE_REQUEST} ${MARIADB_VERSION} ${MARIADB_STORAGE_REQUEST} ${KEYSTONE_TAG} ${KEYCLOAK_VERSION} ${KEYCLOAK_STORAGE_REQUEST} ${KEYCLOAK_HOST_PORT} ${APP_TAG}'
 
 
 ###################################
@@ -31,6 +33,17 @@ kubectl apply --server-side -f $KUBE_ROOT_FOLDER/namespace_datalake.yml
 # MEMCACHED
 ###################################
 kubectl apply --server-side -f $MEMCACHED_KUBE_PATH/services/ -f $MEMCACHED_KUBE_PATH/network/ -f $MEMCACHED_KUBE_PATH/pods/
+
+###################################
+# KEYCLOAK (optional)
+###################################
+# Only when DEPLOY_KEYCLOAK=true, like create_docker.sh. Before Keystone : Keystone fetches its certificates at start.
+if [ "${DEPLOY_KEYCLOAK,,}" = "true" ]; then
+  kubectl apply --server-side -f $OPENSTACKKEYCLOAK_KUBE_PATH/volumes/
+  kubectl apply --server-side -f $OPENSTACKKEYCLOAK_KUBE_PATH/services/service_keycloak.yml
+  envsubst "$VARS" < $OPENSTACKKEYCLOAK_KUBE_PATH/services/service_keycloak_public.yml | kubectl apply --server-side -f -
+  envsubst "$VARS" < $OPENSTACKKEYCLOAK_KUBE_PATH/pods/statefulset_keycloak.yml | kubectl apply --server-side -f -
+fi
 
 ###################################
 # OPENSTACK KEYSTONE (MariaDB + Keystone)

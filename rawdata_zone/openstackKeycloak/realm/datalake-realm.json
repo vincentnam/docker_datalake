@@ -1,5 +1,5 @@
 {
-  "realm": "MIDOC",
+  "realm": "datalake",
   "enabled": true,
   "sslRequired": "none",
   "loginWithEmailAllowed": true,
@@ -26,7 +26,7 @@
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
-      "secret": "EdMYtZ8ra9rTlloVQTPGJdc0qtMuEKiU",
+      "secret": "changeme",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": false,
