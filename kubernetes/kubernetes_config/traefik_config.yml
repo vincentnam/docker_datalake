@@ -1,0 +1,16 @@
+# Template rendu par le -r de start.sh : ${KUBE_PUBLIC_PORT} vient de conf.env
+# Traefik est installé par k3s (chart Helm « traefik » dans kube-system) : on ne modifie pas ce chart,
+# on le personnalise avec un HelmChartConfig, et k3s redéploie Traefik avec ces valeurs.
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik                             # même nom que le chart installé par k3s
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    ports:
+      web:
+        exposedPort: ${KUBE_PUBLIC_PORT}    # port HTTP ouvert sur la machine (80 par défaut)
+    service:
+      spec:
+        externalTrafficPolicy: Local        # Traefik voit la vraie IP du client (pour les futurs filtres IP)

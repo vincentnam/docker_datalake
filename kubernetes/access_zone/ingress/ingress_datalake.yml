@@ -1,0 +1,23 @@
+# Règle de routage lue par Traefik : toute requête reçue sur son port HTTP (KUBE_PUBLIC_PORT) va vers nginx-proxy,
+# qui répartit ensuite par chemin (/ → web-gui, /api/ → flask-app), comme dans le Compose.
+# Pas de "host:" pour l'instant : n'importe quelle adresse (IP, localhost...) est acceptée, comme le port 7000 avant.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: datalake
+  namespace: datalake
+  labels:
+    app.kubernetes.io/name: nginx-proxy
+    app.kubernetes.io/part-of: access-zone
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web   # port HTTP de Traefik
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix                # toutes les requêtes
+            backend:
+              service:
+                name: nginx-proxy
+                port: {number: 7000}

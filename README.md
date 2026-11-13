@@ -226,16 +226,25 @@ Migration status: Swift, memcached, the access zone, MariaDB and Keystone are mi
 
 WSL is for testing only, not for production.
 
-### Access the services (port forwarding)
+### Access the services (Traefik)
 
-The web GUI and the Flask API are served by the 'nginx-proxy' Service on port 7000. The browser URLs of 'conf.env' ('WEB_GUI_URL', 'REACT_APP_FLASK_APP_URL') point to 'http://localhost:7000', so port 7000 of the Service must be forwarded to 'localhost'. From the repository root:
+Traefik, the Ingress controller bundled with k3s, is the only entry point of the cluster. It listens on 'KUBE_PUBLIC_PORT' (7000, like the docker-compose nginx) and sends every request to the 'nginx-proxy' Service, which routes by path ('/' to the web GUI, '/api/' to Flask). The other services ('nginx-proxy' included) are only reachable inside the cluster.
+
+| File | Role |
+|---|---|
+| 'kubernetes/kubernetes_config/traefik_config.yml' | Port opened by Traefik on the machine ('KUBE_PUBLIC_PORT') |
+| 'kubernetes/access_zone/ingress/ingress_datalake.yml' | Routing rule: every request to 'nginx-proxy' |
+
+On the k3s machine, open http://localhost:7000 or http://<machine IP>:7000.
+
+When the browser cannot reach the machine port directly (k3s on WSL: the port is opened on the WSL IP, not on Windows 'localhost'; or a VPN that blocks local network traffic), forward the Traefik port. From the repository root:
 
 ```bash
 export KUBECONFIG="$PWD/k3s.yaml"
-kubectl -n datalake port-forward svc/nginx-proxy 7000:7000
+kubectl -n kube-system port-forward svc/traefik 7000:7000
 ```
 
-Keep the command running, then open http://localhost:7000 in the browser. It stops when the terminal is closed or the 'nginx-proxy' pod restarts: run it again.
+Keep the command running, then open http://localhost:7000 in the browser. It stops when the terminal is closed or the Traefik pod restarts: run it again.
 
 With the bundled Keycloak ('DEPLOY_KEYCLOAK="true"'), the browser must also reach Keycloak at 'KEYCLOAK_PUBLIC_URL' (SSO login page, admin console). Forward 'KEYCLOAK_HOST_PORT' the same way, in a second terminal:
 
@@ -243,7 +252,7 @@ With the bundled Keycloak ('DEPLOY_KEYCLOAK="true"'), the browser must also reac
 kubectl -n datalake port-forward svc/keycloak-public 8088:8088
 ```
 
-Port forwarding is needed when the browser cannot reach the k3s LoadBalancer directly: k3s on WSL (the LoadBalancer listens on the WSL IP, not on Windows 'localhost'), or a VPN that blocks local network traffic.
+Keycloak is not behind Traefik yet: it still has its own port ('KEYCLOAK_HOST_PORT').
 
 ### Change a value of conf.env (Kubernetes)
 

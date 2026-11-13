@@ -379,6 +379,12 @@ elif [ "$PLATFORM" = "kubernetes" ]; then
 
     VARS='${SWIFT_STORAGE_REPLICAS} ${SWIFT_PROXY_REPLICAS} ${SWIFT_STORAGE_REQUEST} ${MARIADB_VERSION} ${MARIADB_STORAGE_REQUEST} ${KEYSTONE_TAG} ${KEYCLOAK_VERSION} ${KEYCLOAK_STORAGE_REQUEST} ${KEYCLOAK_HOST_PORT} ${APP_TAG}'
     VARS="$VARS"' ${SWIFT_CONF_HASH} ${MARIADB_CONF_HASH} ${KEYSTONE_CONF_HASH} ${KEYCLOAK_CONF_HASH} ${FLASK_CONF_HASH} ${WEB_GUI_CONF_HASH} ${NGINX_PROXY_CONF_HASH}'
+    VARS="$VARS"' ${KUBE_PUBLIC_PORT}'
+
+    if [ -z "$KUBE_PUBLIC_PORT" ]; then
+      echo "Set the public port of Traefik in conf.env file."
+      exit 1
+    fi
 
 
     ###################################
@@ -429,6 +435,14 @@ elif [ "$PLATFORM" = "kubernetes" ]; then
     envsubst "$VARS" < $ACCESS_ZONE_KUBE_PATH/pods/deployment_flask_app.yml | kubectl apply --server-side -f -
     envsubst "$VARS" < $ACCESS_ZONE_KUBE_PATH/pods/deployment_web_gui.yml | kubectl apply --server-side -f -
     envsubst "$VARS" < $ACCESS_ZONE_KUBE_PATH/pods/deployment_nginx_proxy.yml | kubectl apply --server-side -f -
+
+    ###################################
+    # TRAEFIK (only entry point)
+    ###################################
+    # After the access zone : nginx-proxy is ClusterIP, the port of the machine is free for Traefik.
+    # k3s redeploys Traefik with the new port (a few seconds), then the Ingress sends everything to nginx-proxy.
+    envsubst "$VARS" < $DISK_CONFIG_PATH/traefik_config.yml | kubectl apply --server-side -f -
+    kubectl apply --server-side -f $ACCESS_ZONE_KUBE_PATH/ingress/
   fi
 
   # ==================== FORCE RESTART ====================
