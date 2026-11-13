@@ -137,7 +137,8 @@ EOF
 ## NGINX PROXY SECTION
 ####################################
 # Same conf as access_zone/nginx/conf.d/default.conf, with the Service names instead of the 10.5.x.x IPs.
-# The /hub/ location comes back with the JupyterHub migration : nginx does not start with an unknown upstream.
+# /hub/ goes to the proxy of the JupyterHub chart (namespace datalake-jupyter) : nginx does not start with an unknown
+# upstream, so start.sh -r deploys JupyterHub before the access zone.
 cat << 'EOF' > $ACCESS_ZONE_KUBE_PATH/volumes/configmap_nginx_proxy.yml
 apiVersion: v1
 kind: ConfigMap
@@ -183,6 +184,27 @@ data:
             sub_filter_once off;
             sub_filter 'href="/' 'href="/api/';
             sub_filter 'src="/'  'src="/api/';
+        }
+
+        # 3. JupyterHub → /hub/ (base_url /hub/ in the chart : the path is kept as is)
+        location /hub/ {
+            proxy_pass http://proxy-public.datalake-jupyter.svc.cluster.local:80;
+
+            # Headers Websocket (Indispensables)
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+
+            # Headers Proxy Standards
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # Gestion du Scheme pour que Jupyter sache s'il est en https ou http
+            proxy_set_header X-Scheme $scheme;
+
+            proxy_buffering off;
         }
     }
 EOF

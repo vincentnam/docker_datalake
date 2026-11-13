@@ -1,0 +1,12 @@
+# Dossiers personnels des utilisateurs de JupyterHub : un volume par utilisateur, créé par le chart au premier lancement
+# de son notebook. Un disque préparé ne peut pas servir (il faudrait le créer avant de connaître l'utilisateur) :
+# local-path de k3s crée un dossier par volume sur le disque de la machine (/var/lib/rancher/k3s/storage).
+# Retain : supprimer le volume d'un utilisateur ne supprime jamais ses fichiers (la classe local-path de k3s est en Delete).
+# À voir (kanban) : mettre ces dossiers sur un disque préparé dédié plutôt que sur le disque système.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: jupyter-users
+provisioner: rancher.io/local-path
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain

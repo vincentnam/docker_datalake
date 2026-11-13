@@ -58,7 +58,7 @@ help_message() {
   echo "  -n, --name NAME      Disk name (default: $DISK_NAME)"
   echo "  -s, --size SIZE      Disk size, fallocate syntax (default: $DISK_SIZE)"
   echo "  -f, --filetype FS    Filesystem used by --create : xfs or ext4 (default: $DISK_FS)"
-  echo "  --class CLASS        StorageClass of the disk : swift-disks, mariadb-disks or keycloak-disks (default: $STORAGE_CLASS)"
+  echo "  --class CLASS        StorageClass of the disk : swift-disks, mariadb-disks, keycloak-disks or jupyterhub-disks (default: $STORAGE_CLASS)"
   echo "  -h, --help           Show this help"
   echo ""
   echo "Examples:"
@@ -420,6 +420,7 @@ if [ "$APPLY" = true ]; then
   kubectl apply -f $DISK_CONFIG_PATH/storage_class_swift_disk.yml
   kubectl apply -f $DISK_CONFIG_PATH/storage_class_mariadb_disk.yml
   kubectl apply -f $DISK_CONFIG_PATH/storage_class_keycloak_disk.yml
+  kubectl apply -f $DISK_CONFIG_PATH/storage_class_jupyterhub_disk.yml
 
   # The provisioner reads its ConfigMap only at start : restarted when a class is added
   PROVISIONER_APPLY=$(kubectl apply -f $DISK_CONFIG_PATH/local_static_provisioner.yml)

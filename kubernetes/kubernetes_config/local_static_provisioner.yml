@@ -48,6 +48,11 @@ data:
       mountDir: /mnt/disks/keycloak-disks
       volumeMode: Filesystem
       accessMode: ReadWriteOnce
+    jupyterhub-disks:
+      hostDir: /mnt/disks/jupyterhub-disks
+      mountDir: /mnt/disks/jupyterhub-disks
+      volumeMode: Filesystem
+      accessMode: ReadWriteOnce
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole

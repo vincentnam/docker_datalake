@@ -1,0 +1,14 @@
+# JupyterHub (hub, proxy) et les notebooks des utilisateurs : jamais dans le namespace datalake.
+# Pas de sous-namespace dans Kubernetes : le rattachement au data lake passe par le nom et les labels.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: datalake-jupyter
+  labels:
+    app.kubernetes.io/part-of: datalake
+    datalake/zone: process
+    # Pod Security Admission : comme le namespace datalake
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/audit: restricted
