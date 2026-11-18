@@ -118,8 +118,8 @@ $(sed -e 's/\r$//' -e 's/^/            /' $JUPYTER_PATH/templates/native-login.h
         dynamic:
           storageClass: jupyter-users
       networkPolicy:
-        egress:                             # the notebooks call Flask (private IPs are blocked by the chart)
-          - to:
+        egress:                             # private IPs are blocked by the chart : only Flask and the Swift proxy are opened
+          - to:                             # Flask (SSO ticket of the notebooks)
               - namespaceSelector:
                   matchLabels:
                     kubernetes.io/metadata.name: datalake
@@ -128,5 +128,15 @@ $(sed -e 's/\r$//' -e 's/^/            /' $JUPYTER_PATH/templates/native-login.h
                     app.kubernetes.io/name: flask-app
             ports:
               - port: 5000
+          - to:                             # Swift proxy : the data, with the Keystone token of the user (catalog URL)
+              - namespaceSelector:
+                  matchLabels:
+                    kubernetes.io/metadata.name: datalake
+                podSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: swift
+                    app.kubernetes.io/component: proxy
+            ports:
+              - port: 8080
 EOF
 chmod 600 $JUPYTER_KUBE_PATH/volumes/helmchart_jupyterhub.yml

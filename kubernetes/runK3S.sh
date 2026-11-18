@@ -172,16 +172,21 @@ cmd_test() {
     --dry-run=client -o yaml | K apply -f - >/dev/null
   K rollout status deploy/web-test --timeout=180s >/dev/null
 
+  # Port HTTP de Traefik : 80 par défaut, KUBE_PUBLIC_PORT une fois traefik_config.yml appliqué par start.sh -r
+  local port
+  port=$(K -n kube-system get svc traefik -o jsonpath='{.spec.ports[?(@.name=="web")].port}')
+  port=${port:-80}
+
   local reussi=0
   for _ in $(seq 1 30); do
-    if curl -sf -H "Host: web-test.localhost" http://localhost | grep -q "Welcome to nginx"; then
+    if curl -sf -H "Host: web-test.localhost" "http://localhost:$port" | grep -q "Welcome to nginx"; then
       reussi=1; break
     fi
     sleep 2
   done
 
   K delete ingress,service,deployment web-test --ignore-not-found >/dev/null
-  (( reussi )) || die "nginx injoignable via Traefik (vérifie : K -n kube-system get svc traefik)"
+  (( reussi )) || die "nginx injoignable via Traefik sur le port $port (vérifie : K -n kube-system get svc traefik)"
   ok "Chemin complet OK : curl → Traefik → Service → Pod"
 }
 

@@ -14,6 +14,7 @@ metadata:
     app.kubernetes.io/version: "${APP_TAG}"
 spec:
   backoffLimit: 6                           # en cas d'échec, relancé jusqu'à 6 fois (délai croissant)
+  activeDeadlineSeconds: 900                # le script attend Keystone sans limite : le Job échoue (DeadlineExceeded) après 15 min
   template:
     metadata:
       labels:

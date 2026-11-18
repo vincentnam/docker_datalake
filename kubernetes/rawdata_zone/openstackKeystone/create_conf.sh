@@ -54,6 +54,14 @@ fi
 KEYCLOAK_ISSUER="${KEYCLOAK_ISSUER:-${KEYCLOAK_PUBLIC_URL%/}/realms/$KEYCLOAK_REALM}"
 KEYCLOAK_JWKS_URI="${KEYCLOAK_URL%/}/realms/$KEYCLOAK_REALM/protocol/openid-connect/certs"
 
+# The database password goes into a URL (connection line of keystone.conf) : its special characters are
+# URL-encoded. This also keeps & and # out of the sed replacement below.
+MYSQL_PASSWORD_URL=$(printf '%s' "$MYSQL_PASSWORD" | sed -e 's/%/%25/g' -e 's/ /%20/g' -e 's/!/%21/g' -e 's/#/%23/g' -e 's/\$/%24/g' -e 's/&/%26/g' -e "s/'/%27/g" -e 's#/#%2F#g' -e 's/:/%3A/g' -e 's/?/%3F/g' -e 's/@/%40/g' -e 's/\\/%5C/g')
+
+# Full Service name of the Swift proxy in the Keystone catalog : the short name only resolves in the datalake
+# namespace, the notebooks (datalake-jupyter) and the future tenants read the same catalog.
+SWIFT_PROXY_URL="http://swift-proxy.datalake.svc.cluster.local:8080"
+
 mkdir -p $OPENSTACKKEYSTONE_KUBE_PATH/volumes
 
 
@@ -98,11 +106,11 @@ metadata:
 type: Opaque
 stringData:
   keystone.conf: |
-$(sed -e 's/\r$//' -e "s#^connection = .*#connection = mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mariadb/${MYSQL_DATABASE}#" -e 's/^/    /' $OPENSTACKKEYSTONE_PATH/conf/etc/keystone/keystone.conf)
+$(sed -e 's/\r$//' -e "s#^connection = .*#connection = mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD_URL}@mariadb/${MYSQL_DATABASE}#" -e 's/^/    /' $OPENSTACKKEYSTONE_PATH/conf/etc/keystone/keystone.conf)
 EOF
 chmod 600 $OPENSTACKKEYSTONE_KUBE_PATH/volumes/secret_keystone_conf.yml
 
-# The Swift endpoints of bootstrap_keystone.sh point to the Compose proxy (management-1) : Service swift-proxy here.
+# The Swift endpoints of bootstrap_keystone.sh point to the Compose proxy (management-1) : full Service name of swift-proxy here.
 cat << EOF > $OPENSTACKKEYSTONE_KUBE_PATH/volumes/configmap_keystone_files.yml
 apiVersion: v1
 kind: ConfigMap
@@ -124,7 +132,7 @@ $(sed -e 's/\r$//' -e 's/^/    /' $OPENSTACKKEYSTONE_PATH/conf/python/keystone/w
   init-keystone.sh: |
 $(sed -e 's/\r$//' -e 's/^/    /' $OPENSTACKKEYSTONE_PATH/scripts/init-keystone.sh)
   bootstrap_keystone.sh: |
-$(sed -e 's/\r$//' -e 's#http://management-1:8080#http://swift-proxy:8080#g' -e 's/^/    /' $OPENSTACKKEYSTONE_PATH/scripts/bootstrap_keystone.sh)
+$(sed -e 's/\r$//' -e "s#http://management-1:8080#$SWIFT_PROXY_URL#g" -e 's/^/    /' $OPENSTACKKEYSTONE_PATH/scripts/bootstrap_keystone.sh)
 EOF
 
 

@@ -137,8 +137,9 @@ EOF
 ## NGINX PROXY SECTION
 ####################################
 # Same conf as access_zone/nginx/conf.d/default.conf, with the Service names instead of the 10.5.x.x IPs.
-# /hub/ goes to the proxy of the JupyterHub chart (namespace datalake-jupyter) : nginx does not start with an unknown
-# upstream, so start.sh -r deploys JupyterHub before the access zone.
+# /hub/ goes to the proxy of the JupyterHub chart (namespace datalake-jupyter). Its address is resolved at each request
+# (resolver + variable) and not once at start : nginx starts even if JupyterHub is missing (/hub/ answers 502 meanwhile),
+# and follows a new IP of proxy-public after a reinstall of the chart.
 cat << 'EOF' > $ACCESS_ZONE_KUBE_PATH/volumes/configmap_nginx_proxy.yml
 apiVersion: v1
 kind: ConfigMap
@@ -188,7 +189,10 @@ data:
 
         # 3. JupyterHub → /hub/ (base_url /hub/ in the chart : the path is kept as is)
         location /hub/ {
-            proxy_pass http://proxy-public.datalake-jupyter.svc.cluster.local:80;
+            # DNS of the cluster (CoreDNS), name looked up again every 10 s ; full Service name : no search domain here
+            resolver kube-dns.kube-system.svc.cluster.local valid=10s;
+            set $jupyterhub_upstream http://proxy-public.datalake-jupyter.svc.cluster.local:80;
+            proxy_pass $jupyterhub_upstream;
 
             # Headers Websocket (Indispensables)
             proxy_http_version 1.1;

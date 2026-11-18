@@ -154,10 +154,11 @@ if [ "$PLATFORM" = "docker-compose" ]; then
     sudo docker compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
   fi
 
-  # Force restart : every running container is restarted
+  # Force restart : every container of the data lake is restarted.
+  # Same profiles as -r (and -t) : without them, compose ignores every service that belongs to a profile.
   if [ "$FORCE_RESTART" = true ]; then
     echo "Restarting containers..."
-    sudo docker compose -f "$COMPOSE_FILE" restart
+    sudo docker compose -f "$COMPOSE_FILE" --profile datalake --profile debug restart
   fi
 
 
@@ -258,6 +259,52 @@ elif [ "$PLATFORM" = "kubernetes" ]; then
   # kubeconfig of the cluster, used by every kubectl of the scripts below
   export KUBECONFIG="$PWD/k3s.yaml"
 
+  # ==================== CONF.ENV VALUES (build and run) ====================
+  # ${X:-} : with set -u, a variable missing from conf.env would stop the script before its message
+  if [ -z "${MARIADB_VERSION:-}" ]; then
+    echo "Set the MariaDB version in conf.env file."
+    exit 1
+  fi
+
+  if [ -z "${MARIADB_STORAGE_SIZE:-}" ]; then
+    echo "Set the MariaDB disk size in conf.env file."
+    exit 1
+  fi
+
+  if [ -z "${JUPYTERHUB_STORAGE_SIZE:-}" ]; then
+    echo "Set the JupyterHub disk size in conf.env file."
+    exit 1
+  fi
+
+  if [ -z "${KUBE_PUBLIC_PORT:-}" ]; then
+    echo "Set the public port of Traefik in conf.env file."
+    exit 1
+  fi
+
+  if [ "${DEPLOY_KEYCLOAK,,}" = "true" ]; then
+    if [ -z "${KEYCLOAK_VERSION:-}" ]; then
+      echo "Set the Keycloak version in conf.env file."
+      exit 1
+    fi
+
+    if [ -z "${KEYCLOAK_STORAGE_SIZE:-}" ]; then
+      echo "Set the Keycloak disk size in conf.env file."
+      exit 1
+    fi
+  fi
+
+  # Image tags : Keystone, same tag as rawdata_zone/openstackKeystone/build.sh and create_docker.sh ;
+  # Flask, web GUI and bootstrap Job, the git commit
+  export KEYSTONE_TAG="${OPENSTACK_RELEASE_VAR//stable\//}-${BASE_TAG_VAR}"
+  export APP_TAG="$(git rev-parse --short HEAD)"
+
+  # Requests of the disks : 90 % of the disk size, the filesystem keeps a part of the disk
+  export SWIFT_STORAGE_REQUEST="$(( $(numfmt --from=auto "${NODE_STORAGE_SIZE%B}") * 9 / 10 / 1048576 ))Mi"
+  export MARIADB_STORAGE_REQUEST="$(( $(numfmt --from=auto "${MARIADB_STORAGE_SIZE%B}") * 9 / 10 / 1048576 ))Mi"
+  if [ "${DEPLOY_KEYCLOAK,,}" = "true" ]; then
+    export KEYCLOAK_STORAGE_REQUEST="$(( $(numfmt --from=auto "${KEYCLOAK_STORAGE_SIZE%B}") * 9 / 10 / 1048576 ))Mi"
+  fi
+
   # ==================== BUILD ====================
   if [ "$BUILD" = true ]; then
     echo "Running build steps..."
@@ -275,15 +322,6 @@ elif [ "$PLATFORM" = "kubernetes" ]; then
     chmod +x "$JUPYTER_KUBE_PATH/create_conf.sh"
     chmod +x create_conf.sh
 
-    if [ -z "$MARIADB_VERSION" ]; then
-      echo "Set the MariaDB version in conf.env file."
-      exit 1
-    fi
-
-    if [ -z "$MARIADB_STORAGE_SIZE" ]; then
-      echo "Set the MariaDB disk size in conf.env file."
-      exit 1
-    fi
     # One local disk per storage node (swift-0, swift-1... like the storage pods)
     for i in $(seq 0 $((NB_STORAGE_NODE - 1))); do
       "$DISK_CONFIG_PATH/disk_creation.sh" --create --grow --apply --name "swift-$i" --size "$NODE_STORAGE_SIZE"
@@ -294,42 +332,23 @@ elif [ "$PLATFORM" = "kubernetes" ]; then
 
     # One local disk for the bundled Keycloak (keycloak-0, like its pod), only when it is deployed
     if [ "${DEPLOY_KEYCLOAK,,}" = "true" ]; then
-      if [ -z "$KEYCLOAK_VERSION" ]; then
-        echo "Set the Keycloak version in conf.env file."
-        exit 1
-      fi
-
-      if [ -z "$KEYCLOAK_STORAGE_SIZE" ]; then
-        echo "Set the Keycloak disk size in conf.env file."
-        exit 1
-      fi
-
       "$DISK_CONFIG_PATH/disk_creation.sh" --create --grow --apply --class keycloak-disks --name keycloak-0 --size "$KEYCLOAK_STORAGE_SIZE"
-    fi
-
-    if [ -z "$JUPYTERHUB_STORAGE_SIZE" ]; then
-      echo "Set the JupyterHub disk size in conf.env file."
-      exit 1
     fi
 
     # One local disk for the JupyterHub hub (database, cookie secret)
     "$DISK_CONFIG_PATH/disk_creation.sh" --create --grow --apply --class jupyterhub-disks --name jupyterhub-0 --size "$JUPYTERHUB_STORAGE_SIZE"
 
-    # Flask and web GUI images are tagged with the git commit (same tag in RUN below)
-    APP_TAG="$(git rev-parse --short HEAD)"
-
     # k3s does not see the Docker images : each image is imported after its build
     sudo docker build -t swift-base:2.30.0 -f "$OPENSTACKSWIFT_PATH/Dockerfile.base" "$OPENSTACKSWIFT_PATH"
     sudo docker save swift-base:2.30.0 | sudo k3s ctr images import -
 
-    # Keystone image built by LOCI, like the docker-compose platform (same tag as create_docker.sh)
+    # Keystone image built by LOCI, like the docker-compose platform (KEYSTONE_TAG, see CONF.ENV VALUES)
     # build.sh calls docker without sudo : run with sudo, like the other docker commands of this block
     chmod +x "$OPENSTACKKEYSTONE_PATH/build.sh"
     (cd "$OPENSTACKKEYSTONE_PATH" && sudo ./build.sh)
-    KEYSTONE_TAG="${OPENSTACK_RELEASE_VAR//stable\//}-${BASE_TAG_VAR}"
     sudo docker save "keystone:$KEYSTONE_TAG" | sudo k3s ctr images import -
 
-    # openstack client image of the bootstrap Job, tagged with the git commit (same tag in RUN below)
+    # openstack client image of the bootstrap Job, tagged with the git commit (APP_TAG, like Flask and the web GUI)
     sudo docker build -t "keystone-bootstrap:$APP_TAG" -f "$OPENSTACKKEYSTONE_PATH/Dockerfile.openstackClientBootstrap" "$OPENSTACKKEYSTONE_PATH"
     sudo docker save "keystone-bootstrap:$APP_TAG" | sudo k3s ctr images import -
 
@@ -365,16 +384,9 @@ elif [ "$PLATFORM" = "kubernetes" ]; then
 
   # ==================== RUN ====================
   if [ "$RUN" = true ]; then
-    # Values of the ${...} placeholders of the pods/ files.
-    # The storage requests are 90 % of the disk sizes : the filesystem keeps a part of the disk.
+    # Values of the ${...} placeholders of the pods/ files (tags and disk requests : see CONF.ENV VALUES)
     export SWIFT_STORAGE_REPLICAS="$NB_STORAGE_NODE"
     export SWIFT_PROXY_REPLICAS="$NB_MANAGEMENT_NODE"
-    export SWIFT_STORAGE_REQUEST="$(( $(numfmt --from=auto "${NODE_STORAGE_SIZE%B}") * 9 / 10 / 1048576 ))Mi"
-    export MARIADB_STORAGE_REQUEST="$(( $(numfmt --from=auto "${MARIADB_STORAGE_SIZE%B}") * 9 / 10 / 1048576 ))Mi"
-    export KEYCLOAK_STORAGE_REQUEST="$(( $(numfmt --from=auto "${KEYCLOAK_STORAGE_SIZE%B}") * 9 / 10 / 1048576 ))Mi"
-    # Same tag as rawdata_zone/openstackKeystone/build.sh and create_docker.sh
-    export KEYSTONE_TAG="${OPENSTACK_RELEASE_VAR//stable\//}-${BASE_TAG_VAR}"
-    export APP_TAG="$(git rev-parse --short HEAD)"
 
     # Checksum of the generated conf of each service (volumes/ files), written in its pod template (checksum/config).
     # Conf changed = pod template changed = Kubernetes replaces the pods of that service only.
@@ -391,11 +403,6 @@ elif [ "$PLATFORM" = "kubernetes" ]; then
     VARS='${SWIFT_STORAGE_REPLICAS} ${SWIFT_PROXY_REPLICAS} ${SWIFT_STORAGE_REQUEST} ${MARIADB_VERSION} ${MARIADB_STORAGE_REQUEST} ${KEYSTONE_TAG} ${KEYCLOAK_VERSION} ${KEYCLOAK_STORAGE_REQUEST} ${KEYCLOAK_HOST_PORT} ${APP_TAG}'
     VARS="$VARS"' ${SWIFT_CONF_HASH} ${MARIADB_CONF_HASH} ${KEYSTONE_CONF_HASH} ${KEYCLOAK_CONF_HASH} ${FLASK_CONF_HASH} ${WEB_GUI_CONF_HASH} ${NGINX_PROXY_CONF_HASH}'
     VARS="$VARS"' ${KUBE_PUBLIC_PORT}'
-
-    if [ -z "$KUBE_PUBLIC_PORT" ]; then
-      echo "Set the public port of Traefik in conf.env file."
-      exit 1
-    fi
 
 
     ###################################
@@ -441,20 +448,12 @@ elif [ "$PLATFORM" = "kubernetes" ]; then
     ###################################
     # JUPYTERHUB (Zero to JupyterHub chart)
     ###################################
-    # Before the access zone : nginx-proxy does not start while its /hub/ upstream (proxy-public) does not exist.
-    # k3s installs or upgrades the chart by itself (Job helm-install-jupyterhub in kube-system).
+    # k3s installs or upgrades the chart by itself, in the background (Job helm-install-jupyterhub in kube-system).
+    # No wait : nginx-proxy resolves /hub/ at each request, the rest of the data lake does not depend on JupyterHub.
+    # Install problem : kubectl -n kube-system logs job/helm-install-jupyterhub
     kubectl apply --server-side -f $JUPYTER_KUBE_PATH/namespace_datalake_jupyter.yml
     kubectl apply --server-side -f $DISK_CONFIG_PATH/storage_class_jupyter_users.yml
     kubectl apply --server-side -f $JUPYTER_KUBE_PATH/volumes/
-    echo "Waiting for the JupyterHub proxy Service (first install : download of the chart and images)..."
-    WAIT_END=$((SECONDS + 600))
-    until kubectl -n datalake-jupyter get service proxy-public >/dev/null 2>&1; do
-      if [ "$SECONDS" -ge "$WAIT_END" ]; then
-        echo "Error: no proxy-public Service after 10 min : kubectl -n kube-system logs job/helm-install-jupyterhub"
-        exit 1
-      fi
-      sleep 5
-    done
 
     ###################################
     # REST API + WEB GUI + NGINX PROXY
@@ -476,8 +475,10 @@ elif [ "$PLATFORM" = "kubernetes" ]; then
 
   # ==================== FORCE RESTART ====================
   # -r already restarts the services whose conf changed (checksum/config annotation, see RUN above).
-  # This restarts every one of them : needed when an image is rebuilt with the same tag (swift-base, keystone, mariadb...).
+  # This restarts every service of the data lake : needed when an image is rebuilt with the same tag (swift-base, keystone, mariadb...).
+  # datalake-jupyter : hub and proxy of JupyterHub. The notebooks already started by the users are not restarted.
   if [ "$FORCE_RESTART" = true ]; then
     kubectl -n datalake rollout restart deployment,statefulset
+    kubectl -n datalake-jupyter rollout restart deployment,statefulset
   fi
 fi

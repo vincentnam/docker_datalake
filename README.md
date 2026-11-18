@@ -201,7 +201,7 @@ export KUBECONFIG="$PWD/k3s.yaml"
 | '-t', '--test' | Test mode: adds a Caddy reverse proxy |
 | '-c', '--clean' | Remove stopped containers and orphans |
 | '--clean-hard' | Full reset: deletes volumes, configuration and data |
-| '--force-restart' | Restart every service, even unchanged ones. Kubernetes: 'kubectl rollout restart' of every Deployment and StatefulSet. Docker Compose: 'docker compose restart' |
+| '--force-restart' | Restart every service, even unchanged ones. Kubernetes: 'kubectl rollout restart' of every Deployment and StatefulSet of the 'datalake' and 'datalake-jupyter' namespaces (the notebooks already started by the users keep running). Docker Compose: 'docker compose restart' of the 'datalake' and 'debug' profiles |
 | '-h', '--help' | Show help |
 
 '--platform' is mandatory. Examples:
@@ -258,7 +258,7 @@ Keycloak is not behind Traefik yet: it still has its own port ('KEYCLOAK_HOST_PO
 
 ### Change a value of conf.env (Kubernetes)
 
-Run '-br' again. '-r' only restarts the services whose generated configuration changed: each pod carries a checksum of its configuration (annotation 'checksum/config'), and Kubernetes replaces the pods when it changes. Services call each other by Service name ('keystone:5000', 'swift-proxy:8080', 'mariadb:3306', 'keycloak:8080'), so a restarted pod is found again without any change.
+Run '-br' again. '-r' only restarts the services whose generated configuration changed: each pod carries a checksum of its configuration (annotation 'checksum/config'), and Kubernetes replaces the pods when it changes. Services call each other by Service name ('keystone:5000', 'swift-proxy:8080', 'mariadb:3306', 'keycloak:8080'), so a restarted pod is found again without any change. From another namespace (JupyterHub in 'datalake-jupyter'), the full name is used: 'flask-app.datalake.svc.cluster.local:5000', and the Swift endpoints of the Keystone catalog are 'http://swift-proxy.datalake.svc.cluster.local:8080/...' so that the notebooks can use them too.
 
 Use '--force-restart' when an image was rebuilt with the same tag ('swift-base', 'keystone', 'mariadb', or the Flask and web GUI images without a new git commit): the configuration did not change, so '-r' restarts nothing.
 
