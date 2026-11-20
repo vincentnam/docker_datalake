@@ -200,7 +200,9 @@ data:
             proxy_set_header Connection "upgrade";
 
             # Headers Proxy Standards
-            proxy_set_header Host $host;
+            # $http_host and not $host : $host drops the port, and the notebook server compares the Origin of the browser
+            # (http://localhost:7000) with Host to accept the websocket of the kernels (Compose : allow_origin = '*' in the image instead)
+            proxy_set_header Host $http_host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;

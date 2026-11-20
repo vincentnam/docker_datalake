@@ -109,6 +109,9 @@ $(sed -e 's/\r$//' -e 's/^/            /' $JUPYTER_PATH/templates/native-login.h
       service:
         type: ClusterIP                     # reached by nginx-proxy (/hub/), never from outside
     singleuser:
+      cloudMetadata:
+        blockWithIptables: false            # the iptables init container needs privileged + NET_ADMIN, refused by Pod Security :
+                                            # the cloud metadata server (169.254.169.254) stays blocked by the NetworkPolicy of the notebooks
       image:
         name: $JUPYTERHUB_NOTEBOOK_IMAGE
         tag: "$JUPYTERHUB_NOTEBOOK_TAG"
