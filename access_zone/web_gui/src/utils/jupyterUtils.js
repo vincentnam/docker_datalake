@@ -27,8 +27,12 @@ const getNotebookFilename = (objectKey) => {
   return `download-${safeObjectName}-${Date.now()}.ipynb`;
 };
 
-const buildFirstCell = (bucketName, objectKey) => {
-  const cellTemplate = `import time
+// Code de consommation d'un objet, exécuté dans un notebook de JupyterHub.
+// L'adresse de Flask vient de l'environnement du notebook (DATALAKE_FLASK_URL, fourni par le chart sous Kubernetes) ;
+// la valeur par défaut est l'adresse du Compose.
+export const buildFirstCell = (bucketName, objectKey) => {
+  const cellTemplate = `import os
+import time
 from getpass import getpass
 from pathlib import Path
 from urllib.parse import quote
@@ -36,7 +40,7 @@ from urllib.parse import quote
 import requests
 from IPython.display import HTML, display
 
-FLASK_URL = "http://flask-app:5000"
+FLASK_URL = os.environ.get("DATALAKE_FLASK_URL", "http://flask-app:5000")
 BUCKET_NAME = __BUCKET_NAME__
 OBJECT_KEY = __OBJECT_KEY__
 

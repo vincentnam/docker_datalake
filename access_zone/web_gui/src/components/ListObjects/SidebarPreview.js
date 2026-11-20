@@ -1,18 +1,26 @@
 import React, { useState } from "react";
 import { Sidebar } from "primereact/sidebar";
+import { Dialog } from "primereact/dialog";
 import PrimaryButton from "../common/PrimaryButton";
 import { downloadFile } from "../../utils/fileUtils";
 import usePreview from "../../hooks/usePreview";
-import { createNotebookInJupyter, getJupyterHubUrl } from "../../utils/jupyterUtils";
+import { buildFirstCell, createNotebookInJupyter, getJupyterHubUrl } from "../../utils/jupyterUtils";
 import { apiFetch } from "../../utils/apiClient";
 import "../../styles/preview.css";
 import { Panel } from "primereact/panel";
 import { throttle } from "lodash";
 
+// Désactivé : créer le notebook depuis la web GUI demande de désactiver la protection XSRF
+// des serveurs de notebooks (faille : tous les serveurs partagent la même origine).
+// À réactiver quand Flask créera le notebook en tant que service JupyterHub.
+const NOTEBOOK_BUTTON_ENABLED = false;
+
 const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
   const { previewComponent, isPreviewLoading, previewError } = usePreview(selectedNode, bucketName);
   const [sidebarWidth, setSidebarWidth] = useState(384);
   const [isCreatingNotebook, setIsCreatingNotebook] = useState(false);
+  const [consumptionCodeToShow, setConsumptionCodeToShow] = useState("");
+  const [isConsumptionCodeCopied, setIsConsumptionCodeCopied] = useState(false);
 
   const throttledResize = throttle((newWidth) => {
     requestAnimationFrame(() => setSidebarWidth(newWidth));
@@ -77,6 +85,33 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
     }
   };
 
+  const copyConsumptionCode = async () => {
+    if (!selectedNode?.leaf) {
+      return;
+    }
+
+    const consumptionCode = buildFirstCell(bucketName, selectedNode.key);
+    setIsConsumptionCodeCopied(false);
+
+    // Le presse-papier n'existe qu'en contexte sécurisé (HTTPS ou localhost) :
+    // sinon, le code est affiché dans une fenêtre pour être copié à la main.
+    if (!navigator.clipboard) {
+      setConsumptionCodeToShow(consumptionCode);
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(consumptionCode);
+    } catch (error) {
+      setConsumptionCodeToShow(consumptionCode);
+      return;
+    }
+
+    // JupyterHub n'est pas ouvert ici : la session du hub peut être celle d'un autre utilisateur
+    // que celui de la web GUI (le code atterrirait chez lui).
+    setIsConsumptionCodeCopied(true);
+  };
+
   return (
     <>
       <Sidebar
@@ -122,13 +157,25 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
                 Télécharger
               </PrimaryButton>
 
+              {NOTEBOOK_BUTTON_ENABLED && (
+                <button
+                  className={`bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors duration-300 neon-button `}
+                  onClick={openInJupyter}
+                  disabled={isCreatingNotebook}
+                >
+                  {isCreatingNotebook ? "Création du notebook..." : "Ouvrir dans Jupyter Notebook"}
+                </button>
+              )}
+
               <button
                 className={`bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors duration-300 neon-button `}
-                onClick={openInJupyter}
-                disabled={isCreatingNotebook}
+                onClick={copyConsumptionCode}
               >
-                {isCreatingNotebook ? "Création du notebook..." : "Ouvrir dans Jupyter Notebook"}
+                Exemple de code de consommation
               </button>
+              {isConsumptionCodeCopied && (
+                <p>Code copié : colle-le dans un notebook de JupyterHub.</p>
+              )}
               {isPreviewLoading ? (
                 <p>Chargement de la prévisualisation...</p>
               ) : previewError ? (
@@ -140,6 +187,23 @@ const SidebarPreview = ({ visible, onHide, selectedNode, bucketName }) => {
           )}
         </div>
       </Sidebar>
+
+      <Dialog
+        header="Exemple de code de consommation"
+        visible={Boolean(consumptionCodeToShow)}
+        onHide={() => setConsumptionCodeToShow("")}
+        style={{ width: "60vw" }}
+        baseZIndex={1100}
+      >
+        <p>Copie ce code et colle-le dans un notebook de JupyterHub.</p>
+        <textarea
+          readOnly
+          value={consumptionCodeToShow}
+          onFocus={(event) => event.target.select()}
+          rows={20}
+          style={{ width: "100%", fontFamily: "monospace" }}
+        />
+      </Dialog>
     </>
   );
 };

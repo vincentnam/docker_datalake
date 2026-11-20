@@ -112,6 +112,8 @@ $(sed -e 's/\r$//' -e 's/^/            /' $JUPYTER_PATH/templates/native-login.h
       cloudMetadata:
         blockWithIptables: false            # the iptables init container needs privileged + NET_ADMIN, refused by Pod Security :
                                             # the cloud metadata server (169.254.169.254) stays blocked by the NetworkPolicy of the notebooks
+      extraEnv:
+        DATALAKE_FLASK_URL: "$FLASK_URL"    # read by the consumption code copied from the web GUI (Flask is in another namespace)
       image:
         name: $JUPYTERHUB_NOTEBOOK_IMAGE
         tag: "$JUPYTERHUB_NOTEBOOK_TAG"
